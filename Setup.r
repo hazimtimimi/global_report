@@ -1,8 +1,8 @@
-# -------------------------------------------------
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Initial set up script for tables and figures
 # Tom Hiatt
-# 6 July 2012, revised 25 June 2015
-# -------------------------------------------------
+# 6 July 2012, revised July 2015
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # bits to change if another dude is running this.
 whoami <- "Tom"   # I hope you know the answer to this.
@@ -14,15 +14,15 @@ if(whoami=="Tom"){
 }
 
 if(whoami=="Hazim"){
-  Rprofile <- "d:/TMEData/TomsCode/MyEnvironment/.Rprofile" # Note for Hazim: I've added a part into my .Rprofile that adds in the HBC groupings and forecast estimates. You may want to similarly include in your .Rprofile
-  basefolder <- "D:/Extracted Data/Extracted Data2014/GTBR2014_internal/tables_figures"
-  scriptsfolder <- "D:/TMEData/TomsCode/Global TB control Reports/Tables and figures"
+  Rprofile <- "d:/TMEData/TomsCode/MyEnvironment/.Rprofile" # Note for Hazim (from Tom): I've added a part into my .Rprofile that adds in the HBC groupings and forecast estimates. You may want to similarly include in your .Rprofile
+  basefolder <- "D:/Extracted Data/Extracted Data2015/GTBR15_internal/tables_figures"
+  scriptsfolder <- "D:/R_projects/global_report"
 }
 
 
 # A few details on my way of working. For the tables, figures, maps repeated from year to year, all the code is here and the data source is nearly 100% from the global database. Some people have to send me excel files which I save in the 'External data' folder. For other one-off tables I just save the final files in my folders and iterate with the creator to get them in a ready format.
 
-# -------------------------------------------------
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 start <- Sys.time()
 source(Rprofile)
@@ -30,7 +30,7 @@ runprofile()
 library(plyr) # The next function uses dplyr and plyr must be loaded first.
 getforecastestimates()
 
-# -------------------------------------------------
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # Find the report year
 thisyear <- as.numeric(format(Sys.time(),"%Y")) - ifelse(as.numeric(format(Sys.time(),"%m")) < 6, 1, 0) # This refers to the report year
@@ -39,7 +39,7 @@ thisyear <- as.numeric(format(Sys.time(),"%Y")) - ifelse(as.numeric(format(Sys.t
 
 libraries(c('reshape', 'ggplot2', 'grid', 'scales', 'xtable', 'stringr', 'timeSeries', 'ggthemes', 'plyr', "gridExtra"))
 
-# Create a folder structure for saving files if doesn't exist yet 
+# Create a folder structure for saving files if doesn't exist yet
 if(file.path(basefolder, 'FigData') %nin% list.dirs(basefolder, recursive=FALSE)){
   dir.create(file.path(basefolder, "Review"))
   dir.create(file.path(basefolder, "FigData"))
@@ -53,7 +53,7 @@ outfolder <- basefolder
 setwd(basefolder)
 
 # Graph theme components
-# ---------------------------
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 theme_glb.rpt <- function(base_size=10, base_family="") {
   colors <- ggthemes_data$few
   gray <- colors$medium['gray']
@@ -110,14 +110,14 @@ for(df in c('e', 'eraw', 'a', 'araw', 'n', 'd')){
   assign(paste(df, "t", sep="."), comb)
 }
 
-while(max(araw.t$year) < 2015) { 
+while(max(araw.t$year) < 2015) {
   warning(paste('Still need to get updated forecast for araw!'))
   copy <- araw.t[araw.t$year==max(araw.t$year),]
   copy$year <- max(araw.t$year) + 1
   araw.t <- rbind(araw.t, copy)
 }
 
-while(max(eraw.t$year) < 2015) { 
+while(max(eraw.t$year) < 2015) {
   warning(paste('Still need to get updated forecast for eraw!'))
   copy <- eraw.t[eraw.t$year==max(eraw.t$year),]
   copy$year <- max(eraw.t$year) + 1
@@ -148,23 +148,23 @@ round.conv.rates <- function(x) {
   ifelse(x==0, 0, ifelse(x < 0.1, "<0.1", ifelse(signif(x, 2) < 10, formatC(round(x,1), format='f', digits=1),
                                                  # ifelse(signif(x, 2) < 10, formatC(round(x,1), format='f', digits=1),
                                                  ifelse(signif(x, 3) < 100, signif(x, 2), signif(x, 3)))))
-}	
+}
 
 # Depends on whether dealing with thousands or rates. In general, 0 is 0, under .1 to "<0.1", then appropriate sig figs.
 # Amended by Hazim 2012-08-31 to fix double-rounding error, plus also
 # changed so that numbers < 1 are only rounded to 1 sig fig
 frmt <- function(x, rates=FALSE, thou=FALSE) {
-  ifelse(x==0, "0", 
-         ifelse(x < 0.01 & thou==TRUE, "<0.01", 
-                ifelse(x < 0.1 & thou==FALSE, "<0.1", 
+  ifelse(x==0, "0",
+         ifelse(x < 0.01 & thou==TRUE, "<0.01",
+                ifelse(x < 0.1 & thou==FALSE, "<0.1",
                        ifelse(signif(x, 2) < 1 & thou==TRUE, formatC(signif(x,2), format='f', digits=2),
-                              ifelse(signif(x, 2) < 1, formatC(signif(x,1), format='f', digits=1), 
+                              ifelse(signif(x, 2) < 1, formatC(signif(x,1), format='f', digits=1),
                                      ifelse(signif(x, 2) < 10, formatC(signif(x,2), format='f', digits=1),
-                                            ifelse(x > 1 & rates==FALSE, formatC(signif(x, 2), big.mark=" ", format='d'), 
+                                            ifelse(x > 1 & rates==FALSE, formatC(signif(x, 2), big.mark=" ", format='d'),
                                                    ifelse(signif(x, 3) < 100, formatC(signif(x, 2), big.mark=" ", format='d'), formatC(signif(x, 3), big.mark=" ", format='d')))))))))
-}  
+}
 
-# Simple rounder that just adds in the thousands separator 
+# Simple rounder that just adds in the thousands separator
 rounder <- function(x, decimals=FALSE) {
   if(decimals==TRUE){
     ifelse(is.na(x), NA, ifelse(x==0, 0, ifelse(x < 0.01, "<0.01", ifelse(round(x,2) < 0.1, formatC(round(x,2), format='f', digits=2), ifelse(round(x,1) < 10, formatC(round(x,1), format='f', digits=1), formatC(round(x,0), big.mark=" ", format='d') )))))
@@ -177,54 +177,54 @@ rounder <- function(x, decimals=FALSE) {
   d[col] <- as.character(d[[col]])
   d[col] <- ifelse(d[[col]]=='Democratic Republic of the Congo', 'DR Congo',
                    ifelse(d[[col]]=='Democratic People\'s Republic of Korea', 'DPR Korea',
-                   ifelse(d[[col]]=='United Republic of Tanzania', 'UR Tanzania', 
-                          ifelse(d[[col]]=='hbc22', 'High-burden countries', 
-                                 ifelse(d[[col]]=='global', 'Global', 
-                                        ifelse(d[[col]]=='SEA', 'SEAR', 
+                   ifelse(d[[col]]=='United Republic of Tanzania', 'UR Tanzania',
+                          ifelse(d[[col]]=='hbc22', 'High-burden countries',
+                                 ifelse(d[[col]]=='global', 'Global',
+                                        ifelse(d[[col]]=='SEA', 'SEAR',
                                                d[[col]]))))))
 #   if(ord %nin% c('hbc')) warning('Not ordering.')
   if(ord=='hbc')  d <- d[match(c("Afghanistan", "Bangladesh", "Brazil", "Cambodia", "China", "DR Congo", "Ethiopia", "India", "Indonesia", "Kenya", "Mozambique",  "Myanmar", "Nigeria", "Pakistan", "Philippines", "Russian Federation", "South Africa", "Thailand", "Uganda", "UR Tanzania", "Viet Nam", "Zimbabwe", "High-burden countries", "AFR", "AMR", "EMR", "EUR", "SEAR", "WPR", "Global"), d[[col]]),]
-  
-  
+
+
   return(d)
 }
 
 # Nab Philippe's functions (for aggregating)
-add.rv <- function (r, r.lo, r.hi, r.sd, weights = 1, method = "beta") 
+add.rv <- function (r, r.lo, r.hi, r.sd, weights = 1, method = "beta")
 {
-  if (is.null(r) || length(r) == 0) 
+  if (is.null(r) || length(r) == 0)
     stop("Error: r must contain at least one value")
-  if (sum(r < 0 & !is.na(r) & method == "beta")) 
+  if (sum(r < 0 & !is.na(r) & method == "beta"))
     stop("Error: r must be positive with method 'beta'")
-  if (sum(r > 1 & !is.na(r) & method == "beta")) 
+  if (sum(r > 1 & !is.na(r) & method == "beta"))
     stop("Error: r must be between 0 and 1 with method 'beta'")
-  if (missing(r.sd)) 
+  if (missing(r.sd))
     r.sd <- (r.hi - r.lo)/4
-  if (missing(r.lo) & !missing(r.sd)) 
+  if (missing(r.lo) & !missing(r.sd))
     r.lo <- numeric()
-  if (missing(r.hi) & !missing(r.sd)) 
+  if (missing(r.hi) & !missing(r.sd))
     r.hi <- numeric()
-  if (sum(r.lo < 0 & !is.na(r.lo) & method == "beta")) 
+  if (sum(r.lo < 0 & !is.na(r.lo) & method == "beta"))
     stop("Error: r.lo must be positive with method 'beta'")
-  if (sum(r.lo > 1 & !is.na(r.lo) & method == "beta")) 
+  if (sum(r.lo > 1 & !is.na(r.lo) & method == "beta"))
     stop("Error: r.lo must be between 0 and 1 with method 'beta'")
-  if (sum(r.hi < 0 & !is.na(r.hi) & method == "beta")) 
+  if (sum(r.hi < 0 & !is.na(r.hi) & method == "beta"))
     stop("Error: r.hi must be positive with method 'beta'")
-  if (sum(r.hi > 1 & !is.na(r.hi) & method == "beta")) 
+  if (sum(r.hi > 1 & !is.na(r.hi) & method == "beta"))
     stop("Error: r.hi must be between 0 and 1 with method 'beta'")
-  if (sum(r.sd > 1 & !is.na(r.sd) & method == "beta")) 
+  if (sum(r.sd > 1 & !is.na(r.sd) & method == "beta"))
     stop("Error: sd must be between 0 and 1 with method 'beta'")
-  if (sum(r[!is.na(r) & is.na(r.sd)])) 
+  if (sum(r[!is.na(r) & is.na(r.sd)]))
     stop("Error: some values for r are supplied without uncertainty")
-  if (sum(r.sd < 0 & !is.null(r.sd) & !is.na(r.sd))) 
+  if (sum(r.sd < 0 & !is.null(r.sd) & !is.na(r.sd)))
     stop("Error: sd must be positive")
-  if (!is.null(r.sd)) 
+  if (!is.null(r.sd))
     v <- r.sd^2
   else v <- ((r.hi - r.lo)/4)^2
-  sw <- ifelse(length(weights) > 1, sum(weights[!is.na(r)], 
+  sw <- ifelse(length(weights) > 1, sum(weights[!is.na(r)],
                                         na.rm = TRUE), 1)
   out.m <- sum(r * weights, na.rm = TRUE)/sw
-  out.v <- ifelse(length(weights) > 1, sum(v[!is.na(r)] * weights[!is.na(r)]^2, 
+  out.v <- ifelse(length(weights) > 1, sum(v[!is.na(r)] * weights[!is.na(r)]^2,
                                            na.rm = TRUE)/sw^2, sum(v))
   if (method == "beta") {
     S <- (out.m * (1 - out.m)/out.v) - 1
@@ -237,10 +237,10 @@ add.rv <- function (r, r.lo, r.hi, r.sd, weights = 1, method = "beta")
     lo <- qnorm(0.025, out.m, sqrt(out.v))
     hi <- qnorm(0.975, out.m, sqrt(out.v))
   }
-  if (all(weights == 1)) 
+  if (all(weights == 1))
     return(data.frame(r = out.m, r.lo = lo, r.hi = hi, r.sd = sqrt(out.v)))
-  else return(data.frame(r = out.m, r.lo = lo, r.hi = hi, r.sd = sqrt(out.v), 
-                         r.num = out.m * sw, r.lo.num = lo * sw, r.hi.num = hi * 
+  else return(data.frame(r = out.m, r.lo = lo, r.hi = hi, r.sd = sqrt(out.v),
+                         r.num = out.m * sw, r.lo.num = lo * sw, r.hi.num = hi *
                            sw, e.pop.num = sw))
 }
 
@@ -282,43 +282,43 @@ tablecopy <- function(table){
 
 # To make typical report table
 glb.rpt.table <- function(df, column.nums, country.col=1, year.col=NA){
-  
+
   if(is.na(year.col)){
     hbcs <- df[df$g_hbc22=='high', c(country.col, column.nums)]
     names(hbcs)[1] <- "area"
-    
+
     # make aggregate rows
     agg1 <- aggregate(df[column.nums], by=list(area=df$g_hbc22), FUN=sum, na.rm=TRUE)
     agg1 <- agg1[agg1$area=='high',]
     agg1$area <- 'High-burden countries'
-    
+
     agg2 <- aggregate(df[column.nums], by=list(area=df$g_whoregion), FUN=sum, na.rm=TRUE)
-    
+
     agg3 <- df; agg3[country.col] <- 'Global'
-    agg3b <- aggregate(agg3[column.nums], by=list(area=agg3[[country.col]]), FUN=sum, na.rm=TRUE) 
-    
+    agg3b <- aggregate(agg3[column.nums], by=list(area=agg3[[country.col]]), FUN=sum, na.rm=TRUE)
+
     # combine together
     com1 <- rbind(hbcs, agg1, agg2, agg3b)
     com2 <- .shortnames(com1, col = "area", ord = "hbc")
   }
-  
+
   if(!is.na(year.col)){
     hbcs <- df[df$g_hbc22=='high', c(country.col, year.col, column.nums)]
     names(hbcs)[1] <- "area"
-    
+
     # make aggregate rows
     agg1 <- aggregate(df[column.nums], by=list(area=df$g_hbc22, year=df$year), FUN=sum, na.rm=TRUE)
     agg1 <- agg1[agg1$area=='high',]
     agg1$area <- 'High-burden countries'
-    
+
     agg2 <- aggregate(df[column.nums], by=list(area=df$g_whoregion, year=df$year), FUN=sum, na.rm=TRUE)
-    
+
     agg3 <- df; agg3[country.col] <- 'Global'
-    agg3b <- aggregate(agg3[column.nums], by=list(area=agg3[[country.col]], year=df$year), FUN=sum, na.rm=TRUE) 
-    
+    agg3b <- aggregate(agg3[column.nums], by=list(area=agg3[[country.col]], year=df$year), FUN=sum, na.rm=TRUE)
+
     # combine together
     com2 <- rbind(hbcs, agg1, agg2, agg3b)
-    
+
   }
   return(com2)
 }
@@ -339,7 +339,7 @@ facetAdjust <- function(x, pos = c("up", "down"))
     idx <- (space - ncol - n + 1):(space - ncol)
     gtable$grobs[paste0("axis_b",idx)] <- list(gtable$grobs[[paste0("axis_b",panels)]])
     if(pos == "down"){
-      rows <- grep(paste0("axis_b\\-[", idx[1], "-", idx[n], "]"), 
+      rows <- grep(paste0("axis_b\\-[", idx[1], "-", idx[n], "]"),
                    gtable$layout$name)
       lastAxis <- grep(paste0("axis_b\\-", panels), gtable$layout$name)
       gtable$layout[rows, c("t","b")] <- gtable$layout[lastAxis, c("t")]
@@ -354,7 +354,7 @@ print.facetAdjust <- function(x, newpage = is.null(vp), vp = NULL) {
   if(is.null(vp)){
     grid.draw(x)
   } else {
-    if (is.character(vp)) 
+    if (is.character(vp))
       seekViewport(vp)
     else pushViewport(vp)
     grid.draw(x)
@@ -364,9 +364,9 @@ print.facetAdjust <- function(x, newpage = is.null(vp), vp = NULL) {
 }
 
 
-########################################################
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Functions to assist with tables and figure in markdown document (poached from here: http://rmflight.github.io/posts/2012/10/papersinRmd.html)
-########################################################
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 yr <- as.numeric(format(Sys.time(),"%Y")) - ifelse(as.numeric(format(Sys.time(),"%m")) < 4, 2, 1)
 
@@ -385,7 +385,7 @@ tableCount <- c(`_` = 0)
 
 pasteLabel <- function(preText, inObj, objName, insLink = TRUE) {
   objNum <- inObj[objName]
-  
+
   useText <- paste(preText, objNum, sep = " ")
   if (insLink) {
     useText <- paste("[", useText, "](#", objName, ")", sep = "")
@@ -405,7 +405,7 @@ tableCat <- function(inFrame) {
 # Run everything ------------------------------------------------
 
 source(file.path(scriptsfolder, "Figures.r"))
-source(file.path(scriptsfolder, "Tables.r")) 
+source(file.path(scriptsfolder, "Tables.r"))
 source(file.path(scriptsfolder, "Maps.r"))
 
 cat("\nThat took", signif(Sys.time() - start, 3), units(Sys.time() - start), "to run.\n")
