@@ -1,13 +1,11 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Figures in the global report
+# Called from create_tables_figures.r which sets up the necessary dependencies
 # Tom Hiatt
 # 10 July 2012, updated July 2015
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # Probably I need to change this to a R markdown document so the whole thing produces a PDF with all the tables and figures one after the other and individual PDFs, PNGs, etc. in a folder. UPDATE: Rmarkdown can't make a decent table in word or HTML to print. Someday I will learn LaTex or something and make it work.
-
-# HT: run the Setup.r manually first  ...
-# source('D:/TMEData/TomsCode/Global TB control Reports/Tables and figures/Setup.r')
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -62,7 +60,7 @@
 
 
 #flag for whether or not to produce estimates figures
-flg_show_estimates <- TRUE
+flg_show_estimates <- FALSE
 
 
 if(flg_show_estimates){
@@ -84,7 +82,7 @@ if(flg_show_estimates){
 
   .topten <- function(df, vect, num.rows){
     df1 <- df[order(df[vect], decreasing=TRUE),]
-    df1 <- .shortnames(df1[1:num.rows, c('country', vect, glue(vect, '_lo'), glue(vect, '_hi'))])
+    df1 <- .shortnames(df1[1:num.rows, c('country', vect, paste0(vect, '_lo'), paste0(vect, '_hi'))])
     df1$var <- vect
     names(df1) <- c("country", 'best', 'lo', 'hi', 'var')
     (df1)
@@ -107,7 +105,7 @@ if(flg_show_estimates){
     tn$country <- factor(tn$country, levels=rev(tn$country))
     tn1 <- ggplot(tn, aes(best/1e6, country, xmin=lo/1e6, xmax=hi/1e6)) + geom_point()  + geom_errorbarh(height=.25) +  theme_glb.rpt() + labs(y="", x='Millions', title=vr) + theme(plot.title = element_text(hjust = 0))
 
-    figsave(tn1, tn, glue('2_3_topten_', pn, '_'), width=5, height=4)
+    figsave(tn1, tn, paste0('2_3_topten_', pn, '_'), width=5, height=4)
   }
 
   for(pn in c(2,5,7)){
@@ -116,7 +114,7 @@ if(flg_show_estimates){
     tn$country <- factor(tn$country, levels=rev(tn$country))
     tn1 <- ggplot(tn, aes(best, country, xmin=lo, xmax=hi)) + geom_point()  + geom_errorbarh(height=.25) +  theme_glb.rpt() + labs(y="", x='Rate per 100 000 population per year', title=vr) + theme(plot.title = element_text(hjust = 0))
 
-    figsave(tn1, tn, glue('2_3_topten_', pn, '_'), width=5, height=4)
+    figsave(tn1, tn, paste0('2_3_topten_', pn, '_'), width=5, height=4)
   }
 
 
@@ -317,14 +315,14 @@ the mortality rate by 2015 compared with 1990. The other dashed lines show proje
 
 # 3_1_agesex_reg -------------------------------------------------------------
 
-fa <- subset(tb, year==thisyear-1, c("country", "g_whoregion", "newrel_m014", "newrel_m1524", "newrel_m2534", "newrel_m3544", "newrel_m4554", "newrel_m5564", "newrel_m65", "newrel_f014", "newrel_f1524", "newrel_f2534", "newrel_f3544", "newrel_f4554", "newrel_f5564", "newrel_f65"))
+fa <- subset(n, year==thisyear-1, c("country", "g_whoregion", "newrel_m014", "newrel_m1524", "newrel_m2534", "newrel_m3544", "newrel_m4554", "newrel_m5564", "newrel_m65", "newrel_f014", "newrel_f1524", "newrel_f2534", "newrel_f3544", "newrel_f4554", "newrel_f5564", "newrel_f65"))
 
 fb <- subset(p, year==thisyear-1, c("country", "e_pop_m014", "e_pop_m1524", "e_pop_m2534", "e_pop_m3544", "e_pop_m4554", "e_pop_m5564", "e_pop_m65", "e_pop_f014", "e_pop_f1524", "e_pop_f2534", "e_pop_f3544", "e_pop_f4554", "e_pop_f5564", "e_pop_f65"))
 
 fc <- merge(fa, fb)
 
 # Drop pop numbers from non reporters
-fc$check <- .rowsums(fc[c("newrel_m1524", "newrel_m2534", "newrel_m3544", "newrel_m4554", "newrel_m5564", "newrel_m65", "newrel_f1524", "newrel_f2534", "newrel_f3544", "newrel_f4554", "newrel_f5564", "newrel_f65")] )
+fc$check <- sum_of_row(fc[c("newrel_m1524", "newrel_m2534", "newrel_m3544", "newrel_m4554", "newrel_m5564", "newrel_m65", "newrel_f1524", "newrel_f2534", "newrel_f3544", "newrel_f4554", "newrel_f5564", "newrel_f65")] )
 
 fc1 <- fc[!is.na(fc$check), -ncol(fc)]
 
@@ -346,8 +344,8 @@ fg$age <- factor(fg$age, levels=c("014", "1524", "2534", "3544", "4554", "5564",
 agesex_reg1 <- ggplot(fg, aes(age, newrel_100k, colour=Region, group=Region)) + geom_line(size=1) + scale_y_continuous(name = "Rate per 100 000 population per year") + scale_x_discrete("", labels=levels(fg$age)) + scale_color_brewer(name="", palette="Dark2") + ggtitle(paste0("Regional TB notification rates by age, ", thisyear-1, "(a)")) + theme_glb.rpt()
 
 # Add footnote
-fgf1 <- rounder(sum(fg$newrel) / sum(tb[tb$year==yr, "c_newinc"], na.rm=TRUE) * 100)
-fgf2 <- tb[tb$year==yr & tb$g_hbc22=="high", "country"]
+fgf1 <- rounder(sum(fg$newrel) / sum(n[n$year==yr, "c_newinc"], na.rm=TRUE) * 100)
+fgf2 <- n[n$year==yr & n$g_hbc22=="high", "country"]
 fgf3 <- fgf2[!fgf2 %in% fc1$country]
 fgf4 <- .shortnames(data.frame(country=fgf3), col="country")
 
@@ -433,7 +431,7 @@ if(flg_show_estimates){
 
 # 3_5_txsucc -------------------------------------------------------------------
 
-ha1 <- subset(tb, year==thisyear-2, select=c('country', 'g_whoregion', 'g_hbc22', "rel_with_new_flg", "newrel_coh", "newrel_succ", "newrel_fail", "newrel_died", "newrel_lost", "c_newrel_neval"))
+ha1 <- subset(o, year==thisyear-2, select=c('country', 'g_whoregion', 'g_hbc22', "rel_with_new_flg", "newrel_coh", "newrel_succ", "newrel_fail", "newrel_died", "newrel_lost", "c_newrel_neval"))
 
 # Aggregate and reassemble
 
@@ -470,10 +468,10 @@ figsave(txsucc, hab, "3_5_txsucc")
 # B3_5_hiv_ts_d ---------------------------------------------------
 
 # Remove non-HIV outcomes reporters (because otherwise we can't minus out the HIV)
-hma2 <- subset(tb, year==thisyear-2 & !is.na(tbhiv_succ) & !is.na(newrel_succ), c(country, year, newrel_coh, newrel_succ, newrel_fail, newrel_died, newrel_lost, c_newrel_neval, ret_nrel_coh, ret_nrel_succ, ret_nrel_fail, ret_nrel_died, ret_nrel_lost, c_ret_nrel_neval, tbhiv_coh, tbhiv_succ, tbhiv_fail, tbhiv_died, tbhiv_lost, c_tbhiv_neval))
+hma2 <- subset(o, year==thisyear-2 & !is.na(tbhiv_succ) & !is.na(newrel_succ), c(country, year, newrel_coh, newrel_succ, newrel_fail, newrel_died, newrel_lost, c_newrel_neval, ret_nrel_coh, ret_nrel_succ, ret_nrel_fail, ret_nrel_died, ret_nrel_lost, c_ret_nrel_neval, tbhiv_coh, tbhiv_succ, tbhiv_fail, tbhiv_died, tbhiv_lost, c_tbhiv_neval))
 
 if(thisyear==2014){
-  hma2 <- subset(hma2, country %nin% c('COD', "MOZ"))
+  hma2 <- subset(hma2, !(country %in% c("COD", "MOZ")))
   warning("DRC and Mozambique numbers removed!!!")
 }
 
@@ -543,7 +541,7 @@ hivtest_graph <- ggplot(subset(gac, year >= gadstart), aes(year, hivtest_pct, co
   scale_y_continuous(name = "Percentage of notified TB patients", limits=c(0,100), expand=c(0,0)) +
   scale_x_continuous("", labels=gadstart:(thisyear-1), breaks=gadstart:(thisyear-1)) +
   scale_color_brewer(name="WHO region", palette="Dark2") + expand_limits(x=c(gadstart, thisyear+0.5)) +
-  ggtitle(glue('Percentage of notified TB patients with known HIV status, ', gadstart, "\u2013", thisyear-1)) + theme_glb.rpt() + theme(legend.position="none")
+  ggtitle(paste0('Percentage of notified TB patients with known HIV status, ', gadstart, "\u2013", thisyear-1)) + theme_glb.rpt() + theme(legend.position="none")
 
 # windows(11, 7); gad; dev.off()
 figsave(hivtest_graph, gac, "6_1_hivtest_graph")

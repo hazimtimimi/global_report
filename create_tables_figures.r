@@ -1,59 +1,121 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Initial set up script for tables and figures
+# Initial set up script for tables and figures (including maps)
+#
+# A few details on my way of working. For the tables, figures, maps repeated from year to year,
+# all the code is here and the data source is nearly 100% from the global database.
+# Some people have to send me excel files which I save in the 'External data' folder. For other one-off
+# tables I just save the final files in my folders and iterate with the creator to get them in a ready format.
+#
 # Tom Hiatt
 # 6 July 2012, revised July 2015
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-# bits to change if another dude is running this.
-whoami <- "Tom"   # I hope you know the answer to this.
-
-if(whoami=="Tom"){
-  Rprofile <- "d:/users/hiattt/Dropbox/Code/R/.Rprofile"
-  basefolder <- "d:/users/hiattt/Google Drive/Work files/Global TB report/Tables and Figures"
-  scriptsfolder <- "D:/Users/hiattt/Dropbox/Code/Surveillance reports"
-}
-
-if(whoami=="Hazim"){
-  Rprofile <- "d:/TMEData/TomsCode/MyEnvironment/.Rprofile" # Note for Hazim (from Tom): I've added a part into my .Rprofile that adds in the HBC groupings and forecast estimates. You may want to similarly include in your .Rprofile
-  basefolder <- "D:/Extracted Data/Extracted Data2015/GTBR15_internal/tables_figures"
-  scriptsfolder <- "D:/R_projects/global_report"
-}
-
-
-# A few details on my way of working. For the tables, figures, maps repeated from year to year, all the code is here and the data source is nearly 100% from the global database. Some people have to send me excel files which I save in the 'External data' folder. For other one-off tables I just save the final files in my folders and iterate with the creator to get them in a ready format.
-
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 start <- Sys.time()
-source(Rprofile)
-runprofile()
-library(plyr) # The next function uses dplyr and plyr must be loaded first.
-getforecastestimates()
 
+# Clear the decks ----
+rm(list=ls())
+
+# Set up the running environment ----
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# This depends on the person, location, machine used etc.and populates the following:
+#
+# scriptsfolder:  Folder containing these scripts
+# outfolder:      Folder containing output subfolders for tables and figures
+#
+# and, from the global TB database,
+#
+# n:     dataframe copy of view_TME_master_notification
+# nk:    dataframe copy of view_TME_master_notification_exceptions
+# tbhiv: dataframe copy of view_TME_master_TBHIV_for_aggregates
+# e:     dataframe copy of view_TME_estimates_epi
+# eraw:  dataframe copy of view_TME_estimates_epi_rawvalues
+# f:     dataframe copy of view_TME_master_finance
+# be:    dataframe copy of view_TME_master_budget_expenditure
+# p:     dataframe copy of view_TME_estimates_population
+# o:     dataframe copy of view_TME_master_outcomes
+# s:     dataframe copy of view_TME_master_strategy
+# i:     dataframe copy of view_TME_master_data_collection
+# a:     dataframe copy of view_TME_aggregated_estimates_epi
+# araw:  dataframe copy of view_TME_aggregated_estimates_epi_rawvalues
+# d:     dataframe copy of view_TME_master_dr_surveillance
+# dsvy:  dataframe copy of view_TME_master_drs
+# dictionary:  dataframe copy of view_TME_data_dictionary
+# datacodes:   dataframe copy of view_TME_data_codes
+# emdr:  dataframe copy of view_TME_estimates_mdr
+# emdrn: dataframe copy of view_TME_estimates_mdr_in_notified
+# emdra: dataframe copy of view_TME_aggregated_estimates_mdr_in_notified
+#
+# data.date: When the source datasets were created
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-# Find the report year
-thisyear <- as.numeric(format(Sys.time(),"%Y")) - ifelse(as.numeric(format(Sys.time(),"%m")) < 6, 1, 0) # This refers to the report year
+scriptsfolder <- getSrcDirectory(function(x) {x})  # See http://stackoverflow.com/a/30306616
 
-# Set-up
+setwd(scriptsfolder)
+source("get_tables_figures_environment.r")  # particular to each person so this file is in the ignore list
 
-libraries(c('reshape', 'ggplot2', 'grid', 'scales', 'xtable', 'stringr', 'timeSeries', 'ggthemes', 'plyr', "gridExtra"))
+# Remove factors from dataframes
 
-# Create a folder structure for saving files if doesn't exist yet
-if(file.path(basefolder, 'FigData') %nin% list.dirs(basefolder, recursive=FALSE)){
-  dir.create(file.path(basefolder, "Review"))
-  dir.create(file.path(basefolder, "FigData"))
-  dir.create(file.path(basefolder, "Figs"))
-  dir.create(file.path(basefolder, "CPFigs"))
-  dir.create(file.path(basefolder, "Slides"))
-  dir.create(file.path(basefolder, "Tables"))
+# turn all factors to character
+.strip.factor <- function(x){
+  for(var in 1:ncol(x)){
+    if(is.factor(x[[var]])){
+      x[[var]] <- as.character(x[[var]])
+    }
+  }
+  return(x)
 }
 
-outfolder <- basefolder
-setwd(basefolder)
+for(obj in c("a", "araw", "d", "dictionary", "dsvy", "e", "emdr", "eraw", "f", "i", "n", "o", "p", "s","tbhiv")){
+  obj2 <- get(obj)
+  obj3 <- .strip.factor(obj2)
+  assign(obj, obj3)
+  #   suppressWarnings(rm(obj2, obj3))
+}
 
-# Graph theme components
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# set e_pop_num to numeric to avoid integer overflow error
+e$e_pop_num <- as.numeric(e$e_pop_num)
+
+
+# Kill any attempt at using factors, unless we explicitly want them!
+options(stringsAsFactors=FALSE)
+
+
+# Tom had this, but where is the code?
+# getforecastestimates()
+
+# Load libraries ----
+library("reshape")
+library("ggplot2")
+library("grid")
+library("scales")
+library("xtable")
+library("stringr")
+library("timeSeries")
+library("ggthemes")
+library("plyr")
+library("gridExtra")
+
+# Create a folder structure for output files ----
+# (only if they don't exist yet)
+dir.create(outfolder, showWarnings = FALSE)
+if(!(file.path(outfolder, "FigData") %in% list.dirs(outfolder, recursive=FALSE))){
+  dir.create(file.path(outfolder, "Review"))
+  dir.create(file.path(outfolder, "FigData"))
+  dir.create(file.path(outfolder, "Figs"))
+  dir.create(file.path(outfolder, "CPFigs"))
+  dir.create(file.path(outfolder, "Slides"))
+  dir.create(file.path(outfolder, "Tables"))
+}
+
+setwd(outfolder)
+
+# Find the report year ----
+thisyear <- as.numeric(format(Sys.time(),"%Y")) - ifelse(as.numeric(format(Sys.time(),"%m")) < 6, 1, 0) # This refers to the report year
+
+
+
+# Graph theme components ----
 theme_glb.rpt <- function(base_size=10, base_family="") {
   colors <- ggthemes_data$few
   gray <- colors$medium['gray']
@@ -86,14 +148,13 @@ theme_glb.rpt <- function(base_size=10, base_family="") {
 #   - All use same color palette [done]
 
 
-# Burden colors
-
+# Burden colors ----
 inc.color <- "green"
 inch.color <- "red"
 prev.color <- "blue"
 mort.color <- "violet"
 
-# Dummy data ---------------------------------------------------
+# Dummy data ----
 # Create dummy data for latest year until data are available
 # new dataframes have names with .t appended ...
 
@@ -125,9 +186,7 @@ while(max(eraw.t$year) < 2015) {
 }
 
 
-# functions
-
-# Report rounding convention
+# Report rounding convention ----
 # - 0 is written as "0"
 # - values under 0.1 are written "<0.1"
 # - from 0.1 to under 10 are written rounding 1 decimal place
@@ -172,7 +231,7 @@ rounder <- function(x, decimals=FALSE) {
   else ifelse(is.na(x), NA, ifelse(x==0, 0, ifelse(x < 1, "< 1", formatC(round(x,0), big.mark=" ", format='d'))))
 }
 
-# Shorten and correct names (and order them properly!)
+# Shorten and correct names (and order them properly!) ----
 .shortnames <- function(d, col='country', ord='somethingelse'){
   d[col] <- as.character(d[[col]])
   d[col] <- ifelse(d[[col]]=='Democratic Republic of the Congo', 'DR Congo',
@@ -189,7 +248,7 @@ rounder <- function(x, decimals=FALSE) {
   return(d)
 }
 
-# Nab Philippe's functions (for aggregating)
+# Philippe's aggregation functions ----
 add.rv <- function (r, r.lo, r.hi, r.sd, weights = 1, method = "beta")
 {
   if (is.null(r) || length(r) == 0)
@@ -260,13 +319,12 @@ divXY <- function(X, Y, varX, varY, covXY=0){
   return(list("E(X/Y)"=eXY, "Var(X/Y)"=varXY))
 }
 
-# For saving figures
-
+# For saving figures ----
 figsave <- function(obj, data, name, width=11, height=7){
   #   save PDF for designer
-  ggsave(glue(outfolder, "/Figs/", name, Sys.Date(), ".pdf"), obj, width=width, height=height)
+  ggsave(paste0(outfolder, "/Figs/", name, Sys.Date(), ".pdf"), obj, width=width, height=height)
   #   save PNG for reviewer
-  ggsave(glue(outfolder, "/Review/", name, ".png"), obj, width=width, height=height)
+  ggsave(paste0(outfolder, "/Review/", name, ".png"), obj, width=width, height=height)
   #   save data for designer
   write.csv(data, file=paste(outfolder, "/FigData/", name, Sys.Date(), ".csv", sep=""), row.names=FALSE, na="")
   #   save data for reviewer
@@ -274,13 +332,12 @@ figsave <- function(obj, data, name, width=11, height=7){
   print(out, file=paste(outfolder, "/Review/", name, ".htm", sep=""), type="html")
 }
 
-# For saving tables
-
+# For saving tables ----
 tablecopy <- function(table){
-  file.copy(glue("Tables/", table, Sys.Date(), ".htm"), glue("Review/", table, ".htm"), overwrite=TRUE)
+  file.copy(paste0("Tables/", table, Sys.Date(), ".htm"), paste0("Review/", table, ".htm"), overwrite=TRUE)
 }
 
-# To make typical report table
+# To make typical report table ----
 glb.rpt.table <- function(df, column.nums, country.col=1, year.col=NA){
 
   if(is.na(year.col)){
@@ -323,7 +380,7 @@ glb.rpt.table <- function(df, column.nums, country.col=1, year.col=NA){
   return(com2)
 }
 
-# For adding an x-axis to orphaned plots -----------------------------
+# For adding an x-axis to orphaned plots ----
 facetAdjust <- function(x, pos = c("up", "down"))
 {
   pos <- match.arg(pos)
@@ -347,6 +404,7 @@ facetAdjust <- function(x, pos = c("up", "down"))
   }
   class(gtable) <- c("facetAdjust", "gtable", "ggplot"); gtable
 }
+
 # The function for printing which differs only by few lines from ggplot2:::print.ggplot:
 print.facetAdjust <- function(x, newpage = is.null(vp), vp = NULL) {
   if(newpage)
@@ -364,7 +422,9 @@ print.facetAdjust <- function(x, newpage = is.null(vp), vp = NULL) {
 }
 
 
+
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# markdown for tables and figures ----
 # Functions to assist with tables and figure in markdown document (poached from here: http://rmflight.github.io/posts/2012/10/papersinRmd.html)
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -379,9 +439,6 @@ incCount <- function(inObj, useName) {
 }
 figCount <- c(`_` = 0)
 tableCount <- c(`_` = 0)
-
-# tableCount <- incCount(tableCount, "t.blogPostDocs")
-# tableCount
 
 pasteLabel <- function(preText, inObj, objName, insLink = TRUE) {
   objNum <- inObj[objName]
@@ -402,10 +459,28 @@ tableCat <- function(inFrame) {
   return(outText)
 }
 
-# Run everything ------------------------------------------------
+
+# Better row sum ----
+sum_of_row <- function(x) {
+  # This function sums rows ignoring NAs unless all are NA
+  # [rowSums() returns 0 instead of NA if all are NA and you use na.rm=TRUE]
+  # use it like this
+  # df$snu <- sum_of_row(df[c('new_sn', 'new_su')])
+  tosum <- as.matrix(x)
+  summed <- rowMeans((tosum), na.rm=TRUE) * rowSums(!is.na((tosum)))
+  return(summed)
+}
+
+
+
+# Run everything -----
 
 source(file.path(scriptsfolder, "Figures.r"))
 source(file.path(scriptsfolder, "Tables.r"))
+
+stop("stopping before mapping stage!")
+
+
 source(file.path(scriptsfolder, "Maps.r"))
 
 cat("\nThat took", signif(Sys.time() - start, 3), units(Sys.time() - start), "to run.\n")
