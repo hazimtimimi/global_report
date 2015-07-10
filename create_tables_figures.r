@@ -54,6 +54,7 @@ starting_time <- Sys.time()
 scriptsfolder <- getSrcDirectory(function(x) {x})  # See http://stackoverflow.com/a/30306616
 
 setwd(scriptsfolder)
+
 source("get_tables_figures_environment.r")  # particular to each person so this file is in the ignore list
 
 # Remove factors from dataframes
@@ -86,7 +87,10 @@ options(stringsAsFactors=FALSE)
 # Tom had this, but where is the code?
 # getforecastestimates()
 
+
 # Load libraries ----
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
 library("reshape")
 library("ggplot2")
 library("grid")
@@ -101,6 +105,8 @@ library("gridExtra")
 
 # Create a folder structure for output files ----
 # (only if they don't exist yet)
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
 dir.create(outfolder, showWarnings = FALSE)
 if(!(file.path(outfolder, "FigData") %in% list.dirs(outfolder, recursive=FALSE))){
   dir.create(file.path(outfolder, "Review"))
@@ -113,12 +119,15 @@ if(!(file.path(outfolder, "FigData") %in% list.dirs(outfolder, recursive=FALSE))
 
 setwd(outfolder)
 
-# Find the report year ----
-thisyear <- as.numeric(format(Sys.time(),"%Y")) - ifelse(as.numeric(format(Sys.time(),"%m")) < 6, 1, 0) # This refers to the report year
+
+# Establish the report year ----
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+thisyear <- as.numeric(format(Sys.time(),"%Y")) - ifelse(as.numeric(format(Sys.time(),"%m")) < 6, 1, 0)
 
 
 
 # Graph theme components ----
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 theme_glb.rpt <- function(base_size=10, base_family="") {
   colors <- ggthemes_data$few
   gray <- colors$medium['gray']
@@ -190,6 +199,9 @@ while(max(eraw.t$year) < 2015) {
 
 
 # Report rounding convention ----
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+
 # - 0 is written as "0"
 # - values under 0.1 are written "<0.1"
 # - from 0.1 to under 10 are written rounding 1 decimal place
@@ -197,61 +209,86 @@ while(max(eraw.t$year) < 2015) {
 # - data that are not reported, but could be are represented as empty cells and should be accompanied by a footnote.
 # - data that cannot be calculated, either because of missing data, data was not requested, or any other reason are represented with an en-dash (ctrl - on your keyboard).
 
-# 0 is 0, under .1 to "<0.1", under 1 to 1 sig fig, otherwise 2 sig fig
+
+# rounding function for absolute numbers
 round.conv <- function(x) {
-  ifelse(x==0, 0, ifelse(x < 0.1, "<0.1", ifelse(signif(x, 2) < 1, formatC(round(x,1), format='f', digits=1),
-                                                 ifelse(signif(x, 2) < 10, sapply(signif(x,2), sprintf, fmt="%#.2g"), signif(x, 2)))))
-}  # Note: The second method for trailing 0s does not work with 9.99
+  ifelse(x==0, 0,
+  ifelse(x < 0.1, "<0.1",
+  ifelse(signif(x, 2) < 1, formatC(round(x,1), format='f', digits=1),
+  ifelse(signif(x, 2) < 10, sapply(signif(x,2), sprintf, fmt="%#.2g"), signif(x, 2)))))
+}
 
 # rounding convention for rates
-# 0 is 0, under .1 to "<0.1", under 1 to 1 sig fig, under 100 to 2 sig figs,
-# otherwise 3 sig figs
 round.conv.rates <- function(x) {
-  ifelse(x==0, 0, ifelse(x < 0.1, "<0.1", ifelse(signif(x, 2) < 10, formatC(round(x,1), format='f', digits=1),
-                                                 # ifelse(signif(x, 2) < 10, formatC(round(x,1), format='f', digits=1),
-                                                 ifelse(signif(x, 3) < 100, signif(x, 2), signif(x, 3)))))
+  ifelse(x==0, 0,
+  ifelse(x < 0.1, "<0.1",
+  ifelse(signif(x, 2) < 10, formatC(round(x,1), format='f', digits=1),
+  ifelse(signif(x, 3) < 100, signif(x, 2), signif(x, 3)))))
 }
 
 # Depends on whether dealing with thousands or rates. In general, 0 is 0, under .1 to "<0.1", then appropriate sig figs.
-# Amended by Hazim 2012-08-31 to fix double-rounding error, plus also
-# changed so that numbers < 1 are only rounded to 1 sig fig
+# Numbers < 1 are only rounded to 1 sig fig
 frmt <- function(x, rates=FALSE, thou=FALSE) {
   ifelse(x==0, "0",
-         ifelse(x < 0.01 & thou==TRUE, "<0.01",
-                ifelse(x < 0.1 & thou==FALSE, "<0.1",
-                       ifelse(signif(x, 2) < 1 & thou==TRUE, formatC(signif(x,2), format='f', digits=2),
-                              ifelse(signif(x, 2) < 1, formatC(signif(x,1), format='f', digits=1),
-                                     ifelse(signif(x, 2) < 10, formatC(signif(x,2), format='f', digits=1),
-                                            ifelse(x > 1 & rates==FALSE, formatC(signif(x, 2), big.mark=" ", format='d'),
-                                                   ifelse(signif(x, 3) < 100, formatC(signif(x, 2), big.mark=" ", format='d'), formatC(signif(x, 3), big.mark=" ", format='d')))))))))
+  ifelse(x < 0.01 & thou==TRUE, "<0.01",
+  ifelse(x < 0.1 & thou==FALSE, "<0.1",
+  ifelse(signif(x, 2) < 1 & thou==TRUE, formatC(signif(x,2), format='f', digits=2),
+  ifelse(signif(x, 2) < 1, formatC(signif(x,1), format='f', digits=1),
+  ifelse(signif(x, 2) < 10, formatC(signif(x,2), format='f', digits=1),
+  ifelse(x > 1 & rates==FALSE, formatC(signif(x, 2), big.mark=" ", format='d'),
+  ifelse(signif(x, 3) < 100, formatC(signif(x, 2), big.mark=" ", format='d'), formatC(signif(x, 3), big.mark=" ", format='d')))))))))
 }
 
 # Simple rounder that just adds in the thousands separator
 rounder <- function(x, decimals=FALSE) {
-  if(decimals==TRUE){
-    ifelse(is.na(x), NA, ifelse(x==0, 0, ifelse(x < 0.01, "<0.01", ifelse(round(x,2) < 0.1, formatC(round(x,2), format='f', digits=2), ifelse(round(x,1) < 10, formatC(round(x,1), format='f', digits=1), formatC(round(x,0), big.mark=" ", format='d') )))))
+
+  if (decimals==TRUE) {
+    ifelse(is.na(x), NA,
+    ifelse(x==0, 0,
+    ifelse(x < 0.01, "<0.01",
+    ifelse(round(x,2) < 0.1, formatC(round(x,2), format='f', digits=2),
+    ifelse(round(x,1) < 10, formatC(round(x,1), format='f', digits=1), formatC(round(x,0), big.mark=" ", format='d') )))))
+
+  } else {
+
+    ifelse(is.na(x), NA,
+    ifelse(x==0, 0,
+    ifelse(x < 1, "< 1", formatC(round(x,0), big.mark=" ", format='d'))))
   }
-  else ifelse(is.na(x), NA, ifelse(x==0, 0, ifelse(x < 1, "< 1", formatC(round(x,0), big.mark=" ", format='d'))))
 }
 
+
+
 # Shorten and correct names (and order them properly!) ----
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
 .shortnames <- function(d, col='country', ord='somethingelse'){
   d[col] <- as.character(d[[col]])
   d[col] <- ifelse(d[[col]]=='Democratic Republic of the Congo', 'DR Congo',
-                   ifelse(d[[col]]=='Democratic People\'s Republic of Korea', 'DPR Korea',
-                   ifelse(d[[col]]=='United Republic of Tanzania', 'UR Tanzania',
-                          ifelse(d[[col]]=='hbc22', 'High-burden countries',
-                                 ifelse(d[[col]]=='global', 'Global',
-                                        ifelse(d[[col]]=='SEA', 'SEAR',
-                                               d[[col]]))))))
-#   if(ord %nin% c('hbc')) warning('Not ordering.')
-  if(ord=='hbc')  d <- d[match(c("Afghanistan", "Bangladesh", "Brazil", "Cambodia", "China", "DR Congo", "Ethiopia", "India", "Indonesia", "Kenya", "Mozambique",  "Myanmar", "Nigeria", "Pakistan", "Philippines", "Russian Federation", "South Africa", "Thailand", "Uganda", "UR Tanzania", "Viet Nam", "Zimbabwe", "High-burden countries", "AFR", "AMR", "EMR", "EUR", "SEAR", "WPR", "Global"), d[[col]]),]
+            ifelse(d[[col]]=='Democratic People\'s Republic of Korea', 'DPR Korea',
+            ifelse(d[[col]]=='United Republic of Tanzania', 'UR Tanzania',
+            ifelse(d[[col]]=='hbc22', 'High-burden countries',
+            ifelse(d[[col]]=='global', 'Global',
+            ifelse(d[[col]]=='SEA', 'SEAR', d[[col]]))))))
 
 
+  if (ord=='hbc') {
+    d <- d[match(c("Afghanistan", "Bangladesh", "Brazil", "Cambodia", "China",
+                   "DR Congo", "Ethiopia", "India", "Indonesia", "Kenya", "Mozambique",
+                   "Myanmar", "Nigeria", "Pakistan", "Philippines", "Russian Federation",
+                   "South Africa", "Thailand", "Uganda", "UR Tanzania", "Viet Nam",
+                   "Zimbabwe",
+                   "High-burden countries",
+                   "AFR", "AMR", "EMR", "EUR", "SEAR", "WPR", "Global"), d[[col]]),]
+  }
   return(d)
 }
 
+
+
 # Philippe's aggregation functions ----
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
 add.rv <- function (r, r.lo, r.hi, r.sd, weights = 1, method = "beta")
 {
   if (is.null(r) || length(r) == 0)
@@ -322,7 +359,10 @@ divXY <- function(X, Y, varX, varY, covXY=0){
   return(list("E(X/Y)"=eXY, "Var(X/Y)"=varXY))
 }
 
+
 # For saving figures ----
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
 figsave <- function(obj, data, name, width=11, height=7){
   #   save PDF for designer
   ggsave(paste0(outfolder, "/Figs/", name, Sys.Date(), ".pdf"), obj, width=width, height=height)
@@ -336,11 +376,15 @@ figsave <- function(obj, data, name, width=11, height=7){
 }
 
 # For saving tables ----
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
 tablecopy <- function(table){
   file.copy(paste0("Tables/", table, Sys.Date(), ".htm"), paste0("Review/", table, ".htm"), overwrite=TRUE)
 }
 
 # To make typical report table ----
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
 glb.rpt.table <- function(df, column.nums, country.col=1, year.col=NA){
 
   if(is.na(year.col)){
@@ -384,6 +428,8 @@ glb.rpt.table <- function(df, column.nums, country.col=1, year.col=NA){
 }
 
 # For adding an x-axis to orphaned plots ----
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
 facetAdjust <- function(x, pos = c("up", "down"))
 {
   pos <- match.arg(pos)
@@ -425,6 +471,19 @@ print.facetAdjust <- function(x, newpage = is.null(vp), vp = NULL) {
 }
 
 
+# Better row sum ----
+# This function sums rows ignoring NAs unless all are NA
+# [rowSums() returns 0 instead of NA if all are NA and you use na.rm=TRUE]
+# use it like this
+# df$snu <- sum_of_row(df[c('new_sn', 'new_su')])
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+sum_of_row <- function(x) {
+  tosum <- as.matrix(x)
+  summed <- rowMeans((tosum), na.rm=TRUE) * rowSums(!is.na((tosum)))
+  return(summed)
+}
+
+
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # markdown for tables and figures ----
@@ -463,16 +522,6 @@ tableCat <- function(inFrame) {
 }
 
 
-# Better row sum ----
-sum_of_row <- function(x) {
-  # This function sums rows ignoring NAs unless all are NA
-  # [rowSums() returns 0 instead of NA if all are NA and you use na.rm=TRUE]
-  # use it like this
-  # df$snu <- sum_of_row(df[c('new_sn', 'new_su')])
-  tosum <- as.matrix(x)
-  summed <- rowMeans((tosum), na.rm=TRUE) * rowSums(!is.na((tosum)))
-  return(summed)
-}
 
 # Run everything -----
 
