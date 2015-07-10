@@ -468,12 +468,18 @@ figsave(txsucc, hab, "3_5_txsucc")
 # B3_5_hiv_ts_d ---------------------------------------------------
 
 # Remove non-HIV outcomes reporters (because otherwise we can't minus out the HIV)
-hma2 <- subset(o, year==thisyear-2 & !is.na(tbhiv_succ) & !is.na(newrel_succ), c(country, year, newrel_coh, newrel_succ, newrel_fail, newrel_died, newrel_lost, c_newrel_neval, ret_nrel_coh, ret_nrel_succ, ret_nrel_fail, ret_nrel_died, ret_nrel_lost, c_ret_nrel_neval, tbhiv_coh, tbhiv_succ, tbhiv_fail, tbhiv_died, tbhiv_lost, c_tbhiv_neval))
-
-if(thisyear==2014){
-  hma2 <- subset(hma2, !(country %in% c("COD", "MOZ")))
-  warning("DRC and Mozambique numbers removed!!!")
-}
+# This should exclude those where ALL tbhiv outcomes have been assigned to 'not evaluated'
+# (therefore make sure if tbhiv_coh > 0 then the not evaluated column is less than the total cohort )
+hma2 <- subset(o, year==thisyear-2 &
+                 !is.na(tbhiv_succ) &
+                 !is.na(newrel_succ) &
+                 ( tbhiv_coh == 0 |
+                   (tbhiv_coh > 0 & c_tbhiv_neval < tbhiv_coh)
+                  ),
+               c(country, year,
+                 newrel_coh, newrel_succ, newrel_fail, newrel_died, newrel_lost, c_newrel_neval,
+                 ret_nrel_coh, ret_nrel_succ, ret_nrel_fail, ret_nrel_died, ret_nrel_lost, c_ret_nrel_neval,
+                 tbhiv_coh, tbhiv_succ, tbhiv_fail, tbhiv_died, tbhiv_lost, c_tbhiv_neval))
 
 hma <- hma2
 
