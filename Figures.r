@@ -691,7 +691,7 @@ hiv_art_etbhiv <- ggplot(gcc, aes(year, value, color=variable)) +
   scale_y_continuous("Number of TB patients (thousands)", limits=c(0,1500)) + theme_glb.rpt() +
   scale_x_continuous(name="") +  scale_colour_manual(name="", values=c(inch.color, "firebrick", "dark blue")) +
   geom_text(data=gcc[gcc$year==thisyear-2, ], aes(label=variable), vjust=3, hjust=1)  +
-  ggtitle(paste("ART enrolment among HIV-positive TB patients compared with the reported number of HIV-positive \nTB patients and the estimated number of HIV-positive people who developed TB, 2004", thisyear-1, sep="\u2013")) + theme(legend.position="none")
+  ggtitle(paste("ART enrolment among HIV-positive TB patients compared with the reported number of HIV-positive \nTB patients and the estimated number of HIV-positive people who developed TB(a), 2004", thisyear-1, sep="\u2013")) + theme(legend.position="none")
 
 # Footnote:
 # Notified HIV-positive TB patients on ART includes new and relapse TB

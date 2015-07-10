@@ -333,10 +333,10 @@ print(tid, type="html",
                       <td>% AGED &#8804; 15 YEARS</td>
                       <td>MALE/FEMALE RATIO</td>
                       </tr>",
-                      "<tr><td colspan='7'>Blank cells indicate data that could not be reported for the age categories shown.<br />
+                      "<tr><td colspan='6'>Blank cells indicate data that could not be reported for the age categories shown.<br />
                       \u2013 indicates values that cannot be calculated.<br />
-                      * New cases only.
-                      <td> </tr>")))
+                      &ast; New cases only.
+                      </td> </tr>")))
 
 tablecopy("3_2_agesex")
 
@@ -480,7 +480,7 @@ print(tcb_coha, type="html",
 
                           \u2013 indicates values that cannot be calculated.<br />
 
-                          * Data for 2013 include relapse cases.???? Check because this is different from GTBR2014!!!</td></tr>", sep=""))))
+                          &ast;  Data for 2013 include relapse cases.???? Check because this is different from GTBR2014!!!</td></tr>", sep=""))))
 
 tablecopy("3_6_tsr")
 
@@ -568,7 +568,7 @@ print(tfe, type="html",
       file=paste0("Tables/5_1_lab_capac", Sys.Date(), ".htm"),
       include.rownames=F, include.colnames=F,
       #sanitize.text.function=identity, #this makes <0.1 disappear in word even if not in a browser.
-      html.table.attributes="border='0' rules='rows' width='1100' cellpadding='5'",
+      html.table.attributes="border='1'  width='1100' cellpadding='5'",
       add.to.row=list(pos=list(0, nrow(tfe)),
         command=c(paste0("<h2 align=\"left\" >Laboratory capacity, ", thisyear-1, "<sup>a</sup></h2>
                         <tr>
@@ -681,7 +681,7 @@ ted$e_inc_tbhiv_num_hi <- frmt(ted$e_inc_tbhiv_num_hi / 1000, thou=TRUE)
 
 
 # Fix and footnote for Russian Federation
-ted[ted$country=='Russian Federation', 'hivtest1000'] <- paste0(ted[ted$country=='Russian Federation', 'hivtest1000'], '(a)')
+ted[ted$country=='Russian Federation', 'hivtest1000'] <- paste0(ted[ted$country=='Russian Federation', 'hivtest1000'], '(c)')
 ted[ted$country=='Russian Federation', c('hivtest_prct', 'hivtest_pos_prct')] <- NA
 warning("Russian Federation modification for the TB/HIV table is still in place. Delete this message when no longer applicable.")
 

@@ -196,7 +196,7 @@ mib$cat <- factor(mib$cat1, levels=c(1, 0, 3), labels=c('Yes', 'No', 'Unknown' )
 
 # map
 bdq_map <- WHOmap.print(mib,
-                        paste("Countries that had used bedaquiline for the treatment of M/XDR−TB as part of expanded access, \ncompassionate use or under normal programmatic conditions by the end of", thisyear-1),
+                        paste("Countries that had used bedaquiline for the treatment of M/XDR-TB as part of expanded access, \ncompassionate use or under normal programmatic conditions by the end of", thisyear-1),
                         '',
                         colors=c('dark orange', 'green', 'blue'),
                         copyright=FALSE,
