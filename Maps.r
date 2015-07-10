@@ -1,15 +1,9 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Maps in the global report
+# Called from create_tables_figures.r which sets up the necessary dependencies
 # Tom Hiatt
 # 6 July 2012, updated July 2015
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-# HT: run the setup manually  ... but then change this with a whoami !!!!!
-# source('d:/users/hiattt/Dropbox/Code/Global TB control Reports/Tables and Figures/2013/Setup.r')
-
-# if map make is still broken, run this.
-# source('c:/delete/Functions.r')
-
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Links ------
@@ -39,6 +33,12 @@
 
 # ******************************************************
 
+# This script does not use Philippe's who mapping package (see https://github.com/glaziou/whomap)
+# instead it uses Tom's original version which allows us to add 'Not applicable' and 'No estimate'
+# options to the legends, etc.
+# Have therefore not switched to the simpler whomap package (yet)
+
+source(file.path(scriptsfolder, "WHO_map_functions.r"))
 
 setwd(outfolder)
 
@@ -173,7 +173,7 @@ figsave(mhc, mhb, "2_16_err_map")
 # 4_10_bdq_map -------------------------------------------------
 # Countries using bedaquiline
 
-mia <- subset(tb, year %in% (thisyear-1):(thisyear-2), select=c('country', 'year', 'iso3', 'mdrxdr_bdq_used'))
+mia <- subset(n, year %in% (thisyear-1):(thisyear-2), select=c('country', 'year', 'iso3', 'mdrxdr_bdq_used'))
 
 # Take last year's answer if unreported
 for(cnty in unique(mia$country)) {

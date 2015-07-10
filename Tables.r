@@ -1,12 +1,9 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Tables in the global report
+# Called from create_tables_figures.r which sets up the necessary dependencies
 # Tom Hiatt
 # 6 July 2012, updated July 2015
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-# HT: run the setup manually... but then change this with a whoami !!!!!
-# source('d:/users/hiattt/Dropbox/Code/Surveillance reports/Setup.r')
-
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Links ------

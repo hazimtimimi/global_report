@@ -1,5 +1,8 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Initial set up script for tables and figures (including maps)
+# Script to produce tables and figures (including maps)
+# for the global TB report.
+#
+# Source this to set up the working environment and to call Figures.r, Tables.r and Maps.r
 #
 # A few details on my way of working. For the tables, figures, maps repeated from year to year,
 # all the code is here and the data source is nearly 100% from the global database.
@@ -10,11 +13,10 @@
 # 6 July 2012, revised July 2015
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-
-start <- Sys.time()
-
 # Clear the decks ----
 rm(list=ls())
+
+starting_time <- Sys.time()
 
 # Set up the running environment ----
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -95,6 +97,7 @@ library("timeSeries")
 library("ggthemes")
 library("plyr")
 library("gridExtra")
+
 
 # Create a folder structure for output files ----
 # (only if they don't exist yet)
@@ -471,16 +474,10 @@ sum_of_row <- function(x) {
   return(summed)
 }
 
-
-
 # Run everything -----
 
 source(file.path(scriptsfolder, "Figures.r"))
 source(file.path(scriptsfolder, "Tables.r"))
-
-stop("stopping before mapping stage!")
-
-
 source(file.path(scriptsfolder, "Maps.r"))
 
-cat("\nThat took", signif(Sys.time() - start, 3), units(Sys.time() - start), "to run.\n")
+cat("\nThat took", signif(Sys.time() - starting_time, 3), units(Sys.time() - starting_time), "to run.\n")
