@@ -36,9 +36,6 @@
 # ******************************************************
 
 
-#flag for whether or not to produce estimates tables
-flg_show_estimates <- FALSE
-
 if(flg_show_estimates){
 
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -205,48 +202,35 @@ if(flg_show_estimates){
 
 
 # 3_1_notif -------------------------------------------------------------------
+notif <- subset(n,
+                year==report_year-1,
+                select=c("country", "year", "g_whoregion", "g_hbc22", "c_notified", "c_newinc", "new_labconf", "new_clindx", "new_ep", "ret_rel_labconf", "ret_rel_clindx", "ret_rel_ep", "ret_nrel"))
 
-tbb <- subset(n, year==report_year-1, select=c('country', 'g_whoregion', 'g_hbc22', 'c_notified', 'c_newinc', "new_labconf", "new_clindx", "new_ep", "ret_rel_labconf", "ret_rel_clindx", "ret_rel_ep", "ret_nrel"))
+# create a combined table with HBCs and aggregates
+notif_table <- hbc_and_aggs_table(df = notif, country.col = 1, year.col = 2, data.cols = 5:ncol(notif) )
 
-tbb <- tbb[order(tbb$country),]
-names(tbb)[names(tbb)=='country'] <- 'area'
+# calculate % of cases that are pulmonary
+notif_table$nrpulm_lab_pct <- (sum_of_row(notif_table[c("new_labconf", "ret_rel_labconf")] ) * 100 /
+                               sum_of_row(notif_table[c("new_labconf", "new_clindx", "ret_rel_labconf", "ret_rel_clindx")]))
 
-# make aggregate rows
-tbbh <- aggregate(tbb[4:ncol(tbb)], by=list(area=tbb$g_hbc22), FUN=sum, na.rm=TRUE)
-tbbh <- tbbh[tbbh$area=='high',]
-tbbh$area <- 'High-burden countries'
-tbbr <- aggregate(tbb[4:ncol(tbb)], by=list(area=tbb$g_whoregion), FUN=sum, na.rm=TRUE)
-tbbg <- tbb; tbbg$area <- 'Global'
-tbbga <- aggregate(tbbg[4:ncol(tbb)], by=list(area=tbbg$area), FUN=sum, na.rm=TRUE)
-
-# combine together
-tbc <- rbind(tbb[tbb$g_hbc22=='high', c(1, 4:ncol(tbb))], tbbh, tbbr, tbbga)
-
-# calculate and format vars
-
-tbc$nrpulm_lab_pct <- sum_of_row(tbc[c("new_labconf", "ret_rel_labconf")] )* 100 / sum_of_row(tbc[c("new_labconf", "new_clindx", "ret_rel_labconf", "ret_rel_clindx")])
-
-for(var in 2:ncol(tbc)){
-tbc[var] <- rounder(tbc[[var]])
+# format data
+for(var in 3:ncol(notif_table)){
+  notif_table[var] <- rounder(notif_table[[var]])
 }
+notif_table$nrpulm_lab_pct <- ifelse(is.na(notif_table$nrpulm_lab_pct), "\u2013", notif_table$nrpulm_lab_pct)
 
-tbc[is.na(tbc$nrpulm_lab_pct), 'nrpulm_lab_pct'] <- "\u2013"
 
-# rename
-tbc <- .shortnames(tbc, col='area', ord = "hbc")
+# Create HTM output
+notif_table_html <- xtable(notif_table[c("area", "c_notified", "c_newinc", "ret_nrel", "new_labconf", "new_clindx", "new_ep", "ret_rel_labconf", "ret_rel_clindx", "ret_rel_ep", "nrpulm_lab_pct")])
 
-# Add to file
-
-tbm <- xtable(tbc[c("area", "c_notified", 'c_newinc', "ret_nrel", "new_labconf", "new_clindx", "new_ep", "ret_rel_labconf", "ret_rel_clindx", "ret_rel_ep", "nrpulm_lab_pct")])
-
-digits(tbm) <- 0
+digits(notif_table_html) <- 0
 
 cat(paste("<h3>Case notifications,", report_year-1, "</h3>"), file=paste0("Tables/3_1_notif", Sys.Date(), ".htm"))
 
-print(tbm, type="html", file=paste0("Tables/3_1_notif", Sys.Date(), ".htm"),
+print(notif_table_html, type="html", file=paste0("Tables/3_1_notif", Sys.Date(), ".htm"),
       include.rownames=F, include.colnames=F,
       html.table.attributes="border='0' rules='rows' width='1100' cellpadding='5'", append=T,
-      add.to.row=list(pos=list(0, nrow(tbm)),
+      add.to.row=list(pos=list(0, nrow(notif_table_html)),
             command=c("<tr>
                           <td colspan='4' style='border-right: solid 2px black;'></td>
                           <th colspan='3' style='border-right: solid 2px black;'>NEW OR PREVIOUS TREATMENT HISTORY UNKNOWN</th>
@@ -273,59 +257,69 @@ print(tbm, type="html", file=paste0("Tables/3_1_notif", Sys.Date(), ".htm"),
 
 tablecopy("3_1_notif")
 
+# and now clear up the mess left behind
+rm(list=c("notif", "notif_table", "notif_table_html"))
+
 
 # 3_2_agesex -------------------------------------------------------------------
 
 # Get country data
-tiasb <- subset(n.t, year == report_year-1, select=c("iso3", "country", "year", "g_whoregion", "g_hbc22", "newrel_m014", "newrel_mu","newrel_f014", "newrel_fu", 'newrel_m15plus', 'newrel_f15plus', 'newrel_sexunk014', 'newrel_sexunk15plus', "newrel_sexunkageunk"))
+agesex <- subset(n,
+                 year == report_year-1,
+                 select=c("country", "year", "g_whoregion", "g_hbc22", "newrel_m014", "newrel_mu","newrel_f014", "newrel_fu", "newrel_m15plus", "newrel_f15plus", "newrel_sexunk014", "newrel_sexunk15plus", "newrel_sexunkageunk"))
 
 
-# combine all vars
-tiasb$all.014 <- sum_of_row(tiasb[c("newrel_m014", "newrel_f014", 'newrel_sexunk014')]) # (unknowns will be removed for this var later, but for now they are needed for age % and aggregates)
+# Calculate totals <15, >= 15, male, female for each line
+# (unknowns will be removed for this var later, but for now they are needed for age % and aggregates)
+agesex$all.014      <- sum_of_row(agesex[c("newrel_m014", "newrel_f014", "newrel_sexunk014")])
+agesex$all.totalage <- sum_of_row(agesex[c("all.014", "newrel_m15plus", "newrel_f15plus", "newrel_sexunk15plus")])
+agesex$all.15plus   <- sum_of_row(agesex[c("newrel_m15plus", "newrel_f15plus", "newrel_sexunk15plus")])
+agesex$ageunk       <- sum_of_row(agesex[c("newrel_mu", "newrel_fu", "newrel_sexunkageunk")])
+agesex$all.male     <- sum_of_row(agesex[c("newrel_m014", "newrel_m15plus", "newrel_mu")])
+agesex$all.female   <- sum_of_row(agesex[c("newrel_f014", "newrel_f15plus", "newrel_fu")])
 
 
-tiasb$all.totalage <- sum_of_row(tiasb[c('all.014', 'newrel_m15plus', 'newrel_f15plus', 'newrel_sexunk15plus')])
+# Create a combined table with HBCs and aggregates
+agesex_table <- hbc_and_aggs_table(df = agesex, country.col = 1, year.col = 2, data.cols = 5:ncol(agesex) )
 
-tiasb$all.15plus <- sum_of_row(tiasb[c('newrel_m15plus', 'newrel_f15plus', 'newrel_sexunk15plus')])
+# Add an asterisk to the name if country did not include relapse cases in the age/sex table,
+# but only if they reported some data!
+asterisks <- .shortnames(subset(n, rel_in_agesex_flg==0 & g_hbc22=="high" & year==report_year-1, country))
+agesex_table$area <- ifelse(agesex_table$area %in% asterisks$country & !is.na(agesex_table$all.014) ,
+                            paste0(agesex_table$area, "*"), agesex_table$area)
 
-tiasb$ageunk <- sum_of_row(tiasb[c("newrel_mu", "newrel_fu", "newrel_sexunkageunk")])
+# Cut number of variables
+agesex_vars <- c("area", "newrel_m014", "newrel_f014", "all.014", "all.15plus", "ageunk", "all.totalage", "all.male", "all.female")
 
-tiasb$all.male <- sum_of_row(tiasb[c("newrel_m014", 'newrel_m15plus', "newrel_mu")])
-tiasb$all.female <- sum_of_row(tiasb[c("newrel_f014", 'newrel_f15plus', "newrel_fu")])
-
-# Assemble aggregates
-tiaa <- glb.rpt.table(df = tiasb, column.nums = 6:ncol(tiasb), country.col = 2)
-
-tiaa1 <- .shortnames(subset(n, rel_in_agesex_flg==0 & g_hbc22=="high" & year==report_year-1, country))
-
-#Add an asterisk to the name if country did not include relapse cases in the age/sex table, but only if they reported some data!
-tiaa$area <- ifelse(tiaa$area %in% tiaa1$country & !is.na(tiaa$all.014) , paste0(tiaa$area, "*"), tiaa$area)
-
-tikeep <- c("area", "newrel_m014", "newrel_f014", "all.014", "all.15plus", "ageunk", "all.totalage", "all.male", "all.female") #"sn.ep.totalage",
-
-tiaa <- tiaa[tikeep]
+agesex_table <- agesex_table[agesex_vars]
 
 # Calculate % child. (Removed for all new where countries didn't report)
-tiaa$all.child.pct <- ifelse(is.na(tiaa$all.totalage) , "\u2013", frmt(tiaa$all.014 / tiaa$all.totalage * 100))
+agesex_table$all.child.pct <- ifelse(is.na(agesex_table$all.totalage) , "\u2013",
+                                     frmt(agesex_table$all.014  * 100 / agesex_table$all.totalage))
 
 # Calculate male female ratio. (Removed for all new where countries didn't report)
-tiaa$all.mf.ratio <- ifelse(is.na(tiaa$all.male) | is.na(tiaa$all.female) | tiaa$all.male==0 | tiaa$all.female==0, "\u2013", frmt(tiaa$all.male / tiaa$all.female))
+agesex_table$all.mf.ratio <- ifelse(is.na(agesex_table$all.male) |
+                                      is.na(agesex_table$all.female) |
+                                      agesex_table$all.male==0 |
+                                      agesex_table$all.female==0, "\u2013",
+                                    frmt(agesex_table$all.male / agesex_table$all.female))
 
-for(var in tikeep[2:7]){
-tiaa[var] <- rounder(tiaa[[var]])
+# format data
+for(var in agesex_vars[2:7]){
+  agesex_table[var] <- rounder(agesex_table[[var]])
 }
 
-# tiaa <- tiaa[order(tiaa$order),]
-tid <- xtable(subset(tiaa, select=c("area", "all.014", "all.15plus", "ageunk", "all.child.pct", "all.mf.ratio")))
+
+agesex_table_html <- xtable(subset(agesex_table, select=c("area", "all.014", "all.15plus", "ageunk", "all.child.pct", "all.mf.ratio")))
 
 # Add to file
 
 cat(paste0("<h2>Notifications of new and relapse TB cases by age and sex, ", report_year-1, '</h2>'), file=paste0("Tables/3_2_agesex", Sys.Date(), ".htm"))
 
-print(tid, type="html",
+print(agesex_table_html, type="html",
       file=paste0("Tables/3_2_agesex", Sys.Date(), ".htm"),
       include.rownames=F, include.colnames=F, append=TRUE,
-      add.to.row=list(pos=list(0,nrow(tid)),
+      add.to.row=list(pos=list(0,nrow(agesex_table_html)),
             command=c("<tr> <td></td>
                       <td>0-14 YEARS</td>
                       <td>&#8805;15 YEARS</td>
@@ -340,6 +334,8 @@ print(tid, type="html",
 
 tablecopy("3_2_agesex")
 
+# and now clear up the mess left behind
+rm(list=c("agesex", "agesex_table", "agesex_table_html", "asterisks"))
 
 # 3_5_cdr -------------------------------------------------------------------
 
@@ -421,57 +417,76 @@ tablecopy('3_5_cdr')
 # 3_6_tsr -------------------------------------------------------------------
 # Treatment success rates for all new cases
 
-tcbb <- subset(o, year>=1995 & year<report_year-1, select=c('country', 'year', 'g_hbc22', 'g_whoregion', 'new_sp_coh', 'new_sp_cur', 'new_sp_cmplt', 'new_snep_coh', 'new_snep_cmplt', "newrel_coh", "newrel_succ"))
+tsr <- subset(o,
+              year>=1995 & year < report_year-1,
+              select=c("country", "year", "g_hbc22", "g_whoregion", "new_sp_coh", "new_sp_cur", "new_sp_cmplt", "new_snep_coh", "new_snep_cmplt", "newrel_coh", "newrel_succ"))
 
-tcbb$new_succ <- sum_of_row(tcbb[c('new_sp_cur', 'new_sp_cmplt', 'new_snep_cmplt')])
-tcbb$new_coh <- sum_of_row(tcbb[c('new_sp_coh', 'new_snep_coh')])
+# Combine old smear pos and smear neg cohorts
+tsr$new_succ <- sum_of_row(tsr[c("new_sp_cur", "new_sp_cmplt", "new_snep_cmplt")])
+tsr$new_coh <- sum_of_row(tsr[c("new_sp_coh", "new_snep_coh")])
 
-# Combine together
-tcba <- glb.rpt.table(tcbb, column.nums = 10:ncol(tcbb), country.col = 1, year.col=2)
 
-# Calculate TSR and coh, after 2011 it includes relapse as well.
-tcba$tsr <- ifelse(tcba$year > 2011, tcba$newrel_succ / tcba$newrel_coh, tcba$new_succ / tcba$new_coh) * 100
+# create a combined table with HBCs and aggregates
+tsr_table <- hbc_and_aggs_table(df = tsr, country.col = 1, year.col = 2, data.cols = 10:ncol(tsr) )
 
-tcba$coh <- ifelse(tcba$year > 2011, tcba$newrel_coh, tcba$new_coh)
+# Calculate cohort size (coh) and treatment success rate (tsr) (note that variables changed after 2011 cohort)
+
+tsr_table$coh <- ifelse(tsr_table$year > 2011, tsr_table$newrel_coh, tsr_table$new_coh)
+
+tsr_table$tsr <- ifelse(tsr_table$year > 2011,
+                        tsr_table$newrel_succ  * 100 / tsr_table$newrel_coh,
+                        tsr_table$new_succ  * 100 / tsr_table$new_coh)
+
 
 # Subset for 5 year intervals
-tcbb <- subset(tcba, year %in% c(seq(1995, report_year-4, 5), (report_year-4):(report_year-2)))
+tsr_table <- subset(tsr_table, year %in% c(seq(1995, report_year-4, 5), (report_year-4):(report_year-2)))
 
-# Pretty the formatting
+# format data
+tsr_table$coh <- rounder(tsr_table$coh / 1000, decimals=TRUE)
+tsr_table$tsr <- ifelse(is.na(tsr_table$tsr), "\u2013", frmt(tsr_table$tsr))
 
-tcbb$coh <- rounder(tcbb$coh / 1000, decimals=TRUE)
+# Pivot round to have years on top
+coh_pivoted <- cast(tsr_table, area~year, value="coh")
+tsr_pivoted <- cast(tsr_table, area~year, value="tsr")
 
-tcbb$tsr <- ifelse(is.na(tcbb$tsr), "\u2013", frmt(tcbb$tsr))
+# Resort into the standard table order
+rownames(coh_pivoted) <- as.character(coh_pivoted$area)
+rownames(tsr_pivoted) <- as.character(tsr_pivoted$area)
 
-# Put years up top
-tcbc1 <- cast(tcbb, area~year, value='tsr')
-tcbd <- cast(tcbb, area~year, value='coh')
+coh_pivoted <- coh_pivoted[standard_table_order, ]
+tsr_pivoted <- tsr_pivoted[standard_table_order, ]
 
-# Short names and ordering and asterisking
-tc2 <- .shortnames(subset(o, rel_with_new_flg==1 & g_hbc22=="high" & year==report_year-2, country))
+# Add an asterisk to the name if country included relapse cases in the outcomes cohort
+asterisks <- .shortnames(subset(o, rel_with_new_flg==1 & g_hbc22=="high" & year==report_year-2, country))
 
-tcbc <- .shortnames(tcbc1, "area", ord="hbc")
-tcbc$area <- ifelse(tcbc$area %in% tc2$country, paste0(tcbc$area, "*"), tcbc$area)
+coh_pivoted$area <- ifelse(coh_pivoted$area %in% asterisks$country,
+                           paste0(coh_pivoted$area, "*"), coh_pivoted$area)
 
-tcb_coh <- .shortnames(tcbd, "area", ord="hbc")
-tcb_coh$area <- ifelse(tcb_coh$area %in% tc2$country, paste0(tcb_coh$area, "*"), tcb_coh$area)
+tsr_pivoted$area <- ifelse(tsr_pivoted$area %in% asterisks$country,
+                            paste0(tsr_pivoted$area, "*"), tsr_pivoted$area)
 
-names(tcbc)[1] <- names(tcb_coh)[1] <- ""
+# remove name from the area variable so that it won't appear in the HTML output
+names(coh_pivoted)[1] <- ""
+names(tsr_pivoted)[1] <- ""
 
-# Add to file
+
+# Create HTM output
+
+coh_table_html <- xtable(coh_pivoted)
+tsr_table_html <- xtable(tsr_pivoted)
+
+digits(coh_table_html) <- 0
+digits(tsr_table_html) <- 0
 
 cat(paste("<h3>Treatment success for all new cases (%) and cohort size (thousands), 1995", "\u2013", report_year-2, "</h3>
           <p>a. Treatment success (%)</p>", sep=""), file=paste0("Tables/3_6_tsr", Sys.Date(), ".htm"))
 
-tcb_tsra <- xtable(tcbc)
-digits(tcb_tsra) <- 0
-print(tcb_tsra, type="html", file=paste0("Tables/3_6_tsr", Sys.Date(), ".htm"),include.rownames=F, include.colnames=T, append=T, html.table.attributes="border=0 rules=rows width=900")
+
+print(tsr_table_html, type="html", file=paste0("Tables/3_6_tsr", Sys.Date(), ".htm"),include.rownames=F, include.colnames=T, append=T, html.table.attributes="border=0 rules=rows width=900")
 
 cat("<p>b. Cohort size (thousands)</p>", file=paste0("Tables/3_6_tsr", Sys.Date(), ".htm"), append=T)
 
-tcb_coha <- xtable(tcb_coh)
-
-print(tcb_coha, type="html",
+print(coh_table_html, type="html",
       file=paste0("Tables/3_6_tsr", Sys.Date(), ".htm"),
       include.rownames=F, include.colnames=T, append=T,
       html.table.attributes="border='0' rules='rows' width='900'",
@@ -483,6 +498,9 @@ print(tcb_coha, type="html",
                           &ast;  Data for 2013 include relapse cases.???? Check because this is different from GTBR2014!!!</td></tr>", sep=""))))
 
 tablecopy("3_6_tsr")
+
+# and now clear up the mess left behind
+rm(list=c("tsr", "tsr_table", "tsr_pivoted", "tsr_table_html", "coh_pivoted", "coh_table_html", "asterisks"))
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Chapter 5 ------

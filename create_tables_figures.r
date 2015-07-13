@@ -23,6 +23,10 @@ starting_time <- Sys.time()
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 report_year <- 2015
 
+# Include estimates tables and figures? ----
+# Decide whether or not to produce the tables and figures relying upon burden estimates
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+flg_show_estimates <- FALSE
 
 
 # Set up the running environment ----
@@ -265,6 +269,15 @@ rounder <- function(x, decimals=FALSE) {
 # Shorten and correct names (and order them properly!) ----
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+standard_table_order <- c("Afghanistan", "Bangladesh", "Brazil", "Cambodia", "China",
+                          "DR Congo", "Ethiopia", "India", "Indonesia", "Kenya", "Mozambique",
+                          "Myanmar", "Nigeria", "Pakistan", "Philippines", "Russian Federation",
+                          "South Africa", "Thailand", "Uganda", "UR Tanzania", "Viet Nam",
+                          "Zimbabwe",
+                          "High-burden countries",
+                          "AFR", "AMR", "EMR", "EUR", "SEAR", "WPR", "Global")
+
+
 .shortnames <- function(d, col='country', ord='somethingelse'){
   d[col] <- as.character(d[[col]])
   d[col] <- ifelse(d[[col]]=='Democratic Republic of the Congo', 'DR Congo',
@@ -276,13 +289,7 @@ rounder <- function(x, decimals=FALSE) {
 
 
   if (ord=='hbc') {
-    d <- d[match(c("Afghanistan", "Bangladesh", "Brazil", "Cambodia", "China",
-                   "DR Congo", "Ethiopia", "India", "Indonesia", "Kenya", "Mozambique",
-                   "Myanmar", "Nigeria", "Pakistan", "Philippines", "Russian Federation",
-                   "South Africa", "Thailand", "Uganda", "UR Tanzania", "Viet Nam",
-                   "Zimbabwe",
-                   "High-burden countries",
-                   "AFR", "AMR", "EMR", "EUR", "SEAR", "WPR", "Global"), d[[col]]),]
+    d <- d[match(standard_table_order, d[[col]]),]
   }
   return(d)
 }
@@ -388,51 +395,43 @@ tablecopy <- function(table){
 # To make typical report table ----
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-glb.rpt.table <- function(df, column.nums, country.col=1, year.col=NA){
+hbc_and_aggs_table <- function(df, country.col=1, year.col=2, data.cols ){
+  # Produce a standard table with the 22 HBC countries followed by regional and global aggregates
+  #
+  # country.col: which column number has country names
+  # year.col:    Which column number has the year
+  # data.cols:   Which column numbers have the data to be included and aggregated
 
-  if(is.na(year.col)){
-    # Assumes input data is for one year only, so no need to aggregate by year
-    hbcs <- df[df$g_hbc22=='high', c(country.col, column.nums)]
-    names(hbcs)[1] <- "area"
+  # Select and order high burden countries
+  hbcs <- df[df$g_hbc22=="high", c(country.col, year.col, data.cols)]
+  hbcs <- hbcs[order(hbcs$country, hbcs$year),]
+  names(hbcs)[1] <- "area"
 
-    # make aggregate rows
-    agg_hbc <- aggregate(df[column.nums], by=list(area=df$g_hbc22), FUN=sum, na.rm=TRUE)
-    agg_hbc <- agg_hbc[agg_hbc$area=='high',]
-    agg_hbc$area <- 'High-burden countries'
+  # Make aggregate rows
+  agg_hbc <- aggregate(df[data.cols], by=list(area=df$g_hbc22, year=df$year), FUN=sum, na.rm=TRUE)
+  agg_hbc <- agg_hbc[agg_hbc$area=="high",]
+  agg_hbc$area <- "High-burden countries"
 
-    agg_region <- aggregate(df[column.nums], by=list(area=df$g_whoregion), FUN=sum, na.rm=TRUE)
+  agg_region <- aggregate(df[data.cols], by=list(area=df$g_whoregion, year=df$year), FUN=sum, na.rm=TRUE)
 
-    agg_global <- df
-    agg_global[country.col] <- 'Global'
-    agg_global <- aggregate(agg_global[column.nums], by=list(area=agg_global[[country.col]]), FUN=sum, na.rm=TRUE)
+  agg_global <- df
+  agg_global[country.col] <- "Global"
+  agg_global <- aggregate(agg_global[data.cols], by=list(area=agg_global[[country.col]], year=df$year), FUN=sum, na.rm=TRUE)
 
-    # combine HBCs and aggregates into one data frame
-    combined_df <- rbind(hbcs, agg_hbc, agg_region, agg_global)
-    combined_df <- .shortnames(combined_df, col = "area", ord = "hbc")
-  }
+  # Combine HBCs and aggregates into one data frame
+  combined_df <- rbind(hbcs, agg_hbc, agg_region, agg_global)
 
-  if(!is.na(year.col)){
-    # Assumes input data is for multiple years, so aggregate by year as well as HBCs, regions, global
-    hbcs <- df[df$g_hbc22=='high', c(country.col, year.col, column.nums)]
-    names(hbcs)[1] <- "area"
+  # Use short country names
+  # (Don't use .shortnames() because lose records if have mutliple years)
+  combined_df$area <- ifelse(combined_df$area=='Democratic Republic of the Congo', 'DR Congo',
+                      ifelse(combined_df$area=='Democratic People\'s Republic of Korea', 'DPR Korea',
+                      ifelse(combined_df$area=='United Republic of Tanzania', 'UR Tanzania',
+                      ifelse(combined_df$area=='SEA', 'SEAR', combined_df$area))))
 
-    # make aggregate rows
-    agg_hbc <- aggregate(df[column.nums], by=list(area=df$g_hbc22, year=df$year), FUN=sum, na.rm=TRUE)
-    agg_hbc <- agg_hbc[agg_hbc$area=='high',]
-    agg_hbc$area <- 'High-burden countries'
-
-    agg_region <- aggregate(df[column.nums], by=list(area=df$g_whoregion, year=df$year), FUN=sum, na.rm=TRUE)
-
-    agg_global <- df
-    agg_global[country.col] <- 'Global'
-    agg_global <- aggregate(agg_global[column.nums], by=list(area=agg_global[[country.col]], year=df$year), FUN=sum, na.rm=TRUE)
-
-    # combine HBCs and aggregates into one data frame
-    combined_df <- rbind(hbcs, agg_hbc, agg_region, agg_global)
-
-  }
   return(combined_df)
 }
+
+
 
 # For adding an x-axis to orphaned plots ----
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -492,7 +491,6 @@ sum_of_row <- function(x) {
 
 
 # Run everything -----
-
 source(file.path(scriptsfolder, "Figures.r"))
 source(file.path(scriptsfolder, "Tables.r"))
 source(file.path(scriptsfolder, "Maps.r"))

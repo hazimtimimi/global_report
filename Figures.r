@@ -59,10 +59,6 @@
 # ******************************************************
 
 
-#flag for whether or not to produce estimates figures
-flg_show_estimates <- FALSE
-
-
 if(flg_show_estimates){
 
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -431,38 +427,43 @@ if(flg_show_estimates){
 
 # 3_5_txsucc -------------------------------------------------------------------
 
-ha1 <- subset(o, year==report_year-2, select=c('country', 'g_whoregion', 'g_hbc22', "rel_with_new_flg", "newrel_coh", "newrel_succ", "newrel_fail", "newrel_died", "newrel_lost", "c_newrel_neval"))
+tsr <- subset(o,
+              year==report_year-2,
+              select=c("country", "year","g_whoregion", "g_hbc22", "newrel_coh", "newrel_succ", "newrel_fail", "newrel_died", "newrel_lost", "c_newrel_neval"))
 
-# Aggregate and reassemble
+# create a combined table with HBCs and aggregates
+tsr_table <- hbc_and_aggs_table(df = tsr, country.col = 1, year.col = 2, data.cols = 5:ncol(tsr) )
 
-haa <- glb.rpt.table(ha1, 5:ncol(ha1))
+# Add an asterisk to the name if country did not include relapse cases in the outcomes cohort
+asterisks <- .shortnames(subset(o, rel_with_new_flg==0 & g_hbc22=="high" & year==report_year-2, country))
 
-ha2 <- .shortnames(subset(ha1, rel_with_new_flg==0 & g_hbc22=="high", country))
-haa$area <- ifelse(haa$area %in% ha2$country, paste0(haa$area, "*"), haa$area)
+tsr_table$area <- ifelse(tsr_table$area %in% asterisks$country, paste0(tsr_table$area, "*"), tsr_table$area)
 
-haa$area <- factor(haa$area, levels=rev(haa$area))
+tsr_table$area <- factor(tsr_table$area, levels=rev(tsr_table$area))
 
-haa$`Treatment success` <- haa$newrel_succ / haa$newrel_coh * 100
-haa$Failure <- haa$newrel_fail / haa$newrel_coh * 100
-haa$Died <- haa$newrel_died / haa$newrel_coh * 100
-haa$`Lost to follow-up` <- haa$newrel_lost / haa$newrel_coh * 100
-haa$`Not evaluated` <- haa$c_newrel_neval / haa$newrel_coh * 100
+tsr_table$`Treatment success` <- tsr_table$newrel_succ     * 100 / tsr_table$newrel_coh
+tsr_table$Failure             <- tsr_table$newrel_fail     * 100 / tsr_table$newrel_coh
+tsr_table$Died                <- tsr_table$newrel_died     * 100 / tsr_table$newrel_coh
+tsr_table$`Lost to follow-up` <- tsr_table$newrel_lost     * 100 / tsr_table$newrel_coh
+tsr_table$`Not evaluated`     <- tsr_table$c_newrel_neval  * 100 / tsr_table$newrel_coh
 
 # Plot
+tsr_table_melted <- melt(tsr_table[c(1, 9:13)], id=1)
 
-hab <- melt(haa[c(1, 8:12)], id=1)
-
-txsucc <- ggplot(hab, aes(area, value, fill=variable)) +
+txsucc <- ggplot(tsr_table_melted, aes(area, value, fill=variable)) +
   geom_bar(stat="identity", position="stack") +
   geom_hline(yintercept=85, color="grey70") +
-  geom_text(data=subset(hab, variable=="Treatment success"), aes(label=round(value,0)), hjust=1.25, vjust=0.3, size=4, color="white") +
+  geom_text(data=subset(tsr_table_melted, variable=="Treatment success"), aes(label=round(value,0)), hjust=1.25, vjust=0.3, size=4, color="white") +
   theme_glb.rpt() + coord_flip() +
   scale_fill_brewer("", type = "qual", palette = 8) +
   labs(x="", y="Percentage of cohort") +
   theme(legend.position="bottom", panel.grid=element_blank()) + expand_limits(c(0,0)) +
   ggtitle(paste0("Treatment outcomes for new and relapse cases, ", report_year-2, ", globally, \nfor the six WHO regions and 22 high-burden countries"))
 
-figsave(txsucc, hab, "3_5_txsucc")
+figsave(txsucc, tsr_table_melted, "3_5_txsucc")
+
+# and now clear up the mess left behind
+rm(list=c("tsr", "tsr_table", "tsr_table_melted", "txsucc"))
 
 
 # B3_5_hiv_ts_d ---------------------------------------------------
