@@ -18,6 +18,13 @@ rm(list=ls())
 
 starting_time <- Sys.time()
 
+
+# Establish the report year ----
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+report_year <- 2015
+
+
+
 # Set up the running environment ----
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # This depends on the person, location, machine used etc.and populates the following:
@@ -120,10 +127,6 @@ if(!(file.path(outfolder, "FigData") %in% list.dirs(outfolder, recursive=FALSE))
 setwd(outfolder)
 
 
-# Establish the report year ----
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-thisyear <- as.numeric(format(Sys.time(),"%Y")) - ifelse(as.numeric(format(Sys.time(),"%m")) < 6, 1, 0)
-
 
 
 # Graph theme components ----
@@ -172,12 +175,12 @@ mort.color <- "violet"
 
 for(df in c('e', 'eraw', 'a', 'araw', 'n', 'd')){
   obj <- get(df)
-  if(max(obj["year"]) < thisyear-1) {
+  if(max(obj["year"]) < report_year-1) {
     warning(paste('Still need to get updated dataset for', df, '!!!'))
-    copy <- obj[obj['year']==thisyear-1-1,]
-    copy$year <- thisyear-1
+    copy <- obj[obj['year']==report_year-1-1,]
+    copy$year <- report_year-1
     comb <- rbind(obj, copy)
-    if(df=="n") comb[comb$iso3=="DZA" & comb$year==thisyear-1, 'tot_newrel'] <- NA
+    if(df=="n") comb[comb$iso3=="DZA" & comb$year==report_year-1, 'tot_newrel'] <- NA
   }
   else(comb <- obj)
   assign(paste(df, "t", sep="."), comb)
@@ -482,45 +485,6 @@ sum_of_row <- function(x) {
   summed <- rowMeans((tosum), na.rm=TRUE) * rowSums(!is.na((tosum)))
   return(summed)
 }
-
-
-
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# markdown for tables and figures ----
-# Functions to assist with tables and figure in markdown document (poached from here: http://rmflight.github.io/posts/2012/10/papersinRmd.html)
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-yr <- as.numeric(format(Sys.time(),"%Y")) - ifelse(as.numeric(format(Sys.time(),"%m")) < 4, 2, 1)
-
-incCount <- function(inObj, useName) {
-  nObj <- length(inObj)
-  useNum <- max(inObj) + 1
-  inObj <- c(inObj, useNum)
-  names(inObj)[nObj + 1] <- useName
-  inObj
-}
-figCount <- c(`_` = 0)
-tableCount <- c(`_` = 0)
-
-pasteLabel <- function(preText, inObj, objName, insLink = TRUE) {
-  objNum <- inObj[objName]
-
-  useText <- paste(preText, objNum, sep = " ")
-  if (insLink) {
-    useText <- paste("[", useText, "](#", objName, ")", sep = "")
-  }
-  useText
-}
-
-tableCat <- function(inFrame) {
-  outText <- paste(names(inFrame), collapse = " | ")
-  outText <- c(outText, paste(rep("---", ncol(inFrame)), collapse = " | "))
-  invisible(apply(inFrame, 1, function(inRow) {
-    outText <<- c(outText, paste(inRow, collapse = " | "))
-  }))
-  return(outText)
-}
-
 
 
 # Run everything -----

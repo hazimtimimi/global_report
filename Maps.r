@@ -51,7 +51,7 @@ setwd(outfolder)
 # 2_4_hivprev_map -------------------------------------------------
 # HIV prevalence in new cases
 
-mga <- subset(e.t, year==thisyear-1, select=c('country', 'iso3', 'e_tbhiv_prct'))
+mga <- subset(e.t, year==report_year-1, select=c('country', 'iso3', 'e_tbhiv_prct'))
 
 mga$cat <- cut(mga$e_tbhiv_prct,
                c(0,5,20,50,Inf),
@@ -59,7 +59,7 @@ mga$cat <- cut(mga$e_tbhiv_prct,
                right=FALSE)
 
 # map
-hivprev_map <- WHOmap.print(mga, paste("Estimated HIV prevalence in new and relapse TB cases,", thisyear-1),
+hivprev_map <- WHOmap.print(mga, paste("Estimated HIV prevalence in new and relapse TB cases,", report_year-1),
                             'HIV prevalence \nin new TB cases, \nall ages (%)',
                             na.label="No estimate",
                             copyright=FALSE,
@@ -72,7 +72,7 @@ figsave(hivprev_map, mga, "2_4_hivprev_map")
 # 2_5_inc_map -------------------------------------------------
 # Incidence rates
 
-mfa <- subset(e.t, year==thisyear-1, select=c('country', 'iso3', 'e_inc_100k'))
+mfa <- subset(e.t, year==report_year-1, select=c('country', 'iso3', 'e_inc_100k'))
 
 mfa$cat <- cut(round(mfa$e_inc_100k),
                c(0,10,20,50,125,300,500,Inf),
@@ -80,7 +80,7 @@ mfa$cat <- cut(round(mfa$e_inc_100k),
                right=FALSE)
 
 # map
-inc_map <- WHOmap.print(mfa, paste("Estimated TB incidence rates,", thisyear-1),
+inc_map <- WHOmap.print(mfa, paste("Estimated TB incidence rates,", report_year-1),
                         "Estimated new TB \ncases (all forms) per \n100 000 population per year",
                         na.label="No estimate",
                         copyright=FALSE,
@@ -93,7 +93,7 @@ figsave(inc_map, mfa, "2_5_inc_map")
 # 2_12_mort_src_map -------------------------------------------------
 # Mortality from vital registration
 
-mea <- subset(e.t, year==thisyear-1, select=c("g_whoregion", 'country', 'iso3', 'source_mort'))
+mea <- subset(e.t, year==report_year-1, select=c("g_whoregion", 'country', 'iso3', 'source_mort'))
 
 # Mortality with VR data
 meb <- subset(mea, source_mort %in% c('VR', 'VR imputed'), select=c("g_whoregion", "country", "iso3", "source_mort"))
@@ -113,7 +113,7 @@ figsave(mort_src_map, meb, "2_12_mort_src_map")
 # 2_13_mort_map -------------------------------------------------
 # Mortality rates
 
-mia <- subset(e.t, year==thisyear-1, select=c('country', 'iso3', 'e_mort_exc_tbhiv_100k'))
+mia <- subset(e.t, year==report_year-1, select=c('country', 'iso3', 'e_mort_exc_tbhiv_100k'))
 
 mia$cat <- cut(mia$e_mort_exc_tbhiv_100k,
                c(0,1,4,10,20,40,Inf),
@@ -122,7 +122,7 @@ mia$cat <- cut(mia$e_mort_exc_tbhiv_100k,
 
 # map
 mort_map <- WHOmap.print(mia,
-                         paste("Estimated TB mortality rates excluding TB deaths among HIV-positive people,", thisyear-1),
+                         paste("Estimated TB mortality rates excluding TB deaths among HIV-positive people,", report_year-1),
                          "Estimated TB \ndeaths per \n100 000 population",
                          na.label="No estimate",
                          copyright=FALSE,
@@ -135,17 +135,17 @@ figsave(mort_map, mia, "2_13_mort_map")
 # 2_16_err_map -------------------------------------------------
 # Electronic recording and reporting
 
-mha <- subset(s, year %in% (thisyear-1):(thisyear-2), select=c('country', 'year', 'iso3', 'caseb_err_nat'))
+mha <- subset(s, year %in% (report_year-1):(report_year-2), select=c('country', 'year', 'iso3', 'caseb_err_nat'))
 
 # Take last year's answer if unreported
 for(cnty in unique(mha$country)) {
-  if(is.na(mha[mha$country==cnty & mha$year==thisyear-1, 'caseb_err_nat'])) mha[mha$country==cnty & mha$year==thisyear-1, 'caseb_err_nat'] <- mha[mha$country==cnty & mha$year==thisyear-2, 'caseb_err_nat']
+  if(is.na(mha[mha$country==cnty & mha$year==report_year-1, 'caseb_err_nat'])) mha[mha$country==cnty & mha$year==report_year-1, 'caseb_err_nat'] <- mha[mha$country==cnty & mha$year==report_year-2, 'caseb_err_nat']
 }
 
-mhb <- subset(mha, year==thisyear-1)
+mhb <- subset(mha, year==report_year-1)
 
 # Western europe fixes
-if(thisyear==2013){
+if(report_year==2013){
   mhb[mhb$iso3 %in% c('AUT', 'CHE', 'CYP', 'DNK', 'GRC', 'GRL', 'ITA', 'LUX', 'UZB', 'KOR'), 'caseb_err_nat'] <- 42
   mhb[mhb$iso3 %in% c('KGZ'), 'caseb_err_nat'] <- 0
   mhb[mhb$iso3 %in% c('NPL'), 'caseb_err_nat'] <- 43
@@ -156,7 +156,7 @@ mhb$cat <- factor(mhb$caseb_err_nat, levels=c(42, 43, 0), labels=c('All TB patie
 
 # map
 mhc <- WHOmap.print(mhb,
-                    paste("Availability of national electronic case-based databases of TB patients,", thisyear-1),
+                    paste("Availability of national electronic case-based databases of TB patients,", report_year-1),
                     '',
                     colors=c('dark green', 'light green', 'white'),
                     copyright=FALSE,
@@ -173,17 +173,17 @@ figsave(mhc, mhb, "2_16_err_map")
 # 4_10_bdq_map -------------------------------------------------
 # Countries using bedaquiline
 
-mia <- subset(n, year %in% (thisyear-1):(thisyear-2), select=c('country', 'year', 'iso3', 'mdrxdr_bdq_used'))
+mia <- subset(n, year %in% (report_year-1):(report_year-2), select=c('country', 'year', 'iso3', 'mdrxdr_bdq_used'))
 
 # Take last year's answer if unreported
 for(cnty in unique(mia$country)) {
-  if(is.na(mia[mia$country==cnty & mia$year==thisyear-1, 'mdrxdr_bdq_used'])) mia[mia$country==cnty & mia$year==thisyear-1, 'mdrxdr_bdq_used'] <- mia[mia$country==cnty & mia$year==thisyear-2, 'mdrxdr_bdq_used']
+  if(is.na(mia[mia$country==cnty & mia$year==report_year-1, 'mdrxdr_bdq_used'])) mia[mia$country==cnty & mia$year==report_year-1, 'mdrxdr_bdq_used'] <- mia[mia$country==cnty & mia$year==report_year-2, 'mdrxdr_bdq_used']
 }
 
-mib <- subset(mia, year==thisyear-1)
+mib <- subset(mia, year==report_year-1)
 
 #  fixes
-if(thisyear==2014){
+if(report_year==2014){
   mib[mib$iso3 %in% c('BEL', "ITA"), 'mdrxdr_bdq_used'] <- 1
   mib[mib$iso3 %in% c('ARG'), 'mdrxdr_bdq_used'] <- 0
   warning("some hard coding going on with the BDQ map.")
@@ -196,7 +196,7 @@ mib$cat <- factor(mib$cat1, levels=c(1, 0, 3), labels=c('Yes', 'No', 'Unknown' )
 
 # map
 bdq_map <- WHOmap.print(mib,
-                        paste("Countries that had used bedaquiline for the treatment of M/XDR-TB as part of expanded access, \ncompassionate use or under normal programmatic conditions by the end of", thisyear-1),
+                        paste("Countries that had used bedaquiline for the treatment of M/XDR-TB as part of expanded access, \ncompassionate use or under normal programmatic conditions by the end of", report_year-1),
                         '',
                         colors=c('dark orange', 'green', 'blue'),
                         copyright=FALSE,
@@ -214,11 +214,11 @@ figsave(bdq_map, mib, "4_10_bdq_map")
 
 # 6_2_hivtest_map -------------------------------------------------
 
-mc <- subset(tbhiv, year==thisyear-1, select=c(country, iso2, iso3, g_whoregion, hivtest_pct_numerator, hivtest_pct_denominator))
+mc <- subset(tbhiv, year==report_year-1, select=c(country, iso2, iso3, g_whoregion, hivtest_pct_numerator, hivtest_pct_denominator))
 mc$hivtest_prct <- round(mc$hivtest_pct_numerator/mc$hivtest_pct_denominator * 100)
 
 # Fix and footnote for Russian Federation
-mc[mc$country=='Russian Federation', 'hivtest_prct'] <- round(subset(n, iso2=='RU' & year==thisyear-1, hivtest_p) / subset(n, iso2=='RU' & year==thisyear-1, c_newunk) * 100)
+mc[mc$country=='Russian Federation', 'hivtest_prct'] <- round(subset(n, iso2=='RU' & year==report_year-1, hivtest_p) / subset(n, iso2=='RU' & year==report_year-1, c_newunk) * 100)
 
 warning("Russian Federation modification for the HIV test map is still in place. Delete this message when no longer applicable.")
 
@@ -235,7 +235,7 @@ mc$cat <- factor(mc$cat, levels = c("0-14", "15-49",  "50-74", ">=75"))
 # HIV testing map (ugly colors are for easier design)
 
 hivtest_map <- WHOmap.print(mc,
-                            paste("Percentage of notified TB patients with known HIV status by country,", thisyear-1, "(a)"),
+                            paste("Percentage of notified TB patients with known HIV status by country,", report_year-1, "(a)"),
                             "Percentage of \nnotified TB patients",
                             copyright=FALSE,
                             colors=c('yellow', 'lightgreen', 'green', 'darkgreen'),
@@ -250,9 +250,9 @@ figsave(hivtest_map, mc, "6_2_hivtest_map")
 
 # Changed denominator in 2014 report from hiv_art_pct_denominator to e_inc_tbhiv_num
 
-mca <- subset(tbhiv, year==thisyear-1, select=c(country, iso2, iso3, g_whoregion, hiv_art_pct_numerator, hiv_art_pct_denominator))
+mca <- subset(tbhiv, year==report_year-1, select=c(country, iso2, iso3, g_whoregion, hiv_art_pct_numerator, hiv_art_pct_denominator))
 
-mca <- merge(mca, subset(e.t, year==thisyear-1, select=c('country', 'year', 'e_inc_tbhiv_num')))
+mca <- merge(mca, subset(e.t, year==report_year-1, select=c('country', 'year', 'e_inc_tbhiv_num')))
 
 mca$hivart_prct <- round(mca$hiv_art_pct_numerator/mca$e_inc_tbhiv_num * 100)
 
@@ -264,7 +264,7 @@ mca$cat <- cut(mca$hivart_prct,
 # map
 
 HIVart_map <- WHOmap.print(mca,
-                           paste("Number of HIV-positive TB patients on ART as a percentage of estimated HIV-positive incident \nTB cases,", thisyear-1, "(a)"),
+                           paste("Number of HIV-positive TB patients on ART as a percentage of estimated HIV-positive incident \nTB cases,", report_year-1, "(a)"),
                            "Percentage",
                            copyright=FALSE,
                            colors=c('yellow', 'lightgreen', 'green', 'darkgreen'),

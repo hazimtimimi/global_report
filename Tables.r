@@ -49,11 +49,11 @@ if(flg_show_estimates){
   # 2_1_burden_num ----------------------------------------------
 
   tagvars <- c("e_pop_num", "e_mort_exc_tbhiv_num", "e_mort_exc_tbhiv_num_lo", "e_mort_exc_tbhiv_num_hi", "e_mort_tbhiv_num", "e_mort_tbhiv_num_lo", "e_mort_tbhiv_num_hi", "e_prev_num", "e_prev_num_lo", "e_prev_num_hi", "e_inc_num", "e_inc_num_lo", "e_inc_num_hi", "e_inc_tbhiv_num", "e_inc_tbhiv_num_lo", "e_inc_tbhiv_num_hi")
-  tag1 <- subset(e.t, g_hbc22=='high' & year==thisyear-1, c('country', tagvars))
+  tag1 <- subset(e.t, g_hbc22=='high' & year==report_year-1, c('country', tagvars))
 
   names(tag1)[1] <- 'group_name'
 
-  tag <- rbind(tag1, subset(araw.t, group_type %in% c('global', 'g_whoregion', "g_hbc22") & year==thisyear-1, c('group_name', tagvars)))
+  tag <- rbind(tag1, subset(araw.t, group_type %in% c('global', 'g_whoregion', "g_hbc22") & year==report_year-1, c('group_name', tagvars)))
 
   names(tag)[1] <- 'rowname'
 
@@ -81,7 +81,7 @@ if(flg_show_estimates){
   tak[tak$rowname=="India", "rowname"] <- "India(d)"
 
 
-  cat(paste("<font size=5><b>Estimated epidemiological burden of TB, ", thisyear-1, ".</b> Best estimates are followed by the lower and upper bounds of the 95% uncertainty interval. Numbers in thousands.<sup>a</sup></font>", sep=""), file=paste0("Tables/2_1_burden_num", Sys.Date(), ".htm"))
+  cat(paste("<font size=5><b>Estimated epidemiological burden of TB, ", report_year-1, ".</b> Best estimates are followed by the lower and upper bounds of the 95% uncertainty interval. Numbers in thousands.<sup>a</sup></font>", sep=""), file=paste0("Tables/2_1_burden_num", Sys.Date(), ".htm"))
 
   tai <- xtable(tak)
   print(tai, type="html", file=paste0("Tables/2_1_burden_num", Sys.Date(), ".htm"), include.rownames=F, include.colnames=F, append=T,
@@ -114,10 +114,10 @@ if(flg_show_estimates){
   # 2_2_burden_rt --------------------------------------------------------
 
   tahvars <- c("e_pop_num", "e_mort_exc_tbhiv_100k", "e_mort_exc_tbhiv_100k_lo", "e_mort_exc_tbhiv_100k_hi", "e_mort_tbhiv_100k", "e_mort_tbhiv_100k_lo", "e_mort_tbhiv_100k_hi", "e_prev_100k", "e_prev_100k_lo", "e_prev_100k_hi", "e_inc_100k", "e_inc_100k_lo", "e_inc_100k_hi", "e_tbhiv_prct", "e_tbhiv_prct_lo", "e_tbhiv_prct_hi")
-  tai <- subset(e, g_hbc22=='high' & year==thisyear-1, c('country', tahvars))
+  tai <- subset(e, g_hbc22=='high' & year==report_year-1, c('country', tahvars))
 
   names(tai)[1] <- 'group_name'
-  tah <- rbind(tai, subset(araw, group_type %in% c('global', 'g_whoregion', "g_hbc22") & year==thisyear-1, c('group_name', tahvars)))
+  tah <- rbind(tai, subset(araw, group_type %in% c('global', 'g_whoregion', "g_hbc22") & year==report_year-1, c('group_name', tahvars)))
 
   names(tah)[1] <- 'rowname'
 
@@ -148,7 +148,7 @@ if(flg_show_estimates){
   tam[tam$rowname=="Bangladesh", "rowname"] <- "Bangladesh(b)"
   tam[tam$rowname=="India", "rowname"] <- "India(c)"
 
-  cat(paste("<font size=5><b>Estimated epidemiological burden of TB, ", thisyear-1, ".</b> Best estimates are followed by the lower and upper bounds of the 95% uncertainty interval. Rates per 100 000 population except where indicated.</font>", sep=""), file=paste0("Tables/2_2_burden_rt", Sys.Date(), ".htm"))
+  cat(paste("<font size=5><b>Estimated epidemiological burden of TB, ", report_year-1, ".</b> Best estimates are followed by the lower and upper bounds of the 95% uncertainty interval. Rates per 100 000 population except where indicated.</font>", sep=""), file=paste0("Tables/2_2_burden_rt", Sys.Date(), ".htm"))
 
   taj <- xtable(tam)
   print(taj, type="html", file=paste0("Tables/2_2_burden_rt", Sys.Date(), ".htm"), include.rownames=F, include.colnames=F, append=T,
@@ -177,7 +177,7 @@ if(flg_show_estimates){
 
   # for country profiles
 
-  taca <- subset(e.t, g_hbc22=='high' & year==thisyear-1, select=c('country', 'year', "e_mort_exc_tbhiv_num", "e_mort_exc_tbhiv_num_lo", "e_mort_exc_tbhiv_num_hi", "e_mort_exc_tbhiv_100k", "e_mort_exc_tbhiv_100k_lo", "e_mort_exc_tbhiv_100k_hi", "e_prev_num", "e_prev_num_lo", "e_prev_num_hi", "e_prev_100k", "e_prev_100k_lo", "e_prev_100k_hi", "e_inc_num", "e_inc_num_lo", "e_inc_num_hi", "e_inc_100k", "e_inc_100k_lo", "e_inc_100k_hi", "e_inc_tbhiv_num", "e_inc_tbhiv_num_lo", "e_inc_tbhiv_num_hi", "e_inc_tbhiv_100k", "e_inc_tbhiv_100k_lo", "e_inc_tbhiv_100k_hi", "c_cdr", "c_cdr_lo", "c_cdr_hi"))
+  taca <- subset(e.t, g_hbc22=='high' & year==report_year-1, select=c('country', 'year', "e_mort_exc_tbhiv_num", "e_mort_exc_tbhiv_num_lo", "e_mort_exc_tbhiv_num_hi", "e_mort_exc_tbhiv_100k", "e_mort_exc_tbhiv_100k_lo", "e_mort_exc_tbhiv_100k_hi", "e_prev_num", "e_prev_num_lo", "e_prev_num_hi", "e_prev_100k", "e_prev_100k_lo", "e_prev_100k_hi", "e_inc_num", "e_inc_num_lo", "e_inc_num_hi", "e_inc_100k", "e_inc_100k_lo", "e_inc_100k_hi", "e_inc_tbhiv_num", "e_inc_tbhiv_num_lo", "e_inc_tbhiv_num_hi", "e_inc_tbhiv_100k", "e_inc_tbhiv_100k_lo", "e_inc_tbhiv_100k_hi", "c_cdr", "c_cdr_lo", "c_cdr_hi"))
 
   nums <- names(taca)[grep("num", names(taca))]
   rates <- names(taca)[grep("100k", names(taca))]
@@ -206,7 +206,7 @@ if(flg_show_estimates){
 
 # 3_1_notif -------------------------------------------------------------------
 
-tbb <- subset(n, year==thisyear-1, select=c('country', 'g_whoregion', 'g_hbc22', 'c_notified', 'c_newinc', "new_labconf", "new_clindx", "new_ep", "ret_rel_labconf", "ret_rel_clindx", "ret_rel_ep", "ret_nrel"))
+tbb <- subset(n, year==report_year-1, select=c('country', 'g_whoregion', 'g_hbc22', 'c_notified', 'c_newinc', "new_labconf", "new_clindx", "new_ep", "ret_rel_labconf", "ret_rel_clindx", "ret_rel_ep", "ret_nrel"))
 
 tbb <- tbb[order(tbb$country),]
 names(tbb)[names(tbb)=='country'] <- 'area'
@@ -241,7 +241,7 @@ tbm <- xtable(tbc[c("area", "c_notified", 'c_newinc', "ret_nrel", "new_labconf",
 
 digits(tbm) <- 0
 
-cat(paste("<h3>Case notifications,", thisyear-1, "</h3>"), file=paste0("Tables/3_1_notif", Sys.Date(), ".htm"))
+cat(paste("<h3>Case notifications,", report_year-1, "</h3>"), file=paste0("Tables/3_1_notif", Sys.Date(), ".htm"))
 
 print(tbm, type="html", file=paste0("Tables/3_1_notif", Sys.Date(), ".htm"),
       include.rownames=F, include.colnames=F,
@@ -277,7 +277,7 @@ tablecopy("3_1_notif")
 # 3_2_agesex -------------------------------------------------------------------
 
 # Get country data
-tiasb <- subset(n.t, year == thisyear-1, select=c("iso3", "country", "year", "g_whoregion", "g_hbc22", "newrel_m014", "newrel_mu","newrel_f014", "newrel_fu", 'newrel_m15plus', 'newrel_f15plus', 'newrel_sexunk014', 'newrel_sexunk15plus', "newrel_sexunkageunk"))
+tiasb <- subset(n.t, year == report_year-1, select=c("iso3", "country", "year", "g_whoregion", "g_hbc22", "newrel_m014", "newrel_mu","newrel_f014", "newrel_fu", 'newrel_m15plus', 'newrel_f15plus', 'newrel_sexunk014', 'newrel_sexunk15plus', "newrel_sexunkageunk"))
 
 
 # combine all vars
@@ -296,7 +296,7 @@ tiasb$all.female <- sum_of_row(tiasb[c("newrel_f014", 'newrel_f15plus', "newrel_
 # Assemble aggregates
 tiaa <- glb.rpt.table(df = tiasb, column.nums = 6:ncol(tiasb), country.col = 2)
 
-tiaa1 <- .shortnames(subset(n, rel_in_agesex_flg==0 & g_hbc22=="high" & year==thisyear-1, country))
+tiaa1 <- .shortnames(subset(n, rel_in_agesex_flg==0 & g_hbc22=="high" & year==report_year-1, country))
 
 #Add an asterisk to the name if country did not include relapse cases in the age/sex table, but only if they reported some data!
 tiaa$area <- ifelse(tiaa$area %in% tiaa1$country & !is.na(tiaa$all.014) , paste0(tiaa$area, "*"), tiaa$area)
@@ -320,7 +320,7 @@ tid <- xtable(subset(tiaa, select=c("area", "all.014", "all.15plus", "ageunk", "
 
 # Add to file
 
-cat(paste0("<h2>Notifications of new and relapse TB cases by age and sex, ", thisyear-1, '</h2>'), file=paste0("Tables/3_2_agesex", Sys.Date(), ".htm"))
+cat(paste0("<h2>Notifications of new and relapse TB cases by age and sex, ", report_year-1, '</h2>'), file=paste0("Tables/3_2_agesex", Sys.Date(), ".htm"))
 
 print(tid, type="html",
       file=paste0("Tables/3_2_agesex", Sys.Date(), ".htm"),
@@ -346,12 +346,12 @@ tablecopy("3_2_agesex")
 if(!identical(e.t, e)) warning('These estimates are currently phony!')
 
 # get country rows
-tda <- subset(e.t, g_hbc22=='high' & year %in% c(1995, 2000, 2005, 2010, thisyear-1), select=c('country', 'year', 'g_hbc22', 'g_whoregion', 'c_cdr_lo', 'c_cdr', 'c_cdr_hi'))
+tda <- subset(e.t, g_hbc22=='high' & year %in% c(1995, 2000, 2005, 2010, report_year-1), select=c('country', 'year', 'g_hbc22', 'g_whoregion', 'c_cdr_lo', 'c_cdr', 'c_cdr_hi'))
 tda$group_name <- tda$country
 
 # get HBC aggregate row (requires PG's add.rv estimates aggregator)
 tda1 <- merge(n.t, e.t)
-tdhb <- subset(tda1, g_hbc22=='high' & year %in% c(1995, 2000, 2005, 2010, thisyear-1), select=c('country', 'year', 'g_hbc22', 'g_whoregion', 'e_inc_100k_lo', 'e_inc_100k', 'e_inc_100k_hi', 'e_pop_num', 'c_newinc'))
+tdhb <- subset(tda1, g_hbc22=='high' & year %in% c(1995, 2000, 2005, 2010, report_year-1), select=c('country', 'year', 'g_hbc22', 'g_whoregion', 'e_inc_100k_lo', 'e_inc_100k', 'e_inc_100k_hi', 'e_pop_num', 'c_newinc'))
 
 tdhb2 <- aggregate(tdhb['c_newinc'], by=list(year=tdhb$year), FUN=sum, na.rm=TRUE)
 tdhb2[c('e_inc_num_lo', 'e_inc_num', 'e_inc_num_hi')] <- NA
@@ -370,7 +370,7 @@ c_cdr_hi <- round(c_newinc / e_inc_num_lo *100)
 })
 
 # get aggregates for Regions and global
-tdr <- subset(a.t, group_type %in% c('g_whoregion', 'global') & year %in% c(1995, 2000, 2005, 2010, thisyear-1), select=c('group_name', 'year', 'c_cdr_lo', 'c_cdr', 'c_cdr_hi'))
+tdr <- subset(a.t, group_type %in% c('g_whoregion', 'global') & year %in% c(1995, 2000, 2005, 2010, report_year-1), select=c('group_name', 'year', 'c_cdr_lo', 'c_cdr', 'c_cdr_hi'))
 
 # Merge and reshape
 tdb <- merge(tda, tdhb2, all=TRUE)
@@ -390,7 +390,7 @@ tdd <- tdd[match(ordrd, tdd$group_name),]
 
 tde <- .shortnames(tdd, col='group_name', ord = "hbc")
 
-cat(paste("<font size=5><b>Estimates of the case detection rate for new and relapse cases (%), 1995\u2013", thisyear-1, ".<sup>a</sup></b>  Best estimates are followed by the lower and upper bounds of the 95% uncertainty interval.</font>", sep=""), file=paste0("Tables/3_5_cdr", Sys.Date(), ".htm"))
+cat(paste("<font size=5><b>Estimates of the case detection rate for new and relapse cases (%), 1995\u2013", report_year-1, ".<sup>a</sup></b>  Best estimates are followed by the lower and upper bounds of the 95% uncertainty interval.</font>", sep=""), file=paste0("Tables/3_5_cdr", Sys.Date(), ".htm"))
 
 tdf <- xtable(tde)
 # digits(tdf) <- 1
@@ -405,7 +405,7 @@ print(tdf, type="html",
                            <th colspan='2'>2000</th>
                            <th colspan='2'>2005</th>
                            <th colspan='2'>2010</th>
-                           <th colspan='2'>", thisyear-1, "</th>
+                           <th colspan='2'>", report_year-1, "</th>
                          </tr>"),
                         "<tr><td colspan='11'>
 
@@ -421,7 +421,7 @@ tablecopy('3_5_cdr')
 # 3_6_tsr -------------------------------------------------------------------
 # Treatment success rates for all new cases
 
-tcbb <- subset(o, year>=1995 & year<thisyear-1, select=c('country', 'year', 'g_hbc22', 'g_whoregion', 'new_sp_coh', 'new_sp_cur', 'new_sp_cmplt', 'new_snep_coh', 'new_snep_cmplt', "newrel_coh", "newrel_succ"))
+tcbb <- subset(o, year>=1995 & year<report_year-1, select=c('country', 'year', 'g_hbc22', 'g_whoregion', 'new_sp_coh', 'new_sp_cur', 'new_sp_cmplt', 'new_snep_coh', 'new_snep_cmplt', "newrel_coh", "newrel_succ"))
 
 tcbb$new_succ <- sum_of_row(tcbb[c('new_sp_cur', 'new_sp_cmplt', 'new_snep_cmplt')])
 tcbb$new_coh <- sum_of_row(tcbb[c('new_sp_coh', 'new_snep_coh')])
@@ -435,7 +435,7 @@ tcba$tsr <- ifelse(tcba$year > 2011, tcba$newrel_succ / tcba$newrel_coh, tcba$ne
 tcba$coh <- ifelse(tcba$year > 2011, tcba$newrel_coh, tcba$new_coh)
 
 # Subset for 5 year intervals
-tcbb <- subset(tcba, year %in% c(seq(1995, thisyear-4, 5), (thisyear-4):(thisyear-2)))
+tcbb <- subset(tcba, year %in% c(seq(1995, report_year-4, 5), (report_year-4):(report_year-2)))
 
 # Pretty the formatting
 
@@ -448,7 +448,7 @@ tcbc1 <- cast(tcbb, area~year, value='tsr')
 tcbd <- cast(tcbb, area~year, value='coh')
 
 # Short names and ordering and asterisking
-tc2 <- .shortnames(subset(o, rel_with_new_flg==1 & g_hbc22=="high" & year==thisyear-2, country))
+tc2 <- .shortnames(subset(o, rel_with_new_flg==1 & g_hbc22=="high" & year==report_year-2, country))
 
 tcbc <- .shortnames(tcbc1, "area", ord="hbc")
 tcbc$area <- ifelse(tcbc$area %in% tc2$country, paste0(tcbc$area, "*"), tcbc$area)
@@ -460,7 +460,7 @@ names(tcbc)[1] <- names(tcb_coh)[1] <- ""
 
 # Add to file
 
-cat(paste("<h3>Treatment success for all new cases (%) and cohort size (thousands), 1995", "\u2013", thisyear-2, "</h3>
+cat(paste("<h3>Treatment success for all new cases (%) and cohort size (thousands), 1995", "\u2013", report_year-2, "</h3>
           <p>a. Treatment success (%)</p>", sep=""), file=paste0("Tables/3_6_tsr", Sys.Date(), ".htm"))
 
 tcb_tsra <- xtable(tcbc)
@@ -476,7 +476,7 @@ print(tcb_coha, type="html",
       include.rownames=F, include.colnames=T, append=T,
       html.table.attributes="border='0' rules='rows' width='900'",
       add.to.row=list(pos=list(30),
-          command=c(paste("<tr><td colspan=", thisyear-1995, ">Blank cells indicate data not reported.<br />
+          command=c(paste("<tr><td colspan=", report_year-1995, ">Blank cells indicate data not reported.<br />
 
                           \u2013 indicates values that cannot be calculated.<br />
 
@@ -493,7 +493,7 @@ tablecopy("3_6_tsr")
 
 # NOTE: Non reporters not included in aggregates
 
-tfa <- subset(s, year==thisyear-1, select=c(country, year, g_whoregion, g_hbc22, g_hbmdr27, c_lab_sm_100k, c_lab_cul_5m, c_lab_dst_5m, lab_sm_f, lab_sm_led, lab_cul_f, lab_dst_f, lab_lpa_f, lab_xpert, dst_in_guide, lc_rst_in_guide, sp_case_dfn_in_guide, lpa_in_guide, dx_alg_tbhiv_in_guide, xpert_in_guide, xpert_in_guide_TBHIV, xpert_in_guide_MDR))
+tfa <- subset(s, year==report_year-1, select=c(country, year, g_whoregion, g_hbc22, g_hbmdr27, c_lab_sm_100k, c_lab_cul_5m, c_lab_dst_5m, lab_sm_f, lab_sm_led, lab_cul_f, lab_dst_f, lab_lpa_f, lab_xpert, dst_in_guide, lc_rst_in_guide, sp_case_dfn_in_guide, lpa_in_guide, dx_alg_tbhiv_in_guide, xpert_in_guide, xpert_in_guide_TBHIV, xpert_in_guide_MDR))
 
 tfb <- merge(tfa, p[c('country', 'year', 'e_pop_num')], all.x=T)
 
@@ -570,7 +570,7 @@ print(tfe, type="html",
       #sanitize.text.function=identity, #this makes <0.1 disappear in word even if not in a browser.
       html.table.attributes="border='1'  width='1100' cellpadding='5'",
       add.to.row=list(pos=list(0, nrow(tfe)),
-        command=c(paste0("<h2 align=\"left\" >Laboratory capacity, ", thisyear-1, "<sup>a</sup></h2>
+        command=c(paste0("<h2 align=\"left\" >Laboratory capacity, ", report_year-1, "<sup>a</sup></h2>
                         <tr>
                           <th colspan='3'></th>
                           <th colspan=3>SMEAR MICROSCOPY</th>
@@ -616,7 +616,7 @@ tea <- merge(n[c('country', 'year', "g_whoregion", 'g_hbhiv41', "hiv_ipt")], tbh
 
 tea <- merge(tea, e.t[c('country', 'year', 'e_inc_tbhiv_num', 'e_inc_tbhiv_num_lo', 'e_inc_tbhiv_num_hi')], all.x=T)
 
-tea <- subset(tea, year==thisyear-1)
+tea <- subset(tea, year==report_year-1)
 
 # Get TB/HIV high burden countries only
 te1 <- tea[tea$g_hbhiv41=='high', c(1, 5:ncol(tea))]
@@ -645,14 +645,14 @@ tedb$type <- 'agg'
 ted <- rbind(teda, tedb)
 
 # replace aggregate estimates with properly aggregated numbers
-ted1 <- e.t[e.t$year==thisyear-1 & !is.na(e.t$e_inc_tbhiv_100k) & e.t$g_hbhiv41=='high' , c('iso3', 'e_inc_tbhiv_100k', 'e_inc_tbhiv_100k_lo', 'e_inc_tbhiv_100k_hi', 'e_pop_num')]
+ted1 <- e.t[e.t$year==report_year-1 & !is.na(e.t$e_inc_tbhiv_100k) & e.t$g_hbhiv41=='high' , c('iso3', 'e_inc_tbhiv_100k', 'e_inc_tbhiv_100k_lo', 'e_inc_tbhiv_100k_hi', 'e_pop_num')]
 ted1[2:4] <- ted1[2:4] / 100000
 ted1$e_pop_num <- as.numeric(ted1$e_pop_num)
 ted2 <- add.rv(ted1$e_inc_tbhiv_100k, ted1$e_inc_tbhiv_100k_lo, ted1$e_inc_tbhiv_100k_hi, weights=ted1$e_pop_num)
 
 ted[ted$country=="High TB/HIV burden countries", c('e_inc_tbhiv_num', 'e_inc_tbhiv_num_lo', 'e_inc_tbhiv_num_hi')] <- signif(ted2[c("r.num", "r.lo.num", "r.hi.num")], 2)
 
-ted3 <- a.t[a.t$year==thisyear-1 & a.t$group_type %in% c('g_whoregion', 'global'), c('group_name', 'group_type', 'e_inc_tbhiv_num', 'e_inc_tbhiv_num_lo', 'e_inc_tbhiv_num_hi')]
+ted3 <- a.t[a.t$year==report_year-1 & a.t$group_type %in% c('g_whoregion', 'global'), c('group_name', 'group_type', 'e_inc_tbhiv_num', 'e_inc_tbhiv_num_lo', 'e_inc_tbhiv_num_hi')]
 ted3 <- ted3[order(ted3$group_type, ted3$group_name),]
 
 ted[43:nrow(ted), c('e_inc_tbhiv_num', 'e_inc_tbhiv_num_lo', 'e_inc_tbhiv_num_hi')] <- ted3[c('e_inc_tbhiv_num', 'e_inc_tbhiv_num_lo', 'e_inc_tbhiv_num_hi')]
@@ -699,7 +699,7 @@ ted3 <- ted2[c("country", 'e_inc_tbhiv_num', 'est_rg', "hivtest1000", "hivtest_p
 
 tee <- xtable(ted3, align=c('l', 'l', 'r', 'l', rep('c',7)))
 
-cat(paste0("<font size='3' align='left'><b>HIV testing for TB patients, treatment for HIV-positive TB patients and prevention of TB among people living with HIV, 41 high TB/HIV burden countries and WHO regions, ", thisyear-1, ".</b> Numbers in thousands except where indicated.</font><br /><br />"), file=paste0("Tables/6_1_tbhiv", Sys.Date(), ".htm"))
+cat(paste0("<font size='3' align='left'><b>HIV testing for TB patients, treatment for HIV-positive TB patients and prevention of TB among people living with HIV, 41 high TB/HIV burden countries and WHO regions, ", report_year-1, ".</b> Numbers in thousands except where indicated.</font><br /><br />"), file=paste0("Tables/6_1_tbhiv", Sys.Date(), ".htm"))
 
 print(tee, type="html",
       file=paste0("Tables/6_1_tbhiv", Sys.Date(), ".htm"),
