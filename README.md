@@ -8,5 +8,5 @@
 2. Then, in R, do:
 
 ```
-source(create_tables_figures.r)
+> source(create_tables_figures.r)
 ```
