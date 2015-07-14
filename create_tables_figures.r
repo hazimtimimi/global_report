@@ -26,7 +26,7 @@ report_year <- 2015
 # Include estimates tables and figures? ----
 # Decide whether or not to produce the tables and figures relying upon burden estimates
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-flg_show_estimates <- FALSE
+flg_show_estimates <- TRUE
 
 
 # Set up the running environment ----
@@ -113,6 +113,7 @@ library("stringr")
 library("timeSeries")
 library("ggthemes")
 library("plyr")
+library("dplyr")
 library("gridExtra")
 
 
