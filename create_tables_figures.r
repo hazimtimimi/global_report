@@ -68,10 +68,9 @@ setwd(scriptsfolder)
 
 source("get_tables_figures_environment.r")  # particular to each person so this file is in the ignore list
 
-# Remove factors from dataframes
-
-# turn all factors to character
-.strip.factor <- function(x){
+# Remove factors from dataframes ----
+strip_factor <- function(x){
+  # turn all factors to characters in a dataframe
   for(var in 1:ncol(x)){
     if(is.factor(x[[var]])){
       x[[var]] <- as.character(x[[var]])
@@ -80,12 +79,15 @@ source("get_tables_figures_environment.r")  # particular to each person so this 
   return(x)
 }
 
-for(obj in c("a", "araw", "d", "dictionary", "dsvy", "e", "emdr", "eraw", "f", "i", "n", "o", "p", "s","tbhiv")){
-  obj2 <- get(obj)
-  obj3 <- .strip.factor(obj2)
-  assign(obj, obj3)
-  #   suppressWarnings(rm(obj2, obj3))
+# get list of all loaded dataframes (see https://stat.ethz.ch/pipermail/r-help/2011-October/291338.html)
+dataframe_names <- names(which(sapply(.GlobalEnv, is.data.frame)))
+
+for(obj in dataframe_names){
+  x <- get(obj)
+  x <- strip_factor(x)
+  assign(obj, x)
 }
+rm(x, dataframe_names)
 
 # set e_pop_num to numeric to avoid integer overflow error
 e$e_pop_num <- as.numeric(e$e_pop_num)
