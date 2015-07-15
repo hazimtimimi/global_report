@@ -131,7 +131,8 @@ while(max(eraw.t$year) < 2015) {
 # - 0 is written as "0"
 # - values under 0.1 are written "<0.1"
 # - from 0.1 to under 10 are written rounding 1 decimal place
-# - 10 and above are written as 3 significant figures for rates and 2 significant figures for absolute numbers.
+# - 10 to under 100 are written rounded to the whole number.
+# - 100 and above are written as 3 significant figures for rates and 2 significant figures for absolute numbers.
 # - data that are not reported, but could be are represented as empty cells and should be accompanied by a footnote.
 # - data that cannot be calculated, either because of missing data, data was not requested, or any other reason are represented with an en-dash (ctrl - on your keyboard).
 
