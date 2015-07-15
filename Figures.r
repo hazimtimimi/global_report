@@ -301,74 +301,81 @@ if(flg_show_estimates){
   # and now clear up the mess left behind
   rm(list=c("mort_hbc_data", "Bangladesh.note", "mort_hbc"))
 
-  # NOTE 14 July: All good up to here .........
-
 
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  # 22 HBCs and regional Profiles --------
+  # Incidence (and notifications), prevalence and mortality graphs
+  # For graphic designer to use in the printed report
+  # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-  # country and reg profiles -------------------------------------------------
-  # Country and regional Profiles - Incidence, prevalence and mortality in 22 HBCs
 
-  cpfd1 <- merge(n, eraw,)
-  rpfd <- aggregate(cpfd1['c_newinc'], by=list(group_name=cpfd1$g_whoregion, year=cpfd1$year), FUN=sum, na.rm=TRUE)
-  rpfd <- merge(rpfd, araw)
-  cpfd1$group_name <- cpfd1$country
-  cpfd <- merge(cpfd1, rpfd, all=T)
+  # Get HBCs case notification and merge with their estimates
+  profile_est <-  filter(n, g_hbc22=="high") %>%
+                  select(iso2, year, c_newinc) %>%
+                  merge(eraw)
 
-  # Incidence
+  profile_est$group_name <- profile_est$country
 
-  hest <- subset(cpfd, g_hbc22=='high' | group_name %in% rpfd$group_name)
-  levels(hest$group_name)[match('Democratic Republic of the Congo', levels(hest$group_name))] <- 'DR Congo'
-  levels(hest$group_name)[match('United Republic of Tanzania', levels(hest$group_name))] <- 'UR Tanzania'
-  hest$c_newinc_100k <- hest$c_newinc / hest$e_pop_num * 1e5
+  # Combine with the regional aggregated estimates
+  profile_est <- merge(profile_est, araw[araw$group_type=="g_whoregion",], all=TRUE)
 
-  pdf(width=14, height=9.5, file='CPFigs/hbc_cp_inc.pdf')
-  # windows(14,9.5) windows(3, 0.87)
-  qplot(year, e_inc_100k, data=hest, geom='line', colour=I(inc.color)) +
-    geom_ribbon(aes(year, ymin=e_inc_100k_lo, ymax=e_inc_100k_hi), fill=I(inc.color), alpha=0.4) +
-    geom_line(aes(year, e_inc_tbhiv_100k), colour=I(inch.color)) +
-    geom_line(aes(year, c_newinc_100k)) +
-    geom_ribbon(aes(year, ymin=e_inc_tbhiv_100k_lo, ymax=e_inc_tbhiv_100k_hi),
-                fill=I(inch.color), alpha=0.4) +
-    facet_wrap(~group_name, scales='free', ncol=4) +
-    scale_y_continuous(name = "") +
-    scale_x_continuous(name="", expand = c(0, 0)) +
-    expand_limits(y=0) +
-    theme_glb.rpt(base_size=6) + theme(legend.position='none', panel.grid.minor = element_blank()) +  ggtitle('Incidence')
+  #Calculate the case notification rate
+  profile_est$c_newinc_100k <- profile_est$c_newinc  * 1e5 / profile_est$e_pop_num
+
+  # Incidence and notifications
+
+  pdf(width=14, height=9.5, file="CPFigs/hbc_cp_inc.pdf")
+  qplot(year, e_inc_100k, data=profile_est, geom="line", colour=I(inc.color)) +
+        geom_ribbon(aes(year,
+                        ymin=e_inc_100k_lo,
+                        ymax=e_inc_100k_hi), fill=I(inc.color), alpha=0.4) +
+        geom_line(aes(year, e_inc_tbhiv_100k), colour=I(inch.color)) +
+        geom_line(aes(year, c_newinc_100k)) +
+        geom_ribbon(aes(year,
+                        ymin=e_inc_tbhiv_100k_lo,
+                        ymax=e_inc_tbhiv_100k_hi), fill=I(inch.color), alpha=0.4) +
+        facet_wrap(~group_name, scales="free", ncol=4) +
+        scale_y_continuous(name = "") +
+        scale_x_continuous(name="", expand = c(0, 0)) +
+        expand_limits(y=0) +
+        theme_glb.rpt(base_size=6) +
+        theme(legend.position="none", panel.grid.minor = element_blank()) +
+        ggtitle("Incidence")
   dev.off()
 
   # Prevalence
 
-  pdf(width=14, height=9.5, file='CPFigs/hbc_cp_prev.pdf')
-  p1 <- qplot(year, e_prev_100k, data=hest, geom='line', colour=I(prev.color)) +
-    geom_ribbon(aes(year, ymin=e_prev_100k_lo, ymax=e_prev_100k_hi), fill=I(prev.color), alpha=0.4) +
-    # geom_hline(aes(yintercept=target.prev), linetype=2) +
-    facet_wrap(~group_name, scales='free', ncol=4) +
-    scale_y_continuous(name = "") +
-    scale_x_continuous(name="", expand = c(0, 0)) +
-    expand_limits(y=0) +
-    theme_glb.rpt(base_size=6) +
-    theme(legend.position='none', panel.grid.minor = element_blank()) + ggtitle('Prevalence')
-  print(p1)
+  pdf(width=14, height=9.5, file="CPFigs/hbc_cp_prev.pdf")
+  qplot(year, e_prev_100k, data=profile_est, geom="line", colour=I(prev.color)) +
+        geom_ribbon(aes(year,
+                        ymin=e_prev_100k_lo,
+                        ymax=e_prev_100k_hi), fill=I(prev.color), alpha=0.4) +
+        facet_wrap(~group_name, scales="free", ncol=4) +
+        scale_y_continuous(name = "") +
+        scale_x_continuous(name="", expand = c(0, 0)) +
+        expand_limits(y=0) +
+        theme_glb.rpt(base_size=6) +
+        theme(legend.position="none", panel.grid.minor = element_blank()) +
+        ggtitle("Prevalence")
   dev.off()
 
   # Mortality
 
-  pdf(width=14, height=9.5, file='CPFigs/hbc_cp_mort.pdf')
-  p2 <- qplot(year, e_mort_exc_tbhiv_100k, data=hest, geom='line', colour=I(mort.color)) +
-    geom_ribbon(aes(year, ymin=e_mort_exc_tbhiv_100k_lo, ymax=e_mort_exc_tbhiv_100k_hi), fill=I(mort.color), alpha=0.4) +
-    # geom_hline(aes(yintercept=target.mort), linetype=2) +
-    facet_wrap(~group_name, scales='free', ncol=4) +
-    scale_y_continuous(name = "") +
-    scale_x_continuous(name="", expand = c(0, 0)) +
-    expand_limits(y=0) +
-    theme_glb.rpt(base_size=6) +
-    theme(legend.position='none', panel.grid.minor = element_blank()) + ggtitle('Mortality')
-  print(p2)
+  pdf(width=14, height=9.5, file="CPFigs/hbc_cp_mort.pdf")
+  qplot(year, e_mort_exc_tbhiv_100k, data=profile_est, geom="line", colour=I(mort.color)) +
+        geom_ribbon(aes(year,
+                        ymin=e_mort_exc_tbhiv_100k_lo,
+                        ymax=e_mort_exc_tbhiv_100k_hi), fill=I(mort.color), alpha=0.4) +
+        facet_wrap(~group_name, scales="free", ncol=4) +
+        scale_y_continuous(name = "") +
+        scale_x_continuous(name="", expand = c(0, 0)) +
+        expand_limits(y=0) +
+        theme_glb.rpt(base_size=6) +
+        theme(legend.position="none", panel.grid.minor = element_blank()) +
+        ggtitle("Mortality")
   dev.off()
 
-
-  # End of estimates figures
+  # End of figures including estimates
 }
 
 
