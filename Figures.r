@@ -576,7 +576,13 @@ hmc1 <- aggregate(hmc[4], by=list(year=hmc$year, type=hmc$type, out=hmc$out), FU
 hmd <- cast(hmc1, year+out~type)
 
 hmd$`HIV-` <- hmd$all - hmd$tbhiv
+<<<<<<< HEAD
 hmd <- hmd %>% rename("HIV+"=tbhiv)
+=======
+# R was getting confused between rename in plyr package and that of the dplyr package, so
+# explicitly using the dplyr function now
+hmd <- dplyr::rename(hmd, `HIV+`=tbhiv)
+>>>>>>> d6bc65c6c77ed152da75bc5c7a1928dd5da0e6dd
 
 hme <- melt(as.data.frame(hmd[-3]), id=1:2, variable_name = "type")
 
