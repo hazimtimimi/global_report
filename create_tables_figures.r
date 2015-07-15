@@ -26,7 +26,7 @@ report_year <- 2015
 # Include estimates tables and figures? ----
 # Decide whether or not to produce the tables and figures relying upon burden estimates
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-flg_show_estimates <- TRUE
+flg_show_estimates <- FALSE
 
 
 # Set up the running environment ----
@@ -127,7 +127,6 @@ if(!(file.path(outfolder, "FigData") %in% list.dirs(outfolder, recursive=FALSE))
   dir.create(file.path(outfolder, "FigData"))
   dir.create(file.path(outfolder, "Figs"))
   dir.create(file.path(outfolder, "CPFigs"))
-  dir.create(file.path(outfolder, "Slides"))
   dir.create(file.path(outfolder, "Tables"))
 }
 

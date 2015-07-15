@@ -10,3 +10,12 @@
 ```
 > source(create_tables_figures.r)
 ```
+
+## Output
+The script will create a series of folders (or add to them if they are already created) with the following uses.
+
+* *CPFigs* These are formatted PDF figures for the country profiles for the graphic designer.
+* *FigData* These are CSV files of the data behind each figure in case specific numbers are needed.
+* *Figs* These are dated PDF files for sending to the graphic designer.
+* *Review* These are the latest tables and figures (along with data) that can be reviewed in one place.
+* *Tables* These are dated HTM files for sending to the graphic designer.

@@ -3,3 +3,5 @@
 .RData
 global_report.Rproj
 get_tables_figures_environment.r
+create_tables_figures.r
+README.html
