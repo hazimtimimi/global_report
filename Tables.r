@@ -51,6 +51,11 @@ if(flg_show_estimates){
   names(tag1)[1] <- 'group_name'
 
   tag <- rbind(tag1, subset(araw.t, group_type %in% c('global', 'g_whoregion', "g_hbc22") & year==report_year-1, c('group_name', tagvars)))
+  
+  # A fudge to make a row for HBC aggregates. I wonder if I can get Hazim to store these in the database...
+  fujj <- data.frame(group_name="High-burden countries")
+  fujj[tagvars] <- NA
+  tag <- rbind(tag, fujj)
 
   names(tag)[1] <- 'rowname'
 
@@ -73,9 +78,8 @@ if(flg_show_estimates){
   # Fix names
   tak <- .shortnames(tah, col = "rowname", ord = "hbc")
 
-  # Add footnotes for some countries (e.g. Bangladesh, India, etc.)
-  tak[tak$rowname=="Bangladesh", "rowname"] <- "Bangladesh(c)"
-  tak[tak$rowname=="India", "rowname"] <- "India(d)"
+  # Add footnotes for some countries 
+  tak[tak$rowname=="India", "rowname"] <- "India(c)"
 
 
   cat(paste("<font size=5><b>Estimated epidemiological burden of TB, ", report_year-1, ".</b> Best estimates are followed by the lower and upper bounds of the 95% uncertainty interval. Numbers in thousands.<sup>a</sup></font>", sep=""), file=paste0("Tables/2_1_burden_num", Sys.Date(), ".htm"))
@@ -99,9 +103,7 @@ if(flg_show_estimates){
 
                         <sup>b</sup> Mortality excludes deaths among HIV-positive TB cases. Deaths among HIV-positive TB cases are classified as HIV deaths according to ICD-10 and are shown separately in this table.<br />
 
-                        <sup>c</sup>Estimates of TB disease burden have not been approved by the national TB programme in Bangladesh and a joint reassessment will be undertaken following completion of the prevalence survey planned for 2015.<br />
-
-                        <sup>d</sup>Estimates for India have not yet been officially approved by the Ministry of Health and Family Welfare, Government of India, and should therefore be considered provisional.
+                        <sup>c</sup>Estimates for India have not yet been officially approved by the Ministry of Health and Family Welfare, Government of India, and should therefore be considered provisional.
 
                         </td>
                       </tr>")))
@@ -111,10 +113,16 @@ if(flg_show_estimates){
   # 2_2_burden_rt --------------------------------------------------------
 
   tahvars <- c("e_pop_num", "e_mort_exc_tbhiv_100k", "e_mort_exc_tbhiv_100k_lo", "e_mort_exc_tbhiv_100k_hi", "e_mort_tbhiv_100k", "e_mort_tbhiv_100k_lo", "e_mort_tbhiv_100k_hi", "e_prev_100k", "e_prev_100k_lo", "e_prev_100k_hi", "e_inc_100k", "e_inc_100k_lo", "e_inc_100k_hi", "e_tbhiv_prct", "e_tbhiv_prct_lo", "e_tbhiv_prct_hi")
-  tai <- subset(e, g_hbc22=='high' & year==report_year-1, c('country', tahvars))
+  tai <- subset(e.t, g_hbc22=='high' & year==report_year-1, c('country', tahvars))
 
   names(tai)[1] <- 'group_name'
-  tah <- rbind(tai, subset(araw, group_type %in% c('global', 'g_whoregion', "g_hbc22") & year==report_year-1, c('group_name', tahvars)))
+  tah <- rbind(tai, subset(araw.t, group_type %in% c('global', 'g_whoregion', "g_hbc22") & year==report_year-1, c('group_name', tahvars)))
+  
+  # A fudge to make a row for HBC aggregates. I wonder if I can get Hazim to store these in the database...
+  fuj <- data.frame(group_name="High-burden countries")
+  fuj[tahvars] <- NA
+  tah <- rbind(tah, fuj)
+  
 
   names(tah)[1] <- 'rowname'
 
@@ -142,8 +150,7 @@ if(flg_show_estimates){
 
 
   # Add footnotes for some countries (e.g. Bangladesh, India, etc.)
-  tam[tam$rowname=="Bangladesh", "rowname"] <- "Bangladesh(b)"
-  tam[tam$rowname=="India", "rowname"] <- "India(c)"
+  tam[tam$rowname=="India", "rowname"] <- "India(b)"
 
   cat(paste("<font size=5><b>Estimated epidemiological burden of TB, ", report_year-1, ".</b> Best estimates are followed by the lower and upper bounds of the 95% uncertainty interval. Rates per 100 000 population except where indicated.</font>", sep=""), file=paste0("Tables/2_2_burden_rt", Sys.Date(), ".htm"))
 
@@ -164,9 +171,7 @@ if(flg_show_estimates){
                             <td colspan=12>
                             <sup>a</sup> Mortality excludes deaths among HIV-positive TB cases. Deaths among HIV-positive TB cases are classified as HIV deaths according to ICD-10 and are shown separately in this table.<br />
 
-                            <sup>b</sup> Estimates of TB disease burden have not been approved by the national TB programme in Bangladesh and a joint reassessment will be undertaken following completion of the prevalence survey planned for 2015.<br />
-
-                            <sup>c</sup> Estimates for India have not yet been officially approved by the Ministry of Health & Family Welfare, Government of India, and should therefore be considered provisional.
+                            <sup>b</sup> Estimates for India have not yet been officially approved by the Ministry of Health & Family Welfare, Government of India, and should therefore be considered provisional.
 
                             </td></tr>")))
 
