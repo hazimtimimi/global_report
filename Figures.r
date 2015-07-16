@@ -769,7 +769,13 @@ figsave(hiv_art_etbhiv, gcc, "6_4_hiv_art_etbhiv")
 
 # 6_6_hiv_ipt -----------------------------------------------------
 
-gfa <- subset(n, year>=2005, select=c('iso3', "g_whoregion", 'year', 'hiv_ipt'))
+gfa <- subset(n.t, year>=2005, select=c('iso3', "g_whoregion", 'year', 'hiv_ipt'))
+
+# 2015 fix for Ethiopia
+if(gfa[gfa$iso3=="ETH" & gfa$year==2014,"hiv_ipt"]==738) {
+  gfa[gfa$iso3=="ETH" & gfa$year==2014,"hiv_ipt"] <- 10385 
+  warning("Ethiopia IPT for 2014 has been modified.")
+}
 
 gfa$area <- ifelse(gfa$iso3 %in% c("ZAF"), "South Africa", ifelse(gfa$g_whoregion=="AFR", "Rest of AFR", "Rest of world"))
 
