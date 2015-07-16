@@ -28,7 +28,6 @@ WHOmap.slide <- function(data, map.title="", legend.title="", low.color='#BDD7E7
   require(ggplot2)
   require(maptools)
   require(gpclib)
-  require(plyr)
   require(grid)
   require(scales)
 
@@ -113,7 +112,6 @@ WHOmap.print <- function(data, map.title="", legend.title="", colors=NULL, low.c
 
   require(ggplot2)
   require(maptools)
-  require(plyr)
   require(grid)
   require(scales)
 

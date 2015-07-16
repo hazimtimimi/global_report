@@ -101,7 +101,7 @@ options(stringsAsFactors=FALSE)
 # getforecastestimates()
 
 
-# Load libraries ----
+# Load packages ----
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 library("reshape")
@@ -112,7 +112,6 @@ library("xtable")
 library("stringr")
 library("timeSeries")
 library("ggthemes")
-library("plyr")
 library("dplyr")
 library("gridExtra")
 
