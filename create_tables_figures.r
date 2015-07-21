@@ -35,6 +35,10 @@ flg_show_estimates <- TRUE
 #
 # scriptsfolder:  Folder containing these scripts
 # outfolder:      Folder containing output subfolders for tables and figures
+# datafolder:     Folder in which to find a .RData file (if available)
+# rdata_name:     Name of a .RData file containing copy of database views
+# use_live_db:    Flag -- if TRUE then data loaded durectly from the global TB database
+#                 if FALSE then data loaded from the .RData file
 #
 # and, from the global TB database,
 #
@@ -67,6 +71,19 @@ scriptsfolder <- getSrcDirectory(function(x) {x})  # See http://stackoverflow.co
 setwd(scriptsfolder)
 
 source("get_tables_figures_environment.r")  # particular to each person so this file is in the ignore list
+
+if (use_live_db==TRUE){
+
+  # load the data directly from the global TB database
+  source("load_data_from_database.r")
+
+} else {
+
+  # load up an .RData file containing a copy of the database views
+  load(paste(datafolder, rdata_name, sep="/"))
+}
+
+
 
 # Remove factors from dataframes ----
 strip_factor <- function(x){
