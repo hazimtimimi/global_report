@@ -5,3 +5,4 @@ global_report.Rproj
 get_tables_figures_environment.r
 connection_string.r
 README.html
+get_tables_annex_for_web_environment.r

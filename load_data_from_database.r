@@ -29,9 +29,12 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
+# Kill any attempt at using factors, unless we explicitly want them!
+options(stringsAsFactors=FALSE)
+
 .fixnamibia <- function(df){
   # make sure Namibia's iso2 code is not interpreted as R's NA (null)
-  df$iso2 <- as.factor(ifelse(df$country=="Namibia", "NA", as.character(df$iso2)))
+  df$iso2 <- ifelse(df$country=="Namibia", "NA", as.character(df$iso2))
   return(df)
 }
 
@@ -73,12 +76,17 @@ emdrn <- .fixnamibia(sqlFetch(ch, "view_TME_estimates_mdr_in_notified"))
 emdra <- sqlFetch(ch, "view_TME_aggregated_estimates_mdr_in_notified")
 close(ch)
 
+
 # Not sure what this next bit is about -- investigate and clear up!
 d <- merge(n[n$year>=min(d$year), 1:19], d[d$all_areas_covered==1 |
   is.na(d$all_areas_covered),], all.x=T)
 
 # Add an internal date'n'time stamp
 data.date <- Sys.time()
+
+
+# set e_pop_num to numeric to avoid integer overflow error
+e$e_pop_num <- as.numeric(e$e_pop_num)
 
 
 # That's it folks ----
