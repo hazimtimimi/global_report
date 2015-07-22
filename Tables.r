@@ -461,14 +461,15 @@ rownames(tsr_pivoted) <- as.character(tsr_pivoted$area)
 coh_pivoted <- coh_pivoted[standard_table_order, ]
 tsr_pivoted <- tsr_pivoted[standard_table_order, ]
 
-# Add an asterisk to the name if country included relapse cases in the outcomes cohort
-asterisks <- .shortnames(subset(o, rel_with_new_flg==1 & g_hbc22=="high" & year==report_year-2, country))
+# Add an asterisk to the name if country included relapse cases in the outcomes cohort DELETE THIS COMEMENT
+# Count the number of countries without relapse included for the footnote.
+include.relapse <- o %>% filter(year >= 2012, g_hbc22=="high", rel_with_new_flg==1) %>% group_by(year) %>% summarize(total=n()) 
 
-coh_pivoted$area <- ifelse(coh_pivoted$area %in% asterisks$country,
-                           paste0(coh_pivoted$area, "*"), coh_pivoted$area)
-
-tsr_pivoted$area <- ifelse(tsr_pivoted$area %in% asterisks$country,
-                            paste0(tsr_pivoted$area, "*"), tsr_pivoted$area)
+# # coh_pivoted$area <- ifelse(coh_pivoted$area %in% asterisks$country,
+#                            paste0(coh_pivoted$area, "*"), coh_pivoted$area)
+# 
+# tsr_pivoted$area <- ifelse(tsr_pivoted$area %in% asterisks$country,
+#                             paste0(tsr_pivoted$area, "*"), tsr_pivoted$area)
 
 # remove name from the area variable so that it won't appear in the HTML output
 names(coh_pivoted)[1] <- ""
@@ -483,7 +484,7 @@ tsr_table_html <- xtable(tsr_pivoted)
 digits(coh_table_html) <- 0
 digits(tsr_table_html) <- 0
 
-cat(paste("<h3>Treatment success for all new cases (%) and cohort size (thousands), 1995", "\u2013", report_year-2, "</h3>
+cat(paste("<h3>Treatment success for all new and relapse<sup>a</sup> cases (%) and cohort size (thousands), 1995", "\u2013", report_year-2, "</h3>
           <p>a. Treatment success (%)</p>", sep=""), file=paste0("Tables/3_6_tsr", Sys.Date(), ".htm"))
 
 
@@ -496,11 +497,9 @@ print(coh_table_html, type="html",
       include.rownames=F, include.colnames=T, append=T,
       html.table.attributes="border='0' rules='rows' width='900'",
       add.to.row=list(pos=list(30),
-          command=c(paste("<tr><td colspan=", report_year-1995, ">Blank cells indicate data not reported.<br />
-
+          command=c(paste0("<tr><td colspan=", ncol(coh_table_html), ">Blank cells indicate data not reported.<br />
                           \u2013 indicates values that cannot be calculated.<br />
-
-                          &ast;  Data for 2013 include relapse cases.???? Check because this is different from GTBR2014!!!</td></tr>", sep=""))))
+                          <sup>a</sup> Cohorts previous to 2012 include new cases only. For ", lister.text(include.relapse$year), " cohorts, ", lister.text(include.relapse$total), " high-burden countries respectively have included relapse cases according to the revised recording and reporting framework.</td></tr>", sep=""))))
 
 tablecopy("3_6_tsr")
 

@@ -68,6 +68,7 @@ flg_show_estimates <- TRUE
 
 scriptsfolder <- getSrcDirectory(function(x) {x})  # See http://stackoverflow.com/a/30306616
 
+
 setwd(scriptsfolder)
 
 source("get_tables_figures_environment.r")  # particular to each person so this file is in the ignore list
@@ -507,6 +508,14 @@ sum_of_row <- function(x) {
   tosum <- as.matrix(x)
   summed <- rowMeans((tosum), na.rm=TRUE) * rowSums(!is.na((tosum)))
   return(summed)
+}
+
+# Text helps --------
+
+# This function takes a vector and makes it into a comma separated list for text.
+lister.text <- function(x){
+  if(length(x)==1) return(x)
+  if(length(x)>1) paste(paste(x[1:(length(x)-1)], collapse=", "), x[length(x)], sep=" and ")
 }
 
 
