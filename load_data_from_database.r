@@ -64,7 +64,10 @@ emdrn <- .fixnamibia(sqlFetch(ch, "view_TME_estimates_mdr_in_notified"))
 emdra <- sqlFetch(ch, "view_TME_aggregated_estimates_mdr_in_notified")
 close(ch)
 
-# Not sure what this next bit is about -- investigate and clear up!
+# format d to play nicer with the other data.frames
+# - Removing records that aren't explicitly covering a whole country
+# - Adding in past years so the number of records is identical with view_TME_master_notification (with NAs filled in for missing data.)
+# - Adding in grouping variables and other meta (1:19 in n)
 d <- merge(n[n$year>=min(d$year), 1:19], d[d$all_areas_covered==1 |
   is.na(d$all_areas_covered),], all.x=T)
 
