@@ -44,7 +44,16 @@ ch <- odbcDriverConnect(connection_string)
 # load views into dataframes
 n <- .fixnamibia(sqlFetch(ch, "view_TME_master_notification"))
 nk <- sqlFetch(ch, "view_TME_master_notification_exceptions")
-tbhiv <- .fixnamibia(sqlFetch(ch, "view_TME_master_TBHIV_for_aggregates"))
+
+if (exists("notification_maxyear")) {
+  # get the TB/HIV figures appropriate for the data collection year
+  # (This is used by create_tables_annex_for_web because the tables could be updated at the same time as the following
+  # year's report is being compiled so it is important to keep unpublished 'final' TB/HIV data out)
+  tbhiv	<- .fixnamibia(sqlQuery(ch, paste0("SELECT * FROM TBHIV_for_aggregates_for_dcyear(", notification_maxyear + 1 , ")")))
+} else {
+  tbhiv <- .fixnamibia(sqlFetch(ch, "view_TME_master_TBHIV_for_aggregates"))
+}
+
 e <- .fixnamibia(sqlFetch(ch, "view_TME_estimates_epi"))
 eraw <- .fixnamibia(sqlFetch(ch, "view_TME_estimates_epi_rawvalues"))
 f <- .fixnamibia(sqlFetch(ch, "view_TME_master_finance"))
