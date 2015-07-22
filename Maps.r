@@ -42,6 +42,9 @@ source(file.path(scriptsfolder, "WHO_map_functions.r"))
 
 setwd(outfolder)
 
+# Contrasting colors for easier re-layout
+con.col <- c('red', 'blue', 'orange', 'green', 'purple', 'violet', 'sienna', 'dark orange')
+
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Chapter 2 ------
 # The burden of disease caused by TB
@@ -204,6 +207,38 @@ bdq_map <- WHOmap.print(mib,
 
 figsave(bdq_map, mib, "4_10_bdq_map")
 
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Chapter 5 ------
+# Diagnostics and laboratory strengthening
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+
+# 5_2_xpertcart_map -------------------------------------------------
+# numbers of xpert cartridges procured
+
+xpert_cart <- readWorksheetFromFile(file.path(datafolder, "Extra data", "WvG", "Figure 5.2 accompanying data.xlsx"), sheet=1) %>%  
+  mutate(cart2=as.numeric(cartridges)/1000, 
+         cart3=cut(cart2, 
+                   c(0, 10, 50, 100, 300, Inf), 
+                   c("0-9", "10-49", "50-99", "100-299", ">=300"), 
+                   right=FALSE), 
+         cat=factor(ifelse(is.na(cart3), 
+                           cartridges, 
+                           as.character(cart3)), 
+                    levels=c(levels(cart3), 
+                             "Not eligible for preferential pricing")
+                    )
+         )
+
+
+xpert_cart_map <- WHOmap.print(xpert_cart,
+                        paste("Xpert MTB/RIF cartridge procurements in", report_year-1), 
+                        "Xpert MTB/RIF cartridges \nprocured at concessional \nprices (thousands)",
+                        colors=con.col[1:6],
+                        copyright=FALSE,
+                        show=FALSE)
+
+figsave(xpert_cart_map, xpert_cart, "5_2_xpertcart_map")
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

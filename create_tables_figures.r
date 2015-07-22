@@ -66,10 +66,10 @@ flg_show_estimates <- TRUE
 # data.date: When the source datasets were created
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-scriptsfolder <- getSrcDirectory(function(x) {x})  # See http://stackoverflow.com/a/30306616
+scriptsfolder <- getSrcDirectory(function(x) {x})  # See http://stackoverflow.com/a/30306616 # If not running by source, go to Session > Set Working Directory > To Source File Location. Then run scriptsfolder <- getwd()
 
 
-setwd(scriptsfolder)
+setwd(scriptsfolder) 
 
 source("get_tables_figures_environment.r")  # particular to each person so this file is in the ignore list
 
@@ -132,7 +132,7 @@ library("timeSeries")
 library("ggthemes")
 library("dplyr")
 library("gridExtra")
-
+library("XLConnect")
 
 # Create a folder structure for output files ----
 # (only if they don't exist yet)

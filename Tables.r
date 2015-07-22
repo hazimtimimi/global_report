@@ -515,7 +515,7 @@ rm(list=c("tsr", "tsr_table", "tsr_pivoted", "tsr_table_html", "coh_pivoted", "c
 
 # NOTE: Non reporters not included in aggregates
 
-tfa <- subset(s, year==report_year-1, select=c(country, year, g_whoregion, g_hbc22, g_hbmdr27, c_lab_sm_100k, c_lab_cul_5m, c_lab_dst_5m, lab_sm_f, lab_sm_led, lab_cul_f, lab_dst_f, lab_lpa_f, lab_xpert, dst_in_guide, lc_rst_in_guide, sp_case_dfn_in_guide, lpa_in_guide, dx_alg_tbhiv_in_guide, xpert_in_guide, xpert_in_guide_TBHIV, xpert_in_guide_MDR))
+tfa <- subset(s, year==report_year-1, select=c(country, year, g_whoregion, g_hbc22, g_hbmdr27, c_lab_sm_100k, c_lab_cul_5m, c_lab_dst_5m, lab_sm_f, lab_sm_led, lab_cul_f, lab_dst_f, lab_lpa_f, lab_xpert, dst_in_guide, lc_rst_in_guide, sp_case_dfn_in_guide, lpa_in_guide, dx_alg_tbhiv_in_guide, xpert_in_guide, xpert_in_guide_TBHIV, xpert_in_guide_MDR, xpert_in_guide_children, xpert_in_guide_eptb, xpert_in_guide_tb))
 
 tfb <- merge(tfa, p[c('country', 'year', 'e_pop_num')], all.x=T)
 
@@ -529,7 +529,7 @@ pop_dst <- ifelse(is.na(lab_dst_f), NA, e_pop_num)
 pop_lpa <- ifelse(is.na(lab_lpa_f), NA, e_pop_num)
 })
 
-for(poli in c("dst_in_guide", "lc_rst_in_guide", "lpa_in_guide", "sp_case_dfn_in_guide", "dx_alg_tbhiv_in_guide", "xpert_in_guide", "xpert_in_guide_TBHIV", "xpert_in_guide_MDR")){
+for(poli in c("dst_in_guide", "lc_rst_in_guide", "lpa_in_guide", "sp_case_dfn_in_guide", "dx_alg_tbhiv_in_guide", "xpert_in_guide", "xpert_in_guide_TBHIV", "xpert_in_guide_MDR", "xpert_in_guide_children", "xpert_in_guide_eptb", "xpert_in_guide_tb")){
 tfb[paste0(poli, '_n')] <- ifelse(is.na(tfb[poli]), 0, 1)
 }
 
@@ -552,7 +552,7 @@ tfd <- merge(tfc, tfa[c('country', 'g_hbc22', 'g_hbmdr27')], all.x=T)
 tfd <- tfd[order(tfd$ord),]
 tfd <- .shortnames(tfd, ord='hbc.mdr')
 
-for(poli in c("dst_in_guide", "lc_rst_in_guide", "lpa_in_guide", "sp_case_dfn_in_guide", "dx_alg_tbhiv_in_guide", "xpert_in_guide", "xpert_in_guide_TBHIV", "xpert_in_guide_MDR")) {
+for(poli in c("dst_in_guide", "lc_rst_in_guide", "lpa_in_guide", "sp_case_dfn_in_guide", "dx_alg_tbhiv_in_guide", "xpert_in_guide", "xpert_in_guide_TBHIV", "xpert_in_guide_MDR", "xpert_in_guide_children", "xpert_in_guide_eptb", "xpert_in_guide_tb")) {
 tfd[is.na(tfd$g_hbc22), poli] <- paste0(round(tfd[is.na(tfd$g_hbc22), poli] / tfd[is.na(tfd$g_hbc22), paste0(poli, '_n')] * 100, 0) , "%")
 tfd[!is.na(tfd$g_hbc22), poli] <- ifelse(tfd[!is.na(tfd$g_hbc22), poli]=='1', 'Y', tfd[!is.na(tfd$g_hbc22), poli])
 tfd[!is.na(tfd$g_hbc22), poli] <- ifelse(tfd[!is.na(tfd$g_hbc22), poli]=='0', 'N', tfd[!is.na(tfd$g_hbc22), poli])
@@ -624,7 +624,26 @@ print(tfe, type="html",
 
 tablecopy("5_1_lab_capac")
 
+# 5_2_lab_policy ####
 
+tff <- xtable(tfd[c("country", "g_hbc22", "g_hbmdr27", "xpert_in_guide_TBHIV", "xpert_in_guide_MDR", "xpert_in_guide_children", "xpert_in_guide_eptb", "xpert_in_guide_tb")], align=c('l', 'l', rep('c',7)))
+
+# Footnote 1
+tffoot <- ifelse(any(is.na(tff[4:ncol(tff)])), "Blank cells indicate data not reported.<br>", "")
+
+print(tff, type="html", file=paste0("Tables/5_2_lab_policy", Sys.Date(), ".htm"),include.rownames=F, include.colnames=F, #sanitize.text.function=identity, 
+      html.table.attributes="border=0 rules=rows width=1100 cellpadding=0", add.to.row=list(pos=list(0, nrow(tff)), command=c(paste0("<h2 align=\"left\">Incorporation of WHO policy guidance on Xpert MTB/RIF, ", report_year-1, "<sup>a</sup></h2>
+
+<TR> <TH colspan=3></TH> <TH colspan=5 style='border: solid 1px black;'>XPERT MTB/RIF AS THE INITIAL DIAGNOSTIC TEST</TH> </TR>
+<TR> <TH></TH> <TH>HIGH TB BURDEN</TH> <TH style='border-right: solid 1px black;'>HIGH MDR-TB BURDEN</TH>
+<TH>FOR TB IN PEOPLE LIVING WITH HIV</TH>
+<TH>IN PEOPLE AT RISK OF DRUG-RESISTANT TB</TH>
+<TH>IN CHILDREN SUSPECTED OF HAVING TB</TH>
+<TH>FOR EXTRAPULMONARY TB USING SELECTED SPECIMENS</TH>
+<TH>IN ALL PEOPLE SUSPECTED OF HAVING TB</TH> </TR>"),
+                                                                                                                              paste0("<TR> <TD colspan=8>", tffoot, "<sup>a</sup> The regional and global figures are aggregates of data reported by low- and middle-income countries and territories. Data for the variables shown in the table are not requested from high-income countries in the WHO data collection form. </TR>"))))
+
+tablecopy("5_2_lab_policy")
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Chapter 6 ------
