@@ -182,10 +182,10 @@ ltbipolicy <- readWorksheetFromFile(file.path(datafolder, "Extra data", "YH", "L
                              "No national policy on LTBI",
                              "No data",
                              "Estimated TB incidence>=100 or low/lower middle income"), 
-                    labels=c("National policy on LTBI \navailable ",
+                    labels=c("National policy on LTBI \navailable",
                              "No national policy on LTBI",
                              "No data",
-                             "Estimated TB incidence>=100 \nor low/lower middle income"))
+                             "High-burden countries"))
   )
 
 
@@ -197,6 +197,33 @@ ltbipolicy_map <- WHOmap.print(ltbipolicy,
                                show=FALSE)
 
 figsave(ltbipolicy_map, ltbipolicy, "3_x_ltbipolicy_map")
+
+# 3_x_ltbipractice_map -------------------------------------------------
+# Countries with national LTBI practices
+
+ltbipractice <- readWorksheetFromFile(file.path(datafolder, "Extra data", "YH", "LTBI_page_maps2207..xlsx"), sheet="practice") %>%  
+  mutate(cat=factor(Practices.on.LTBI.screening.and.treatment, 
+                    levels=c("Both HIV and contacts",
+                             "Only contacts",
+                             "Not practiced for HIV or contacts",
+                             "No data",
+                             "Estimated TB incidence>=100 or low/lower middle income"), 
+                    labels=c("Both HIV and contacts",
+                             "Only contacts",
+                             "Not practiced for \nHIV or contacts",
+                             "No data",
+                             "High-burden countries"))
+  )
+
+
+ltbipractice_map <- WHOmap.print(ltbipractice,
+                               paste("Practices on LTBI testing/treatment for people living with HIV and/or contacts,", report_year-1), 
+                               "",
+                               colors=con.col[1:5],
+                               copyright=FALSE,
+                               show=FALSE)
+
+figsave(ltbipractice_map, ltbipractice, "3_x_ltbipractice_map")
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
