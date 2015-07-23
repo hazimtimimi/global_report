@@ -104,7 +104,10 @@ if (use_live_db==TRUE){
 
 # Create output folder (only if it doesn't yet exist), and move to it
 dir.create(outfolder, recursive = TRUE, showWarnings = FALSE)
-setwd(outfolder)
+
+dir.create(file.path(outfolder, "linked_CSVs"), showWarnings = FALSE)
+
+setwd(file.path(outfolder, "linked_CSVs"))
 
 
 
