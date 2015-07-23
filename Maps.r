@@ -168,6 +168,38 @@ mhc <- WHOmap.print(mhb,
 figsave(mhc, mhb, "2_16_err_map")
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Chapter 3 ------
+# TB case notifications and treatment outcomes
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+
+# 3_x_ltbipolicy_map -------------------------------------------------
+# Countries with national LTBI policy
+
+ltbipolicy <- readWorksheetFromFile(file.path(datafolder, "Extra data", "YH", "LTBI_page_maps2207..xlsx"), sheet="policy") %>%  
+  mutate(cat=factor(Availability.on.national.policy.on.LTBI, 
+                    levels=c("National policy on LTBI available ",
+                             "No national policy on LTBI",
+                             "No data",
+                             "Estimated TB incidence>=100 or low/lower middle income"), 
+                    labels=c("National policy on LTBI \navailable ",
+                             "No national policy on LTBI",
+                             "No data",
+                             "Estimated TB incidence>=100 \nor low/lower middle income"))
+  )
+
+
+ltbipolicy_map <- WHOmap.print(ltbipolicy,
+                               paste("Reported national policies on LTBI,", report_year-1), 
+                               "",
+                               colors=con.col[1:4],
+                               copyright=FALSE,
+                               show=FALSE)
+
+figsave(ltbipolicy_map, ltbipolicy, "3_x_ltbipolicy_map")
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Chapter 4 ------
 # Drug-resistant TB
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -217,25 +249,21 @@ figsave(bdq_map, mib, "4_10_bdq_map")
 # numbers of xpert cartridges procured
 
 xpert_cart <- readWorksheetFromFile(file.path(datafolder, "Extra data", "WvG", "Figure 5.2 accompanying data.xlsx"), sheet=1) %>%  
-  mutate(cart2=as.numeric(cartridges)/1000, 
-         cart3=cut(cart2, 
-                   c(0, 10, 50, 100, 300, Inf), 
-                   c("0-9", "10-49", "50-99", "100-299", ">=300"), 
-                   right=FALSE), 
-         cat=factor(ifelse(is.na(cart3), 
-                           cartridges, 
-                           as.character(cart3)), 
-                    levels=c(levels(cart3), 
-                             "Not eligible for preferential pricing")
-                    )
+  mutate(cart1=ifelse(is.na(cartridges), 0, cartridges), # NA same as 0
+         cart2=as.numeric(cart1)/1000, 
+         cat=cut(cart2, 
+                   c(0, 5, 50, 100, 300, Inf), 
+                   c("0-4", "5-49", "50-99", "100-299", ">=300"), 
+                   right=FALSE) 
          )
 
 
 xpert_cart_map <- WHOmap.print(xpert_cart,
-                        paste("Xpert MTB/RIF cartridge procurements in", report_year-1), 
-                        "Xpert MTB/RIF cartridges \nprocured at concessional \nprices (thousands)",
-                        colors=con.col[1:6],
+                        paste("Xpert MTB/RIF cartridge procurements in", report_year-1, "at concessional prices"), 
+                        "Xpert MTB/RIF \ncartridges \nprocured in 2014 \n(thousands)",
+                        colors=con.col[1:5],
                         copyright=FALSE,
+                        na.label="Not eligible for \npreferential pricing",
                         show=FALSE)
 
 figsave(xpert_cart_map, xpert_cart, "5_2_xpertcart_map")

@@ -626,7 +626,7 @@ tablecopy("5_1_lab_capac")
 
 # 5_2_lab_policy ####
 
-tff <- xtable(tfd[c("country", "g_hbc22", "g_hbmdr27", "xpert_in_guide_TBHIV", "xpert_in_guide_MDR", "xpert_in_guide_children", "xpert_in_guide_eptb", "xpert_in_guide_tb")], align=c('l', 'l', rep('c',7)))
+tff <- xtable(tfd[c("country", "g_hbc22", "g_hbmdr27", "xpert_in_guide_TBHIV", "xpert_in_guide_MDR", "xpert_in_guide_children", "xpert_in_guide_eptb")], align=c('l', 'l', rep('c',6)))
 
 # Footnote 1
 tffoot <- ifelse(any(is.na(tff[4:ncol(tff)])), "Blank cells indicate data not reported.<br>", "")
@@ -634,13 +634,12 @@ tffoot <- ifelse(any(is.na(tff[4:ncol(tff)])), "Blank cells indicate data not re
 print(tff, type="html", file=paste0("Tables/5_2_lab_policy", Sys.Date(), ".htm"),include.rownames=F, include.colnames=F, #sanitize.text.function=identity, 
       html.table.attributes="border=0 rules=rows width=1100 cellpadding=0", add.to.row=list(pos=list(0, nrow(tff)), command=c(paste0("<h2 align=\"left\">Incorporation of WHO policy guidance on Xpert MTB/RIF, ", report_year-1, "<sup>a</sup></h2>
 
-<TR> <TH colspan=3></TH> <TH colspan=5 style='border: solid 1px black;'>XPERT MTB/RIF AS THE INITIAL DIAGNOSTIC TEST</TH> </TR>
+<TR> <TH colspan=3></TH> <TH colspan=4 style='border: solid 1px black;'>XPERT MTB/RIF AS THE INITIAL DIAGNOSTIC TEST</TH> </TR>
 <TR> <TH></TH> <TH>HIGH TB BURDEN</TH> <TH style='border-right: solid 1px black;'>HIGH MDR-TB BURDEN</TH>
 <TH>FOR TB IN PEOPLE LIVING WITH HIV</TH>
 <TH>IN PEOPLE AT RISK OF DRUG-RESISTANT TB</TH>
 <TH>IN CHILDREN SUSPECTED OF HAVING TB</TH>
-<TH>FOR EXTRAPULMONARY TB USING SELECTED SPECIMENS</TH>
-<TH>IN ALL PEOPLE SUSPECTED OF HAVING TB</TH> </TR>"),
+<TH>FOR EXTRAPULMONARY TB USING SELECTED SPECIMENS</TH> </TR>"),
                                                                                                                               paste0("<TR> <TD colspan=8>", tffoot, "<sup>a</sup> The regional and global figures are aggregates of data reported by low- and middle-income countries and territories. Data for the variables shown in the table are not requested from high-income countries in the WHO data collection form. </TR>"))))
 
 tablecopy("5_2_lab_policy")
