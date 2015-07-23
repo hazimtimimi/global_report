@@ -1,8 +1,14 @@
+# Ignore automatically generated R files for project, history etc.
 .Rproj.user
 .Rhistory
 .RData
 global_report.Rproj
-get_tables_figures_environment.r
+
+# ignore the configuration files getting user's local environment
+get_*_environment.r
+
+# ignore all html files
+*.html
+
+# ignore the connection string to SQL-Server database
 connection_string.r
-README.html
-get_tables_annex_for_web_environment.r

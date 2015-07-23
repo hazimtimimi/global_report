@@ -52,7 +52,7 @@ options(stringsAsFactors=FALSE)
 # This depends on the person, location, machine used etc.and populates the following:
 #
 # scriptsfolder:  Folder containing these scripts
-# outfolder:      Folder where CSV files will be saved
+# outfolder:      Parent folder under which CSV files will be saved
 # datafolder:     Folder in which to find a .RData file (if available)
 # rdata_name:     Name of a .RData file containing copy of database views
 # use_live_db:    Flag -- if TRUE then data loaded durectly from the global TB database
