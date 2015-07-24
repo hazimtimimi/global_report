@@ -135,7 +135,7 @@ mort_map <- WHOmap.print(mia,
 figsave(mort_map, mia, "2_13_mort_map")
 
 
-# 2_16_err_map -------------------------------------------------
+# 2_xx_err_map -------------------------------------------------
 # Electronic recording and reporting
 
 mha <- subset(s, year %in% (report_year-1):(report_year-2), select=c('country', 'year', 'iso3', 'caseb_err_nat'))
@@ -165,7 +165,7 @@ mhc <- WHOmap.print(mhb,
                     copyright=FALSE,
                     show=FALSE)
 
-figsave(mhc, mhb, "2_16_err_map")
+figsave(mhc, mhb, "2_xx_err_map")
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Chapter 3 ------

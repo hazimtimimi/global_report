@@ -510,6 +510,9 @@ sum_of_row <- function(x) {
   return(summed)
 }
 
+# Column sum that removes NAs unless all are NA
+sum0 <- function(x) sum(x, na.rm = !all(is.na(x)))
+
 # Text helps --------
 
 # This function takes a vector and makes it into a comma separated list for text.

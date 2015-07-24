@@ -118,6 +118,42 @@ if(flg_show_estimates){
   # and now clear up the mess left behind
   rm(latest_estimates)
   
+  # 2_6_incprevmort_glo ----------------------------------
+  
+  
+  eget <- c("year", "e_pop_num", "e_inc_100k", "e_inc_100k_lo", "e_inc_100k_hi", "e_prev_100k", "e_prev_100k_lo", "e_prev_100k_hi", "e_mort_exc_tbhiv_100k", "e_mort_exc_tbhiv_100k_lo", "e_mort_exc_tbhiv_100k_hi")
+  
+  esta <- subset(araw.t, year >=1990 & group_name=="global", select=eget)
+  
+  estb <- n.t %>% filter(year>=1990) %>% select(year, c_newinc) %>%
+    group_by(year) %>% summarize(c_newinc=sum0(c_newinc)) 
+#   estc <- aggregate(estb["c_newinc"], by=list(year=estb$year), FUN=sum, na.rm=TRUE)
+  
+  estd <- merge(esta, estb, all.x=TRUE)
+  
+  estd$c_newinc_100k <- estd$c_newinc / estd$e_pop_num * 1e5
+  
+  estf <- NULL
+  for(var in c("inc", "prev", "mort_exc_tbhiv")){
+    df <- subset(estd, select=c("year", paste0("e_", var, "_100k"), paste0("e_", var, "_100k_lo"), paste0("e_", var, "_100k_hi")))
+    names(df) <- c("year", "best", "lo", "hi")
+    df$var <- var
+    estf <- rbind(estf, df)
+  }
+  
+  estg <- estd[c("year", "c_newinc_100k")]
+  estg$var <- "inc"
+  
+  esth <- merge(estf, estg, all.x=TRUE)
+  esth$var <- factor(esth$var, levels=c("inc", "prev", "mort_exc_tbhiv"), labels=c("Incidence and notification", "Prevalence", "Mortality (excluding HIV)"))
+  
+esti <- esth %>% group_by(var) %>% arrange(var, year) %>% mutate(target=ifelse(var=="Incidence and notification", as.numeric(NA), best[1]/2)) 
+  
+  incprevmort_glo <- ggplot(esti, aes(year, best, fill=var, ymin=0)) + geom_line(size=1, aes(color=var)) + geom_ribbon(aes (year, best, ymin=lo, ymax=hi), alpha=0.2) + geom_hline(aes(yintercept=target), linetype=2) + geom_line(aes(year, c_newinc_100k), color="black", size=1) + theme_glb.rpt() + facet_wrap(~var, scales="free_y") + theme(legend.position="none") + scale_x_continuous("", minor_breaks=seq(1990, 2015, 1)) + scale_y_continuous(breaks=pretty_breaks()) + ylab("Rate per 100 000 population")
+  
+figsave(incprevmort_glo, esti, "2_6_incprevmort_glo")
+
+  
   
   # 2_7_inc_reg ------------------------------------------------------
   
@@ -239,7 +275,7 @@ if(flg_show_estimates){
     theme(legend.position="none") +
     ggtitle(paste0("Trends in estimated TB mortality rates 1990-", report_year-1, " and forecast TB mortality rates 2015, by WHO region. \nEstimated TB mortality excludes TB deaths among HIV-positive people. Shaded areas represent uncertainty bands.a \nThe horizontal dashed lines represent the Stop TB Partnership target of a 50% reduction in the mortality rate by 2015 compared with 1990. \nThe last point shows a projection for 2015."))
   
-  figsave(mort_reg, prev_mort_reg_aggs, "2_13_mort_reg")
+  figsave(mort_reg, prev_mort_reg_aggs, "2_14_mort_reg")
   
   # and now clear up the mess left behind
   rm(list=c("prev_mort_reg_aggs", "prev_reg", "mort_reg"))
