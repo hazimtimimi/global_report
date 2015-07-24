@@ -225,6 +225,24 @@ ltbipractice_map <- WHOmap.print(ltbipractice,
 
 figsave(ltbipractice_map, ltbipractice, "3_x_ltbipractice_map")
 
+# 3_x_ltbisurvey_map -------------------------------------------------
+# Countries included in the LTBI survey
+
+ltbisurvey <- readWorksheetFromFile(file.path(datafolder, "Extra data", "YH", "LTBI_page_maps.xlsx"), sheet=1) %>%  
+  mutate(cat=factor(primary_target, 
+                    levels=c("Estimated TB incidence<100 and high/upper-middle income"), 
+                    labels=c("Estimated TB incidence<100 or \nhigh/upper-middle income"))
+  )
+
+
+ltbisurvey_map <- WHOmap.print(ltbisurvey,
+                                 "The 113 upper-middle and high-income countries with an incidence rate of less than \n100 per 100 000 population to which current WHO guidance on management of \nlatent TB infection applies", 
+                                 "",
+                                 copyright=FALSE,
+                                 show=FALSE)
+
+figsave(ltbisurvey_map, ltbisurvey, "3_x_ltbisurvey_map")
+
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Chapter 4 ------
