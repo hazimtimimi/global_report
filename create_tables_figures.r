@@ -29,6 +29,10 @@ report_year <- 2015
 flg_show_estimates <- TRUE
 
 
+# Kill any attempt at using factors, unless we explicitly want them!
+options(stringsAsFactors=FALSE)
+
+
 # Set up the running environment ----
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # This depends on the person, location, machine used etc.and populates the following:
@@ -84,35 +88,6 @@ if (use_live_db==TRUE){
   load(paste(datafolder, rdata_name, sep="/"))
 }
 
-
-
-# Remove factors from dataframes ----
-strip_factor <- function(x){
-  # turn all factors to characters in a dataframe
-  for(var in 1:ncol(x)){
-    if(is.factor(x[[var]])){
-      x[[var]] <- as.character(x[[var]])
-    }
-  }
-  return(x)
-}
-
-# get list of all loaded dataframes (see https://stat.ethz.ch/pipermail/r-help/2011-October/291338.html)
-dataframe_names <- names(which(sapply(.GlobalEnv, is.data.frame)))
-
-for(obj in dataframe_names){
-  x <- get(obj)
-  x <- strip_factor(x)
-  assign(obj, x)
-}
-rm(x, dataframe_names)
-
-# set e_pop_num to numeric to avoid integer overflow error
-e$e_pop_num <- as.numeric(e$e_pop_num)
-
-
-# Kill any attempt at using factors, unless we explicitly want them!
-options(stringsAsFactors=FALSE)
 
 
 # Tom had this, but where is the code?

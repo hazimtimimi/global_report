@@ -29,9 +29,12 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
+# Kill any attempt at using factors, unless we explicitly want them!
+options(stringsAsFactors=FALSE)
+
 .fixnamibia <- function(df){
   # make sure Namibia's iso2 code is not interpreted as R's NA (null)
-  df$iso2 <- as.factor(ifelse(df$country=="Namibia", "NA", as.character(df$iso2)))
+  df$iso2 <- ifelse(df$country=="Namibia", "NA", as.character(df$iso2))
   return(df)
 }
 
@@ -44,7 +47,16 @@ ch <- odbcDriverConnect(connection_string)
 # load views into dataframes
 n <- .fixnamibia(sqlFetch(ch, "view_TME_master_notification"))
 nk <- sqlFetch(ch, "view_TME_master_notification_exceptions")
-tbhiv <- .fixnamibia(sqlFetch(ch, "view_TME_master_TBHIV_for_aggregates"))
+
+if (exists("notification_maxyear")) {
+  # get the TB/HIV figures appropriate for the data collection year
+  # (This is used by create_tables_annex_for_web because the tables could be updated at the same time as the following
+  # year's report is being compiled so it is important to keep unpublished 'final' TB/HIV data out)
+  tbhiv	<- .fixnamibia(sqlQuery(ch, paste0("SELECT * FROM TBHIV_for_aggregates_for_dcyear(", notification_maxyear + 1 , ")")))
+} else {
+  tbhiv <- .fixnamibia(sqlFetch(ch, "view_TME_master_TBHIV_for_aggregates"))
+}
+
 e <- .fixnamibia(sqlFetch(ch, "view_TME_estimates_epi"))
 eraw <- .fixnamibia(sqlFetch(ch, "view_TME_estimates_epi_rawvalues"))
 f <- .fixnamibia(sqlFetch(ch, "view_TME_master_finance"))
@@ -68,11 +80,16 @@ close(ch)
 # - Removing records that aren't explicitly covering a whole country
 # - Adding in past years so the number of records is identical with view_TME_master_notification (with NAs filled in for missing data.)
 # - Adding in grouping variables and other meta (1:19 in n)
+
 d <- merge(n[n$year>=min(d$year), 1:19], d[d$all_areas_covered==1 |
   is.na(d$all_areas_covered),], all.x=T)
 
 # Add an internal date'n'time stamp
 data.date <- Sys.time()
+
+
+# set e_pop_num to numeric to avoid integer overflow error
+e$e_pop_num <- as.numeric(e$e_pop_num)
 
 
 # That's it folks ----
