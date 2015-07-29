@@ -51,9 +51,9 @@ options(stringsAsFactors=FALSE)
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # This depends on the person, location, machine used etc.and populates the following:
 #
-# scriptsfolder:  Folder containing these scripts
-# outfolder:      Parent folder under which CSV files will be saved
-# datafolder:     Folder in which to find a .RData file (if available)
+# scripts_folder:  Folder containing these scripts
+# annexweb_folder: Parent folder under which CSV files will be saved
+# rdata_folder:     Folder in which to find a .RData file (if available)
 # rdata_name:     Name of a .RData file containing copy of database views
 # use_live_db:    Flag -- if TRUE then data loaded durectly from the global TB database
 #                 if FALSE then data loaded from the .RData file
@@ -84,11 +84,11 @@ options(stringsAsFactors=FALSE)
 # data.date: When the source datasets were created
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-scriptsfolder <- getSrcDirectory(function(x) {x})  # See http://stackoverflow.com/a/30306616
+scripts_folder <- getSrcDirectory(function(x) {x})  # See http://stackoverflow.com/a/30306616
 
-setwd(scriptsfolder)
+setwd(scripts_folder)
 
-source("get_tables_annex_for_web_environment.r")  # particular to each person so this file is in the ignore list
+source("set_environment.r")  # particular to each person so this file is in the ignore list
 
 if (use_live_db==TRUE){
 
@@ -98,16 +98,16 @@ if (use_live_db==TRUE){
 } else {
 
   # load up an .RData file containing a copy of the database views
-  load(paste(datafolder, rdata_name, sep="/"))
+  load(paste(rdata_folder, rdata_name, sep="/"))
 }
 
 
 # Create output folder (only if it doesn't yet exist), and move to it
-dir.create(outfolder, recursive = TRUE, showWarnings = FALSE)
+dir.create(annexweb_folder, recursive = TRUE, showWarnings = FALSE)
 
-dir.create(file.path(outfolder, "linked_CSVs"), showWarnings = FALSE)
+dir.create(file.path(annexweb_folder, "linked_CSVs"), showWarnings = FALSE)
 
-setwd(file.path(outfolder, "linked_CSVs"))
+setwd(file.path(annexweb_folder, "linked_CSVs"))
 
 
 

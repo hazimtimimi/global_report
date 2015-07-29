@@ -37,9 +37,9 @@ options(stringsAsFactors=FALSE)
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # This depends on the person, location, machine used etc.and populates the following:
 #
-# scriptsfolder:  Folder containing these scripts
-# outfolder:      Folder containing output subfolders for tables and figures
-# datafolder:     Folder in which to find a .RData file (if available)
+# scripts_folder: Folder containing these scripts
+# figures_folder: Folder containing output subfolders for tables,figures and maps
+# rdata_folder:   Folder in which to find a .RData file (if available)
 # rdata_name:     Name of a .RData file containing copy of database views
 # use_live_db:    Flag -- if TRUE then data loaded durectly from the global TB database
 #                 if FALSE then data loaded from the .RData file
@@ -70,12 +70,12 @@ options(stringsAsFactors=FALSE)
 # data.date: When the source datasets were created
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-scriptsfolder <- getSrcDirectory(function(x) {x})  # See http://stackoverflow.com/a/30306616 # If not running by source, go to Session > Set Working Directory > To Source File Location. Then run scriptsfolder <- getwd()
+scripts_folder <- getSrcDirectory(function(x) {x})  # See http://stackoverflow.com/a/30306616 # If not running by source, go to Session > Set Working Directory > To Source File Location. Then run scripts_folder <- getwd()
 
 
-setwd(scriptsfolder) 
+setwd(scripts_folder)
 
-source("get_tables_figures_environment.r")  # particular to each person so this file is in the ignore list
+source("set_environment.r")  # particular to each person so this file is in the ignore list
 
 if (use_live_db==TRUE){
 
@@ -85,7 +85,7 @@ if (use_live_db==TRUE){
 } else {
 
   # load up an .RData file containing a copy of the database views
-  load(paste(datafolder, rdata_name, sep="/"))
+  load(paste(rdata_folder, rdata_name, sep="/"))
 }
 
 
@@ -113,16 +113,16 @@ library("XLConnect")
 # (only if they don't exist yet)
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-dir.create(outfolder, showWarnings = FALSE)
-if(!(file.path(outfolder, "FigData") %in% list.dirs(outfolder, recursive=FALSE))){
-  dir.create(file.path(outfolder, "Review"))
-  dir.create(file.path(outfolder, "FigData"))
-  dir.create(file.path(outfolder, "Figs"))
-  dir.create(file.path(outfolder, "CPFigs"))
-  dir.create(file.path(outfolder, "Tables"))
+dir.create(figures_folder, showWarnings = FALSE)
+if(!(file.path(figures_folder, "FigData") %in% list.dirs(figures_folder, recursive=FALSE))){
+  dir.create(file.path(figures_folder, "Review"))
+  dir.create(file.path(figures_folder, "FigData"))
+  dir.create(file.path(figures_folder, "Figs"))
+  dir.create(file.path(figures_folder, "CPFigs"))
+  dir.create(file.path(figures_folder, "Tables"))
 }
 
-setwd(outfolder)
+setwd(figures_folder)
 
 
 
@@ -371,14 +371,14 @@ divXY <- function(X, Y, varX, varY, covXY=0){
 
 figsave <- function(obj, data, name, width=11, height=7){
   #   save PDF for designer
-  ggsave(paste0(outfolder, "/Figs/", name, Sys.Date(), ".pdf"), obj, width=width, height=height)
+  ggsave(paste0(figures_folder, "/Figs/", name, Sys.Date(), ".pdf"), obj, width=width, height=height)
   #   save PNG for reviewer
-  ggsave(paste0(outfolder, "/Review/", name, ".png"), obj, width=width, height=height)
+  ggsave(paste0(figures_folder, "/Review/", name, ".png"), obj, width=width, height=height)
   #   save data for designer
-  write.csv(data, file=paste(outfolder, "/FigData/", name, Sys.Date(), ".csv", sep=""), row.names=FALSE, na="")
+  write.csv(data, file=paste(figures_folder, "/FigData/", name, Sys.Date(), ".csv", sep=""), row.names=FALSE, na="")
   #   save data for reviewer
   out <- xtable(data)
-  print(out, file=paste(outfolder, "/Review/", name, ".htm", sep=""), type="html")
+  print(out, file=paste(figures_folder, "/Review/", name, ".htm", sep=""), type="html")
 }
 
 # For saving tables ----
@@ -498,8 +498,8 @@ lister.text <- function(x){
 
 
 # Run everything -----
-source(file.path(scriptsfolder, "Figures.r"))
-source(file.path(scriptsfolder, "Tables.r"))
-source(file.path(scriptsfolder, "Maps.r"))
+source(file.path(scripts_folder, "Figures.r"))
+source(file.path(scripts_folder, "Tables.r"))
+source(file.path(scripts_folder, "Maps.r"))
 
 cat("\nThat took", signif(Sys.time() - starting_time, 3), units(Sys.time() - starting_time), "to run.\n")

@@ -10,16 +10,18 @@
 # Clear the decks ----
 rm(list=ls())
 
-scriptsfolder <- getSrcDirectory(function(x) {x})  # See http://stackoverflow.com/a/30306616
-setwd(scriptsfolder)
+scripts_folder <- getSrcDirectory(function(x) {x})  # See http://stackoverflow.com/a/30306616
+setwd(scripts_folder)
+
+
+# Get DB connection string and path where to save the data (variable rdata_folder in set_environment.r)
+source("set_environment.r")
 
 # Load the views directly from the global TB database
 source("load_data_from_database.r")
 
-# Find where to save the data (variable datafolder in get_tables_figures_environment.r)
-source("get_tables_figures_environment.r")
 
-setwd(datafolder)
+setwd(rdata_folder)
 
 # Save the views
 save (n,

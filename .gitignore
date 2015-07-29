@@ -4,11 +4,8 @@
 .RData
 global_report.Rproj
 
-# ignore the configuration files getting user's local environment
-get_*_environment.r
+# ignore the configuration file to set user's local environment
+set_*.r
 
 # ignore all html files
 *.html
-
-# ignore the connection string to SQL-Server database
-connection_string.r

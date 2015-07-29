@@ -39,9 +39,13 @@ options(stringsAsFactors=FALSE)
 }
 
 
+# Get ODBC connection string from the environment file (if not already loaded)
+if (exists("connection_string")==FALSE) {
+  source("set_environment.r")
+}
+
 # connect to the database
 require(RODBC)
-source("connection_string.r")
 ch <- odbcDriverConnect(connection_string)
 
 # load views into dataframes
