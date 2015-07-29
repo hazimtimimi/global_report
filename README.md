@@ -5,29 +5,30 @@
 
 Make sure you have your version of `set_environment.r` set up (see notes further below).
 
-* To create an .RData file from the database, do in R:
+**To create an .RData file from the database, do in R:**
 ```
 > source(create_rdata_file.r)
 ```
 
-* To create tables, figures and maps for the global report, do in R:
+**To create tables, figures and maps for the global report, do in R:**
 ```
 > source(create_tables_figures.r)
 ```
 This will create a series of folders (or add to them if they are already created) with the following uses:
-    + _CPFigs_ These are formatted PDF figures for the country profiles for the graphic designer.
-    + _FigData_ These are CSV files of the data behind each figure in case specific numbers are needed.
-    + _Figs_ These are dated PDF files for sending to the graphic designer.
-    + _Review_ These are the latest tables and figures (along with data) that can be reviewed in one place.
-    + _Tables_ These are dated HTM files for sending to the graphic designer.
+
+  * _CPFigs_ These are formatted PDF figures for the country profiles for the graphic designer.
+  * _FigData_ These are CSV files of the data behind each figure in case specific numbers are needed.
+  * _Figs_ These are dated PDF files for sending to the graphic designer.
+  * _Review_ These are the latest tables and figures (along with data) that can be reviewed in one place.
+  * _Tables_ These are dated HTM files for sending to the graphic designer.
 
 
-* To create CSV files for the web annex tables, do in R:
+**To create CSV files for the web annex tables, do in R:**
 ```
 > source(create_tables_annex_for_web.r)
 ```
 
-* To re-assemble PDF files for the web annex tables, do in R:
+**To re-assemble PDF files for the web annex tables, do in R:**
 ```
 > source(split_rename_PDFs_annex_for_web.r)
 ```
