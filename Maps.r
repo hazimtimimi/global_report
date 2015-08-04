@@ -38,9 +38,9 @@
 # options to the legends, etc.
 # Have therefore not switched to the simpler whomap package (yet)
 
-source(file.path(scriptsfolder, "WHO_map_functions.r"))
+source(file.path(scripts_folder, "WHO_map_functions.r"))
 
-setwd(outfolder)
+setwd(figures_folder)
 
 # Contrasting colors for easier re-layout
 con.col <- c('red', 'blue', 'orange', 'green', 'purple', 'violet', 'sienna', 'dark orange')
@@ -99,7 +99,7 @@ figsave(inc_map, mfa, "2_5_inc_map")
 mea <- subset(e.t, year==report_year-1, select=c("g_whoregion", 'country', 'iso3', 'source_mort'))
 
 # Mortality with VR data
-meb <- subset(mea, source_mort %in% c('VR', 'VR imputed'), select=c("g_whoregion", "country", "iso3", "source_mort"))
+meb <- subset(mea, source_mort %in% c('VR', 'VR imputed') | iso3=="USA", select=c("g_whoregion", "country", "iso3", "source_mort")) # Hack workaround while waiting for this variable to be corrected in the database.
 meb$cat <- factor("Estimated with \nVR data")
 
 # map
@@ -173,10 +173,10 @@ figsave(mhc, mhb, "2_xx_err_map")
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
-# 3_x_ltbipolicy_map -------------------------------------------------
+# 3_7_ltbipolicy_map -------------------------------------------------
 # Countries with national LTBI policy
 
-ltbipolicy <- readWorksheetFromFile(file.path(datafolder, "Extra data", "YH", "LTBI_page_maps2207..xlsx"), sheet="policy") %>%  
+ltbipolicy <- readWorksheetFromFile(file.path(rdata_folder, "Extra data", "YH", "LTBI_page_maps2207..xlsx"), sheet="policy") %>%  
   mutate(cat=factor(Availability.on.national.policy.on.LTBI, 
                     levels=c("National policy on LTBI available ",
                              "No national policy on LTBI",
@@ -196,12 +196,12 @@ ltbipolicy_map <- WHOmap.print(ltbipolicy,
                                copyright=FALSE,
                                show=FALSE)
 
-figsave(ltbipolicy_map, ltbipolicy, "3_x_ltbipolicy_map")
+figsave(ltbipolicy_map, ltbipolicy, "3_7_ltbipolicy_map")
 
-# 3_x_ltbipractice_map -------------------------------------------------
+# 3_8_ltbipractice_map -------------------------------------------------
 # Countries with national LTBI practices
 
-ltbipractice <- readWorksheetFromFile(file.path(datafolder, "Extra data", "YH", "LTBI_page_maps2207..xlsx"), sheet="practice") %>%  
+ltbipractice <- readWorksheetFromFile(file.path(rdata_folder, "Extra data", "YH", "LTBI_page_maps2207..xlsx"), sheet="practice") %>%  
   mutate(cat=factor(Practices.on.LTBI.screening.and.treatment, 
                     levels=c("Both HIV and contacts",
                              "Only contacts",
@@ -217,18 +217,18 @@ ltbipractice <- readWorksheetFromFile(file.path(datafolder, "Extra data", "YH", 
 
 
 ltbipractice_map <- WHOmap.print(ltbipractice,
-                               paste("Practices on LTBI testing/treatment for people living with HIV and/or contacts,", report_year-1), 
+                               paste("Practices on LTBI testing/treatment for people living \nwith HIV and/or contacts,", report_year-1), 
                                "",
                                colors=con.col[1:5],
                                copyright=FALSE,
                                show=FALSE)
 
-figsave(ltbipractice_map, ltbipractice, "3_x_ltbipractice_map")
+figsave(ltbipractice_map, ltbipractice, "3_8_ltbipractice_map")
 
-# 3_x_ltbisurvey_map -------------------------------------------------
+# 3_6_ltbisurvey_map -------------------------------------------------
 # Countries included in the LTBI survey
 
-ltbisurvey <- readWorksheetFromFile(file.path(datafolder, "Extra data", "YH", "LTBI_page_maps.xlsx"), sheet=1) %>%  
+ltbisurvey <- readWorksheetFromFile(file.path(rdata_folder, "Extra data", "YH", "LTBI_page_maps.xlsx"), sheet=1) %>%  
   mutate(cat=factor(primary_target, 
                     levels=c("Estimated TB incidence<100 and high/upper-middle income"), 
                     labels=c("Estimated TB incidence<100 or \nhigh/upper-middle income"))
@@ -236,12 +236,12 @@ ltbisurvey <- readWorksheetFromFile(file.path(datafolder, "Extra data", "YH", "L
 
 
 ltbisurvey_map <- WHOmap.print(ltbisurvey,
-                                 "The 113 upper-middle and high-income countries with an incidence rate of less than \n100 per 100 000 population to which current WHO guidance on management of \nlatent TB infection applies", 
-                                 "",
+                                 "The 113 upper-middle and high-income countries with \nan incidence rate of less than \n100 per 100 000 population that are the \nprimary audience for 2015 WHO guidelines on the \nmanagement of latent TB infection", 
+                                 "[Remove legend]",
                                  copyright=FALSE,
                                  show=FALSE)
 
-figsave(ltbisurvey_map, ltbisurvey, "3_x_ltbisurvey_map")
+figsave(ltbisurvey_map, ltbisurvey, "3_6_ltbisurvey_map")
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -293,7 +293,7 @@ figsave(bdq_map, mib, "4_10_bdq_map")
 # 5_2_xpertcart_map -------------------------------------------------
 # numbers of xpert cartridges procured
 
-xpert_cart <- readWorksheetFromFile(file.path(datafolder, "Extra data", "WvG", "Figure 5.2 accompanying data.xlsx"), sheet=1) %>%  
+xpert_cart <- readWorksheetFromFile(file.path(rdata_folder, "Extra data", "WvG", "Figure 5.2 accompanying data.xlsx"), sheet=1) %>%  
   mutate(cart1=ifelse(is.na(cartridges), 0, cartridges), # NA same as 0
          cart2=as.numeric(cart1)/1000, 
          cat=cut(cart2, 

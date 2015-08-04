@@ -3,7 +3,7 @@
 # Functions for creating WHO maps
 # (later adapted by Philippe at https://github.com/glaziou/whomap)
 #
-# Requires WHO shapefiles in ~/Data/gparts.Rdata   (~ = scriptsfolder)
+# Requires WHO shapefiles in ~/Data/gparts.Rdata   (~ = scripts_folder)
 
 
 # ----------------------------------------------------------
@@ -35,7 +35,7 @@ WHOmap.slide <- function(data, map.title="", legend.title="", low.color='#BDD7E7
   # Prepare map
   # ----------------------------------------------------
 
-  load(file.path(scriptsfolder,"/Data/gparts.Rdata"))
+  load(file.path(scripts_folder,"/Data/gparts.Rdata"))
 
 
   # Generic map parts
@@ -119,7 +119,7 @@ WHOmap.print <- function(data, map.title="", legend.title="", colors=NULL, low.c
   # Prepare map
   # ----------------------------------------------------
 
-  load(file.path(scriptsfolder,"/Data/gparts.Rdata"))
+  load(file.path(scripts_folder,"/Data/gparts.Rdata"))
 
   # Add in missing circles for ASM, PYF, MNP, WLF
   asm <- subset(gworld, id=="WSM") ; asm$id <- "ASM" ; asm$group <- "ASM.1" ; asm$long <- asm$long + 2 ; asm$lat <- asm$lat - 0.5

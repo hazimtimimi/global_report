@@ -420,7 +420,7 @@ if(flg_show_estimates){
 # TB Case notifications and treatment outcomes
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-# 3_1_agesex_reg -------------------------------------------------------------
+# 3_4_agesex_reg -------------------------------------------------------------
 
 fa <- subset(n, year==report_year-1, c("country", "g_whoregion", "newrel_m014", "newrel_m1524", "newrel_m2534", "newrel_m3544", "newrel_m4554", "newrel_m5564", "newrel_m65", "newrel_f014", "newrel_f1524", "newrel_f2534", "newrel_f3544", "newrel_f4554", "newrel_f5564", "newrel_f65"))
 
@@ -461,30 +461,47 @@ fgfoot <- paste0("(a) Countries not reporting cases in these categories are excl
 agesex_reg <- arrangeGrob(agesex_reg1, sub = textGrob(fgfoot, x = 0, hjust = -0.1, vjust=0.1, gp = gpar(fontsize = 10)))
 
 # windows(11, 7); gad; dev.off()
-figsave(agesex_reg, fg, "3_1_agesex_reg")
+figsave(agesex_reg, fg, "3_4_agesex_reg")
 
 
 if(flg_show_estimates){
 
   # Global rates of incidence, and notifications
-  # 3_2_inc_notif_glo ----------------------------------------------------
+  # 3_1_inc_notif_glo ----------------------------------------------------
 
   eha <- subset(araw.t, group_type=="global")
 
+  # Absolute number 
+  
+  ehba <- merge(subset(eha, select=c("group_name", "year", "e_inc_num", "e_inc_num_lo", "e_inc_num_hi", "e_inc_tbhiv_num", "e_inc_tbhiv_num_lo", "e_inc_tbhiv_num_hi", "e_pop_num")), aggregate(n.t['c_newinc'], by=list(year=n.t$year), FUN=sum, na.rm=TRUE))
+
+#   ehba$c_newinc_mil <- ehba$c_newinc / 1e6
+
+  inc_notif_gloa <- ggplot(ehba, aes(year, e_inc_num/1e6, ymin=0)) + geom_line(colour=I('#00FF33')) +
+    geom_ribbon(aes(year, ymin=e_inc_num_lo/1e6, ymax=e_inc_num_hi/1e6), fill=I('#00FF33'), alpha=0.4) +
+    geom_line(aes(year, c_newinc/1e6)) + scale_x_continuous('') +
+    ylab('Cases per year (millions)')  + theme_glb.rpt() +
+    ggtitle(paste0('Global trends in absolute number of notified TB cases (black) and estimated TB \nincidence (green), 1990-', report_year-1, ". \nCase notifications include new and relapse cases (all forms)."))
+
+  figsave(inc_notif_gloa, ehba, "3_1a_inc_notif_glo", width=6, height=6)
+  
+  # Rates
+  
   ehb <- merge(subset(eha, select=c("group_name", "year", "e_inc_100k", "e_inc_100k_lo", "e_inc_100k_hi", "e_inc_tbhiv_100k", "e_inc_tbhiv_100k_lo", "e_inc_tbhiv_100k_hi", "e_pop_num")), aggregate(n.t['c_newinc'], by=list(year=n.t$year), FUN=sum, na.rm=TRUE))
-
+  
   ehb$newrel_100k <- ehb$c_newinc / ehb$e_pop_num * 100000
-
-  inc_notif_glo <- qplot(year, e_inc_100k, data=ehb, geom='line', colour=I('#00FF33')) +
+  
+  inc_notif_glob <- ggplot(ehb, aes(year, e_inc_100k, ymin=0)) + geom_line(colour=I('#00FF33')) +
     geom_ribbon(aes(year, ymin=e_inc_100k_lo, ymax=e_inc_100k_hi), fill=I('#00FF33'), alpha=0.4) +
     geom_line(aes(year, newrel_100k)) + scale_x_continuous('') +
     ylab('Rate per 100 000 population per year')  + theme_glb.rpt() +
     ggtitle(paste0('Global trends in case notification (black) and estimated TB \nincidence (green) rates, 1990-', report_year-1, ". \nCase notifications include new and relapse cases (all forms)."))
-
-  figsave(inc_notif_glo, ehb, "3_2_inc_notif_glo", width=6, height=6)
+  
+  figsave(inc_notif_glob, ehb, "3_1a_inc_notif_glo", width=6, height=6)
+  
 
   # Regional rates of incidence, and notifications
-  # 3_3_inc_notif_reg ----------------------------------------------------
+  # 3_2_inc_notif_reg ----------------------------------------------------
 
   efa1 <- subset(araw.t, group_type=="g_whoregion" & year < report_year)
 
@@ -500,13 +517,13 @@ if(flg_show_estimates){
     geom_line(aes(year, newrel_100k)) +
     facet_wrap(~g_whoregion, scales='free_y') + scale_x_continuous('') +
     ylab('Rate per 100 000 population per year') +expand_limits(y=0) + theme_glb.rpt() +
-    ggtitle(paste0('Case notification and estimated TB incidence rates by WHO region, 1990-', report_year-1, '. \nRegional trends in case notification rates (new and relapse cases, all forms) (black) and estimated TB incidence rates (green). \nShaded areas represent uncertainty bands.'))
+    ggtitle(paste0('Case notification and estimated TB incidence rates by WHO region, 1990-', report_year-1, '. \nRegional trends in case notification rates (new and relapse cases, all forms) (black) \nand estimated TB incidence rates (green). \nShaded areas represent uncertainty bands.'))
 
-  figsave(inc_notif_reg, efa, "3_3_inc_notif_reg")
+  figsave(inc_notif_reg, efa, "3_2_inc_notif_reg")
 
 
   # HBC rates of incidence, and notifications
-  # 3_4_inc_notif_hbc ----------------------------------------------------
+  # 3_3_inc_notif_hbc ----------------------------------------------------
 
   ega <- subset(merge(eraw.t, e.t[e.t$year==report_year-1,c("country", "g_hbc22")]), g_hbc22=="high" & year < report_year) # This hack is until we add g_hbc22 to eraw.
 
@@ -519,9 +536,9 @@ if(flg_show_estimates){
     geom_line(aes(year, newrel_100k)) +
     facet_wrap(~country, scales='free_y') + scale_x_continuous('') +
     ylab('Rate per 100 000 population per year') + expand_limits(y=0) + theme_glb.rpt() +
-    ggtitle(paste0('Case notification and estimated TB incidence rates, 22 high-burden countries, 1990-', report_year-1, '. \nTrends in case notification rates (new and relapse cases, all forms) (black) and estimated TB incidence rates (green). \nShaded areas represent uncertainty bands.'))
+    ggtitle(paste0('Case notification and estimated TB incidence rates, 22 high-burden countries, 1990-', report_year-1, '. \nTrends in case notification rates (new and relapse cases, all forms) (black) and \nestimated TB incidence rates (green). \nShaded areas represent uncertainty bands.'))
 
-  figsave(inc_notif_hbc, egb, "3_4_inc_notif_hbc")
+  figsave(inc_notif_hbc, egb, "3_3_inc_notif_hbc")
 
 
   # End of estimates figures
@@ -567,7 +584,7 @@ txsucc <- ggplot(tsr_table_melted, aes(area, value, fill=variable)) +
 figsave(txsucc, tsr_table_melted, "3_5_txsucc")
 
 # and now clear up the mess left behind
-rm(list=c("tsr", "tsr_table", "tsr_table_melted", "txsucc"))
+rm(list=c("tsr", "tsr_table", "tsr_table_melted"))
 
 
 # B3_5_hiv_ts_d ---------------------------------------------------

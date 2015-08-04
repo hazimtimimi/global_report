@@ -504,7 +504,7 @@ print(coh_table_html, type="html",
 tablecopy("3_6_tsr")
 
 # and now clear up the mess left behind
-rm(list=c("tsr", "tsr_table", "tsr_pivoted", "tsr_table_html", "coh_pivoted", "coh_table_html", "asterisks"))
+rm(list=c("tsr", "tsr_table", "tsr_pivoted", "tsr_table_html", "coh_pivoted", "coh_table_html"))
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Chapter 5 ------
