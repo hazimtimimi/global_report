@@ -172,58 +172,58 @@ figsave(mhc, mhb, "2_xx_err_map")
 # TB case notifications and treatment outcomes
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-
-# 3_7_ltbipolicy_map -------------------------------------------------
-# Countries with national LTBI policy
-
-ltbipolicy <- readWorksheetFromFile(file.path(rdata_folder, "Extra data", "YH", "LTBI_page_maps2207..xlsx"), sheet="policy") %>%  
-  mutate(cat=factor(Availability.on.national.policy.on.LTBI, 
-                    levels=c("National policy on LTBI available ",
-                             "No national policy on LTBI",
-                             "No data",
-                             "Estimated TB incidence>=100 or low/lower middle income"), 
-                    labels=c("National policy on LTBI \navailable",
-                             "No national policy on LTBI",
-                             "No data",
-                             "High-burden countries"))
-  )
-
-
-ltbipolicy_map <- WHOmap.print(ltbipolicy,
-                               paste("Reported national policies on LTBI,", report_year-1), 
-                               "",
-                               colors=con.col[1:4],
-                               copyright=FALSE,
-                               show=FALSE)
-
-figsave(ltbipolicy_map, ltbipolicy, "3_7_ltbipolicy_map")
-
-# 3_8_ltbipractice_map -------------------------------------------------
-# Countries with national LTBI practices
-
-ltbipractice <- readWorksheetFromFile(file.path(rdata_folder, "Extra data", "YH", "LTBI_page_maps2207..xlsx"), sheet="practice") %>%  
-  mutate(cat=factor(Practices.on.LTBI.screening.and.treatment, 
-                    levels=c("Both HIV and contacts",
-                             "Only contacts",
-                             "Not practiced for HIV or contacts",
-                             "No data",
-                             "Estimated TB incidence>=100 or low/lower middle income"), 
-                    labels=c("Both HIV and contacts",
-                             "Only contacts",
-                             "Not practiced for \nHIV or contacts",
-                             "No data",
-                             "High-burden countries"))
-  )
-
-
-ltbipractice_map <- WHOmap.print(ltbipractice,
-                               paste("Practices on LTBI testing/treatment for people living \nwith HIV and/or contacts,", report_year-1), 
-                               "",
-                               colors=con.col[1:5],
-                               copyright=FALSE,
-                               show=FALSE)
-
-figsave(ltbipractice_map, ltbipractice, "3_8_ltbipractice_map")
+# 
+# # 3_7_ltbipolicy_map -------------------------------------------------
+# # Countries with national LTBI policy
+# 
+# ltbipolicy <- readWorksheetFromFile(file.path(rdata_folder, "Extra data", "YH", "LTBI_page_maps2207..xlsx"), sheet="policy") %>%  
+#   mutate(cat=factor(Availability.on.national.policy.on.LTBI, 
+#                     levels=c("National policy on LTBI available ",
+#                              "No national policy on LTBI",
+#                              "No data",
+#                              "Estimated TB incidence>=100 or low/lower middle income"), 
+#                     labels=c("National policy on LTBI \navailable",
+#                              "No national policy on LTBI",
+#                              "No data",
+#                              "High-burden countries"))
+#   )
+# 
+# 
+# ltbipolicy_map <- WHOmap.print(ltbipolicy,
+#                                paste("Reported national policies on LTBI,", report_year-1), 
+#                                "",
+#                                colors=con.col[1:4],
+#                                copyright=FALSE,
+#                                show=FALSE)
+# 
+# figsave(ltbipolicy_map, ltbipolicy, "3_7_ltbipolicy_map")
+# 
+# # 3_8_ltbipractice_map -------------------------------------------------
+# # Countries with national LTBI practices
+# 
+# ltbipractice <- readWorksheetFromFile(file.path(rdata_folder, "Extra data", "YH", "LTBI_page_maps2207..xlsx"), sheet="practice") %>%  
+#   mutate(cat=factor(Practices.on.LTBI.screening.and.treatment, 
+#                     levels=c("Both HIV and contacts",
+#                              "Only contacts",
+#                              "Not practiced for HIV or contacts",
+#                              "No data",
+#                              "Estimated TB incidence>=100 or low/lower middle income"), 
+#                     labels=c("Both HIV and contacts",
+#                              "Only contacts",
+#                              "Not practiced for \nHIV or contacts",
+#                              "No data",
+#                              "High-burden countries"))
+#   )
+# 
+# 
+# ltbipractice_map <- WHOmap.print(ltbipractice,
+#                                paste("Practices on LTBI testing/treatment for people living \nwith HIV and/or contacts,", report_year-1), 
+#                                "",
+#                                colors=con.col[1:5],
+#                                copyright=FALSE,
+#                                show=FALSE)
+# 
+# figsave(ltbipractice_map, ltbipractice, "3_8_ltbipractice_map")
 
 # 3_6_ltbisurvey_map -------------------------------------------------
 # Countries included in the LTBI survey

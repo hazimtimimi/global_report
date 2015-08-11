@@ -156,11 +156,11 @@ if(flg_show_estimates){
   # 2_x_incdist ----------------------------------
 
 
-  inca <- eraw.t %>% filter(year==report_year-1, !is.na(e_inc_num)) %>% mutate(name=ifelse(e_inc_num > 1e5 | e_inc_100k > 450, iso3, NA)) %>% inner_join(subset(n.t, year==report_year-1, c(iso3, g_hbc22))) %>% mutate(hbc=ifelse(g_hbc22=="high", "High-burden \ncountries", NA))
+  inca <- eraw.t %>% filter(year==report_year-1, !is.na(e_inc_num)) %>% mutate(name=ifelse(e_inc_num > 1e5 | e_inc_100k > 450 | iso3=="BRA", iso3, NA)) %>% inner_join(subset(n.t, year==report_year-1, c(iso3, g_hbc22))) %>% mutate(hbc=ifelse(g_hbc22=="high", "High-burden \ncountries", NA))
 
   incb <- araw.t %>% filter(year==report_year-1, group_type=="g_whoregion") %>% .shortnames(col = "group_name") %>% mutate(name=group_name)
 
-    incdist <- ggplot(inca, aes(e_inc_100k, e_inc_num/1e3, color=hbc, size=e_pop_num/1e6)) + geom_point() + theme_glb.rpt() + geom_text(aes(label=name), size=2.5, vjust=-1.2) + labs(x="Rate per 100 000 population per year", y="Cases per year (thousands)", color="22 High-burden \ncountries", size="Population\n(millions)", title=paste("Global distribution of estimated TB incidence by rate and absolute number,", max(inca$year)))
+    incdist <- ggplot(inca, aes(e_inc_100k, e_inc_num/1e3, color=hbc, size=e_pop_num/1e6)) + geom_point() + theme_glb.rpt() + geom_text(aes(label=name), size=2.5, vjust=-1.2) + labs(x="Rate per 100 000 population per year", y="Cases per year (thousands)", color="22 High-burden \ncountries", size="Population\n(millions)", title=paste("Global distribution of estimated TB incidence by rate and absolute number,", max(inca$year))) + scale_x_continuous(breaks=seq(0,900,100))
 
   incdistb <- ggplot(incb, aes(e_inc_100k, e_inc_num/1e3, size=e_pop_num/1e6, ymin=0, xmin=0)) + geom_point() + theme_glb.rpt() + geom_text(aes(label=name), size=2.5, vjust=2.3) + labs(x="Rate per 100 000 population per year", y="Cases per year (thousands)", color="22 High-burden \ncountries", size="Population\n(millions)", title="WHO region")
 
