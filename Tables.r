@@ -257,7 +257,7 @@ print(notif_table_html, type="html", file=paste0("Tables/3_1_notif", Sys.Date(),
                       </tr>",
                       "<tr><td colspan='11'>Blank cells indicate data not reported.<br />
 
-                            <sup>a</sup> NEW AND RELAPSE includes cases for which the treatment history is unknown.</td>
+                            <sup>a</sup> New and relapse includes cases for which the treatment history is unknown.</td>
                       </tr>")))
 
 tablecopy("3_1_notif")
@@ -463,15 +463,7 @@ tsr_pivoted <- tsr_pivoted[standard_table_order, ]
 
 # Add an asterisk to the name if country included relapse cases in the outcomes cohort DELETE THIS COMEMENT
 # Count the number of countries without relapse included for the footnote.
-include.relapse <- o %>% filter(year >= 2012, g_hbc22=="high", rel_with_new_flg==1) %>% select(country, year) %>% mutate(n=1) %>% spread(year, n) 
-
-tsr.footnote <- "Data for Afghanistan, Bangladesh, Brazil, Cambodia, China, India, Indonesia, Kenya (2013 only), Mozambique (2012 only), Pakistan (2012 only), Philippines (2012 only), Russian Federation, South Africa, Thailand, Uganda, United Republic of Tanzania and Viet Nam include relapse cases"
-
-if (report_year!=2015) {
-  stop("Need to update footnote for Table 3.6")
-}
-
-# %>% group_by(year) %>% summarize(total=n()) 
+include.relapse <- o %>% filter(year >= 2012, g_hbc22=="high", rel_with_new_flg==1) %>% group_by(year) %>% summarize(total=n()) 
 
 # # coh_pivoted$area <- ifelse(coh_pivoted$area %in% asterisks$country,
 #                            paste0(coh_pivoted$area, "*"), coh_pivoted$area)
@@ -492,7 +484,7 @@ tsr_table_html <- xtable(tsr_pivoted)
 digits(coh_table_html) <- 0
 digits(tsr_table_html) <- 0
 
-cat(paste("<h3>Treatment success for all new cases (%) and cohort size (thousands), 1995", "\u2013", report_year-2, "</h3>
+cat(paste("<h3>Treatment success for all new and relapse<sup>a</sup> cases (%) and cohort size (thousands), 1995", "\u2013", report_year-2, "</h3>
           <p>a. Treatment success (%)</p>", sep=""), file=paste0("Tables/3_6_tsr", Sys.Date(), ".htm"))
 
 
@@ -507,7 +499,7 @@ print(coh_table_html, type="html",
       add.to.row=list(pos=list(30),
           command=c(paste0("<tr><td colspan=", ncol(coh_table_html), ">Blank cells indicate data not reported.<br />
                           \u2013 indicates values that cannot be calculated.<br />
-                          <sup>a</sup> Cohorts previous to 2012 include new cases only. For ", lister.text(include.relapse$year), " cohorts, ", lister.text(include.relapse$total), " high-burden countries respectively have included relapse cases according to the revised recording and reporting framework.</td></tr>", sep=""))))
+                          <sup>a</sup> Cohorts before 2012 include new cases only. For the ", lister.text(include.relapse$year), " cohorts, ", lister.text(include.relapse$total), " high-burden countries respectively included both new and relapse cases, as recommended in the revised recording and reporting framework issued by WHO in 2013 (see Definitions and reporting framework for tuberculosis – 2013 revision.  Geneva, World Health Organization, 2013 (WHO/HTM/TB/2013.2). Available at www.who.int/tb/publications/definitions.</td></tr>", sep=""))))
 
 tablecopy("3_6_tsr")
 
