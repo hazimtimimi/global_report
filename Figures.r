@@ -448,7 +448,7 @@ fg$newrel_100k <- fg$newrel / fg$e_pop * 1e5
 fg <- .shortnames(fg, col="Region")
 fg$age <- factor(fg$age, levels=c("014", "1524", "2534", "3544", "4554", "5564", "65"), labels=c("0\u201314", "15\u201324", "25\u201334", "35\u201344", "45\u201354", "55\u201364", "\u226565"))
 
-agesex_reg1 <- ggplot(fg, aes(age, newrel_100k, colour=Region, group=Region)) + geom_line(size=1) + scale_y_continuous(name = "Rate per 100 000 population per year") + scale_x_discrete("", labels=levels(fg$age)) + scale_color_brewer(name="", palette="Dark2") + ggtitle(paste0("Regional TB notification rates by age, ", report_year-1, "(a)")) + theme_glb.rpt()
+agesex_reg1 <- ggplot(fg, aes(age, newrel_100k, colour=Region, group=Region)) + geom_line(size=1) + scale_y_continuous(name = "Rate per 100 000 population per year") + scale_x_discrete("Age group (years)", labels=levels(fg$age)) + scale_color_brewer(name="", palette="Dark2") + ggtitle(paste0("Regional TB notification rates by age, ", report_year-1, "(a)")) + theme_glb.rpt()
 
 # Add footnote
 fgf1 <- rounder(sum(fg$newrel) / sum(n[n$year==report_year -1, "c_newinc"], na.rm=TRUE) * 100)
@@ -456,7 +456,7 @@ fgf2 <- n[n$year==report_year -1 & n$g_hbc22=="high", "country"]
 fgf3 <- fgf2[!fgf2 %in% fc1$country]
 fgf4 <- .shortnames(data.frame(country=fgf3), col="country")
 
-fgfoot <- paste0("(a) Countries not reporting cases in these categories are excluded. \nCases included make up ", fgf1, "% of reported cases and exclude the following high-burden countries: \n", "Afghanistan, Ethiopia, Mozambique and Thailand.")
+fgfoot <- paste0("(a) Countries not reporting cases in these categories are excluded. \nCases included make up ", fgf1, "% of reported cases and exclude the following high-burden countries: \n", lister.text(fgf4$country), ".")
 
 agesex_reg <- arrangeGrob(agesex_reg1, sub = textGrob(fgfoot, x = 0, hjust = -0.1, vjust=0.1, gp = gpar(fontsize = 10)))
 
@@ -497,7 +497,7 @@ if(flg_show_estimates){
     ylab('Rate per 100 000 population per year')  + theme_glb.rpt() +
     ggtitle(paste0('Global trends in case notification (black) and estimated TB \nincidence (green) rates, 1990-', report_year-1, ". \nCase notifications include new and relapse cases (all forms)."))
   
-  figsave(inc_notif_glob, ehb, "3_1a_inc_notif_glo", width=6, height=6)
+  figsave(inc_notif_glob, ehb, "3_1b_inc_notif_glo", width=6, height=6)
   
 
   # Regional rates of incidence, and notifications
@@ -571,15 +571,18 @@ tsr_table$`Not evaluated`     <- tsr_table$c_newrel_neval  * 100 / tsr_table$new
 # Plot
 tsr_table_melted <- melt(tsr_table[c(1, 9:13)], id=1)
 
-txsucc <- ggplot(tsr_table_melted, aes(area, value, fill=variable)) +
+txsucc1 <- ggplot(tsr_table_melted, aes(area, value, fill=variable)) +
   geom_bar(stat="identity", position="stack") +
   geom_hline(yintercept=85, color="grey70") +
   geom_text(data=subset(tsr_table_melted, variable=="Treatment success"), aes(label=round(value,0)), hjust=1.25, vjust=0.3, size=4, color="white") +
   theme_glb.rpt() + coord_flip() +
   scale_fill_brewer("", type = "qual", palette = 8) +
-  labs(x="", y="Percentage of cohort") +
+  labs(x="", y="Percentage of cohort (%)") +
   theme(legend.position="bottom", panel.grid=element_blank()) + expand_limits(c(0,0)) +
   ggtitle(paste0("Treatment outcomes for new and relapse cases, ", report_year-2, ", globally, \nfor the six WHO regions and 22 high-burden countries"))
+
+txsucc <- arrangeGrob(txsucc1, sub = textGrob("* Treatment outcomes for new cases only.", x = 0, hjust = -0.1, vjust=0.1, gp = gpar(fontsize = 10)))
+
 
 figsave(txsucc, tsr_table_melted, "3_5_txsucc")
 
@@ -587,7 +590,7 @@ figsave(txsucc, tsr_table_melted, "3_5_txsucc")
 rm(list=c("tsr", "tsr_table", "tsr_table_melted"))
 
 
-# B3_5_hiv_ts_d ---------------------------------------------------
+# B3_6_hiv_ts_d ---------------------------------------------------
 
 # Remove non-HIV outcomes reporters (because otherwise we can't minus out the HIV)
 # This should exclude those where ALL tbhiv outcomes have been assigned to 'not evaluated'
@@ -605,10 +608,20 @@ hma2 <- subset(o, year==report_year-2 &
 
 hma <- hma2
 
+# Remove countries that did not report 
+# - total outcomes (newrel_coh) (because otherwise we can't minus out the HIV)
+# - tbhiv outcomes (tbhiv_coh)
+# Countries reporting all tbhiv cases as not evaluated are included.
+
+# Subset the data
+hma <- o %>% filter(year==report_year-2, !is.na(newrel_coh), !is.na(tbhiv_coh), tbhiv_coh == 0 | (tbhiv_coh > 0 & c_tbhiv_neval != tbhiv_coh)) %>% select(country, year, newrel_coh, newrel_succ, newrel_fail, newrel_died, newrel_lost, c_newrel_neval, ret_nrel_coh, ret_nrel_succ, ret_nrel_fail, ret_nrel_died, ret_nrel_lost, c_ret_nrel_neval, tbhiv_coh, tbhiv_succ, tbhiv_fail, tbhiv_died, tbhiv_lost, c_tbhiv_neval) 
+
+# Aggregate for global figures
 hma[1] <- "global"
 
 hmb <- aggregate(hma[3:ncol(hma)], by=list(area=hma$country, year=hma$year), FUN=sum, na.rm=TRUE)
 
+# Extract variable name components for later combining
 hmc <- melt(hmb, id=1:2)
 hmc$type <- str_extract(hmc$variable, "tbhiv|newrel|ret_nrel")
 hmc$out <- str_extract(hmc$variable, "coh|succ|fail|died|lost|neval")
@@ -618,13 +631,14 @@ hmc$out <- str_extract(hmc$variable, "coh|succ|fail|died|lost|neval")
 hmc$type <- ifelse(hmc$type=="tbhiv", "tbhiv", "all")
 hmc1 <- aggregate(hmc[4], by=list(year=hmc$year, type=hmc$type, out=hmc$out), FUN=sum, na.rm=TRUE)
 
+# Reshape with HIV+ and HIV- across the top
 hmd <- cast(hmc1, year+out~type)
 
 hmd$`HIV-` <- hmd$all - hmd$tbhiv
 
 hmd <- hmd %>% rename("HIV+"=tbhiv)
 
-
+# Reshape for calculating percentages
 hme <- melt(as.data.frame(hmd[-3]), id=1:2, variable_name = "type")
 
 hmf <- cast(hme, ...~out)
@@ -635,6 +649,7 @@ hmf$Died <- hmf$died / hmf$coh * 100
 hmf$`Lost to follow-up` <- hmf$lost / hmf$coh * 100
 hmf$`Not evaluated` <- hmf$neval / hmf$coh * 100
 
+# Reshape for plotting
 hmg <- melt(as.data.frame(hmf[c(1:2,9:ncol(hmf))]), id=1:2) # It's a melt and cast fiesta!
 
 hiv_ts_d <- ggplot(hmg, aes(variable, value, fill=type)) +
@@ -642,7 +657,7 @@ hiv_ts_d <- ggplot(hmg, aes(variable, value, fill=type)) +
   scale_y_continuous("Percentage of cohort", limits=c(0,100)) + scale_fill_brewer("", type = "qual", palette=6) +
   ggtitle(paste("Outcomes of TB treatment by HIV status, ", report_year-2, sep=""))
 
-figsave(hiv_ts_d, hmg, "B3_5_hiv_ts_d")
+figsave(hiv_ts_d, hmg, "B3_6_hiv_ts_d")
 
 
 # B3_2_notif_ind ----------------------------------------------------

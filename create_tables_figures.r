@@ -106,6 +106,7 @@ library("stringr")
 library("timeSeries")
 library("ggthemes")
 library("dplyr")
+library("tidyr")
 library("gridExtra")
 library("XLConnect")
 
