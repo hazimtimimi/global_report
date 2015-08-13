@@ -257,7 +257,7 @@ print(notif_table_html, type="html", file=paste0("Tables/3_1_notif", Sys.Date(),
                       </tr>",
                       "<tr><td colspan='11'>Blank cells indicate data not reported.<br />
 
-                            <sup>a</sup> New and relapse includes cases for which the treatment history is unknown.</td>
+                            <sup>a</sup> NEW AND RELAPSE includes cases for which the treatment history is unknown.</td>
                       </tr>")))
 
 tablecopy("3_1_notif")
@@ -329,7 +329,7 @@ print(agesex_table_html, type="html",
                       <td>0-14 YEARS</td>
                       <td>&#8805;15 YEARS</td>
                       <td>AGE UNKNOWN</td>
-                      <td>% AGED &#8804; 15 YEARS</td>
+                      <td>% AGED < 15 YEARS</td>
                       <td>MALE/FEMALE RATIO</td>
                       </tr>",
                       "<tr><td colspan='6'>Blank cells indicate data that could not be reported for the age categories shown.<br />
@@ -463,7 +463,15 @@ tsr_pivoted <- tsr_pivoted[standard_table_order, ]
 
 # Add an asterisk to the name if country included relapse cases in the outcomes cohort DELETE THIS COMEMENT
 # Count the number of countries without relapse included for the footnote.
-include.relapse <- o %>% filter(year >= 2012, g_hbc22=="high", rel_with_new_flg==1) %>% group_by(year) %>% summarize(total=n()) 
+include.relapse <- o %>% filter(year >= 2012, g_hbc22=="high", rel_with_new_flg==1) %>% select(country, year) %>% mutate(n=1) %>% spread(year, n) 
+
+tsr.footnote <- "Data for Afghanistan, Bangladesh, Brazil, Cambodia, China, India, Indonesia, Kenya (2013 only), Mozambique (2012 only), Pakistan (2012 only), Philippines (2012 only), Russian Federation, South Africa, Thailand, Uganda, United Republic of Tanzania and Viet Nam include relapse cases"
+
+if (report_year!=2015) {
+  stop("Need to update footnote for Table 3.6")
+}
+
+# %>% group_by(year) %>% summarize(total=n()) 
 
 # # coh_pivoted$area <- ifelse(coh_pivoted$area %in% asterisks$country,
 #                            paste0(coh_pivoted$area, "*"), coh_pivoted$area)
@@ -484,7 +492,7 @@ tsr_table_html <- xtable(tsr_pivoted)
 digits(coh_table_html) <- 0
 digits(tsr_table_html) <- 0
 
-cat(paste("<h3>Treatment success for all new and relapse<sup>a</sup> cases (%) and cohort size (thousands), 1995", "\u2013", report_year-2, "</h3>
+cat(paste("<h3>Treatment success for all new cases (%) and cohort size (thousands), 1995", "\u2013", report_year-2, "</h3>
           <p>a. Treatment success (%)</p>", sep=""), file=paste0("Tables/3_6_tsr", Sys.Date(), ".htm"))
 
 
@@ -652,7 +660,7 @@ tablecopy("5_2_lab_policy")
 
 # 6_1_tbhiv -------------------------------------------------------------------
 
-tea <- merge(n[c('country', 'year', "g_whoregion", 'g_hbhiv41', "hiv_ipt")], tbhiv[c('country', 'year', "hivtest", "hivtest_pct_denominator", "hivtest_pos_pct_denominator", "hivtest_pos_pct_numerator", "hiv_cpt_pct_numerator", "hiv_cpt_pct_denominator", "hiv_art_pct_numerator", "hiv_art_pct_denominator", 'hivtest_pct_numerator', 'hivtest_pos', 'hiv_cpt', 'hiv_art')])
+tea <- merge(n.t[c('country', 'year', "g_whoregion", 'g_hbhiv41', "hiv_ipt", 'hiv_tbdetect', 'hiv_reg_new2')], tbhiv[c('country', 'year', "hivtest", "hivtest_pct_denominator", "hivtest_pos_pct_denominator", "hivtest_pos_pct_numerator", "hiv_cpt_pct_numerator", "hiv_cpt_pct_denominator", "hiv_art_pct_numerator", "hiv_art_pct_denominator", 'hivtest_pct_numerator', 'hivtest_pos', 'hiv_cpt', 'hiv_art')])
 
 tea <- merge(tea, e.t[c('country', 'year', 'e_inc_tbhiv_num', 'e_inc_tbhiv_num_lo', 'e_inc_tbhiv_num_hi')], all.x=T)
 
@@ -676,10 +684,10 @@ tec <- aggregate(tec[2:ncol(tec)], by=list(country=tec$country), FUN=sum, na.rm=
 
 # create country/agg flag ("type")
 teda <- te1
-teda$type <- 'country'
+# teda$type <- 'country'
 
 tedb <- rbind(te2, teb, tec)
-tedb$type <- 'agg'
+# tedb$type <- 'agg'
 
 # Combine all together
 ted <- rbind(teda, tedb)
@@ -697,19 +705,35 @@ ted3 <- ted3[order(ted3$group_type, ted3$group_name),]
 
 ted[43:nrow(ted), c('e_inc_tbhiv_num', 'e_inc_tbhiv_num_lo', 'e_inc_tbhiv_num_hi')] <- ted3[c('e_inc_tbhiv_num', 'e_inc_tbhiv_num_lo', 'e_inc_tbhiv_num_hi')]
 
-# Format table columns WHY AM I DOING IT DIFFERENT FOR COUNTRY?!! Need to come back to this and the ART map. And the HIV test map.
+# Format table columns 
+# For aggregate rows, remove countries that did not report a numerator and a denominator.WHY AM I DOING IT DIFFERENT FOR COUNTRY?!! Need to come back to this and the ART map. And the HIV test map.
+
 ted <- within(ted, {
-hivtest1000 <- rounder(ifelse(type=='country', hivtest, hivtest_pct_numerator) / 1000, decimals=TRUE)
-hivtest_prct <- rounder(ifelse(type=='country', hivtest, hivtest_pct_numerator) / hivtest_pct_denominator * 100, decimals=TRUE)
-hivtest_pos_prct <- rounder(ifelse(type=='country', hivtest_pos / hivtest,hivtest_pos_pct_numerator / hivtest_pos_pct_denominator) * 100, decimals=TRUE)
-hiv_cpt_prct <- rounder(ifelse(type=='country', hiv_cpt / hivtest_pos, hiv_cpt_pct_numerator / hiv_cpt_pct_denominator) * 100, decimals=TRUE)
-hiv_art_prct <- rounder(ifelse(type=='country', hiv_art / hivtest_pos, hiv_art_pct_numerator / hiv_art_pct_denominator) * 100, decimals=TRUE)
-
-# new in 2014, calculate ART coverage of ESTIMATED TB/HIV patients
-hiv_art_est_prct <- rounder(ifelse(type=='country', hiv_art / e_inc_tbhiv_num, hiv_art_pct_numerator / e_inc_tbhiv_num) * 100, decimals=TRUE)
-
-hiv_ipt2 <- rounder(hiv_ipt / 1000, decimals=TRUE)
+  hivtest1000 <- rounder(hivtest_pct_numerator / 1000, decimals=TRUE)
+  hivtest_prct <- rounder(hivtest_pct_numerator / hivtest_pct_denominator * 100, decimals=TRUE)
+  hivtest_pos_prct <- rounder(hivtest_pos_pct_numerator / hivtest_pos_pct_denominator * 100, decimals=TRUE)
+  hiv_cpt_prct <- rounder(hiv_cpt_pct_numerator / hiv_cpt_pct_denominator * 100, decimals=TRUE)
+  hiv_art_prct <- rounder(hiv_art_pct_numerator / hiv_art_pct_denominator * 100, decimals=TRUE)
+  hiv_tb_prct <- rounder(hiv_tbdetect / hiv_reg_new2 * 100, decimals=TRUE) 
+  
+  hiv_art_est_prct <- rounder(hiv_art_pct_numerator / e_inc_tbhiv_num * 100, decimals=TRUE)
+  
+  hiv_ipt2 <- rounder(hiv_ipt / 1000, decimals=TRUE)
 })
+
+# ted <- within(ted, {
+# hivtest1000 <- rounder(ifelse(type=='country', hivtest, hivtest_pct_numerator) / 1000, decimals=TRUE)
+# hivtest_prct <- rounder(ifelse(type=='country', hivtest, hivtest_pct_numerator) / hivtest_pct_denominator * 100, decimals=TRUE)
+# hivtest_pos_prct <- rounder(ifelse(type=='country', hivtest_pos / hivtest,hivtest_pos_pct_numerator / hivtest_pos_pct_denominator) * 100, decimals=TRUE)
+# hiv_cpt_prct <- rounder(ifelse(type=='country', hiv_cpt / hivtest_pos, hiv_cpt_pct_numerator / hiv_cpt_pct_denominator) * 100, decimals=TRUE)
+# hiv_art_prct <- rounder(ifelse(type=='country', hiv_art / hivtest_pos, hiv_art_pct_numerator / hiv_art_pct_denominator) * 100, decimals=TRUE)
+# hiv_tb_prct <- rounder(ifelse(type=='country', hiv_art / hivtest_pos, hiv_art_pct_numerator / hiv_art_pct_denominator) * 100, decimals=TRUE)
+# 
+# # new in 2014, calculate ART coverage of ESTIMATED TB/HIV patients
+# hiv_art_est_prct <- rounder(ifelse(type=='country', hiv_art / e_inc_tbhiv_num, hiv_art_pct_numerator / e_inc_tbhiv_num) * 100, decimals=TRUE)
+# 
+# hiv_ipt2 <- rounder(hiv_ipt / 1000, decimals=TRUE)
+# })
 
 ted <- .shortnames(ted, ord='tbhiv')
 
@@ -725,21 +749,21 @@ ted[ted$country=='Russian Federation', 'hivtest1000'] <- paste0(ted[ted$country=
 ted[ted$country=='Russian Federation', c('hivtest_prct', 'hivtest_pos_prct')] <- NA
 warning("Russian Federation modification for the TB/HIV table is still in place. Delete this message when no longer applicable.")
 
-ted2 <- ted[c("country", 'e_inc_tbhiv_num', 'e_inc_tbhiv_num_lo', 'e_inc_tbhiv_num_hi', "hivtest1000", "hivtest_prct", "hivtest_pos_prct", "hiv_cpt_prct", "hiv_art_prct", "hiv_art_est_prct", "hiv_ipt2")]
+ted2 <- ted[c("country", 'e_inc_tbhiv_num', 'e_inc_tbhiv_num_lo', 'e_inc_tbhiv_num_hi', "hivtest1000", "hivtest_prct", "hivtest_pos_prct", "hiv_cpt_prct", "hiv_art_prct", "hiv_art_est_prct", "hiv_ipt2", "hiv_tb_prct")]
 
 # replace uncalculatables
-for(var in 6:10){
+for(var in c(6:10,12)){
 ted2[var] <- ifelse(is.na(ted2[[var]]), "\u2013", ted2[[var]])
 }
 
 # combine estimates to two lines
 ted2$est_rg <- paste0("(", ted2$e_inc_tbhiv_num_lo, "\u2013", ted2$e_inc_tbhiv_num_hi, ")")
 
-ted3 <- ted2[c("country", 'e_inc_tbhiv_num', 'est_rg', "hivtest1000", "hivtest_prct", "hivtest_pos_prct", "hiv_cpt_prct", "hiv_art_prct", "hiv_art_est_prct", "hiv_ipt2")]
+ted3 <- ted2[c("country", 'e_inc_tbhiv_num', 'est_rg', "hivtest1000", "hivtest_prct", "hivtest_pos_prct", "hiv_art_prct", "hiv_art_est_prct", "hiv_ipt2", "hiv_tb_prct")]
 
 tee <- xtable(ted3, align=c('l', 'l', 'r', 'l', rep('c',7)))
 
-cat(paste0("<font size='3' align='left'><b>HIV testing for TB patients, treatment for HIV-positive TB patients and prevention of TB among people living with HIV, 41 high TB/HIV burden countries and WHO regions, ", report_year-1, ".</b> Numbers in thousands except where indicated.</font><br /><br />"), file=paste0("Tables/6_1_tbhiv", Sys.Date(), ".htm"))
+cat(paste0("<font size='3' align='left'><b>Table 6.1 HIV testing for TB patients, treatment for HIV-positive TB patients and prevention of TB among people living with HIV, 41 high TB/HIV burden countries and WHO regions, ", report_year-1, ".</b> Numbers in thousands except where indicated.</font><br /><br />"), file=paste0("Tables/6_1_tbhiv", Sys.Date(), ".htm"))
 
 print(tee, type="html",
       file=paste0("Tables/6_1_tbhiv", Sys.Date(), ".htm"),
@@ -752,10 +776,10 @@ print(tee, type="html",
                       <th>NUMBER OF NOTIFIED TB PATIENTS WITH KNOWN HIV STATUS</th>
                       <th>% OF NOTIFIED TB PATIENTS WITH KNOWN HIV STATUS</th>
                       <th>% of TB PATIENTS WITH AN HIV TEST RESULT WHO WERE HIV-POSITIVE</th>
-                      <th>% OF NOTIFIED HIV-POSITIVE TB PATIENTS STARTED ON CPT</th>
                       <th>% OF NOTIFIED HIV-POSITIVE TB PATIENTS STARTED ON ART</th>
                       <th>NUMBER OF HIV-POSTIVE TB PATIENTS ON ART AS % OF ESTIMATED HIV-POSITIVE INCIDENT TB CASES<sup>b</sup></th>
                       <th>NUMBER OF HIV-POSITIVE PEOPLE PROVIDED WITH IPT</th>
+                      <th>% OF PEOPLE NEWLY ENROLLED IN HIV CARE WHO WERE NOTIFIED AS A TB CASE THE SAME YEAR</th>
                   </tr>",
                   "<tr><td colspan='11'>Blank cells indicate data not reported.<br />
 
