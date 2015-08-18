@@ -584,7 +584,7 @@ txsucc1 <- ggplot(tsr_table_melted, aes(area, value, fill=variable)) +
 txsucc <- arrangeGrob(txsucc1, sub = textGrob("* Treatment outcomes for new cases only.", x = 0, hjust = -0.1, vjust=0.1, gp = gpar(fontsize = 10)))
 
 
-figsave(txsucc, tsr_table_melted, "3_5_txsucc")
+figsave(txsucc, tsr_table, "3_5_txsucc") # Designer needs wide data
 
 # and now clear up the mess left behind
 rm(list=c("tsr", "tsr_table", "tsr_table_melted"))
@@ -707,17 +707,29 @@ hivtest_graph <- ggplot(subset(gac, year >= gadstart), aes(year, hivtest_pct, co
   scale_color_brewer(name="WHO region", palette="Dark2") + expand_limits(x=c(gadstart, report_year+0.5)) +
   ggtitle(paste0('Percentage of notified TB patients with known HIV status, ', gadstart, "\u2013", report_year-1)) + theme_glb.rpt() + theme(legend.position="none")
 
+# wide data for graphic designer
+gaca <- gac %>% select(area, year, hivtest_pct) %>% spread(area, hivtest_pct)
+
 # windows(11, 7); gad; dev.off()
-figsave(hivtest_graph, gac, "6_1_hivtest_graph")
+figsave(hivtest_graph, gaca, "6_1_hivtest_graph")
 
 
 # 6_3_hivprog_graph_all ------------------------------------------------------
-warning("I should come back to 6_3_hivprog_graph_all next year and make sure it still works.")
-gg <- subset(tbhiv, year>=2003, select=c('iso3', 'year', 'g_hbhiv63', 'hivtest', 'hivtest_pos', 'hiv_cpt', 'hiv_art', 'hiv_cpt_pct_numerator', 'hiv_cpt_pct_denominator', 'hiv_art_pct_numerator', 'hiv_art_pct_denominator', 'c_notified', 'hivtest_pos_pct_denominator', 'hivtest_pos_pct_numerator'))
+# This graph is meant to show both HIV progress that is reported, plus an exploration of what it would look like if non-reporting countries did report. The logic is as follows.
+# 1 - Decide on the time series length and identify countries with a full time series for the numer and denom.
+# 2 - For countries with at least 1 denom point and 1 numer point, interpolate the gaps and extrapolate to the start and end of the time series. Note that for 1 point, the time series is flat.
+# 3 - List countries with no data points for the entire time series and acknowledge that they aren't considered.
+# 4 - Create a best line showing the percentage using interpolated data.
+# 5 - Create a low line showing what it would look like if all non-reporting countries had reported 0%.
+# 6 - Create a high line showing what it would look like if all non-reporting countries had reported 100%.
 
-# replace denominators with interpolated rates across years
+gg.yrs <- 2003:(report_year-1)
 
-gga <- merge(e.t[c('iso3', 'year', 'e_pop_num')], gg, all.y=T)
+gg <- subset(tbhiv, year %in% gg.yrs, select=c('iso3', 'year', 'g_hbhiv63', 'hivtest', 'hivtest_pos', 'hiv_cpt', 'hiv_art', 'hiv_cpt_pct_numerator', 'hiv_cpt_pct_denominator', 'hiv_art_pct_numerator', 'hiv_art_pct_denominator', 'c_notified', 'hivtest_pos_pct_denominator', 'hivtest_pos_pct_numerator'))
+
+## replace denominators with interpolated rates across years
+
+gga <- merge(e.t[c('iso3', 'year', 'e_pop_num')], gg, all.y=TRUE)
 
 ggb <- melt(gga, id=1:4)
 
@@ -726,20 +738,26 @@ ggb$rate <- ggb$value / ggb$e_pop_num
 ghe <- gga
 
 for(var in c('c_notified', 'hivtest', 'hivtest_pos')) {
-
+# select variable and put year in rows and iso3 as columns
   gha <- cast(ggb[ggb$variable==var & !is.na(ggb$rate),c('iso3', 'year', 'rate')], year~iso3, value='rate')
+  # make timeSeries object
   ghb <- timeSeries(as.matrix(as.matrix.cast_df(gha)))
+  # Fill in gaps in the series
   ghc <- na.omit(ghb, method="ie")
-  ghc$year <- 2003:(report_year-1)
+  # add back in years
+  ghc$year <- gg.yrs
   ghd <- melt(as.data.frame(ghc), id='year', variable='iso3')
+  # make new variable of interpolated rate
   names(ghd)[3] <- paste(var, "ir", sep="_")
+  # merge back into original data.frame
   ghe <- merge(ghe, ghd, all.x=T)
 }
-
+# Make absolute numbers based on rates per population
 ghe$c_notified_m <- ghe$c_notified_ir * ghe$e_pop_num
 ghe$hivtest_m <- ghe$hivtest_ir * ghe$e_pop_num
 ghe$hivtest_pos_m <- ghe$hivtest_pos_ir * ghe$e_pop_num
 
+# Create denominator for aggregating where both numerator and denominator are present. Also create band where missing numerators are assumed to be 0% and 100%.
 ggf <- ghe
 
 gl <- within(ggf, {
@@ -761,14 +779,14 @@ gl <- within(ggf, {
   hiv_art_hi <- ifelse(!is.na(hivtest_pos_m) & is.na(hiv_art), hivtest_pos_m, hiv_art)
 
 })
-
+# Check how complete the time series is based on how many countries can be included for each year for each variable.
 table(gl[!is.na(gl$c_notified_m),'year'])
 table(gl[!is.na(gl$hivtest_m),'year'])
 table(gl[!is.na(gl$hivtest_pos_m),'year'])
 
-unique(e.t[!e.t$iso3  %in% unique(gl[!is.na(gl$c_notified_m),'iso3']),'country'])
-unique(e.t[!e.t$iso3  %in% unique(gl[!is.na(gl$hivtest_m),'iso3']),'country'])
-unique(e.t[!e.t$iso3  %in% unique(gl[!is.na(gl$hivtest_pos_m),'iso3']),'country'])
+unique(e.t[!e.t$iso3  %in% unique(gl[!is.na(gl$c_notified_m),'iso3']),'country']) # Countries not reporting 1 data point for the whole time series for c_notified.
+unique(e.t[!e.t$iso3  %in% unique(gl[!is.na(gl$hivtest_m),'iso3']),'country']) # Countries not reporting 1 data point for the whole time series for hivtest.
+unique(e.t[!e.t$iso3  %in% unique(gl[!is.na(gl$hivtest_pos_m),'iso3']),'country']) # Countries not reporting 1 data point for the whole time series for hivtest_pos.
 # table(tbhiv[!is.na(tbhiv$hivtest),'year'])
 
 gk <- aggregate(gl[6:ncol(gl)], by=list(year=gl$year), FUN=sum, na.rm=T)
@@ -901,7 +919,9 @@ hiv_ipt_graph <- ggplot(gfc, aes(year, value, color=area)) +
   scale_color_brewer(name="", palette="Dark2") + guides(color = guide_legend(reverse = TRUE)) +
   ggtitle(paste("Provision of isoniazid preventive therapy (IPT) to people living with HIV, 2005", report_year-1, sep="\u2013"))
 
-figsave(hiv_ipt_graph, gfc, "6_6_hiv_ipt_graph")
+gfd <- spread(gfc, area, value)
+
+figsave(hiv_ipt_graph, gfd, "6_6_hiv_ipt_graph")
 
 
 ## END ---------------------------------------
