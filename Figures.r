@@ -715,135 +715,36 @@ figsave(hivtest_graph, gaca, "6_1_hivtest_graph")
 
 
 # 6_3_hivprog_graph_all ------------------------------------------------------
-# This graph is meant to show both HIV progress that is reported, plus an exploration of what it would look like if non-reporting countries did report. The logic is as follows.
-# 1 - Decide on the time series length and identify countries with a full time series for the numer and denom.
-# 2 - For countries with at least 1 denom point and 1 numer point, interpolate the gaps and extrapolate to the start and end of the time series. Note that for 1 point, the time series is flat.
-# 3 - List countries with no data points for the entire time series and acknowledge that they aren't considered.
-# 4 - Create a best line showing the percentage using interpolated data.
-# 5 - Create a low line showing what it would look like if all non-reporting countries had reported 0%.
-# 6 - Create a high line showing what it would look like if all non-reporting countries had reported 100%.
 
-gg.yrs <- 2003:(report_year-1)
+gg.yrs <- 2007:(report_year-1)
 
-gg <- subset(tbhiv, year %in% gg.yrs, select=c('iso3', 'year', 'g_hbhiv63', 'hivtest', 'hivtest_pos', 'hiv_cpt', 'hiv_art', 'hiv_cpt_pct_numerator', 'hiv_cpt_pct_denominator', 'hiv_art_pct_numerator', 'hiv_art_pct_denominator', 'c_notified', 'hivtest_pos_pct_denominator', 'hivtest_pos_pct_numerator'))
+gg <- tbhiv %>% filter(year %in% gg.yrs) %>% select(iso3, year, g_hbhiv63, hiv_cpt_pct_numerator, hiv_cpt_pct_denominator, hiv_art_pct_numerator, hiv_art_pct_denominator, hivtest_pos_pct_denominator, hivtest_pos_pct_numerator)
 
-## replace denominators with interpolated rates across years
-
-gga <- merge(e.t[c('iso3', 'year', 'e_pop_num')], gg, all.y=TRUE)
-
-ggb <- melt(gga, id=1:4)
-
-ggb$rate <- ggb$value / ggb$e_pop_num
-
-ghe <- gga
-
-for(var in c('c_notified', 'hivtest', 'hivtest_pos')) {
-# select variable and put year in rows and iso3 as columns
-  gha <- cast(ggb[ggb$variable==var & !is.na(ggb$rate),c('iso3', 'year', 'rate')], year~iso3, value='rate')
-  # make timeSeries object
-  ghb <- timeSeries(as.matrix(as.matrix.cast_df(gha)))
-  # Fill in gaps in the series
-  ghc <- na.omit(ghb, method="ie")
-  # add back in years
-  ghc$year <- gg.yrs
-  ghd <- melt(as.data.frame(ghc), id='year', variable='iso3')
-  # make new variable of interpolated rate
-  names(ghd)[3] <- paste(var, "ir", sep="_")
-  # merge back into original data.frame
-  ghe <- merge(ghe, ghd, all.x=T)
-}
-# Make absolute numbers based on rates per population
-ghe$c_notified_m <- ghe$c_notified_ir * ghe$e_pop_num
-ghe$hivtest_m <- ghe$hivtest_ir * ghe$e_pop_num
-ghe$hivtest_pos_m <- ghe$hivtest_pos_ir * ghe$e_pop_num
-
-# Create denominator for aggregating where both numerator and denominator are present. Also create band where missing numerators are assumed to be 0% and 100%.
-ggf <- ghe
-
-gl <- within(ggf, {
-  c_notified_hnm <- ifelse(!is.na(c_notified) & !is.na(hivtest) &
-                             c_notified >= hivtest, c_notified, NA)
-  hivtest_hnm <- ifelse(!is.na(c_notified) & !is.na(hivtest) &
-                          c_notified >= hivtest, hivtest, NA)
-
-  hivtest_lo <- ifelse(!is.na(c_notified_m) & is.na(hivtest), 0, hivtest)
-  hivtest_hi <- ifelse(!is.na(c_notified_m) & is.na(hivtest), c_notified_m, hivtest)
-
-  hivtest_pos_lo <- ifelse(!is.na(hivtest_m) & is.na(hivtest_pos), 0, hivtest_pos)
-  hivtest_pos_hi <- ifelse(!is.na(hivtest_m) & is.na(hivtest_pos), hivtest_m, hivtest_pos)
-
-  hiv_cpt_lo <- ifelse(!is.na(hivtest_pos_m) & is.na(hiv_cpt), 0, hiv_cpt)
-  hiv_cpt_hi <- ifelse(!is.na(hivtest_pos_m) & is.na(hiv_cpt), hivtest_pos_m, hiv_cpt)
-
-  hiv_art_lo <- ifelse(!is.na(hivtest_pos_m) & is.na(hiv_art), 0, hiv_art)
-  hiv_art_hi <- ifelse(!is.na(hivtest_pos_m) & is.na(hiv_art), hivtest_pos_m, hiv_art)
-
-})
-# Check how complete the time series is based on how many countries can be included for each year for each variable.
-table(gl[!is.na(gl$c_notified_m),'year'])
-table(gl[!is.na(gl$hivtest_m),'year'])
-table(gl[!is.na(gl$hivtest_pos_m),'year'])
-
-unique(e.t[!e.t$iso3  %in% unique(gl[!is.na(gl$c_notified_m),'iso3']),'country']) # Countries not reporting 1 data point for the whole time series for c_notified.
-unique(e.t[!e.t$iso3  %in% unique(gl[!is.na(gl$hivtest_m),'iso3']),'country']) # Countries not reporting 1 data point for the whole time series for hivtest.
-unique(e.t[!e.t$iso3  %in% unique(gl[!is.na(gl$hivtest_pos_m),'iso3']),'country']) # Countries not reporting 1 data point for the whole time series for hivtest_pos.
-# table(tbhiv[!is.na(tbhiv$hivtest),'year'])
-
-gk <- aggregate(gl[6:ncol(gl)], by=list(year=gl$year), FUN=sum, na.rm=T)
+gk <- aggregate(gg[4:ncol(gg)], by=list(year=gg$year), FUN=sum, na.rm=T)
 
 gah <- within(gk, {
-  pht_best <- hivtest_hnm / c_notified_hnm
-  pht_lo <- hivtest_lo / c_notified_m
-  pht_hi <- hivtest_hi / c_notified_m
-
-  phtp_best <- hivtest_pos_pct_numerator / hivtest_pos_pct_denominator
-  phtp_lo <- hivtest_pos_lo / hivtest_m
-  phtp_hi <- hivtest_pos_hi / hivtest_m
-
-  pcpt_best <- hiv_cpt_pct_numerator / hiv_cpt_pct_denominator
-  pcpt_lo <- hiv_cpt_lo / hivtest_pos_m
-  pcpt_hi <- hiv_cpt_hi / hivtest_pos_m
-
-  part_best <- hiv_art_pct_numerator / hiv_art_pct_denominator
-  part_lo <- hiv_art_lo / hivtest_pos_m
-  part_hi <- hiv_art_hi / hivtest_pos_m
+  hivtest_pos <- hivtest_pos_pct_numerator / hivtest_pos_pct_denominator * 100
+  hiv_cpt <- hiv_cpt_pct_numerator / hiv_cpt_pct_denominator * 100
+  hiv_art <- hiv_art_pct_numerator / hiv_art_pct_denominator * 100
 })
 
-gai <- melt(gah[c('year', "part_hi", "part_lo", "part_best", "pcpt_hi", "pcpt_lo", "pcpt_best", "phtp_hi", "phtp_lo", "phtp_best", "pht_hi", "pht_lo", "pht_best")], id=1)
+gai <- melt(gah[c('year', "hivtest_pos", "hiv_cpt", "hiv_art")], id=1)
 
-for(ro in 1:nrow(gai)){
-
-  both <- as.data.frame(str_split(gai[ro,'variable'], "_"))
-  gai[ro, 'var'] <- both[1,]
-  gai[ro, 'hilo'] <- both[2,]
-
-}
-
-gaj <- cast(gai, year+var~hilo)
-
-gaj['Percentages'] <- factor(gaj$var,
-                             levels=c("pht", "phtp", "pcpt", "part"),
-                             labels=c('% of notified TB patients with known HIV status',
-                                      'Notified TB patients with known HIV status who were HIV-positive',
+gai['Percentages'] <- factor(gai$variable,
+                             levels=c("hivtest_pos", "hiv_cpt", "hiv_art"),
+                             labels=c('Notified TB patients with known HIV status who were HIV-positive',
                                       'Notified HIV-positive TB patients \nstarted on CPT',
                                       'Notified HIV-positive TB patients \nstarted on ART'))
 
-gak <- gaj[gaj$year>=2007 & gaj$Percentages!='% of notified TB patients with known HIV status',]
-
-gak[c("best", "hi", "lo")] <- gak[c("best", "hi", "lo")] * 100
-
-hivprog_graph_all <- ggplot(gak, aes(year, best)) +
+hivprog_graph_all <- ggplot(gai, aes(year, value)) +
   geom_line(size=1, alpha=.5) +
-  geom_ribbon(aes (year, best, ymin=lo, ymax=hi), alpha=0.2) +
+  # geom_ribbon(aes (year, best, ymin=lo, ymax=hi), alpha=0.2) +
   facet_wrap(~Percentages, ncol=3) +
-  scale_y_continuous(limits = c(0, 100), name = "Percentage of notified TB patients", breaks=c(0, 20, 40, 60, 80, 100)) +
+  scale_y_continuous(limits = c(0, 100), name = "Percentage of notified TB patients", breaks=seq(0, 100, 20)) +
   scale_x_continuous("") + theme_glb.rpt()  +
-  ggtitle(paste0('Percentage of notified TB patients with known HIV status who were HIV positive, and percentage of notified \nHIV-positive TB patients enrolled on co-trimoxazole preventive therapy (CPT) and antiretroviral therapy (ART),\n ', min(gak$year), '\u2013', max(gak$year), '(a)'))
+  ggtitle(paste0('Percentage of notified TB patients with known HIV status who were HIV positive, and percentage of notified \nHIV-positive TB patients enrolled on co-trimoxazole preventive therapy (CPT) and antiretroviral therapy (ART),\n ', min(gai$year), '\u2013', max(gai$year)))
 
-# Footnote: The solid lines show values for countries that reported data.
-# The shaded areas show upper and lower limits when countries that did not report data are considered..
-
-figsave(hivprog_graph_all, gak, "6_3_hivprog_graph_all")
+figsave(hivprog_graph_all, gai, "6_3_hivprog_graph_all")
 
 
 
