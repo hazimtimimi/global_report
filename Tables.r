@@ -652,6 +652,28 @@ tablecopy("5_2_lab_policy")
 
 # 6_1_tbhiv -------------------------------------------------------------------
 
+teda <- te1
+# teda$type <- 'country'
+
+tedb <- rbind(te2, teb, tec)
+# tedb$type <- 'agg'
+
+# Combine all together
+ted <- rbind(teda, tedb)
+
+# replace aggregate estimates with properly aggregated numbers
+ted1 <- e.t[e.t$year==report_year-1 & !is.na(e.t$e_inc_tbhiv_100k) & e.t$g_hbhiv41=='high' , c('iso3', 'e_inc_tbhiv_100k', 'e_inc_tbhiv_100k_lo', 'e_inc_tbhiv_100k_hi', 'e_pop_num')]
+ted1[2:4] <- ted1[2:4] / 100000
+ted1$e_pop_num <- as.numeric(ted1$e_pop_num)
+ted2 <- add.rv(ted1$e_inc_tbhiv_100k, ted1$e_inc_tbhiv_100k_lo, ted1$e_inc_tbhiv_100k_hi, weights=ted1$e_pop_num)
+
+ted[ted$country=="High TB/HIV burden countries", c('e_inc_tbhiv_num', 'e_inc_tbhiv_num_lo', 'e_inc_tbhiv_num_hi')] <- signif(ted2[c("r.num", "r.lo.num", "r.hi.num")], 2)
+
+ted3 <- a.t[a.t$year==report_year-1 & a.t$group_type %in% c('g_whoregion', 'global'), c('group_name', 'group_type', 'e_inc_tbhiv_num', 'e_inc_tbhiv_num_lo', 'e_inc_tbhiv_num_hi')]
+ted3 <- ted3[order(ted3$group_type, ted3$group_name),]
+
+ted[43:nrow(ted), c('e_inc_tbhiv_num', 'e_inc_tbhiv_num_lo', 'e_inc_tbhiv_num_hi')] <- ted3[c('e_inc_tbhiv_num', 'e_inc_tbhiv_num_lo', 'e_inc_tbhiv_num_hi')]
+
 tea <- merge(n.t[c('country', 'year', "g_whoregion", 'g_hbhiv41', "hiv_ipt", 'hiv_tbdetect', 'hiv_reg_new2')], tbhiv[c('country', 'year', "hivtest", "hivtest_pct_denominator", "hivtest_pos_pct_denominator", "hivtest_pos_pct_numerator", "hiv_cpt_pct_numerator", "hiv_cpt_pct_denominator", "hiv_art_pct_numerator", "hiv_art_pct_denominator", 'hivtest_pct_numerator', 'hivtest_pos', 'hiv_cpt', 'hiv_art')])
 
 tea <- merge(tea, e.t[c('country', 'year', 'e_inc_tbhiv_num', 'e_inc_tbhiv_num_lo', 'e_inc_tbhiv_num_hi')], all.x=T)
@@ -675,28 +697,6 @@ tec[1] <- 'Global'
 tec <- aggregate(tec[2:ncol(tec)], by=list(country=tec$country), FUN=sum, na.rm=T)
 
 # create country/agg flag ("type")
-teda <- te1
-# teda$type <- 'country'
-
-tedb <- rbind(te2, teb, tec)
-# tedb$type <- 'agg'
-
-# Combine all together
-ted <- rbind(teda, tedb)
-
-# replace aggregate estimates with properly aggregated numbers
-ted1 <- e.t[e.t$year==report_year-1 & !is.na(e.t$e_inc_tbhiv_100k) & e.t$g_hbhiv41=='high' , c('iso3', 'e_inc_tbhiv_100k', 'e_inc_tbhiv_100k_lo', 'e_inc_tbhiv_100k_hi', 'e_pop_num')]
-ted1[2:4] <- ted1[2:4] / 100000
-ted1$e_pop_num <- as.numeric(ted1$e_pop_num)
-ted2 <- add.rv(ted1$e_inc_tbhiv_100k, ted1$e_inc_tbhiv_100k_lo, ted1$e_inc_tbhiv_100k_hi, weights=ted1$e_pop_num)
-
-ted[ted$country=="High TB/HIV burden countries", c('e_inc_tbhiv_num', 'e_inc_tbhiv_num_lo', 'e_inc_tbhiv_num_hi')] <- signif(ted2[c("r.num", "r.lo.num", "r.hi.num")], 2)
-
-ted3 <- a.t[a.t$year==report_year-1 & a.t$group_type %in% c('g_whoregion', 'global'), c('group_name', 'group_type', 'e_inc_tbhiv_num', 'e_inc_tbhiv_num_lo', 'e_inc_tbhiv_num_hi')]
-ted3 <- ted3[order(ted3$group_type, ted3$group_name),]
-
-ted[43:nrow(ted), c('e_inc_tbhiv_num', 'e_inc_tbhiv_num_lo', 'e_inc_tbhiv_num_hi')] <- ted3[c('e_inc_tbhiv_num', 'e_inc_tbhiv_num_lo', 'e_inc_tbhiv_num_hi')]
-
 # Format table columns 
 # For aggregate rows, remove countries that did not report a numerator and a denominator.WHY AM I DOING IT DIFFERENT FOR COUNTRY?!! Need to come back to this and the ART map. And the HIV test map.
 
@@ -736,10 +736,17 @@ ted$e_inc_tbhiv_num_hi <- frmt(ted$e_inc_tbhiv_num_hi / 1000, thou=TRUE)
 
 
 
-# Fix and footnote for Russian Federation
+# Fix and footnote for specific countries
+# Russia
 ted[ted$country=='Russian Federation', 'hivtest1000'] <- paste0(ted[ted$country=='Russian Federation', 'hivtest1000'], '(c)')
 ted[ted$country=='Russian Federation', c('hivtest_prct', 'hivtest_pos_prct')] <- NA
 warning("Russian Federation modification for the TB/HIV table is still in place. Delete this message when no longer applicable.")
+
+# Uganda
+if(report_year==2015 & ted[ted$country=='Uganda', 'hiv_tb_prct']==0.2){
+  ted[ted$country=='Uganda', 'hiv_tb_prct'] <- NA
+  warning("TB amongst HIV in Uganda was removed in Table 6.1.")
+}
 
 ted2 <- ted[c("country", 'e_inc_tbhiv_num', 'e_inc_tbhiv_num_lo', 'e_inc_tbhiv_num_hi', "hivtest1000", "hivtest_prct", "hivtest_pos_prct", "hiv_cpt_prct", "hiv_art_prct", "hiv_art_est_prct", "hiv_ipt2", "hiv_tb_prct")]
 
