@@ -27,7 +27,7 @@ report_year <- 2015
 # Decide whether or not to produce the tables and figures relying upon burden estimates
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 flg_show_estimates <- TRUE
-
+flg_forecast_estimates_ready <- TRUE
 
 # Kill any attempt at using factors, unless we explicitly want them!
 options(stringsAsFactors=FALSE)
@@ -184,6 +184,27 @@ for(df in c('e', 'eraw', 'a', 'araw', 'n', 'd')){
   else(comb <- obj)
   assign(paste(df, "t", sep="."), comb)
 }
+
+if (max(araw.t$year) < report_year & flg_forecast_estimates_ready) {
+  # Load from dropbox
+  load(paste(rdata_folder, "Extra data/PG/global_ff.Rdata", sep="/"))
+  load(paste(rdata_folder, "Extra data/PG/regional_ff.Rdata", sep="/"))
+  # Keep only forecast years and prev and mort; combine global and regional
+  glbl <- global.ff %>% data.frame() %>% filter(year==report_year) %>% select(year, e_pop_num=e.pop.num, e_prev_100k=prev, e_prev_100k_lo=prev.lo, e_prev_100k_hi=prev.hi, e_mort_exc_tbhiv_100k=mort.nh, e_mort_exc_tbhiv_100k_lo=mort.nh.lo, e_mort_exc_tbhiv_100k_hi=mort.nh.hi, forecast) %>% mutate(group_name="global")
+  reglo <- regional.ff %>% data.frame() %>% filter(year==report_year) %>% select(group_name=g.whoregion, year, e_pop_num=e.pop.num, e_prev_100k=prev, e_prev_100k_lo=prev.lo, e_prev_100k_hi=prev.hi, e_mort_exc_tbhiv_100k=mort.nh, e_mort_exc_tbhiv_100k_lo=mort.nh.lo, e_mort_exc_tbhiv_100k_hi=mort.nh.hi, forecast) %>% rbind(glbl)
+
+    araw.t <- merge(araw.t, reglo, all=TRUE) %>% mutate(forecast=ifelse(is.na(forecast), FALSE, forecast))
+}
+
+if (max(eraw.t$year) < report_year & flg_forecast_estimates_ready) {
+  # Load from dropbox
+  load(paste(rdata_folder, "Extra data/PG/hbc_ff.Rdata", sep="/"))
+  # Keep only forecast years and prev and mort
+  hbcff <- hbc.ff %>% data.frame() %>% filter(year==report_year) %>% select(iso3, year, e_pop_num=e.pop.num, e_prev_100k=prev, e_prev_100k_lo=prev.lo, e_prev_100k_hi=prev.hi, e_mort_exc_tbhiv_100k=mort.nh, e_mort_exc_tbhiv_100k_lo=mort.nh.lo, e_mort_exc_tbhiv_100k_hi=mort.nh.hi, forecast) 
+  
+  eraw.t <- merge(eraw.t, hbcff, all=TRUE) %>% mutate(forecast=ifelse(is.na(forecast), FALSE, forecast))
+}
+
 
 while(max(araw.t$year) < 2015) {
   warning(paste('Still need to get updated forecast for araw!'))
