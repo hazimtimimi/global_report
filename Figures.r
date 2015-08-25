@@ -66,6 +66,12 @@ if(flg_show_estimates){
   # The burden of disease caused by TB
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+  # 2_2_incmort_num_glo ------------------------------------------------
+  
+  ima <- a.t %>% filter(group_name=="global") %>% select(year, matches(".*inc.*num.*"), matches(".*mort.*num.*"))
+  
+  # incmort_num_glo1 <- ggplot(ima, aes(year, best, fill=var, ymin=0)) + geom_line(size=1, aes(color=var)) + geom_ribbon(aes (year, best, ymin=lo, ymax=hi), alpha=0.2) + geom_hline(aes(yintercept=target), linetype=2) + geom_line(aes(year, c_newinc_100k), color="black", size=1) + theme_glb.rpt() + facet_wrap(~var, scales="free_y") + theme(legend.position="none") + scale_x_continuous("", minor_breaks=seq(1990, 2015, 1)) + scale_y_continuous(breaks=pretty_breaks()) + ylab("Rate per 100 000 population")
+  
 
   # 2_3_topten ---------------------------------------------------------
   # The 'top 10 countries' by absolute number and by rate, in 2015 only (incidence) are used.
@@ -592,22 +598,6 @@ rm(list=c("tsr", "tsr_table", "tsr_table_melted"))
 
 # B3_6_hiv_ts_d ---------------------------------------------------
 
-# Remove non-HIV outcomes reporters (because otherwise we can't minus out the HIV)
-# This should exclude those where ALL tbhiv outcomes have been assigned to 'not evaluated'
-# (therefore make sure if tbhiv_coh > 0 then the not evaluated column is less than the total cohort )
-hma2 <- subset(o, year==report_year-2 &
-                 !is.na(tbhiv_succ) &
-                 !is.na(newrel_succ) &
-                 ( tbhiv_coh == 0 |
-                     (tbhiv_coh > 0 & c_tbhiv_neval < tbhiv_coh)
-                 ),
-               c(country, year,
-                 newrel_coh, newrel_succ, newrel_fail, newrel_died, newrel_lost, c_newrel_neval,
-                 ret_nrel_coh, ret_nrel_succ, ret_nrel_fail, ret_nrel_died, ret_nrel_lost, c_ret_nrel_neval,
-                 tbhiv_coh, tbhiv_succ, tbhiv_fail, tbhiv_died, tbhiv_lost, c_tbhiv_neval))
-
-hma <- hma2
-
 # Remove countries that did not report 
 # - total outcomes (newrel_coh) (because otherwise we can't minus out the HIV)
 # - tbhiv outcomes (tbhiv_coh)
@@ -742,7 +732,7 @@ hivprog_graph_all <- ggplot(gai, aes(year, value)) +
   facet_wrap(~Percentages, ncol=3) +
   scale_y_continuous(limits = c(0, 100), name = "Percentage of notified TB patients", breaks=seq(0, 100, 20)) +
   scale_x_continuous("") + theme_glb.rpt()  +
-  ggtitle(paste0('Percentage of notified TB patients with known HIV status who were HIV positive, and percentage of notified \nHIV-positive TB patients enrolled on co-trimoxazole preventive therapy (CPT) and antiretroviral therapy (ART),\n ', min(gai$year), '\u2013', max(gai$year)))
+  ggtitle(paste0('Percentage of notified TB patients with known HIV status who were HIV-positive, and percentage of notified \nHIV-positive TB patients enrolled on co-trimoxazole preventive therapy (CPT) and antiretroviral therapy (ART),\n ', min(gai$year), '\u2013', max(gai$year)))
 
 figsave(hivprog_graph_all, gai, "6_3_hivprog_graph_all")
 
