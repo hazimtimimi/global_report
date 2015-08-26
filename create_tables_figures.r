@@ -89,10 +89,8 @@ if (use_live_db==TRUE){
 }
 
 
-
-# Tom had this, but where is the code?
-# getforecastestimates()
-
+# Repeated footnotes -----
+bangladesh.est.foot <- "For Bangladesh, a joint reassessment of estimates of TB disease burden will be undertaken following completion of the national TB prevalence survey."
 
 # Load packages ----
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -185,13 +183,15 @@ for(df in c('e', 'eraw', 'a', 'araw', 'n', 'd')){
   assign(paste(df, "t", sep="."), comb)
 }
 
+# Real forecast data
 if (max(araw.t$year) < report_year & flg_forecast_estimates_ready) {
   # Load from dropbox
   load(paste(rdata_folder, "Extra data/PG/global_ff.Rdata", sep="/"))
   load(paste(rdata_folder, "Extra data/PG/regional_ff.Rdata", sep="/"))
+  
   # Keep only forecast years and prev and mort; combine global and regional
-  glbl <- global.ff %>% data.frame() %>% filter(year==report_year) %>% select(year, e_pop_num=e.pop.num, e_prev_100k=prev, e_prev_100k_lo=prev.lo, e_prev_100k_hi=prev.hi, e_mort_exc_tbhiv_100k=mort.nh, e_mort_exc_tbhiv_100k_lo=mort.nh.lo, e_mort_exc_tbhiv_100k_hi=mort.nh.hi, forecast) %>% mutate(group_name="global")
-  reglo <- regional.ff %>% data.frame() %>% filter(year==report_year) %>% select(group_name=g.whoregion, year, e_pop_num=e.pop.num, e_prev_100k=prev, e_prev_100k_lo=prev.lo, e_prev_100k_hi=prev.hi, e_mort_exc_tbhiv_100k=mort.nh, e_mort_exc_tbhiv_100k_lo=mort.nh.lo, e_mort_exc_tbhiv_100k_hi=mort.nh.hi, forecast) %>% rbind(glbl)
+  glbl <- global.ff %>% data.frame() %>% filter(year==report_year) %>% select(year, e_pop_num=e.pop.num, e_prev_100k=prev, e_prev_100k_lo=prev.lo, e_prev_100k_hi=prev.hi, e_mort_exc_tbhiv_100k=mort.nh, e_mort_exc_tbhiv_100k_lo=mort.nh.lo, e_mort_exc_tbhiv_100k_hi=mort.nh.hi, forecast) %>% mutate(group_name="global", group_type="global")
+  reglo <- regional.ff %>% data.frame() %>% filter(year==report_year) %>% select(group_name=g.whoregion, year, e_pop_num=e.pop.num, e_prev_100k=prev, e_prev_100k_lo=prev.lo, e_prev_100k_hi=prev.hi, e_mort_exc_tbhiv_100k=mort.nh, e_mort_exc_tbhiv_100k_lo=mort.nh.lo, e_mort_exc_tbhiv_100k_hi=mort.nh.hi, forecast)%>% mutate(group_type="g_whoregion") %>% rbind(glbl)
 
     araw.t <- merge(araw.t, reglo, all=TRUE) %>% mutate(forecast=ifelse(is.na(forecast), FALSE, forecast))
 }
@@ -202,7 +202,12 @@ if (max(eraw.t$year) < report_year & flg_forecast_estimates_ready) {
   # Keep only forecast years and prev and mort
   hbcff <- hbc.ff %>% data.frame() %>% filter(year==report_year) %>% select(iso3, year, e_pop_num=e.pop.num, e_prev_100k=prev, e_prev_100k_lo=prev.lo, e_prev_100k_hi=prev.hi, e_mort_exc_tbhiv_100k=mort.nh, e_mort_exc_tbhiv_100k_lo=mort.nh.lo, e_mort_exc_tbhiv_100k_hi=mort.nh.hi, forecast) 
   
-  eraw.t <- merge(eraw.t, hbcff, all=TRUE) %>% mutate(forecast=ifelse(is.na(forecast), FALSE, forecast))
+  # Get est Rdata as well for vr.raw (necessary for HBC mortality plot)
+  # Load from dropbox
+  load(paste(rdata_folder, "Extra data/PG/est.Rdata", sep="/"))
+  # Keep only forecast years and prev and mort
+  hbcvr <- est %>% data.frame() %>% select(iso3, year, vr.raw) 
+  eraw.t <- merge(eraw.t, hbcff, all=TRUE) %>% mutate(forecast=ifelse(is.na(forecast), FALSE, forecast)) %>% merge(hbcvr, all=TRUE)
 }
 
 
