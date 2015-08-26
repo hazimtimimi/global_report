@@ -68,10 +68,27 @@ if(flg_show_estimates){
 
   # 2_2_incmort_num_glo ------------------------------------------------
   
-  ima <- a.t %>% filter(group_name=="global") %>% select(year, matches(".*inc.*num.*"), matches(".*mort.*num.*"))
+  ima <- araw.t %>% filter(group_name=="global") %>% select(year, matches(".*inc.*num.*"), matches(".*mort.*num.*"))
   
-  # incmort_num_glo1 <- ggplot(ima, aes(year, best, fill=var, ymin=0)) + geom_line(size=1, aes(color=var)) + geom_ribbon(aes (year, best, ymin=lo, ymax=hi), alpha=0.2) + geom_hline(aes(yintercept=target), linetype=2) + geom_line(aes(year, c_newinc_100k), color="black", size=1) + theme_glb.rpt() + facet_wrap(~var, scales="free_y") + theme(legend.position="none") + scale_x_continuous("", minor_breaks=seq(1990, 2015, 1)) + scale_y_continuous(breaks=pretty_breaks()) + ylab("Rate per 100 000 population")
+  # Reshape
+  imaf <- NULL
+  for(var in c("inc", "inc_tbhiv", "mort_tbhiv", "mort_exc_tbhiv")){
+    df <- subset(ima, select=c("year", paste0("e_", var, "_num"), paste0("e_", var, "_num_lo"), paste0("e_", var, "_num_hi")))
+    names(df) <- c("year", "best", "lo", "hi")
+    df[2:4] <- df[2:4] / 1e6
+    df$var <- var
+    imaf <- rbind(imaf, df)
+  }
   
+  incmort_num_glo1 <- imaf %>% filter(var %in% c("inc", "inc_tbhiv")) %>% ggplot(aes(year, best, fill=var, ymin=0)) + geom_line(size=1, aes(color=var)) + geom_ribbon(aes (year, best, ymin=lo, ymax=hi), alpha=0.2) + theme_glb.rpt() + theme(legend.position="none") + scale_x_continuous("", minor_breaks=seq(1990, 2015, 1)) + scale_y_continuous(breaks=pretty_breaks()) + ylab("Millions") + scale_color_manual(values = c(inc.color, inch.color)) + scale_fill_manual(values = c(inc.color, inch.color)) + geom_text(aes(2004,8.3, label="All TB cases")) + geom_text(aes(2004,2.3, label="HIV-positive TB cases")) + ggtitle("TB incidence")
+
+  figsave(incmort_num_glo1, imaf, "2_2_incmort_num_glo1", width=6, height=6)
+  
+  incmort_num_glo2 <- imaf %>% filter(var %in% c("mort_tbhiv", "mort_exc_tbhiv")) %>% ggplot(aes(year, best, fill=var, ymin=0)) + geom_line(size=1, aes(color=var)) + geom_ribbon(aes (year, best, ymin=lo, ymax=hi), alpha=0.2) + theme_glb.rpt() + theme(legend.position="none") + scale_x_continuous("", minor_breaks=seq(1990, 2015, 1)) + scale_y_continuous(breaks=pretty_breaks()) + ylab("Millions") + scale_color_manual(values = c(mort.color, inch.color)) + scale_fill_manual(values = c(mort.color, inch.color)) + geom_text(aes(1998,1.2, label="TB deaths among \nHIV-negative people")) + geom_text(aes(2004,0.7, label="TB deaths among HIV-positive people(a)")) + ggtitle("TB deaths")  
+  
+  figsave(incmort_num_glo2, imaf, "2_2_incmort_num_glo2", width=6, height=6)
+  
+  # incmort_num <- arrangeGrob(incmort_num_glo1, incmort_num_glo2)
 
   # 2_3_topten ---------------------------------------------------------
   # The 'top 10 countries' by absolute number and by rate, in 2015 only (incidence) are used.
@@ -96,10 +113,11 @@ if(flg_show_estimates){
       coord_flip()
 
     figsave(p, df, paste0("2_3_topten_", var_name), width=5, height=4)
+    return(p)
   }
 
   # Top 10 countries by incidence rates
-  latest_estimates %>%
+  topten_e_inc_100k <- latest_estimates %>%
     select(country,
            var    = e_inc_100k,
            var_lo = e_inc_100k_lo,
@@ -109,7 +127,7 @@ if(flg_show_estimates){
     hplot_estimates_with_ui("Incidence: rate per 100 000 population per year", "e_inc_100k", "Rate")
 
   # Top 10 countries by incidence absolute number
-  latest_estimates %>%
+  topten_e_inc_num <- latest_estimates %>%
     select(country,
            var    = e_inc_num,
            var_lo = e_inc_num_lo,
@@ -127,35 +145,44 @@ if(flg_show_estimates){
   # 2_6_incprevmort_glo ----------------------------------
 
 
-  eget <- c("year", "e_pop_num", "e_inc_100k", "e_inc_100k_lo", "e_inc_100k_hi", "e_prev_100k", "e_prev_100k_lo", "e_prev_100k_hi", "e_mort_exc_tbhiv_100k", "e_mort_exc_tbhiv_100k_lo", "e_mort_exc_tbhiv_100k_hi")
+  eget <- c("year", "e_pop_num", "e_inc_100k", "e_inc_100k_lo", "e_inc_100k_hi", "e_inc_tbhiv_100k", "e_inc_tbhiv_100k_lo", "e_inc_tbhiv_100k_hi", "e_prev_100k", "e_prev_100k_lo", "e_prev_100k_hi", "e_mort_exc_tbhiv_100k", "e_mort_exc_tbhiv_100k_lo", "e_mort_exc_tbhiv_100k_hi")
 
   esta <- subset(araw.t, year >=1990 & group_name=="global", select=eget)
 
-  estb <- n.t %>% filter(year>=1990) %>% select(year, c_newinc) %>%
-    group_by(year) %>% summarize(c_newinc=sum0(c_newinc))
+  # estb <- n.t %>% filter(year>=1990) %>% select(year, c_newinc) %>%
+    # group_by(year) %>% summarize(c_newinc=sum0(c_newinc))
   #   estc <- aggregate(estb["c_newinc"], by=list(year=estb$year), FUN=sum, na.rm=TRUE)
 
-  estd <- merge(esta, estb, all.x=TRUE)
+  # estd <- merge(esta, estb, all.x=TRUE)
 
-  estd$c_newinc_100k <- estd$c_newinc / estd$e_pop_num * 1e5
+  # estd$c_newinc_100k <- estd$c_newinc / estd$e_pop_num * 1e5
 
+  # Reshape
   estf <- NULL
-  for(var in c("inc", "prev", "mort_exc_tbhiv")){
-    df <- subset(estd, select=c("year", paste0("e_", var, "_100k"), paste0("e_", var, "_100k_lo"), paste0("e_", var, "_100k_hi")))
+  for(var in c("inc", "inc_tbhiv", "prev", "mort_exc_tbhiv")){
+    df <- subset(esta, select=c("year", paste0("e_", var, "_100k"), paste0("e_", var, "_100k_lo"), paste0("e_", var, "_100k_hi")))
     names(df) <- c("year", "best", "lo", "hi")
     df$var <- var
     estf <- rbind(estf, df)
   }
 
-  estg <- estd[c("year", "c_newinc_100k")]
-  estg$var <- "inc"
+  # estg <- estd[c("year", "c_newinc_100k")]
+  # estg$var <- "inc"
 
-  esth <- merge(estf, estg, all.x=TRUE)
-  esth$var <- factor(esth$var, levels=c("inc", "prev", "mort_exc_tbhiv"), labels=c("Incidence and notification", "Prevalence", "Mortality (excluding HIV)"))
+  # create panel grouping
+  estf$panel <- ifelse(estf$var %in% c("inc", "inc_tbhiv"), "inc", estf$var)
+  estf$panel <- factor(estf$panel, levels=c("inc", "prev", "mort_exc_tbhiv"), labels=c("Incidence", "Prevalence", "Mortality"))
 
-  esti <- esth %>% group_by(var) %>% arrange(var, year) %>% mutate(target=ifelse(var=="Incidence and notification", as.numeric(NA), best[1]/2))
+  esti <- estf %>% group_by(var) %>% arrange(var, year) %>% mutate(target=ifelse(panel=="Incidence", as.numeric(NA), best[1]/2))
 
-  incprevmort_glo <- ggplot(esti, aes(year, best, fill=var, ymin=0)) + geom_line(size=1, aes(color=var)) + geom_ribbon(aes (year, best, ymin=lo, ymax=hi), alpha=0.2) + geom_hline(aes(yintercept=target), linetype=2) + geom_line(aes(year, c_newinc_100k), color="black", size=1) + theme_glb.rpt() + facet_wrap(~var, scales="free_y") + theme(legend.position="none") + scale_x_continuous("", minor_breaks=seq(1990, 2015, 1)) + scale_y_continuous(breaks=pretty_breaks()) + ylab("Rate per 100 000 population")
+  incprevmort_glo <- ggplot(esti, aes(year, best, fill=var, ymin=0)) + geom_line(size=1, aes(color=var)) + geom_ribbon(aes (year, best, ymin=lo, ymax=hi), alpha=0.2) + geom_hline(aes(yintercept=target), linetype=2) + theme_glb.rpt() + facet_wrap(~panel, scales="free_y") + theme(legend.position="none") + scale_x_continuous("", minor_breaks=seq(1990, 2015, 1)) + scale_y_continuous(breaks=pretty_breaks()) + ylab("Rate per 100 000 population per year") +
+    scale_color_manual(values = c(inc.color, inch.color, mort.color, prev.color)) + scale_fill_manual(values = c(inc.color, inch.color, mort.color, prev.color)) +
+    ggtitle(paste0("Global trends in estimated rates of TB incidence, prevalence and mortality. Left: Global trends in estimated 
+incidence rate including HIV-positive TB (", inc.color, ") and estimated incidence rate of HIV-positive TB (", inch.color,"). Centre and 
+right: Trends in estimated TB prevalence and mortality rates 1990–", report_year-1, " and forecast TB prevalence and mortality 
+rates ", report_year, ". The horizontal dashed lines represent the Stop TB Partnership targets of a 50% reduction in 
+prevalence and mortality rates by 2015 compared with 1990. Shaded areas represent uncertainty bands. Mortality 
+excludes TB deaths among HIV-positive people."))
 
   figsave(incprevmort_glo, esti, "2_6_incprevmort_glo")
 
@@ -204,7 +231,7 @@ if(flg_show_estimates){
   figsave(inc_reg, reg_aggs, "2_7_inc_reg")
 
   # and now clear up the mess left behind
-  rm(list=c("inc_reg", "reg_aggs"))
+#   rm(list=c("inc_reg", "reg_aggs"))
 
 
   # 2_8_inc_hbc -----------------------------------------------------
@@ -222,7 +249,7 @@ if(flg_show_estimates){
     .shortnames()
 
 
-  inc_hbc <- qplot(year, e_inc_100k, data=inc_hbc_data, geom='line', colour=I(inc.color)) +
+  inc_hbc1 <- qplot(year, e_inc_100k, data=inc_hbc_data, geom='line', colour=I(inc.color)) +
     geom_ribbon(aes(year,
                     ymin=e_inc_100k_lo,
                     ymax=e_inc_100k_hi), fill=I(inc.color), alpha=0.4) +
@@ -238,12 +265,12 @@ if(flg_show_estimates){
     ggtitle(paste0("Estimated TB incidence rates, 22 high-burden countries, 1990-", report_year-1, ". \nTrends in estimated TB incidence rates (green) and estimated incidence rates of HIV-positive TB (red). \nShaded areas represent uncertainty bands."))
 
   # Put back x-axis (weird ggplot problem because facets don;t fit page exactly...)
-  inc_hbc <- facetAdjust(inc_hbc)
+  inc_hbc <- facetAdjust(inc_hbc1)
 
   figsave(inc_hbc, inc_hbc_data, "2_8_inc_hbc")
 
   # and now clear up the mess left behind
-  rm(list=c("inc_hbc_data", "inc_hbc"))
+#   rm(list=c("inc_hbc_data", "inc_hbc"))
 
 
 
@@ -252,7 +279,7 @@ if(flg_show_estimates){
   prev_mort_reg_aggs <- araw.t %>%
     filter(group_type=="g_whoregion")
 
-  prev_mort_reg_aggs$forecast <- ifelse(prev_mort_reg_aggs$year >= report_year, "forecast", "current")
+    prev_mort_reg_aggs$forecast <- ifelse(prev_mort_reg_aggs$year >= report_year, "forecast", "current")
 
   prev_mort_reg_aggs$g_whoregion <- factor(prev_mort_reg_aggs$group_name,
                                            labels=c("Africa", "The Americas", "Eastern Mediterranean", "Europe", "South-East Asia", "Western Pacific"))
@@ -277,6 +304,44 @@ if(flg_show_estimates){
 
   figsave(prev_reg, prev_mort_reg_aggs, "2_11_prev_reg")
 
+  # 2_x_prev_hbc ----------------------------------------------------
+  
+  # Fudge because eraw doesn't contain g_hbc22
+  hbc_iso2 <- e.t %>%
+    filter(g_hbc22=="high" & year==report_year-1) %>%
+    select(iso2)
+  
+  # Get prevalence estimates for the HBCs
+  prev_hbc_data <- eraw.t %>%
+    filter(iso2 %in% hbc_iso2$iso2) %>%
+    select(country, iso2, year, e_prev_100k, e_prev_100k_lo, e_prev_100k_hi) %>% mutate(target.prev=e_prev_100k[1]/2)  %>% # Add variable for STP target prevalence rates (half of 1990 values) to be displayed as dashed lines
+    .shortnames()
+  
+  prev_hbc_data$forecast <- ifelse(prev_hbc_data$year >= report_year, "forecast", "current")
+  
+  
+  prev_hbc <- qplot(year, e_prev_100k, data=prev_hbc_data, geom='line', colour=I(prev.color)) +
+    geom_ribbon(aes(year,
+                    ymin=e_prev_100k_lo,
+                    ymax=e_prev_100k_hi), fill=I(prev.color), alpha=0.4) +
+    geom_hline(aes(yintercept=target.prev), linetype=2) +
+    facet_wrap(~country, scales='free_y') +
+    xlab("") + ylab('Rates per 100 000 population per year') +
+    expand_limits(y=0) +
+    theme_glb.rpt() +
+    theme(legend.position='none') +
+    ggtitle(paste0("Trends in estimated TB prevalence rates 1990-", report_year-1, " and forecast TB prevalence rates 2015, 22 high-burden countries. \nShaded areas represent uncertainty bands. The horizontal dashed lines represent the Stop TB Partnership \ntarget of a 50% reduction in the prevalence rate by 2015 compared with 1990. \nThe last point shows a projection for 2015."))
+  
+  # Add footnote
+  # This currently breaks ggsave, but in a near release it should be fixed.
+  # mort_hbc <- arrangeGrob(mort_hbc, sub = textGrob("(a) The width of an uncertainty band narrows as the quality and completeness of vital registration data improves.", x = 0, hjust = -0.1, vjust=0.1, gp = gpar(fontsize = 10)))
+  
+  # mort_hbc <- facetAdjust(mort_hbc)
+  # It looks like you can have one tweak or another, but not both. (X-axis on orphaned panels or footnote.)
+  
+  figsave(prev_hbc, prev_hbc_data, "2_x_prev_hbc")
+  
+  
   # 2_14_mort_reg ----------------------------------------------------
 
   mort_reg <- ggplot(prev_mort_reg_aggs,
@@ -297,7 +362,7 @@ if(flg_show_estimates){
   figsave(mort_reg, prev_mort_reg_aggs, "2_14_mort_reg")
 
   # and now clear up the mess left behind
-  rm(list=c("prev_mort_reg_aggs", "prev_reg", "mort_reg"))
+#   rm(list=c("prev_mort_reg_aggs", "prev_reg", "mort_reg"))
 
 
 
@@ -311,8 +376,8 @@ if(flg_show_estimates){
 
   # Get mortality estimates for the HBCs
   mort_hbc_data <- eraw.t %>%
-    filter(iso2 %in% hbc_iso2$iso2 & year < report_year) %>%
-    select(country, iso2, year, e_mort_exc_tbhiv_100k, e_mort_exc_tbhiv_100k_lo, e_mort_exc_tbhiv_100k_hi) %>% mutate(target.mort=e_mort_exc_tbhiv_100k[1]/2)  %>% # Add variable for STP target prevalence rates (half of 1990 values) to be displayed as dashed lines
+    filter(iso2 %in% hbc_iso2$iso2) %>%
+    select(country, iso2, year, e_mort_exc_tbhiv_100k, e_mort_exc_tbhiv_100k_lo, e_mort_exc_tbhiv_100k_hi, vr.raw) %>% mutate(target.mort=e_mort_exc_tbhiv_100k[1]/2)  %>% # Add variable for STP target prevalence rates (half of 1990 values) to be displayed as dashed lines
     .shortnames()
 
   mort_hbc_data$forecast <- ifelse(mort_hbc_data$year >= report_year, "forecast", "current")
@@ -324,7 +389,7 @@ if(flg_show_estimates){
                     ymax=e_mort_exc_tbhiv_100k_hi), fill=I(mort.color), alpha=0.4) +
     geom_hline(aes(yintercept=target.mort), linetype=2) +
     facet_wrap(~country, scales='free_y') +
-    #geom_point(aes(year, vr.tbrate.raw), shape=I(4)) +
+    geom_point(aes(year, vr.raw), shape=I(4)) +
     xlab("") + ylab('Rates per 100 000 population per year') +
     expand_limits(y=0) +
     theme_glb.rpt() +
@@ -332,7 +397,8 @@ if(flg_show_estimates){
     ggtitle(paste0("Trends in estimated TB mortality rates 1990-", report_year-1, " and forecast TB mortality rates 2015, 22 high-burden countries. \nEstimated TB mortality excludes TB deaths among HIV-positive people. The horizontal dashed lines represent the Stop TB Partnership \ntarget of a 50% reduction in the mortality rate by 2015 compared with 1990. The last point shows a projection for 2015. (a) \nUncertainty is due to adjustments made to the mortality data from vital registration systems that were reported by countries \n(mortality data from vital registration systems are represented by the 'x' symbol)."))
 
   # Add footnote
-  mort_hbc <- arrangeGrob(mort_hbc, sub = textGrob("(a) The width of an uncertainty band narrows as the quality and completeness of vital registration data improves.", x = 0, hjust = -0.1, vjust=0.1, gp = gpar(fontsize = 10)))
+  # This currently breaks ggsave, but in a near release it should be fixed.
+  # mort_hbc <- arrangeGrob(mort_hbc, sub = textGrob("(a) The width of an uncertainty band narrows as the quality and completeness of vital registration data improves.", x = 0, hjust = -0.1, vjust=0.1, gp = gpar(fontsize = 10)))
 
   # mort_hbc <- facetAdjust(mort_hbc)
   # It looks like you can have one tweak or another, but not both. (X-axis on orphaned panels or footnote.)
@@ -340,7 +406,7 @@ if(flg_show_estimates){
   figsave(mort_hbc, mort_hbc_data, "2_15_mort_hbc")
 
   # and now clear up the mess left behind
-  rm(list=c("mort_hbc_data", "mort_hbc"))
+#   rm(list=c("mort_hbc_data", "mort_hbc"))
 
 
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -487,7 +553,7 @@ if(flg_show_estimates){
     geom_ribbon(aes(year, ymin=e_inc_num_lo/1e6, ymax=e_inc_num_hi/1e6), fill=I('#00FF33'), alpha=0.4) +
     geom_line(aes(year, c_newinc/1e6)) + scale_x_continuous('') +
     ylab('Cases per year (millions)')  + theme_glb.rpt() +
-    ggtitle(paste0('Global trends in absolute number of notified TB cases (black) and estimated TB \nincidence (green), 1990-', report_year-1, ". \nCase notifications include new and relapse cases (all forms)."))
+    ggtitle(paste0('Global trends in absolute number of notified TB cases (black) and \nestimated TB incidence (green), 1990-', report_year-1, ". \nCase notifications include new and relapse cases (all forms)."))
 
   figsave(inc_notif_gloa, ehba, "3_1a_inc_notif_glo", width=6, height=6)
   
@@ -601,7 +667,7 @@ rm(list=c("tsr", "tsr_table", "tsr_table_melted"))
 # Remove countries that did not report 
 # - total outcomes (newrel_coh) (because otherwise we can't minus out the HIV)
 # - tbhiv outcomes (tbhiv_coh)
-# Countries reporting all tbhiv cases as not evaluated are included.
+# Countries reporting all tbhiv cases as not evaluated are not included.
 
 # Subset the data
 hma <- o %>% filter(year==report_year-2, !is.na(newrel_coh), !is.na(tbhiv_coh), tbhiv_coh == 0 | (tbhiv_coh > 0 & c_tbhiv_neval != tbhiv_coh)) %>% select(country, year, newrel_coh, newrel_succ, newrel_fail, newrel_died, newrel_lost, c_newrel_neval, ret_nrel_coh, ret_nrel_succ, ret_nrel_fail, ret_nrel_died, ret_nrel_lost, c_ret_nrel_neval, tbhiv_coh, tbhiv_succ, tbhiv_fail, tbhiv_died, tbhiv_lost, c_tbhiv_neval) 
