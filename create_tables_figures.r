@@ -183,7 +183,7 @@ for(df in c('e', 'eraw', 'a', 'araw', 'n', 'd')){
   assign(paste(df, "t", sep="."), comb)
 }
 
-# Real forecast data
+# Real forecast data (Download from PG's GitHub and save to dropbox)
 if (max(araw.t$year) < report_year & flg_forecast_estimates_ready) {
   # Load from dropbox
   load(paste(rdata_folder, "Extra data/PG/global_ff.Rdata", sep="/"))

@@ -80,7 +80,7 @@ fujj <- hbc %>% data.frame() %>% filter(year==report_year-1) %>% select(e_pop_nu
   tak <- .shortnames(tah, col = "rowname", ord = "hbc")
 
   # Add footnotes for some countries 
-  tak[tak$rowname=="India", "rowname"] <- "India(c)"
+  tak[tak$rowname=="Bangladesh", "rowname"] <- "Bangladesh(c)"
 
 
   cat(paste("<font size=5><b>Table 2.1 Estimated epidemiological burden of TB, ", report_year-1, ".</b> Best estimates are followed by the lower and upper bounds of the 95% uncertainty interval. Numbers in thousands.<sup>a</sup></font>", sep=""), file=paste0("Tables/2_1_burden_num", Sys.Date(), ".htm"))
@@ -98,16 +98,15 @@ fujj <- hbc %>% data.frame() %>% filter(year==report_year-1) %>% select(e_pop_nu
                             <th colspan='2'>INCIDENCE</th>
                             <th colspan='2'>HIV-POSITIVE INCIDENT TB CASES</th>
                         </tr>",
-                      "<tr>
+                      paste0("<tr>
                         <td colspan='12'>
                         <sup>a</sup> Numbers for mortality, prevalence and incidence shown to two significant figures. Totals (HBCs, regional and global) are computed prior to rounding.<br />
 
                         <sup>b</sup> Mortality excludes deaths among HIV-positive TB cases. Deaths among HIV-positive TB cases are classified as HIV deaths according to ICD-10 and are shown separately in this table.<br />
 
-                        <sup>c</sup>Estimates for India have not yet been officially approved by the Ministry of Health and Family Welfare, Government of India, and should therefore be considered provisional.
-
+                        <sup>c</sup> ", bangladesh.est.foot, "
                         </td>
-                      </tr>")))
+                      </tr>"))))
 
   tablecopy("2_1_burden_num")
 
