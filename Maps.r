@@ -40,8 +40,6 @@
 
 source(file.path(scripts_folder, "WHO_map_functions.r"))
 
-setwd(figures_folder)
-
 # Contrasting colors for easier re-layout
 con.col <- c('red', 'blue', 'orange', 'green', 'purple', 'violet', 'sienna', 'dark orange')
 
@@ -50,8 +48,29 @@ con.col <- c('red', 'blue', 'orange', 'green', 'purple', 'violet', 'sienna', 'da
 # The burden of disease caused by TB
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+# 2_1_sb_map -------------------------------------------------
+# Countries which have completed the standards and benchmarks
 
-# 2_4_hivprev_map -------------------------------------------------
+mna <- e.t %>% filter(year==report_year-1, iso2 %in% c("BW","BI","CI","ET","GH","KE","LS","MG","MW","MZ","NG","RW","ZA","SS","SZ","UG","TZ","ZM","ZW","AF","EG","PK","SA", "AM","BY", "GE","TM","UA","UZ","BD","KP","ID","MM","NP","TH","MN","PH","VN")) %>% select(country, iso3, g_hbc22)
+
+mcnt <- table(mna$g_hbc22)
+
+mna$cat <- factor(mna$g_hbc22, levels=c("high", "low"), labels=c(paste0("High-burden countries (", mcnt[1], ")"), paste0("Other countries (", mcnt[2], ")")))
+
+# map
+sb_map <- WHOmap.print(mna, 
+"Figure 2.1 Countries that had completed a systematic assessment
+of TB surveillance using the WHO TB surveillance checklist of
+standards and benchmarks by August 2015", "",
+                            na.label="",
+                            copyright=FALSE,
+                            colors=c('red', 'green'),
+                            show=FALSE)
+
+figsave(sb_map, mna, "f2_1_sb_map")
+
+
+# 2_5_hivprev_map -------------------------------------------------
 # HIV prevalence in new cases
 
 mga <- subset(e.t, year==report_year-1, select=c('country', 'iso3', 'e_tbhiv_prct'))
@@ -62,17 +81,17 @@ mga$cat <- cut(mga$e_tbhiv_prct,
                right=FALSE)
 
 # map
-hivprev_map <- WHOmap.print(mga, paste("Estimated HIV prevalence in new and relapse TB cases,", report_year-1),
+hivprev_map <- WHOmap.print(mga, paste("Figure 2.5 Estimated HIV prevalence in new and relapse TB cases,", report_year-1),
                             'HIV prevalence \nin new TB cases, \nall ages (%)',
                             na.label="No estimate",
                             copyright=FALSE,
                             colors=c('red', 'blue', 'orange', 'green'),
                             show=FALSE)
 
-figsave(hivprev_map, mga, "2_4_hivprev_map")
+figsave(hivprev_map, mga, "f2_5_hivprev_map")
 
 
-# 2_5_inc_map -------------------------------------------------
+# 2_6_inc_map -------------------------------------------------
 # Incidence rates
 
 mfa <- subset(e.t, year==report_year-1, select=c('country', 'iso3', 'e_inc_100k'))
@@ -83,18 +102,18 @@ mfa$cat <- cut(round(mfa$e_inc_100k),
                right=FALSE)
 
 # map
-inc_map <- WHOmap.print(mfa, paste("Estimated TB incidence rates,", report_year-1),
+inc_map <- WHOmap.print(mfa, paste("Figure 2.6 Estimated TB incidence rates,", report_year-1),
                         "Estimated new TB \ncases (all forms) per \n100 000 population \nper year",
                         na.label="No estimate",
                         copyright=FALSE,
                         colors=c('red', 'blue', 'orange', 'green', 'purple', 'violet', 'sienna'),
                         show=FALSE)
 
-figsave(inc_map, mfa, "2_5_inc_map")
+figsave(inc_map, mfa, "f2_6_inc_map")
 
 
 
-# 2_1_inc_src_map -------------------------------------------------
+# 2_2_inc_src_map -------------------------------------------------
 # Incidence from country consultations
 
 mfa <- subset(e.t, year==report_year-1, select=c("g_whoregion", 'country', 'iso3', 'source_inc'))
@@ -103,17 +122,18 @@ mfb <- subset(mfa, source_inc %in% c("Capture-recapture","High income","Survey")
 mfb$cat <- factor("Country consultation")
 
 # map
-inc_src_map <- WHOmap.print(mfb,
-                             paste0("Coverage of country consultations on estimates of TB disease burden, 2008–", report_year-1),
+inc_src_map <- WHOmap.print(mfb, paste0(
+"Figure 2.2 Coverage of country consultations on estimates of 
+TB disease burden, 2008–", report_year),
                              "[remove legend]",
                              low.color=inc.color,
                              copyright=FALSE,
                              show=FALSE)
 
-figsave(inc_src_map, mfb, "2_1_inc_src_map")
+figsave(inc_src_map, mfb, "f2_2_inc_src_map")
 
 
-# 2_12_mort_src_map -------------------------------------------------
+# 2_15_mort_src_map -------------------------------------------------
 # Mortality from vital registration
 
 mea <- subset(e.t, year==report_year-1, select=c("g_whoregion", 'country', 'iso3', 'source_mort'))
@@ -124,16 +144,19 @@ meb$cat <- factor("Estimated with \nVR data")
 
 # map
 mort_src_map <- WHOmap.print(meb,
-                             paste0("Countries (in ", mort.color, ") for which TB mortality is estimated using measurements \nfrom vital registration systems and/or mortality surveys"),
+                             paste0(
+"Figure 2.15 Countries (in ", mort.color, ") for which TB 
+mortality is estimated using measurements from vital registration 
+systems (n=", nrow(meb)-2, ") and/or mortality surveys (n=2)"),
                              "[remove legend]",
                              low.color=mort.color,
                              copyright=FALSE,
                              show=FALSE)
 
-figsave(mort_src_map, meb, "2_12_mort_src_map")
+figsave(mort_src_map, meb, "f2_15_mort_src_map")
 
 
-# 2_13_mort_map -------------------------------------------------
+# 2_17_mort_map -------------------------------------------------
 # Mortality rates
 
 mia <- subset(e.t, year==report_year-1, select=c('country', 'iso3', 'e_mort_exc_tbhiv_100k'))
@@ -145,14 +168,16 @@ mia$cat <- cut(mia$e_mort_exc_tbhiv_100k,
 
 # map
 mort_map <- WHOmap.print(mia,
-                         paste("Estimated TB mortality rates excluding TB deaths among HIV-positive \npeople,", report_year-1),
+                         paste(
+"Figure 2.17 Estimated TB mortality rates excluding TB deaths among 
+HIV-positive \npeople,", report_year-1),
                          "Estimated TB \ndeaths per \n100 000 population",
                          na.label="No estimate",
                          copyright=FALSE,
                          colors=c('red', 'blue', 'orange', 'green', 'purple', 'brown'),
                          show=FALSE)
 
-figsave(mort_map, mia, "2_13_mort_map")
+figsave(mort_map, mia, "f2_17_mort_map")
 
 
 # 2_xx_err_map -------------------------------------------------
@@ -185,14 +210,14 @@ mhc <- WHOmap.print(mhb,
                     copyright=FALSE,
                     show=FALSE)
 
-figsave(mhc, mhb, "2_xx_err_map")
+figsave(mhc, mhb, "f2_xx_err_map")
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Chapter 3 ------
 # TB case notifications and treatment outcomes
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-# 
+
 # 3_7_ltbipolicy_map -------------------------------------------------
 # Countries with national LTBI policy
 
@@ -216,7 +241,7 @@ ltbipolicy_map <- WHOmap.print(ltbipolicy,
                                copyright=FALSE,
                                show=FALSE)
 
-figsave(ltbipolicy_map, ltbipolicy, "3_7_ltbipolicy_map")
+figsave(ltbipolicy_map, ltbipolicy, "f3_7_ltbipolicy_map")
 
 
 # 3_6_ltbisurvey_map -------------------------------------------------
@@ -235,7 +260,7 @@ ltbisurvey_map <- WHOmap.print(ltbisurvey,
                                  copyright=FALSE,
                                  show=FALSE)
 
-figsave(ltbisurvey_map, ltbisurvey, "3_6_ltbisurvey_map")
+figsave(ltbisurvey_map, ltbisurvey, "f3_6_ltbisurvey_map")
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -276,12 +301,28 @@ bdq_map <- WHOmap.print(mib,
                         copyright=FALSE,
                         show=FALSE)
 
-figsave(bdq_map, mib, "4_10_bdq_map")
+figsave(bdq_map, mib, "f4_10_bdq_map")
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Chapter 5 ------
 # Diagnostics and laboratory strengthening
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+
+# 5_1_dst_map -------------------------------------------------
+# dstality rates
+
+dst_dta <- readWorksheetFromFile(file.path(rdata_folder, "Extra data", "WvG", "andrewistheman.xls"), sheet=1) %>% select(iso3, value) %>% filter(value!=5) %>% mutate(cat=factor(value, labels=c("1st- and 2nd-line DST", "1st-line DST only", "Xpert MTB/RIF only", "No capacity"))) %>% inner_join(subset(n, year==report_year-1, c(iso3, country)))
+
+# map
+dst_map <- WHOmap.print(dst_dta, "Figure 5.1 Global capacity for drug-susceptibility testing (DST), 2014(a)",
+                        "", na.label = "No data",
+                        copyright=FALSE,
+                        colors=c('red', 'blue', 'green', 'purple'),
+                        show=FALSE)
+
+figsave(dst_map, dst_dta, "f5_1_dst_map")
+
 
 
 # 5_2_xpertcart_map -------------------------------------------------
@@ -305,7 +346,7 @@ xpert_cart_map <- WHOmap.print(xpert_cart,
                         na.label="Not eligible for \npreferential pricing",
                         show=FALSE)
 
-figsave(xpert_cart_map, xpert_cart, "5_2_xpertcart_map")
+figsave(xpert_cart_map, xpert_cart, "f5_2_xpertcart_map")
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -345,7 +386,7 @@ hivtest_map <- WHOmap.print(mc,
 
 # Footnote: Data for the Russian Federation are for new TB patients in the civilian sector only.
 
-figsave(hivtest_map, mc, "6_2_hivtest_map")
+figsave(hivtest_map, mc, "f6_2_hivtest_map")
 
 
 # 6_5_HIVart_map -------------------------------------------------
@@ -376,7 +417,7 @@ HIVart_map <- WHOmap.print(mca,
 # non-relapse retreatment cases. The denominator (i.e.
 # estimated HIV-positive incident TB cases) includes new and relapse cases only.
 
-figsave(HIVart_map, mca, "6_5_HIVart_map")
+figsave(HIVart_map, mca, "f6_5_HIVart_map")
 
 
 # END ======================
