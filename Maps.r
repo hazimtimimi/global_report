@@ -212,6 +212,27 @@ mhc <- WHOmap.print(mhb,
 
 figsave(mhc, mhb, "f2_xx_err_map")
 
+# 2_21_age_map -------------------------------------------------
+# Countries able to report age disaggregated data
+
+mja <- n.t %>% filter(year==report_year-1, !is.na(c_newinc)) %>% select(country, iso3, matches("newrel_[m|f|sex]")) %>% select(-newrel_mu, -newrel_fu, -newrel_sexunkageunk) 
+
+mja$age <- sum_of_row(mja[3:ncol(mja)])
+
+mja$cat <- factor(ifelse(is.na(mja$age), "No age disaggregation", "Age disaggregation"))
+
+mjb <- mja %>% select(country, iso3, cat)
+
+# map
+age_map <- WHOmap.print(mjb,
+                    paste("Figure 2.21 Reporting of age disaggregated data,", report_year-1),
+                    '',
+                    # colors=c('dark green', 'light green', 'white'),
+                    copyright=FALSE,
+                    show=TRUE)
+
+figsave(age_map, mjb, "f2_21_age_map")
+
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Chapter 3 ------
 # TB case notifications and treatment outcomes
