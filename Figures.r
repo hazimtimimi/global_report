@@ -240,14 +240,9 @@ Mortality excludes TB deaths among HIV-positive people."))
 
   # 2_10_inc_hbc -----------------------------------------------------
 
-  # Fudge because eraw.t doesn't contain g_hbc22
-  hbc_iso2 <- e.t %>%
-    filter(g_hbc22=="high" & year==report_year-1) %>%
-    select(iso2)
-
   # Get incidence estimates for the HBCs
   inc_hbc_data <- eraw.t %>%
-    filter(iso2 %in% hbc_iso2$iso2 & year < report_year) %>%
+    filter(g_hbc22=="high" & year < report_year) %>%
     select(country, year, e_inc_100k, e_inc_100k_lo, e_inc_100k_hi,
            e_inc_tbhiv_100k, e_inc_tbhiv_100k_lo, e_inc_tbhiv_100k_hi)  %>%
     .shortnames() %>% mutate(country=ifelse(country=="Bangladesh", "Bangladesh(a)", country))
@@ -738,7 +733,7 @@ B3_2_notif_ind <- ggplot(inda, aes(year, c_newinc_100k, ymin=0)) +
   scale_x_continuous("") +
   ylab("Cases per 100 000 population per year")  +
   theme_glb.rpt() +
-  ggtitle(paste0("Trends in case notification in India, 2000-", report_year-1))
+  ggtitle(paste0("Case notifications in India, 2000-", report_year-1))
 
 figsave(B3_2_notif_ind, inda, "B3_2_notif_ind", width=6, height=6)
 
