@@ -68,11 +68,11 @@ fujj <- hbc %>% data.frame() %>% filter(year==report_year-1) %>% select(e_pop_nu
 
   # combine range columns
 
-  tag$e_mort_exc_tbhiv_range <- paste0("(", tag$e_mort_exc_tbhiv_num_lo, "\u2013", tag$e_mort_exc_tbhiv_num_hi, ")")
-  tag$e_mort_tbhiv_range <- paste0("(", tag$e_mort_tbhiv_num_lo, "\u2013", tag$e_mort_tbhiv_num_hi, ")")
-  tag$e_prev_range <- paste0("(", tag$e_prev_num_lo, "\u2013", tag$e_prev_num_hi, ")")
-  tag$e_inc_range <- paste0("(", tag$e_inc_num_lo, "\u2013", tag$e_inc_num_hi, ")")
-  tag$e_inc_tbhiv_range <- paste0("(", tag$e_inc_tbhiv_num_lo, "\u2013", tag$e_inc_tbhiv_num_hi, ")")
+  tag$e_mort_exc_tbhiv_range <- paste0(tag$e_mort_exc_tbhiv_num_lo, "\u2013", tag$e_mort_exc_tbhiv_num_hi)
+  tag$e_mort_tbhiv_range <- paste0(tag$e_mort_tbhiv_num_lo, "\u2013", tag$e_mort_tbhiv_num_hi)
+  tag$e_prev_range <- paste0(tag$e_prev_num_lo, "\u2013", tag$e_prev_num_hi)
+  tag$e_inc_range <- paste0(tag$e_inc_num_lo, "\u2013", tag$e_inc_num_hi)
+  tag$e_inc_tbhiv_range <- paste0(tag$e_inc_tbhiv_num_lo, "\u2013", tag$e_inc_tbhiv_num_hi)
 
   tah <- subset(tag, select=c("rowname", "e_pop_num", "e_mort_exc_tbhiv_num", "e_mort_exc_tbhiv_range","e_mort_tbhiv_num", "e_mort_tbhiv_range", "e_prev_num", "e_prev_range", "e_inc_num", "e_inc_range", "e_inc_tbhiv_num", "e_inc_tbhiv_range"))
 
@@ -141,11 +141,11 @@ fujj <- hbc %>% data.frame() %>% filter(year==report_year-1) %>% select(e_pop_nu
   }
 
   # combine range columns
-  tah$e_mort_exc_tbhiv_range <- paste0("(", tah$e_mort_exc_tbhiv_100k_lo, "\u2013", tah$e_mort_exc_tbhiv_100k_hi, ")")
-  tah$e_mort_tbhiv_range <- paste0("(", tah$e_mort_tbhiv_100k_lo, "\u2013", tah$e_mort_tbhiv_100k_hi, ")")
-  tah$e_prev_range <- paste0("(", tah$e_prev_100k_lo, "\u2013", tah$e_prev_100k_hi, ")")
-  tah$e_inc_range <- paste0("(", tah$e_inc_100k_lo, "\u2013", tah$e_inc_100k_hi, ")")
-  tah$e_tbhiv_range <- paste0("(", tah$e_tbhiv_prct_lo, "\u2013", tah$e_tbhiv_prct_hi, ")")
+  tah$e_mort_exc_tbhiv_range <- paste0(tah$e_mort_exc_tbhiv_100k_lo, "\u2013", tah$e_mort_exc_tbhiv_100k_hi)
+  tah$e_mort_tbhiv_range <- paste0(tah$e_mort_tbhiv_100k_lo, "\u2013", tah$e_mort_tbhiv_100k_hi)
+  tah$e_prev_range <- paste0(tah$e_prev_100k_lo, "\u2013", tah$e_prev_100k_hi)
+  tah$e_inc_range <- paste0(tah$e_inc_100k_lo, "\u2013", tah$e_inc_100k_hi)
+  tah$e_tbhiv_range <- paste0(tah$e_tbhiv_prct_lo, "\u2013", tah$e_tbhiv_prct_hi)
 
   tam <- subset(tah, select=c("rowname", "e_pop_num", "e_mort_exc_tbhiv_100k", "e_mort_exc_tbhiv_range","e_mort_tbhiv_100k", "e_mort_tbhiv_range", "e_prev_100k", "e_prev_range", "e_inc_100k", "e_inc_range", "e_tbhiv_prct", "e_tbhiv_range"))
 
@@ -378,7 +378,7 @@ tdb <- merge(tda, tdhb2, all=TRUE)
 tdb <- merge(tdb, tdr, all=TRUE)
 
 # combine bounds into one column and format missings
-tdb$c_cdr_bnd <- ifelse(is.na(tdb$c_cdr_lo), "\u2013", paste0("(", frmt(tdb$c_cdr_lo), "\u2013", frmt(tdb$c_cdr_hi), ")"))
+tdb$c_cdr_bnd <- ifelse(is.na(tdb$c_cdr_lo), "\u2013", paste0(frmt(tdb$c_cdr_lo), "\u2013", frmt(tdb$c_cdr_hi)))
 tdb$c_cdr <- ifelse(is.na(tdb$c_cdr_lo), "\u2013", frmt(tdb$c_cdr))
 
 tdc <- melt(tdb, measure.vars=c('c_cdr', 'c_cdr_bnd'), id=c('group_name', 'year'))
@@ -773,7 +773,7 @@ ted2[var] <- ifelse(is.na(ted2[[var]]), "\u2013", ted2[[var]])
 }
 
 # combine estimates to two lines
-ted2$est_rg <- paste0("(", ted2$e_inc_tbhiv_num_lo, "\u2013", ted2$e_inc_tbhiv_num_hi, ")")
+ted2$est_rg <- paste0(ted2$e_inc_tbhiv_num_lo, "\u2013", ted2$e_inc_tbhiv_num_hi)
 
 ted3 <- ted2[c("country", 'e_inc_tbhiv_num', 'est_rg', "hivtest1000", "hivtest_prct", "hivtest_pos_prct", "hiv_art_prct", "hiv_art_est_prct", "hiv_ipt2", "hiv_tb_prct")]
 

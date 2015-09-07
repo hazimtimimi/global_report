@@ -86,6 +86,8 @@ if(flg_show_estimates){
   
   incmort_num_glo2 <- imaf %>% filter(var %in% c("mort_tbhiv", "mort_exc_tbhiv")) %>% ggplot(aes(year, best, fill=var, ymin=0)) + geom_line(size=1, aes(color=var)) + geom_ribbon(aes (year, best, ymin=lo, ymax=hi), alpha=0.2) + theme_glb.rpt() + theme(legend.position="none") + scale_x_continuous("", minor_breaks=seq(1990, 2015, 1)) + scale_y_continuous(breaks=pretty_breaks()) + ylab("Millions") + scale_color_manual(values = c(mort.color, inch.color)) + scale_fill_manual(values = c(mort.color, inch.color)) + geom_text(aes(1998,1.2, label="TB deaths among \nHIV-negative people")) + geom_text(aes(2004,0.7, label="TB deaths among HIV-positive people(a)")) + ggtitle("TB deaths")  
   
+  # Footnote:  "HIV-associated deaths are classified as HIV deaths according to ICD-10"
+  
   figsave(incmort_num_glo2, imaf, "f2_3_incmort_num_glo2", width=6, height=6)
   
   # incmort_num <- arrangeGrob(incmort_num_glo1, incmort_num_glo2)
@@ -124,7 +126,7 @@ if(flg_show_estimates){
            var_hi = e_inc_100k_hi) %>%
     arrange(desc(var)) %>%
     slice(1:10) %>%
-    hplot_estimates_with_ui("Incidence: rate per 100 000 population per year", "e_inc_100k", "Rate")
+    hplot_estimates_with_ui("Incidence: rates", "e_inc_100k", "Rate per 100 000 population per year")
 
   # Top 10 countries by incidence absolute number
   topten_e_inc_num <- latest_estimates %>%
@@ -137,7 +139,7 @@ if(flg_show_estimates){
     mutate(var    = var / 1e6,
            var_lo = var_lo / 1e6,
            var_hi = var_hi / 1e6) %>%
-    hplot_estimates_with_ui("Incidence: absolute numbers", "e_inc_num", "Millions")
+    hplot_estimates_with_ui("Incidence: absolute number", "e_inc_num", "Millions")
 
   # and now clear up the mess left behind
   rm(latest_estimates)
@@ -178,11 +180,10 @@ if(flg_show_estimates){
   incprevmort_glo <- ggplot(esti, aes(year, best, fill=var, ymin=0)) + geom_line(size=1, aes(color=var)) + geom_ribbon(aes (year, best, ymin=lo, ymax=hi), alpha=0.2) + geom_hline(aes(yintercept=target), linetype=2) + theme_glb.rpt() + facet_wrap(~panel, scales="free_y") + theme(legend.position="none") + scale_x_continuous("", minor_breaks=seq(1990, 2015, 1)) + scale_y_continuous(breaks=pretty_breaks()) + ylab("Rate per 100 000 population per year") +
     scale_color_manual(values = c(inc.color, inch.color, mort.color, prev.color)) + scale_fill_manual(values = c(inc.color, inch.color, mort.color, prev.color)) +
     ggtitle(paste0("
-Figure 2.8 Global trends in estimated rates of TB incidence, 
-prevalence and mortality 1990–", report_year, ". Left: Estimated incidence rate including 
+Figure 2.8 Global trends in estimated rates of TB incidence (1990–", report_year-1, ", 
+and prevalence and mortality rates (1990–", report_year, "). Left: Estimated incidence rate including 
 HIV-positive TB (", inc.color, ") and estimated incidence rate of 
-HIV-positive TB (", inch.color,"). Centre and right: Estimated TB 
-prevalence and mortality rates 1990–", report_year, ". The 
+HIV-positive TB (", inch.color,"). Centre and right: The 
 horizontal dashed lines represent the Stop TB Partnership targets 
 of a 50% reduction in prevalence and mortality rates by 2015 
 compared with 1990. Shaded areas represent uncertainty bands. 
@@ -197,7 +198,7 @@ Mortality excludes TB deaths among HIV-positive people."))
 
   incb <- araw.t %>% filter(year==report_year-1, group_type=="g_whoregion") %>% select(year, group_name, e_inc_100k, e_inc_num, e_pop_num) %>% .shortnames(col = "group_name") %>% mutate(name=group_name)
 
-    incdist <- ggplot(inca, aes(e_inc_100k, e_inc_num/1e3, color=hbc, size=e_pop_num/1e6)) + geom_point() + theme_glb.rpt() + geom_text(aes(label=name), size=2.5, vjust=-1.2) + labs(x="Rate per 100 000 population per year", y="Cases per year (thousands)", color="22 High-burden \ncountries", size="Population\n(millions)", title=paste("Figure 2.7 Global distribution of estimated TB incidence by rate and absolute number,", max(inca$year))) + scale_x_continuous(breaks=seq(0,900,100))
+    incdist <- ggplot(inca, aes(e_inc_100k, e_inc_num/1e3, color=hbc, size=e_pop_num/1e6)) + geom_point() + theme_glb.rpt() + geom_text(aes(label=name), size=2.5, vjust=-1.2) + labs(x="Rate per 100 000 population per year", y="Cases per year (thousands)", color="22 High-burden \ncountries", size="Population\n(millions)", title=paste0("Figure 2.7 Global distribution of estimated TB incidence by rate and absolute number, ", max(inca$year), ". The size of each \nbubble is proportional to the size of the country's population. High-burden countries are shown in red.")) + scale_x_continuous(breaks=seq(0,900,100))
 
   incdistb <- ggplot(incb, aes(e_inc_100k, e_inc_num/1e3, size=e_pop_num/1e6, ymin=0, xmin=0)) + geom_point() + theme_glb.rpt() + geom_text(aes(label=name), size=2.5, vjust=2.3) + labs(x="Rate per 100 000 population per year", y="Cases per year (thousands)", color="22 High-burden \ncountries", size="Population\n(millions)", title="WHO region")
 
@@ -295,7 +296,7 @@ Mortality excludes TB deaths among HIV-positive people."))
     facet_wrap(~g_whoregion, scales='free_y') +
     geom_hline(aes(yintercept=target.prev), linetype=2)  +
     scale_x_continuous('') +
-    ylab('Rates per 100 000 population') +
+    ylab('Rate per 100 000 population') +
     expand_limits(y=0) +
     theme_glb.rpt() +
     theme(legend.position="none") +
@@ -320,7 +321,7 @@ Mortality excludes TB deaths among HIV-positive people."))
                     ymax=e_prev_100k_hi), fill=I(prev.color), alpha=0.4) +
     geom_hline(aes(yintercept=target.prev), linetype=2) +
     facet_wrap(~country, scales='free_y') +
-    xlab("") + ylab('Rates per 100 000 population per year') +
+    xlab("") + ylab('Rate per 100 000 population') +
     expand_limits(y=0) +
     theme_glb.rpt() +
     theme(legend.position='none') +
@@ -341,7 +342,7 @@ Mortality excludes TB deaths among HIV-positive people."))
     facet_wrap(~g_whoregion, scales='free_y') +
     geom_hline(aes(yintercept=target.mort), linetype=2) +
     scale_x_continuous('') +
-    ylab('Rates per 100 000 population') +
+    ylab('Rate per 100 000 population per year') +
     expand_limits(y=0) +
     theme_glb.rpt() +
     theme(legend.position="none") +
@@ -380,7 +381,7 @@ with 1990."))
     geom_hline(aes(yintercept=target.mort), linetype=2) +
     facet_wrap(~country, scales='free_y') +
     geom_point(aes(year, vr.raw), shape=I(4)) +
-    xlab("") + ylab('Rates per 100 000 population per year') +
+    xlab("") + ylab('Rate per 100 000 population per year') +
     expand_limits(y=0) +
     theme_glb.rpt() +
     theme(legend.position='none') +
@@ -658,7 +659,7 @@ txsucc1 <- ggplot(tsr_table_melted, aes(area, value, fill=variable)) +
   theme(legend.position="bottom", panel.grid=element_blank()) + expand_limits(c(0,0)) +
   ggtitle(paste0("Treatment outcomes for new and relapse cases, ", report_year-2, ", globally, \nfor the six WHO regions and 22 high-burden countries"))
 
-txsucc <- arrangeGrob(txsucc1, sub = textGrob("* Treatment outcomes for new cases only.", x = 0, hjust = -0.1, vjust=0.1, gp = gpar(fontsize = 10)))
+txsucc <- arrangeGrob(txsucc1, sub = textGrob("* Treatment outcomes are for new cases only.", x = 0, hjust = -0.1, vjust=0.1, gp = gpar(fontsize = 10)))
 
 
 figsave(txsucc, tsr_table, "f3_5_txsucc") # Designer needs wide data

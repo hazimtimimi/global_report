@@ -276,7 +276,7 @@ ltbisurvey <- readWorksheetFromFile(file.path(rdata_folder, "Extra data", "YH", 
 
 
 ltbisurvey_map <- WHOmap.print(ltbisurvey,
-                                 "The 113 upper-middle and high-income countries with \nan incidence rate of less than \n100 per 100 000 population that are the \nprimary audience for 2015 WHO guidelines on the \nmanagement of latent TB infection", 
+                                 "The 113 upper-middle-income and high-income countries with \nan incidence rate of less than \n100 per 100 000 population that are the \nprimary audience for 2015 WHO guidelines on the \nmanagement of latent TB infection", 
                                  "[Remove legend]",
                                  copyright=FALSE,
                                  show=FALSE)
