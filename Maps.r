@@ -51,7 +51,7 @@ con.col <- c('red', 'blue', 'orange', 'green', 'purple', 'violet', 'sienna', 'da
 # 2_1_sb_map -------------------------------------------------
 # Countries which have completed the standards and benchmarks
 
-mna <- e.t %>% filter(year==report_year-1, iso2 %in% c("BW","BI","CI","ET","GH","KE","LS","MG","MW","MZ","NG","RW","ZA","SS","SZ","UG","TZ","ZM","ZW","AF","EG","PK","SA", "AM","BY", "GE","TM","UA","UZ","BD","KP","ID","MM","NP","TH","MN","PH","VN")) %>% select(country, iso3, g_hbc22)
+mna <- e.t %>% filter(year==report_year-1, iso2 %in% c("BW","BI","CI","ET","GH","KE","LS","MG","MW","MZ","NG","RW","ZA","SS","SZ","UG","TZ","ZM","ZW","AF","EG","PK","SA", "AM","BY", "GE","TM","UA","UZ","BD","KR","ID","MM","NP","TH","MN","PH","VN")) %>% select(country, iso3, g_hbc22)
 
 mcnt <- table(mna$g_hbc22)
 

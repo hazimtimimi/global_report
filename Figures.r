@@ -483,7 +483,14 @@ systems are represented by the 'x' symbol)."))
   # End of figures including estimates
 }
 
+# B2_4_2_psIDN ---------------------------------------------------------
+# Prevalence survey results from Indonesia
 
+psIDN.d <- readWorksheetFromFile(file.path(rdata_folder, "Extra data", "BS", "Data_b_2_4_2.xlsx"), sheet="Sheet1") %>% mutate(type=factor(c(rep("Smear-positive", 15), rep("Bacteriologically confirmed", 28-15)), levels=c("Smear-positive", "Bacteriologically confirmed"))) %>% slice(c(4:9, 11:13, 19:24, 26:28)) %>% separate(Col3, c("lo", "hi"), sep="-", remove=FALSE, convert = TRUE, extra = "drop") %>% mutate(groups=factor(Col1, levels=c("INDONESIA", "15-24", "25-34", "35-44", "45-54", "55-64", "65+", "Male", "Female"), labels=c("All", "15-24", "25-34", "35-44", "45-54", "55-64", "65+", "Male", "Female")), best=as.numeric(Col2), cat=ifelse(groups=="All", "a", ifelse(groups %in% c("Male", "Female"), "b", "c")))
+
+psIDN <- ggplot(psIDN.d, aes(groups, best, color=cat)) + geom_point() + geom_errorbar(aes(ymin=lo, ymax=hi), size=1, width=0.2) + theme_glb.rpt() + facet_wrap(~type) + labs(x="", y="Rate per 100 000 population") + theme(legend.position="none") + scale_color_manual(values=c("black", "red", "blue")) + scale_y_continuous(breaks=c(250,500,750,1000,1500,2000))
+
+  figsave(psIDN, psIDN.d, "B2_4_2_psIDN")
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Chapter 3 ------
