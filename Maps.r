@@ -229,7 +229,7 @@ age_map <- WHOmap.print(mjb,
                     '',
                     # colors=c('dark green', 'light green', 'white'),
                     copyright=FALSE,
-                    show=TRUE)
+                    show=FALSE)
 
 figsave(age_map, mjb, "f2_21_age_map")
 

@@ -83,10 +83,10 @@ fujj <- hbc %>% data.frame() %>% filter(year==report_year-1) %>% select(e_pop_nu
   tak[tak$rowname=="Bangladesh", "rowname"] <- "Bangladesh(c)"
 
 
-  cat(paste("<font size=5><b>Table 2.1 Estimated epidemiological burden of TB, ", report_year-1, ".</b> Best estimates are followed by the lower and upper bounds of the 95% uncertainty interval. Numbers in thousands.<sup>a</sup></font>", sep=""), file=paste0("Tables/2_1_burden_num", Sys.Date(), ".htm"))
+  cat(paste("<font size=5><b>Table 2.1 Estimated epidemiological burden of TB, ", report_year-1, ".</b> Best estimates are followed by the lower and upper bounds of the 95% uncertainty interval. Numbers in thousands.<sup>a</sup></font>", sep=""), file=paste0("Tables/t2_1_burden_num", Sys.Date(), ".htm"))
 
   tai <- xtable(tak)
-  print(tai, type="html", file=paste0("Tables/2_1_burden_num", Sys.Date(), ".htm"), include.rownames=F, include.colnames=F, append=T,
+  print(tai, type="html", file=paste0("Tables/t2_1_burden_num", Sys.Date(), ".htm"), include.rownames=F, include.colnames=F, append=T,
   html.table.attributes="border='0' rules='rows' width='1100'",
   add.to.row=list(pos=list(0,30),
               command=c("<tr width='600'>
@@ -108,7 +108,7 @@ fujj <- hbc %>% data.frame() %>% filter(year==report_year-1) %>% select(e_pop_nu
                         </td>
                       </tr>"))))
 
-  tablecopy("2_1_burden_num")
+  tablecopy("t2_1_burden_num")
 
   # 2_2_burden_rt --------------------------------------------------------
 
@@ -153,10 +153,10 @@ fujj <- hbc %>% data.frame() %>% filter(year==report_year-1) %>% select(e_pop_nu
   # Add footnotes for some countries (e.g. Bangladesh, India, etc.)
   tam[tam$rowname=="Bangladesh", "rowname"] <- "Bangladesh(b)"
 
-  cat(paste("<font size=5><b>Table 2.2 Estimated epidemiological burden of TB, ", report_year-1, ".</b> Best estimates are followed by the lower and upper bounds of the 95% uncertainty interval. Rates per 100 000 population except where indicated.</font>", sep=""), file=paste0("Tables/2_2_burden_rt", Sys.Date(), ".htm"))
+  cat(paste("<font size=5><b>Table 2.2 Estimated epidemiological burden of TB, ", report_year-1, ".</b> Best estimates are followed by the lower and upper bounds of the 95% uncertainty interval. Rates per 100 000 population except where indicated.</font>", sep=""), file=paste0("Tables/t2_2_burden_rt", Sys.Date(), ".htm"))
 
   taj <- xtable(tam)
-  print(taj, type="html", file=paste0("Tables/2_2_burden_rt", Sys.Date(), ".htm"), include.rownames=F, include.colnames=F, append=T,
+  print(taj, type="html", file=paste0("Tables/t2_2_burden_rt", Sys.Date(), ".htm"), include.rownames=F, include.colnames=F, append=T,
   html.table.attributes="border='0' rules='rows' width='1100'",
   add.to.row=list(pos=list(0,30),
                   command=c("<tr width='600'>
@@ -175,7 +175,7 @@ fujj <- hbc %>% data.frame() %>% filter(year==report_year-1) %>% select(e_pop_nu
                             <sup>b</sup> ", bangladesh.est.foot,"
                             </td></tr>"))))
 
-  tablecopy("2_2_burden_rt")
+  tablecopy("t2_2_burden_rt")
 
   # for country profiles
 
@@ -230,9 +230,9 @@ notif_table_html <- xtable(notif_table[c("area", "c_notified", "c_newinc", "ret_
 
 digits(notif_table_html) <- 0
 
-cat(paste("<h3>Table 3.1 Case notifications,", report_year-1, "</h3>"), file=paste0("Tables/3_1_notif", Sys.Date(), ".htm"))
+cat(paste("<h3>Table 3.1 Case notifications,", report_year-1, "</h3>"), file=paste0("Tables/t3_1_notif", Sys.Date(), ".htm"))
 
-print(notif_table_html, type="html", file=paste0("Tables/3_1_notif", Sys.Date(), ".htm"),
+print(notif_table_html, type="html", file=paste0("Tables/t3_1_notif", Sys.Date(), ".htm"),
       include.rownames=F, include.colnames=F,
       html.table.attributes="border='0' rules='rows' width='1100' cellpadding='5'", append=T,
       add.to.row=list(pos=list(0, nrow(notif_table_html)),
@@ -260,7 +260,7 @@ print(notif_table_html, type="html", file=paste0("Tables/3_1_notif", Sys.Date(),
                             <sup>a</sup> New and relapse includes cases for which the treatment history is unknown.</td>
                       </tr>")))
 
-tablecopy("3_1_notif")
+tablecopy("t3_1_notif")
 
 # and now clear up the mess left behind
 rm(list=c("notif", "notif_table", "notif_table_html"))
@@ -319,10 +319,10 @@ agesex_table_html <- xtable(subset(agesex_table, select=c("area", "all.014", "al
 
 # Add to file
 
-cat(paste0("<h2>Table 3.2 Notifications of new and relapse TB cases by age and sex, ", report_year-1, '</h2>'), file=paste0("Tables/3_2_agesex", Sys.Date(), ".htm"))
+cat(paste0("<h2>Table 3.2 Notifications of new and relapse TB cases by age and sex, ", report_year-1, '</h2>'), file=paste0("Tables/t3_2_agesex", Sys.Date(), ".htm"))
 
 print(agesex_table_html, type="html",
-      file=paste0("Tables/3_2_agesex", Sys.Date(), ".htm"),
+      file=paste0("Tables/t3_2_agesex", Sys.Date(), ".htm"),
       include.rownames=F, include.colnames=F, append=TRUE,
       add.to.row=list(pos=list(0,nrow(agesex_table_html)),
             command=c("<tr> <td></td>
@@ -337,7 +337,7 @@ print(agesex_table_html, type="html",
                       &ast; New cases only.
                       </td> </tr>")))
 
-tablecopy("3_2_agesex")
+tablecopy("t3_2_agesex")
 
 # and now clear up the mess left behind
 rm(list=c("agesex", "agesex_table", "agesex_table_html", "asterisks"))
@@ -391,12 +391,12 @@ tdd <- tdd[match(ordrd, tdd$group_name),]
 
 tde <- .shortnames(tdd, col='group_name', ord = "hbc")
 
-cat(paste("<font size=5><b>Table 3.5 Estimates of the case detection rate for new and relapse cases (%), 1995\u2013", report_year-1, ".<sup>a</sup></b>  Best estimates are followed by the lower and upper bounds of the 95% uncertainty interval.</font>", sep=""), file=paste0("Tables/3_5_cdr", Sys.Date(), ".htm"))
+cat(paste("<font size=5><b>Table 3.5 Estimates of the case detection rate for new and relapse cases (%), 1995\u2013", report_year-1, ".<sup>a</sup></b>  Best estimates are followed by the lower and upper bounds of the 95% uncertainty interval.</font>", sep=""), file=paste0("Tables/t3_5_cdr", Sys.Date(), ".htm"))
 
 tdf <- xtable(tde)
 # digits(tdf) <- 1
 print(tdf, type="html",
-      file=paste0("Tables/3_5_cdr", Sys.Date(), ".htm"),
+      file=paste0("Tables/t3_5_cdr", Sys.Date(), ".htm"),
       include.rownames=F, include.colnames=F, append=T,
       html.table.attributes="border='0' rules='rows' width='900'",
       add.to.row=list(pos=list(0,30),
@@ -416,7 +416,7 @@ print(tdf, type="html",
 
                         </td></tr>")))
 
-tablecopy('3_5_cdr')
+tablecopy('t3_5_cdr')
 
 
 # 3_6_tsr -------------------------------------------------------------------
@@ -485,15 +485,15 @@ digits(coh_table_html) <- 0
 digits(tsr_table_html) <- 0
 
 cat(paste("<h3>Table 3.6 Treatment success for all new and relapse<sup>a</sup> cases (%) and cohort size (thousands), 1995", "\u2013", report_year-2, "</h3>
-          <p>a. Treatment success (%)</p>", sep=""), file=paste0("Tables/3_6_tsr", Sys.Date(), ".htm"))
+          <p>a. Treatment success (%)</p>", sep=""), file=paste0("Tables/t3_6_tsr", Sys.Date(), ".htm"))
 
 
-print(tsr_table_html, type="html", file=paste0("Tables/3_6_tsr", Sys.Date(), ".htm"),include.rownames=F, include.colnames=T, append=T, html.table.attributes="border=0 rules=rows width=900")
+print(tsr_table_html, type="html", file=paste0("Tables/t3_6_tsr", Sys.Date(), ".htm"),include.rownames=F, include.colnames=T, append=T, html.table.attributes="border=0 rules=rows width=900")
 
-cat("<p>b. Cohort size (thousands)</p>", file=paste0("Tables/3_6_tsr", Sys.Date(), ".htm"), append=T)
+cat("<p>b. Cohort size (thousands)</p>", file=paste0("Tables/t3_6_tsr", Sys.Date(), ".htm"), append=T)
 
 print(coh_table_html, type="html",
-      file=paste0("Tables/3_6_tsr", Sys.Date(), ".htm"),
+      file=paste0("Tables/t3_6_tsr", Sys.Date(), ".htm"),
       include.rownames=F, include.colnames=T, append=T,
       html.table.attributes="border='0' rules='rows' width='900'",
       add.to.row=list(pos=list(30),
@@ -501,7 +501,7 @@ print(coh_table_html, type="html",
                           \u2013 indicates values that cannot be calculated.<br />
                           <sup>a</sup> Cohorts before 2012 include new cases only. For the ", lister.text(include.relapse$year), " cohorts, ", lister.text(include.relapse$total), " high-burden countries respectively included both new and relapse cases, as recommended in the revised recording and reporting framework issued by WHO in 2013 (see Definitions and reporting framework for tuberculosis - 2013 revision.  Geneva, World Health Organization, 2013 (WHO/HTM/TB/2013.2). Available at www.who.int/tb/publications/definitions.</td></tr>", sep=""))))
 
-tablecopy("3_6_tsr")
+tablecopy("t3_6_tsr")
 
 # and now clear up the mess left behind
 rm(list=c("tsr", "tsr_table", "tsr_pivoted", "tsr_table_html", "coh_pivoted", "coh_table_html"))
@@ -587,7 +587,7 @@ tfe <- xtable(tfd[c("country", "g_hbc22", "g_hbmdr27", "lab_sm_f", "c_sm_100k", 
 tfefoot <- ifelse(any(is.na(tfe[c(4,7,9,11,13)])), "Blank cells indicate data not reported.<br />", "")
 
 print(tfe, type="html",
-      file=paste0("Tables/5_1_lab_capac", Sys.Date(), ".htm"),
+      file=paste0("Tables/t5_1_lab_capac", Sys.Date(), ".htm"),
       include.rownames=F, include.colnames=F,
       #sanitize.text.function=identity, #this makes <0.1 disappear in word even if not in a browser.
       html.table.attributes="border='1'  width='1100' cellpadding='5'",
@@ -622,7 +622,7 @@ print(tfe, type="html",
                             <sup>a</sup> The regional and global figures are aggregates of data reported by low- and middle-income countries and territories. Data for the variables shown in the table are not requested from high-income countries in the WHO data collection form.
                             </td> </tr>"))))
 
-tablecopy("5_1_lab_capac")
+tablecopy("t5_1_lab_capac")
 
 # 5_2_lab_policy ####
 
@@ -631,7 +631,7 @@ tff <- xtable(tfd[c("country", "g_hbc22", "g_hbmdr27", "xpert_in_guide_TBHIV", "
 # Footnote 1
 tffoot <- ifelse(any(is.na(tff[4:ncol(tff)])), "Blank cells indicate data not reported.<br>", "")
 
-print(tff, type="html", file=paste0("Tables/5_2_lab_policy", Sys.Date(), ".htm"),include.rownames=F, include.colnames=F, #sanitize.text.function=identity, 
+print(tff, type="html", file=paste0("Tables/t5_2_lab_policy", Sys.Date(), ".htm"),include.rownames=F, include.colnames=F, #sanitize.text.function=identity, 
       html.table.attributes="border=0 rules=rows width=1100 cellpadding=0", add.to.row=list(pos=list(0, nrow(tff)), command=c(paste0("<h2 align=\"left\">Table 5.2 Incorporation of WHO policy guidance on Xpert MTB/RIF, ", report_year-1, "<sup>a</sup></h2>
 
 <TR> <TH colspan=3></TH> <TH colspan=4 style='border: solid 1px black;'>XPERT MTB/RIF AS THE INITIAL DIAGNOSTIC TEST</TH> </TR>
@@ -642,7 +642,7 @@ print(tff, type="html", file=paste0("Tables/5_2_lab_policy", Sys.Date(), ".htm")
 <TH>EXTRAPULMONARY TB USING SELECTED SPECIMENS</TH> </TR>"),
                                                                                                                               paste0("<TR> <TD colspan=8>", tffoot, "<sup>a</sup> The regional and global figures are aggregates of data reported by low- and middle-income countries and territories. Data for the variables shown in the table are not requested from high-income countries in the WHO data collection form. </TR>"))))
 
-tablecopy("5_2_lab_policy")
+tablecopy("t5_2_lab_policy")
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Chapter 6 ------
@@ -779,10 +779,10 @@ ted3 <- ted2[c("country", 'e_inc_tbhiv_num', 'est_rg', "hivtest1000", "hivtest_p
 
 tee <- xtable(ted3, align=c('l', 'l', 'r', 'l', rep('c',7)))
 
-cat(paste0("<font size='3' align='left'><b>Table 6.1 HIV testing for TB patients, treatment for HIV-positive TB patients and prevention of TB among people living with HIV, 41 high TB/HIV burden countries and WHO regions, ", report_year-1, ".</b> Numbers in thousands except where indicated.</font><br /><br />"), file=paste0("Tables/6_1_tbhiv", Sys.Date(), ".htm"))
+cat(paste0("<font size='3' align='left'><b>Table 6.1 HIV testing for TB patients, treatment for HIV-positive TB patients and prevention of TB among people living with HIV, 41 high TB/HIV burden countries and WHO regions, ", report_year-1, ".</b> Numbers in thousands except where indicated.</font><br /><br />"), file=paste0("Tables/t6_1_tbhiv", Sys.Date(), ".htm"))
 
 print(tee, type="html",
-      file=paste0("Tables/6_1_tbhiv", Sys.Date(), ".htm"),
+      file=paste0("Tables/t6_1_tbhiv", Sys.Date(), ".htm"),
       include.rownames=F, include.colnames=F, append=T,
       html.table.attributes="border='0' rules='rows' width='1100'",
       add.to.row=list(pos=list(0, nrow(tee)),
@@ -805,7 +805,7 @@ print(tee, type="html",
 
                   <sup>b</sup> The numerator (i.e. all notified HIV-positive TB cases on ART) includes all notified new, relapse and non-relapse retreatment cases. The denominator (i.e. estimated HIV-positive incident TB cases) includes new and relapse cases only.<br />", cty.notes))))
 
-tablecopy("6_1_tbhiv")
+tablecopy("t6_1_tbhiv")
 
 
 # END ===================================================
