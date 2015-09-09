@@ -108,7 +108,7 @@ if(flg_show_estimates){
     p <-  ggplot(df, aes(x=reorder(country,var), y=var)) +
       geom_point() +
       labs(x="", y=scale_label, title=plot_title) +
-      geom_errorbar(aes(ymin=var_lo, ymax=var_hi), height=.25) +
+      geom_pointrange(aes(ymin=var_lo, ymax=var_hi)) +
       theme_glb.rpt() +
       theme(plot.title = element_text(hjust = 0)) +
       expand_limits(y=0) +
@@ -139,7 +139,7 @@ if(flg_show_estimates){
     mutate(var    = var / 1e6,
            var_lo = var_lo / 1e6,
            var_hi = var_hi / 1e6) %>%
-    hplot_estimates_with_ui("Incidence: absolute number", "e_inc_num", "Millions")
+    hplot_estimates_with_ui("Incidence: absolute numbers", "e_inc_num", "Millions")
 
   # and now clear up the mess left behind
   rm(latest_estimates)
@@ -487,9 +487,10 @@ systems are represented by the 'x' symbol)."))
 # B2_4_2_psIDN ---------------------------------------------------------
 # Prevalence survey results from Indonesia
 
-psIDN.d <- readWorksheetFromFile(file.path(rdata_folder, "Extra data", "BS", "Data_b_2_4_2.xlsx"), sheet="Sheet1") %>% mutate(type=factor(c(rep("Smear-positive", 15), rep("Bacteriologically confirmed", 28-15)), levels=c("Smear-positive", "Bacteriologically confirmed"))) %>% slice(c(4:9, 11:13, 19:24, 26:28)) %>% separate(Col3, c("lo", "hi"), sep="-", remove=FALSE, convert = TRUE, extra = "drop") %>% mutate(groups=factor(Col1, levels=c("INDONESIA", "15-24", "25-34", "35-44", "45-54", "55-64", "65+", "Male", "Female"), labels=c("All", "15-24", "25-34", "35-44", "45-54", "55-64", "65+", "Male", "Female")), best=as.numeric(Col2), cat=ifelse(groups=="All", "a", ifelse(groups %in% c("Male", "Female"), "b", "c")))
+psIDN.d <- readWorksheetFromFile(file.path(rdata_folder, "Extra data", "BS", "Data_b_2_4_2.xlsx"), sheet="Sheet1") %>% mutate(type=factor(c(rep("Smear-positive TB", 15), rep("Bacteriologically confirmed TB", 28-15)), levels=c("Smear-positive TB", "Bacteriologically confirmed TB"))) %>% slice(c(4:9, 11:13, 19:24, 26:28)) %>% separate(Col3, c("lo", "hi"), sep="-", remove=FALSE, convert = TRUE, extra = "drop") %>% mutate(groups=factor(Col1, levels=c("INDONESIA", "15-24", "25-34", "35-44", "45-54", "55-64", "65+", "Male", "Female"), labels=c("All", "15-24", "25-34", "35-44", "45-54", "55-64", "65+", "Male", "Female")), best=as.numeric(Col2), cat=ifelse(groups=="All", "a", ifelse(groups %in% c("Male", "Female"), "b", "c")))
 
-psIDN <- ggplot(psIDN.d, aes(groups, best, color=cat)) + geom_point() + geom_errorbar(aes(ymin=lo, ymax=hi), size=1, width=0.2) + theme_glb.rpt() + facet_wrap(~type) + labs(x="", y="Rate per 100 000 population") + theme(legend.position="none") + scale_color_manual(values=c("black", "red", "blue")) + scale_y_continuous(breaks=c(250,500,750,1000,1500,2000))
+psIDN <- ggplot(psIDN.d, aes(groups, best, color=cat)) + geom_point() + geom_errorbar(aes(ymin=lo, ymax=hi), size=1, width=0.2) + theme_glb.rpt() + facet_wrap(~type) + labs(x="", y="Rate per 100 000 population") + theme(legend.position="none") + scale_color_manual(values=c("black", "red", "blue")) + scale_y_continuous(breaks=c(250,500,750,1000,1500,2000)) + ggtitle("Overall, and age and sex-specific TB prevalence rates as measured in the 
+2013-2014 national TB prevalence survey in Indonesia, with 95% confidence intervals")
 
   figsave(psIDN, psIDN.d, "B2_4_2_psIDN")
 
