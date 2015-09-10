@@ -118,17 +118,24 @@ figsave(inc_map, mfa, "f2_6_inc_map")
 
 mfa <- subset(e.t, year==report_year-1, select=c("g_whoregion", 'country', 'iso3', 'source_inc'))
 
-mfb <- subset(mfa, source_inc %in% c("Capture-recapture","High income","Survey"), select=c("g_whoregion", "country", "iso3", "source_inc")) 
-mfb$cat <- factor("Country consultation")
+#mfa$var <- mfa$source.inc %in% c("Capture-recapture","High income","Survey")
+mfa$var <- mfa$source.inc
+mfa$var[mfa$iso3 %in% c('CHN', 'GMB', 'IDN', 'MMR', 'PAK', 'PHL', 'RWA', 'VNM')] <- 'Prevalence survey'
+mfa$var[mfa$var=='Survey'] <- 'Prevalence survey'
+mfa$var[!mfa$var %in% c('Prevalence survey', 'Capture-recapture', 'High income')] <- 'Case notifications'
+mfa$var[mfa$iso3 %in% c('FRA', 'RUS')]  <- 'High income'
+mfa$var[mfa$iso3 %in% c('EGY', 'NLD')]  <- 'Capture-recapture'
+mfa$cat <- factor(mfa$var, levels=c('Case notifications','Prevalence survey', 'High income','Capture-recapture'), labels=c('Case notifications', 'Prevalence survey', 'High-income','Capture-recapture'))
+
 
 # map
-inc_src_map <- WHOmap.print(mfb, paste0(
+inc_src_map <- WHOmap.print(mfa, paste0(
 "Figure 2.2 Coverage of country consultations on estimates of 
 TB disease burden, 2008–", report_year),
-                             "[remove legend]",
-                             low.color=inc.color,
+                             "Main method",
+colors=con.col[1:4],
                              copyright=FALSE,
-                             show=FALSE)
+                             show=TRUE)
 
 figsave(inc_src_map, mfb, "f2_2_inc_src_map")
 
