@@ -198,13 +198,18 @@ NZ <- function(x){
 }
 
 
+# ---------------------------------------------------------------------
+#stop("OK, see what we have!")
+# ---------------------------------------------------------------------
+
+
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 #   mort_prev (Table 1) -----
 #   Estimates of TB mortality and prevalence
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # Get country estimates
-mort_prev_c <- filter(e, year == notification_maxyear) %>%
+mort_prev_country <- filter(e, year == notification_maxyear) %>%
                 arrange(country) %>%
                 select(country, year, e_pop_num,
                       e_mort_exc_tbhiv_num, e_mort_exc_tbhiv_num_lo, e_mort_exc_tbhiv_num_hi,
@@ -239,8 +244,8 @@ mort_prev_global <- filter(a, year == notification_maxyear & group_type == "glob
                     rename(entity = group_description )
 
 # Create combined table in order of countries then regional and global estimates
-mort_prev <- combine_tables(mort_prev_c, mort_prev_region, mort_prev_global)
-rm(list=c("mort_prev_c", "mort_prev_region", "mort_prev_global"))
+mort_prev <- combine_tables(mort_prev_country, mort_prev_region, mort_prev_global)
+rm(list=c("mort_prev_country", "mort_prev_region", "mort_prev_global"))
 
 
 
@@ -312,7 +317,7 @@ rm(mort_prev)
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # Get country estimates
-inc_cdr_c <- filter(e, year == notification_maxyear) %>%
+inc_cdr_country <- filter(e, year == notification_maxyear) %>%
               arrange(country) %>%
               select(country, year, e_pop_num,
                      e_inc_num, e_inc_num_lo, e_inc_num_hi,
@@ -323,10 +328,10 @@ inc_cdr_c <- filter(e, year == notification_maxyear) %>%
               rename(entity = country )
 
 # get notifications and add them to the estimates
-inc_cdr_c <- filter(n, year  == notification_maxyear) %>%
+inc_cdr_country <- filter(n, year  == notification_maxyear) %>%
               select(country, c_newinc) %>%
               rename(entity = country ) %>%
-              inner_join(inc_cdr_c, by = "entity") %>%
+              inner_join(inc_cdr_country, by = "entity") %>%
               arrange(entity)
 
 # Get regional estimates (this view already includes c_newinc)
@@ -354,8 +359,8 @@ inc_cdr_global <- filter(a, year == notification_maxyear & group_type == "global
                     rename(entity = group_description )
 
 # Create combined table in order of countries then regional and global estimates
-inc_cdr <- combine_tables(inc_cdr_c, inc_cdr_region, inc_cdr_global)
-rm(list=c("inc_cdr_c", "inc_cdr_region", "inc_cdr_global"))
+inc_cdr <- combine_tables(inc_cdr_country, inc_cdr_region, inc_cdr_global)
+rm(list=c("inc_cdr_country", "inc_cdr_region", "inc_cdr_global"))
 
 
 # Format variables for output
@@ -416,6 +421,126 @@ subset(inc_cdr,
 
 # Don't leave any mess behind!
 rm(inc_cdr)
+
+
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+#   notif (Table 3) ----
+#   Case notifications
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# Get country data
+
+notif_country <- filter(n, year == notification_maxyear) %>%
+            arrange(country) %>%
+            select(country, g_whoregion,
+                   c_newinc, new_labconf, new_clindx, new_ep,
+                   ret_rel_labconf, ret_rel_clindx, ret_rel_ep, ret_nrel) %>%
+            rename(entity = country )
+
+
+# Calculate regional aggregates
+
+notif_region <- notif_country %>%
+                group_by(g_whoregion) %>%
+                summarise_each(funs(sum(., na.rm = TRUE)), c_newinc, new_labconf, new_clindx, new_ep,
+                               ret_rel_labconf, ret_rel_clindx, ret_rel_ep, ret_nrel)
+
+# merge with regional names
+notif_region <- filter(a, year == notification_maxyear & group_type == "g_whoregion") %>%
+                select(group_name, group_description) %>%
+                rename(g_whoregion = group_name) %>%
+                inner_join(notif_region, by = "g_whoregion") %>%
+                rename(entity = group_description) %>%
+                arrange(entity)
+
+# Calculate global aggregate
+notif_global <- notif_country %>%
+                summarise_each(funs(sum(., na.rm = TRUE)), c_newinc, new_labconf, new_clindx, new_ep,
+                               ret_rel_labconf, ret_rel_clindx, ret_rel_ep, ret_nrel) %>%
+                mutate(entity = "Global") %>%
+                mutate(g_whoregion = "")  # dummy variable to match structure of the other two tables
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+#   Handle Kosovo
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# Create a Kosovo only dataset from the nk view
+notif_kosovo <- filter(nk, year == notification_maxyear) %>%
+                select(country,
+                       new_labconf, new_clindx, new_ep,
+                       ret_rel_labconf, ret_rel_clindx, ret_rel_ep, ret_nrel) %>%
+                mutate(g_whoregion = "EUR") %>%
+                rename(entity = country )
+
+# calculate c_newinc
+notif_kosovo$c_newinc <- select(notif_kosovo, new_labconf, new_clindx, new_ep,
+                                ret_rel_labconf, ret_rel_clindx, ret_rel_ep) %>%
+                          sum_of_row()
+
+
+# Create a Serbia (without Kosovo) dataset
+notif_serbia <- filter(notif_country, entity=="Serbia")
+notif_serbia_minus_kosovo <- notif_serbia
+
+notif_vars <- c("c_newinc", "new_labconf", "new_clindx", "new_ep", "ret_rel_labconf", "ret_rel_clindx", "ret_rel_ep", "ret_nrel")
+
+notif_serbia_minus_kosovo[notif_vars] <- notif_serbia[notif_vars] - notif_kosovo[notif_vars]
+notif_serbia_minus_kosovo$entity <- "Serbia (without Kosovo)"
+
+
+# Insert the two additional Kosovo/Serbia w/o Kosovo tables in appropriate spot.
+insertpoint <- which(notif_country$entity == "Serbia" )
+endpoint <- nrow(notif_country)
+
+notif_country <- rbind(notif_country[1:insertpoint, ],
+                       notif_serbia_minus_kosovo,
+                       notif_kosovo,
+                       notif_country[(insertpoint+1):endpoint, ] )
+
+# clean up
+rm(list=c("notif_kosovo", "notif_serbia", "notif_serbia_minus_kosovo"))
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# End of handling Kosovo section
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# Create combined table in order of countries then regional and global estimates
+notif <- combine_tables(notif_country, notif_region, notif_global)
+rm(list=c("notif_country", "notif_region", "notif_global"))
+
+
+
+# Format variables for output
+# could do series of rounder() statements, variable by variable, e.g.
+
+#          notif$c_newinc <- rounder(notif$c_newinc)
+
+# or do with an sapply() statement for the specific columns:
+
+notif[ , notif_vars] <- sapply(notif[,notif_vars], rounder)
+
+
+# Add for blank columns
+notif$blank <- ""
+
+# Insert "blank" placeholders for use in the output spreadsheet before writing out to CSV
+# dplyr's select statement won't repeat the blanks, hence use subset() from base r instead
+
+
+subset(notif,
+       select=c("entity", "blank",
+                "c_newinc", "blank",
+                "new_labconf", "blank", "new_clindx", "blank", "new_ep", "blank",
+                "ret_rel_labconf", "blank", "ret_rel_clindx", "blank", "ret_rel_ep", "blank",
+                "ret_nrel")) %>%
+        write.csv(file="notif.csv", row.names=FALSE, na="")
+
+# Don't leave any mess behind!
+rm(notif)
+
 
 
 # ---------------------------------------------------------------------
