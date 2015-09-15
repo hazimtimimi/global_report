@@ -542,10 +542,106 @@ subset(notif,
 rm(notif)
 
 
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+#   outcome (Table 4) ----
+#   Treatment outcomes, all types
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-# ---------------------------------------------------------------------
-stop("OK, see what we have!")
-# ---------------------------------------------------------------------
+# Get country data
+# A. Standard chorts
+outcome_country <- filter(o, year == outcome_maxyear) %>%
+                    select(country, g_whoregion,
+                           rel_with_new_flg,
+                           newrel_coh, newrel_succ,
+                           ret_nrel_coh, ret_nrel_succ,
+                           tbhiv_coh, tbhiv_succ)
 
+# B. Combine with M/XDR cohorts one year older than standard
+outcome_country <- filter(o, year == (outcome_maxyear - 1)) %>%
+                    select(country,
+                           mdr_coh, mdr_succ,
+                           xdr_coh, xdr_succ) %>%
+                    inner_join(outcome_country, by = "country") %>%
+                    rename(entity = country ) %>%
+                    arrange(entity)
+
+# Calculate regional aggregates
+
+outcome_region <- outcome_country %>%
+                  group_by(g_whoregion) %>%
+                  summarise_each(funs(sum(., na.rm = TRUE)),
+                                 newrel_coh, newrel_succ,
+                                 ret_nrel_coh, ret_nrel_succ,
+                                 tbhiv_coh, tbhiv_succ,
+                                 mdr_coh, mdr_succ,
+                                 xdr_coh, xdr_succ) %>%
+                  mutate(rel_with_new_flg = NA) # dummy variable to match structure of country table
+
+# merge with regional names
+outcome_region <- filter(a, year == notification_maxyear & group_type == "g_whoregion") %>%
+                  select(group_name, group_description) %>%
+                  rename(g_whoregion = group_name) %>%
+                  inner_join(outcome_region, by = "g_whoregion") %>%
+                  rename(entity = group_description) %>%
+                  arrange(entity)
+
+
+# Calculate global aggregate
+outcome_global <- outcome_country %>%
+                  summarise_each(funs(sum(., na.rm = TRUE)),
+                                 newrel_coh, newrel_succ,
+                                 ret_nrel_coh, ret_nrel_succ,
+                                 tbhiv_coh, tbhiv_succ,
+                                 mdr_coh, mdr_succ,
+                                 xdr_coh, xdr_succ) %>%
+                  mutate(entity = "Global") %>%
+                  mutate(rel_with_new_flg = NA) %>% # dummy variable to match structure of the other two tables
+                  mutate(g_whoregion = "")  # dummy variable to match structure of the other two tables
+
+
+
+# Create combined table in order of countries then regional and global estimates
+outcome <- combine_tables(outcome_country, outcome_region, outcome_global)
+rm(list=c("outcome_country", "outcome_region", "outcome_global"))
+
+
+# Calculate treatment success rates and format variables for output
+outcome <- within(outcome, {
+
+  # New or new+relapse
+  c_new_tsr <- ifelse( is.na(newrel_coh), NA, rounder( newrel_succ * 100 /newrel_coh ))
+
+  # Retreatment or retreatment excluding relapse
+  c_ret_tsr <- ifelse( is.na(ret_nrel_coh), NA, rounder( ret_nrel_succ * 100 / ret_nrel_coh ))
+
+  # HIV-positive, all cases
+  c_tbhiv_tsr <- ifelse( is.na(tbhiv_coh), NA, rounder( tbhiv_succ * 100 / tbhiv_coh ))
+
+  # MDR and XDR
+  c_mdr_tsr <- ifelse( is.na(mdr_coh), NA, rounder( mdr_succ * 100 / mdr_coh))
+  c_xdr_tsr <- ifelse( is.na(mdr_coh), NA, rounder( xdr_succ * 100 / xdr_coh))
+
+  # Mark countries where relapses included with new cases
+  newrel_flg <- ifelse(NZ(rel_with_new_flg)==1, "*",NA)
+
+  # Add for blank columns
+  blank <- ""
+
+})
+
+# Insert "blank" placeholders for use in the output spreadsheet before writing out to CSV
+# dplyr's select statement won't repeat the blanks, hence use subset() from base r instead
+
+subset(outcome,
+       select = c("entity", "blank",
+                  "newrel_coh", "newrel_flg", "c_new_tsr", "blank",
+                  "ret_nrel_coh", "newrel_flg", "c_ret_tsr", "blank",
+                  "tbhiv_coh", "blank", "c_tbhiv_tsr", "blank",
+                  "mdr_coh", "blank", "c_mdr_tsr", "blank",
+                  "xdr_coh", "blank", "c_xdr_tsr", "blank"))  %>%
+  write.csv(file="outcome.csv", row.names=FALSE, na="")
+
+# Don't leave any mess behind!
+rm(outcome)
 
 
