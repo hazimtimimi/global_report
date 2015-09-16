@@ -1097,3 +1097,62 @@ subset(labs,
 rm(labs)
 
 
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# mdr_measured (was Table 10) -----
+# Source of MDR-TB measurements for those countries with usable survey or surveillance data
+# No aggregates used
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# Get country data
+
+mdr_measured <- filter(emdr, year == notification_maxyear) %>%
+            select(country,
+                   source_mdr_new, source_drs_year_new, source_drs_coverage_new,
+                   e_new_mdr_pcnt,e_new_mdr_pcnt_lo, e_new_mdr_pcnt_hi,
+                   source_mdr_ret, source_drs_year_ret, source_drs_coverage_ret,
+                   e_ret_mdr_pcnt, e_ret_mdr_pcnt_lo, e_ret_mdr_pcnt_hi)  %>%
+            arrange(country)
+
+
+# blank out source, estimates etc if source is not survey or surveillance
+mdr_measured[mdr_measured$source_mdr_new != "Surveillance" & mdr_measured$source_mdr_new != "Survey",
+        c("source_mdr_new", "source_drs_year_new", "source_drs_coverage_new",
+          "e_new_mdr_pcnt", "e_new_mdr_pcnt_lo", "e_new_mdr_pcnt_hi")] <- NA
+
+mdr_measured[mdr_measured$source_mdr_ret != "Surveillance" & mdr_measured$source_mdr_ret != "Survey",
+        c("source_mdr_ret", "source_drs_year_ret", "source_drs_coverage_ret",
+          "e_ret_mdr_pcnt", "e_ret_mdr_pcnt_lo", "e_ret_mdr_pcnt_hi")] <- NA
+
+# Format variables for output
+mdr_measured <- within(mdr_measured, {
+
+  # concatenate confidence interval variables into bracketed strings
+  e_new_mdr_pcnt_lo_hi <- frmt_intervals(e_new_mdr_pcnt,
+                                        e_new_mdr_pcnt_lo,
+                                        e_new_mdr_pcnt_hi, rates=TRUE)
+
+  e_ret_mdr_pcnt_lo_hi <- frmt_intervals(e_ret_mdr_pcnt,
+                                        e_ret_mdr_pcnt_lo,
+                                        e_ret_mdr_pcnt_hi, rates=TRUE)
+
+  # Add for blank columns
+  blank <- ""
+
+})
+
+
+# Insert "blank" placeholders for use in the output spreadsheet before writing out to CSV
+# dplyr's select statement won't repeat the blanks, hence use subset() from base r instead
+
+subset(mdr_measured,
+       select=c("country", "blank",
+                "source_drs_year_new", "blank", "source_mdr_new", "blank", "source_drs_coverage_new", "blank",
+                "e_new_mdr_pcnt", "blank", "e_new_mdr_pcnt_lo_hi", "blank",
+                "source_drs_year_ret", "blank", "source_mdr_ret", "blank", "source_drs_coverage_ret", "blank",
+                "e_ret_mdr_pcnt", "blank", "e_ret_mdr_pcnt_lo_hi")) %>%
+  write.csv(file="mdr_measured.csv", row.names=FALSE, na="")
+
+# Don't leave any mess behind!
+rm(mdr_measured)
+
+
