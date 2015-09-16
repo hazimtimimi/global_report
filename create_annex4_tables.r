@@ -97,10 +97,7 @@ if (use_live_db==TRUE){
 
 # Create output folder (only if it doesn't yet exist), and move to it
 dir.create(annex4_folder, recursive = TRUE, showWarnings = FALSE)
-
-dir.create(file.path(annex4_folder, "linked_CSVs"), showWarnings = FALSE)
-
-setwd(file.path(annex4_folder, "linked_CSVs"))
+setwd(annex4_folder)
 
 
 
