@@ -134,7 +134,20 @@ WHOmap.print <- function(data, map.title="", legend.title="", colors=NULL, low.c
     lefties <- c("COK", "NIU", "TON", "WSM", "TKL", "ASM", "PYF", "WLF")
     gworld[gworld$id %in% lefties, "long"] <- gworld[gworld$id %in% lefties, "long"] + 360
   }
-
+  
+  # Color Svalbard and Jan Mayen the same as Norway
+  gworld[gworld$group=="SJM.1", "piece"] <- "2"
+  gworld[gworld$group=="SJM.2", "piece"] <- "3"
+  gworld[gworld$group=="SJM.3", "piece"] <- "4"
+ 
+  gworld[gworld$id=="SJM", "id"] <- "NOR"
+  
+  levels(gworld$group) <- c(levels(gworld$group), "NOR.2", "NOR.3", "NOR.4")
+  gworld[gworld$group=="SJM.1", "group"] <- "NOR.2"
+  gworld[gworld$group=="SJM.2", "group"] <- "NOR.3"
+  gworld[gworld$group=="SJM.3", "group"] <- "NOR.4"
+  
+  
   # Generic map parts
 
 #   drop lines that would be whited out.
