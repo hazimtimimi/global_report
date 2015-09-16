@@ -645,3 +645,132 @@ subset(outcome,
 rm(outcome)
 
 
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# tb_hiv (Table 6)  -----
+# HIV testing for TB patients and provision of CPT, ART and IPT
+# Note that the tbhiv dataset already has rules built in for combining _p and _f
+#	(final and provisional) numbers, plus adjusted variables for calculating aggregates.
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# Get country data
+tb_hiv_country <- merge(tbhiv, subset(n, year %in% 2003:notification_maxyear, select= c(iso3, country, year, g_whoregion, c_notified, hiv_ipt)), all.y=TRUE)
+
+# A. Get adjusted tbhiv data
+tb_hiv_country <- filter(tbhiv, year == notification_maxyear)
+
+# B. Combine with IPT from notifications
+tb_hiv_country <- filter(n, year == notification_maxyear) %>%
+                  select(iso2, hiv_ipt) %>%
+                  inner_join(tb_hiv_country, by = "iso2") %>%
+                  rename(entity = country ) %>%
+                  arrange(entity)
+
+
+# Calculate regional aggregates, using the _pct_numerator and _pct_denominator fields
+tb_hiv_region <- tb_hiv_country %>%
+                group_by(g_whoregion) %>%
+                summarise_each(funs(sum(., na.rm = TRUE)),
+                               c_notified, hiv_ipt,
+                               matches("_pct_"))
+
+# merge with regional names
+tb_hiv_region <- filter(a, year == notification_maxyear & group_type == "g_whoregion") %>%
+                select(group_name, group_description) %>%
+                rename(g_whoregion = group_name) %>%
+                inner_join(tb_hiv_region, by = "g_whoregion") %>%
+                rename(entity = group_description) %>%
+                arrange(entity)
+
+# Calculate global aggregate
+tb_hiv_global <- tb_hiv_region %>%
+                summarise_each(funs(sum(., na.rm = TRUE)),
+                               c_notified, hiv_ipt,
+                               matches("_pct_")) %>%
+                mutate(entity = "Global")
+
+
+# Calculate percentages for countries
+tb_hiv_country <- within(tb_hiv_country, {
+
+  hivtest_prct <- ifelse(c_notified==0,NA,frmt(hivtest * 100 / c_notified ))
+  hivtest_pos_prct <- ifelse(hivtest==0,NA,frmt(hivtest_pos * 100/ hivtest ))
+  hiv_cpt_prct <- ifelse(hivtest_pos==0,NA,frmt(hiv_cpt * 100/ hivtest_pos ))
+  hiv_art_prct <- ifelse(hivtest_pos==0,NA,frmt(hiv_art * 100/ hivtest_pos ))
+
+  # TEMPORARY POLITICAL SOLUTION FOR RUSSIAN FEDERATION 2010 onwards:
+  # DO NOT CALCULATE % tb PATIENTS WITH KNOWN HIV STATUS
+  # Enable or disable using flag in section A right at the top of the script.
+
+  if (isTRUE(russianfudge)) {
+    hivtest_prct <- ifelse(entity == "Russian Federation", NA, hivtest_prct)
+    hivtest_pos_prct <- ifelse(entity == "Russian Federation", NA, hivtest_pos_prct)
+  }
+})
+
+# Calculate percentages for regions and globally
+tb_hiv_region <- within(tb_hiv_region, {
+
+  hivtest_prct <- frmt(hivtest_pct_numerator * 100 / hivtest_pct_denominator )
+  hivtest_pos_prct <- frmt(hivtest_pos_pct_numerator * 100/ hivtest_pos_pct_denominator )
+  hiv_cpt_prct <- frmt(hiv_cpt_pct_numerator * 100/ hiv_cpt_pct_denominator )
+  hiv_art_prct <- frmt(hiv_art_pct_numerator * 100/ hiv_art_pct_denominator )
+})
+
+tb_hiv_global <- within(tb_hiv_global, {
+
+  hivtest_prct <- frmt(hivtest_pct_numerator * 100 / hivtest_pct_denominator )
+  hivtest_pos_prct <- frmt(hivtest_pos_pct_numerator * 100/ hivtest_pos_pct_denominator )
+  hiv_cpt_prct <- frmt(hiv_cpt_pct_numerator * 100/ hiv_cpt_pct_denominator )
+  hiv_art_prct <- frmt(hiv_art_pct_numerator * 100/ hiv_art_pct_denominator )
+})
+
+# Harmonise variables in each of the tables before combining them
+tb_hiv_country <- select(tb_hiv_country,
+                         entity, c_notified,
+                         hivtest, hivtest_pos, hiv_ipt,
+                         hivtest_prct, hivtest_pos_prct, hiv_cpt_prct, hiv_art_prct)
+
+tb_hiv_region <- select(tb_hiv_region,
+                         entity, c_notified,
+                         hivtest_pct_numerator, hivtest_pos_pct_numerator, hiv_ipt,
+                         hivtest_prct, hivtest_pos_prct, hiv_cpt_prct, hiv_art_prct) %>%
+                  rename(hivtest = hivtest_pct_numerator,
+                         hivtest_pos = hivtest_pos_pct_numerator)
+
+tb_hiv_global <- select(tb_hiv_global,
+                        entity, c_notified,
+                        hivtest_pct_numerator, hivtest_pos_pct_numerator, hiv_ipt,
+                        hivtest_prct, hivtest_pos_prct, hiv_cpt_prct, hiv_art_prct) %>%
+                  rename(hivtest = hivtest_pct_numerator,
+                         hivtest_pos = hivtest_pos_pct_numerator)
+
+# Create combined table in order of countries then regional and global estimates
+tb_hiv <- combine_tables(tb_hiv_country, tb_hiv_region, tb_hiv_global)
+rm(list=c("tb_hiv_country", "tb_hiv_region", "tb_hiv_global"))
+
+
+# Format the output variables
+tb_hiv <- within(tb_hiv, {
+
+  c_notified <- rounder(c_notified)
+  hivtest <- rounder(hivtest)
+  hivtest_pos <- rounder(hivtest_pos)
+  hiv_ipt <- rounder(hiv_ipt)
+
+  # Add for blank columns
+  blank <- ""
+
+})
+
+# Insert "blank" placeholders for use in the output spreadsheet before writing out to CSV
+# dplyr's select statement won't repeat the blanks, hence use subset() from base r instead
+
+subset(tb_hiv,
+       select = c("entity", "blank",
+                  "hivtest_prct", "blank", "hivtest", "blank", "c_notified", "blank", "hivtest_pos", "blank", "hivtest_pos_prct", "blank", "hiv_cpt_prct", "blank", "hiv_art_prct", "blank", "hiv_ipt"))  %>%
+  write.csv(file="tb_hiv.csv", row.names=FALSE, na="")
+
+# Don't leave any mess behind!
+rm(tb_hiv)
+
