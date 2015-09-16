@@ -118,8 +118,8 @@ figsave(inc_map, mfa, "f2_6_inc_map")
 
 mfa <- subset(e.t, year==report_year-1, select=c("g_whoregion", 'country', 'iso3', 'source_inc'))
 
-#mfa$var <- mfa$source.inc %in% c("Capture-recapture","High income","Survey")
-mfa$var <- mfa$source.inc
+#mfa$var <- mfa$source_inc %in% c("Capture-recapture","High income","Survey")
+mfa$var <- mfa$source_inc
 mfa$var[mfa$iso3 %in% c('CHN', 'GMB', 'IDN', 'MMR', 'PAK', 'PHL', 'RWA', 'VNM')] <- 'Prevalence survey'
 mfa$var[mfa$var=='Survey'] <- 'Prevalence survey'
 mfa$var[!mfa$var %in% c('Prevalence survey', 'Capture-recapture', 'High income')] <- 'Case notifications'
@@ -129,15 +129,14 @@ mfa$cat <- factor(mfa$var, levels=c('Case notifications','Prevalence survey', 'H
 
 
 # map
-inc_src_map <- WHOmap.print(mfa, paste0(
-"Figure 2.2 Coverage of country consultations on estimates of 
-TB disease burden, 2008–", report_year),
+inc_src_map <- WHOmap.print(mfa, 
+"Figure 2.2. Main method used to estimate TB incidence(a)", 
                              "Main method",
 colors=con.col[1:4],
                              copyright=FALSE,
-                             show=TRUE)
+                             show=FALSE)
 
-figsave(inc_src_map, mfb, "f2_2_inc_src_map")
+figsave(inc_src_map, mfa, "f2_2_inc_src_map")
 
 
 # 2_15_mort_src_map -------------------------------------------------
@@ -222,19 +221,40 @@ figsave(mhc, mhb, "f2_xx_err_map")
 # 2_21_age_map -------------------------------------------------
 # Countries able to report age disaggregated data
 
-mja <- n.t %>% filter(year==report_year-1, !is.na(c_newinc)) %>% select(country, iso3, matches("newrel_[m|f|sex]")) %>% select(-newrel_mu, -newrel_fu, -newrel_sexunkageunk) 
+# find countries which did not report yet this year.
+mjc <- n.t %>% filter(year==report_year-1, is.na(c_newinc)) %>% select(iso3)
 
-mja$age <- sum_of_row(mja[3:ncol(mja)])
+mja <- n.t %>% 
+  # Get the last two years
+  filter(year %in% c(report_year-2,report_year-1), !is.na(c_newinc)) %>% 
+  # Get all the age-sex variables
+  select(country, year, iso3, rel_in_agesex_flg, matches("newrel_[m|f|sex]")) %>% 
+  # Remove the variables with age unknown
+  select(-newrel_mu, -newrel_fu, -newrel_sexunkageunk) %>% 
+  # Rename values of last two years (for reshaping later)
+  mutate(year=ifelse(year==report_year-1, "latest", "previous")) %>% 
+  # Replace with previous year if latest year missing. 
+  gather(vari, value, rel_in_agesex_flg:newrel_sexunk15plus) %>% spread(year, value) %>% 
+  # but only if in the list of non-reporters (to exclude countries which reported the previous year, but not the latest)
+  mutate(value=ifelse(is.na(latest) & iso3 %in% mjc$iso3, previous, latest)) %>% select(-latest, -previous) %>% 
+  # Get back to normal with only one row per country
+  spread(variable, value)
 
-mja$cat <- factor(ifelse(is.na(mja$age), "No age disaggregation", "Age disaggregation"))
+# Check if different variables are added or removed in the future.
+if(ncol(mja)!=27) warning("For map 2.21, the age sex variables have changed. Check select() code.")
+
+# Check if all age vars are missing
+mja$age <- sum_of_row(mja[4:ncol(mja)])
+
+mja$cat <- factor(ifelse(is.na(mja$age), "No age disaggregation", ifelse(mja$rel_in_agesex_flg==1, "Age disaggregation (new and relapse)", "Age disaggregation (new only)")))
 
 mjb <- mja %>% select(country, iso3, cat)
 
 # map
 age_map <- WHOmap.print(mjb,
-                    paste("Figure 2.21 Reporting of age disaggregated data,", report_year-1),
+                    paste("Figure 2.21 Reporting of new and relapse TB case notifications disaggregated by age,", report_year-1),
                     '',
-                    # colors=c('dark green', 'light green', 'white'),
+                    colors=c('dark green', 'light green', 'purple'),
                     copyright=FALSE,
                     show=FALSE)
 
