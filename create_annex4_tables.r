@@ -930,3 +930,113 @@ subset(rrmdr,
 # Don't leave any mess behind!
 rm(rrmdr)
 
+
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+#   agesex  (was Table 8) -----
+#   New and relapse case notification by age and sex
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+
+# Get country data
+agesex_country <- filter(n, year == notification_maxyear) %>%
+                  select(country, g_whoregion,
+                         rel_in_agesex_flg,
+                         newrel_m014, newrel_m15plus, newrel_mu,
+                         newrel_f014, newrel_f15plus, newrel_fu,
+                         newrel_sexunk014, newrel_sexunk15plus, newrel_sexunkageunk) %>%
+                  rename(entity = country ) %>%
+                  arrange(entity)
+
+# Calculate regional aggregates
+agesex_region <- agesex_country %>%
+                  group_by(g_whoregion) %>%
+                  summarise_each(funs(sum(., na.rm = TRUE)),
+                                 newrel_m014, newrel_m15plus, newrel_mu,
+                                 newrel_f014, newrel_f15plus, newrel_fu,
+                                 newrel_sexunk014, newrel_sexunk15plus, newrel_sexunkageunk) %>%
+                  mutate(rel_in_agesex_flg = NA) # dummy variable to match structure of country table
+
+# merge with regional names
+agesex_region <- filter(a, year == notification_maxyear & group_type == "g_whoregion") %>%
+                  select(group_name, group_description) %>%
+                  rename(g_whoregion = group_name) %>%
+                  inner_join(agesex_region, by = "g_whoregion") %>%
+                  rename(entity = group_description) %>%
+                  arrange(entity)
+
+# Calculate global aggregate
+agesex_global <- agesex_country %>%
+                  summarise_each(funs(sum(., na.rm = TRUE)),
+                                 newrel_m014, newrel_m15plus, newrel_mu,
+                                 newrel_f014, newrel_f15plus, newrel_fu,
+                                 newrel_sexunk014, newrel_sexunk15plus, newrel_sexunkageunk) %>%
+                  mutate(entity = "Global") %>%
+                  mutate(rel_in_agesex_flg = NA) %>% # dummy variable to match structure of the other two tables
+                  mutate(g_whoregion = "")  # dummy variable to match structure of the other two tables
+
+
+# Create combined table in order of countries then regional and global estimates
+agesex <- combine_tables(agesex_country, agesex_region, agesex_global)
+rm(list=c("agesex_country", "agesex_region", "agesex_global"))
+
+# Calculate Male:Female ratio
+agesex$mf_ratio <- ifelse(NZ(sum_of_row(agesex[c("newrel_f014", "newrel_f15plus", "newrel_fu")])) > 0 &
+                                NZ(sum_of_row(agesex[c("newrel_m014", "newrel_m15plus", "newrel_mu")])) > 0,
+                              frmt( sum_of_row(agesex[c("newrel_m014", "newrel_m15plus", "newrel_mu")]) /
+                                      sum_of_row(agesex[c("newrel_f014", "newrel_f15plus", "newrel_fu")]) ),
+                              NA )
+
+# Calculate % aged under 15
+agesex$u15_pct <- ifelse( NZ(sum_of_row(agesex[c("newrel_m014", "newrel_f014", "newrel_sexunk014",
+                                                     "newrel_m15plus", "newrel_f15plus", "newrel_sexunk15plus")])) > 0,
+                            frmt( sum_of_row(agesex[c("newrel_m014", "newrel_f014", "newrel_sexunk014")]) * 100
+                                  /
+                                    sum_of_row(agesex[c("newrel_m014", "newrel_f014", "newrel_sexunk014",
+                                                          "newrel_m15plus", "newrel_f15plus", "newrel_sexunk15plus")])
+                            ),
+                            NA )
+
+# Format variables for output
+agesex <- within(agesex, {
+
+  newrel_m014 <- rounder(newrel_m014)
+  newrel_f014 <- rounder(newrel_f014)
+  newrel_sexunk014 <- rounder(newrel_sexunk014)
+
+  newrel_m15plus <- rounder(newrel_m15plus)
+  newrel_f15plus <- rounder(newrel_f15plus)
+  newrel_sexunk15plus <- rounder(newrel_sexunk15plus)
+
+  newrel_mu <- rounder(newrel_mu)
+  newrel_fu <- rounder(newrel_fu)
+  newrel_sexunkageunk <- rounder(newrel_sexunkageunk)
+
+  # Flag for whether relapses were not included in age/sex table
+  rel_absent_flg <- ifelse(rel_in_agesex_flg==0, "*",NA)
+
+  # Add for blank columns
+  blank <- ""
+
+})
+
+
+# Insert "blank" placeholders for use in the output spreadsheet before writing out to CSV
+# dplyr's select statement won't repeat the blanks, hence use subset() from base r instead
+
+subset(agesex,
+       select=c("entity", "blank",
+                "rel_absent_flg",
+                "newrel_m014", "blank", "newrel_m15plus", "blank", "newrel_mu", "blank",
+                "newrel_f014", "blank", "newrel_f15plus", "blank", "newrel_fu", "blank",
+                "newrel_sexunk014", "blank", "newrel_sexunk15plus", "blank", "newrel_sexunkageunk", "blank",
+                "u15_pct", "blank",
+                "mf_ratio", "blank")) %>%
+  write.csv(file="agesex.csv", row.names=FALSE, na="")
+
+# Don't leave any mess behind!
+rm(agesex)
+
+
+
