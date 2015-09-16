@@ -1040,3 +1040,69 @@ rm(agesex)
 
 
 
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# labs (was Table 9) -----
+# Laboratories, NTP services, drug management, human resources and infection control
+# Country level only, no need for aggregates
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+
+# Get country data
+
+labs <- filter(s, year == notification_maxyear) %>%
+        select(country,
+               c_lab_sm_100k, lab_sm_f, lab_sm_led
+               c_lab_cul_5m, c_lab_dst_5m, c_lab_lpa_5m, lab_xpert,
+               sldst_avail_incntry, sldst_avail_outcntry, nrl,
+               hcw_tot, hcw_tb_infected) %>%
+        arrange(country)
+
+
+# Calculate some variables and format for output
+labs <- within(labs, {
+
+  # % smear labs using LED microscopy
+  $lab_sm_led_pct <- ifelse(is.na(lab_sm_led) | is.na(lab_sm_f), '–', rounder(lab_sm_led * 100 / lab_sm_f))
+
+  # Availability of 2nd line DST
+  sldst <- ifelse(sldst_avail_incntry==1 & sldst_avail_outcntry==1, 'In and out of country',
+                  ifelse(sldst_avail_incntry==1, 'In country',
+                         ifelse(sldst_avail_outcntry==1, 'Out of country',
+                                ifelse(sldst_avail_incntry==0 & sldst_avail_outcntry==0, 'No', NA))))
+
+  # Convert nrl variable to its full description using the datacodes table
+  nrl <- factor(nrl, levels=datacodes$option_id, labels=datacodes$optiontext_EN)
+
+  # notification rate among health care workers
+  # (ignore records where numerator = denominator!)
+  hcw_100k <- ifelse(is.na(hcw_tb_infected) | NZ(hcw_tot)==0 | hcw_tb_infected == hcw_tot ,
+                     "",
+                     rounder(hcw_tb_infected * 100000 / hcw_tot ))
+
+  # Add for blank columns
+  blank <- ""
+
+})
+
+
+
+
+# Add for blank columns
+labs_c$blank <- NA
+
+
+
+# re-order and export
+t9select <- c("group_name", "blank", "c_lab_sm_100k", "blank", "lab_sm_led_pct", "blank", "c_lab_cul_5m", "blank", "c_lab_dst_5m", "blank", "c_lab_lpa_5m", "blank", "lab_xpert", "blank","sldst", "nrl", "blank", "blank", "free_dx", "blank", "free_fld_ntp", "blank", "blank", "blank", "hcw_100k", "blank", "blank", "blank", "format", "g_whoregion", "iso3", "type", "order")
+labs_c <- subset(labs_c, select=t9select)
+
+labs_c <- labs_c[order(labs_c$order),]
+
+write.csv(labs_c[labs_c$type=="countries",], file="labs_c.csv", row.names=FALSE, na="")
+
+# and now clear up the mess left behind
+rm(list=c("labs_c", "t9_countries", "t9lineser"))
+
+
+
