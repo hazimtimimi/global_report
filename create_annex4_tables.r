@@ -1039,20 +1039,17 @@ subset(agesex,
 rm(agesex)
 
 
-
-
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # labs (was Table 9) -----
-# Laboratories, NTP services, drug management, human resources and infection control
+# Laboratories and infection control
 # Country level only, no need for aggregates
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
 # Get country data
-
 labs <- filter(s, year == notification_maxyear) %>%
         select(country,
-               c_lab_sm_100k, lab_sm_f, lab_sm_led
+               c_lab_sm_100k, lab_sm_f, lab_sm_led,
                c_lab_cul_5m, c_lab_dst_5m, c_lab_lpa_5m, lab_xpert,
                sldst_avail_incntry, sldst_avail_outcntry, nrl,
                hcw_tot, hcw_tb_infected) %>%
@@ -1063,7 +1060,7 @@ labs <- filter(s, year == notification_maxyear) %>%
 labs <- within(labs, {
 
   # % smear labs using LED microscopy
-  $lab_sm_led_pct <- ifelse(is.na(lab_sm_led) | is.na(lab_sm_f), '–', rounder(lab_sm_led * 100 / lab_sm_f))
+  lab_sm_led_pct <- ifelse(is.na(lab_sm_led) | is.na(lab_sm_f), '–', rounder(lab_sm_led * 100 / lab_sm_f))
 
   # Availability of 2nd line DST
   sldst <- ifelse(sldst_avail_incntry==1 & sldst_avail_outcntry==1, 'In and out of country',
@@ -1085,24 +1082,18 @@ labs <- within(labs, {
 
 })
 
+# Insert "blank" placeholders for use in the output spreadsheet before writing out to CSV
+# dplyr's select statement won't repeat the blanks, hence use subset() from base r instead
 
+subset(labs,
+       select=c("country", "blank",
+                "c_lab_sm_100k", "blank", "lab_sm_led_pct", "blank",
+                "c_lab_cul_5m", "blank", "c_lab_dst_5m", "blank", "c_lab_lpa_5m", "blank", "lab_xpert", "blank",
+                "sldst", "nrl", "blank",
+                "hcw_100k")) %>%
+  write.csv(file="labs.csv", row.names=FALSE, na="")
 
-
-# Add for blank columns
-labs_c$blank <- NA
-
-
-
-# re-order and export
-t9select <- c("group_name", "blank", "c_lab_sm_100k", "blank", "lab_sm_led_pct", "blank", "c_lab_cul_5m", "blank", "c_lab_dst_5m", "blank", "c_lab_lpa_5m", "blank", "lab_xpert", "blank","sldst", "nrl", "blank", "blank", "free_dx", "blank", "free_fld_ntp", "blank", "blank", "blank", "hcw_100k", "blank", "blank", "blank", "format", "g_whoregion", "iso3", "type", "order")
-labs_c <- subset(labs_c, select=t9select)
-
-labs_c <- labs_c[order(labs_c$order),]
-
-write.csv(labs_c[labs_c$type=="countries",], file="labs_c.csv", row.names=FALSE, na="")
-
-# and now clear up the mess left behind
-rm(list=c("labs_c", "t9_countries", "t9lineser"))
-
+# Don't leave any mess behind!
+rm(labs)
 
 
