@@ -768,8 +768,8 @@ agesex <- within(agesex, {
   # Keep entity only if sex is female or entiry is "WHO Regions"
   entity <- ifelse(entity == "WHO regions" | sex == "Female", entity, NA )
 
-  # Flag for whether relapses were not included in age/sex table
-  rel_absent_flg <- ifelse(rel_in_agesex_flg==0 & sex == "Female", "*",NA)
+  # Flag country name if relapses were not included in age/sex table
+  entity <- ifelse(!is.na(rel_in_agesex_flg) & rel_in_agesex_flg==0 & sex == "Female" , paste0(entity,"*"),entity)
 
   # Add for blank columns
   blank <- ""
@@ -781,11 +781,10 @@ agesex <- within(agesex, {
 
 subset(agesex,
        select=c("entity", "blank",
-                "rel_absent_flg", "blank",
                 "sex", "blank",
                 "a014", "blank", "a15plus", "blank", "ageunk", "blank",
                 "a04", "blank", "a514", "blank",
-                "a1524", "blank", "a2534", "blank", "a3544", "blank", "a4554", "blank", "a5564", "blank", "a65", "blank")) %>%
+                "a1524", "blank", "a2534", "blank", "a3544", "blank", "a4554", "blank", "a5564", "blank", "a65")) %>%
   write.csv(file="agesex.csv", row.names=FALSE, na="")
 
 # Don't leave any mess behind!
