@@ -809,14 +809,20 @@ rrmdr <- within(rrmdr, {
 
 
   # format the estimates
+  e_mdr_num_lo_hi <- frmt_intervals(e_mdr_num,
+                                    e_mdr_num_lo,
+                                    e_mdr_num_hi, thou=TRUE)
   e_mdr_num <- frmt(e_mdr_num)
-  e_mdr_num_lo_hi <- paste0("(", frmt(e_mdr_num_lo), "–", frmt(e_mdr_num_hi), ")")
 
+  e_new_mdr_num_lo_hi <- frmt_intervals(e_new_mdr_num,
+                                        e_new_mdr_num_lo,
+                                        e_new_mdr_num_hi, thou=TRUE)
   e_new_mdr_num <- frmt(e_new_mdr_num)
-  e_new_mdr_num_lo_hi <- paste0("(", frmt(e_new_mdr_num_lo), "–", frmt(e_new_mdr_num_hi), ")")
 
+  e_ret_mdr_num_lo_hi <- frmt_intervals(e_ret_mdr_num,
+                                        e_ret_mdr_num_lo,
+                                        e_ret_mdr_num_hi, thou=TRUE)
   e_ret_mdr_num <- frmt(e_ret_mdr_num)
-  e_ret_mdr_num_lo_hi <- paste0("(", frmt(e_ret_mdr_num_lo), "–", frmt(e_ret_mdr_num_hi), ")")
 
   # Add for blank columns
   blank <- ""
