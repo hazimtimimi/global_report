@@ -96,10 +96,8 @@ if (use_live_db==TRUE){
 
 
 # Create output folder (only if it doesn't yet exist), and move to it
-dir.create(annex4_folder, recursive = TRUE, showWarnings = FALSE)
-setwd(annex4_folder)
-
-
+dir.create(file.path(annex4_folder, recursive = TRUE, "linked_CSVs"), showWarnings = FALSE)
+setwd(file.path(annex4_folder, "linked_CSVs"))
 
 # B: OK, NOW GO FOR IT ----
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -547,40 +545,40 @@ rm(notif)
 
 # Get country data
 agesex_country <- filter(n, year == notification_maxyear) %>%
-  select(country, g_whoregion,
-         rel_in_agesex_flg,
-         newrel_m014, newrel_m15plus, newrel_mu,
-         newrel_f014, newrel_f15plus, newrel_fu,
-         newrel_sexunk014, newrel_sexunk15plus, newrel_sexunkageunk) %>%
-  rename(entity = country ) %>%
-  arrange(entity)
+                  select(country, g_whoregion,
+                         rel_in_agesex_flg,
+                         newrel_m014, newrel_m15plus, newrel_mu,
+                         newrel_f014, newrel_f15plus, newrel_fu,
+                         newrel_sexunk014, newrel_sexunk15plus, newrel_sexunkageunk) %>%
+                  rename(entity = country ) %>%
+                  arrange(entity)
 
 # Calculate regional aggregates
 agesex_region <- agesex_country %>%
-  group_by(g_whoregion) %>%
-  summarise_each(funs(sum(., na.rm = TRUE)),
-                 newrel_m014, newrel_m15plus, newrel_mu,
-                 newrel_f014, newrel_f15plus, newrel_fu,
-                 newrel_sexunk014, newrel_sexunk15plus, newrel_sexunkageunk) %>%
-  mutate(rel_in_agesex_flg = NA) # dummy variable to match structure of country table
+                  group_by(g_whoregion) %>%
+                  summarise_each(funs(sum(., na.rm = TRUE)),
+                                 newrel_m014, newrel_m15plus, newrel_mu,
+                                 newrel_f014, newrel_f15plus, newrel_fu,
+                                 newrel_sexunk014, newrel_sexunk15plus, newrel_sexunkageunk) %>%
+                  mutate(rel_in_agesex_flg = NA) # dummy variable to match structure of country table
 
 # merge with regional names
 agesex_region <- filter(a, year == notification_maxyear & group_type == "g_whoregion") %>%
-  select(group_name, group_description) %>%
-  rename(g_whoregion = group_name) %>%
-  inner_join(agesex_region, by = "g_whoregion") %>%
-  rename(entity = group_description) %>%
-  arrange(entity)
+                  select(group_name, group_description) %>%
+                  rename(g_whoregion = group_name) %>%
+                  inner_join(agesex_region, by = "g_whoregion") %>%
+                  rename(entity = group_description) %>%
+                  arrange(entity)
 
 # Calculate global aggregate
 agesex_global <- agesex_country %>%
-  summarise_each(funs(sum(., na.rm = TRUE)),
-                 newrel_m014, newrel_m15plus, newrel_mu,
-                 newrel_f014, newrel_f15plus, newrel_fu,
-                 newrel_sexunk014, newrel_sexunk15plus, newrel_sexunkageunk) %>%
-  mutate(entity = "Global") %>%
-  mutate(rel_in_agesex_flg = NA) %>% # dummy variable to match structure of the other two tables
-  mutate(g_whoregion = "")  # dummy variable to match structure of the other two tables
+                  summarise_each(funs(sum(., na.rm = TRUE)),
+                                 newrel_m014, newrel_m15plus, newrel_mu,
+                                 newrel_f014, newrel_f15plus, newrel_fu,
+                                 newrel_sexunk014, newrel_sexunk15plus, newrel_sexunkageunk) %>%
+                  mutate(entity = "Global") %>%
+                  mutate(rel_in_agesex_flg = NA) %>% # dummy variable to match structure of the other two tables
+                  mutate(g_whoregion = "")  # dummy variable to match structure of the other two tables
 
 
 # Create combined table in order of countries then regional and global estimates
@@ -645,6 +643,150 @@ subset(agesex,
 rm(agesex)
 
 
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+#   agesex alternative  (Table 4 alternative) -----
+#   New and relapse case notification by age and sex, for ALL age groups
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+
+# Get country data
+# A. Males
+agesex_country_m <- filter(n, year == notification_maxyear) %>%
+                    select(country, g_whoregion,
+                           rel_in_agesex_flg, starts_with("newrel_m")) %>%
+                    rename(a04 = newrel_m04,
+                           a514 = newrel_m514,
+                           a014 = newrel_m014,
+                           a1524 = newrel_m1524,
+                           a2534 = newrel_m2534,
+                           a3544 = newrel_m3544,
+                           a4554 = newrel_m4554,
+                           a5564 = newrel_m5564,
+                           a65 = newrel_m65,
+                           ageunk = newrel_mu,
+                           a15plus = newrel_m15plus) %>%
+                    mutate(sex = "Male")
+
+# B. Females
+agesex_country_f <- filter(n, year == notification_maxyear) %>%
+                    select(country, g_whoregion,
+                           rel_in_agesex_flg, starts_with("newrel_f")) %>%
+                    rename(a04 = newrel_f04,
+                           a514 = newrel_f514,
+                           a014 = newrel_f014,
+                           a1524 = newrel_f1524,
+                           a2534 = newrel_f2534,
+                           a3544 = newrel_f3544,
+                           a4554 = newrel_f4554,
+                           a5564 = newrel_f5564,
+                           a65 = newrel_f65,
+                           ageunk = newrel_fu,
+                           a15plus = newrel_f15plus) %>%
+                    mutate(sex = "Female")
+
+# C. Age unknown
+agesex_country_sexunk <- filter(n, year == notification_maxyear) %>%
+                          select(country, g_whoregion,
+                                 rel_in_agesex_flg, starts_with("newrel_sexunk"))
+
+# Because very few countries report data with sex unknown, filter out the empty records
+# (There are 5 newrel_sexunk* variables so empty records will have 5 NAs)
+# rowSums(is.na(agesex_country_sexunk)) < 5
+# Also filter out rows where the sum of all 5 newrel_sexunk* variables is zero
+
+agesex_country_sexunk <- filter(agesex_country_sexunk,
+                                NZ(sum_of_row(as.matrix(newrel_sexunk04, newrel_sexunk514, newrel_sexunk014,
+                                                       newrel_sexunkageunk, newrel_sexunk15plus))) > 0 ) %>%
+                          rename(a04 = newrel_sexunk04,
+                                 a514 = newrel_sexunk514,
+                                 a014 = newrel_sexunk014,
+                                 ageunk = newrel_sexunkageunk,
+                                 a15plus = newrel_sexunk15plus) %>%
+                          # Add dummy variables to match structure of country table
+                          mutate(sex = "Unknown",
+                                 a1524 = NA,
+                                 a2534 = NA,
+                                 a3544 = NA,
+                                 a4554 = NA,
+                                 a5564 = NA,
+                                 a65 = NA)
+
+# Combine the country records into one
+agesex_country <-  rbind(agesex_country_m, agesex_country_f, agesex_country_sexunk) %>%
+                    rename( entity = country) %>%
+                    arrange(entity, sex)
+rm(list=c("agesex_country_m", "agesex_country_f", "agesex_country_sexunk"))
+
+# Calculate regional aggregates
+agesex_region <- agesex_country %>%
+                  group_by(g_whoregion, sex) %>%
+                  summarise_each(funs(sum(., na.rm = TRUE)),
+                                 starts_with("a")) %>%
+                  mutate(rel_in_agesex_flg = NA) # dummy variable to match structure of country table
+
+# merge with regional names
+agesex_region <- filter(a, year == notification_maxyear & group_type == "g_whoregion") %>%
+                  select(group_name, group_description) %>%
+                  rename(g_whoregion = group_name) %>%
+                  inner_join(agesex_region, by = "g_whoregion") %>%
+                  rename(entity = group_description) %>%
+                  arrange(entity)
+
+
+# Calculate global aggregate
+agesex_global <- agesex_country %>%
+                  group_by(sex) %>%
+                  summarise_each(funs(sum(., na.rm = TRUE)),
+                                 starts_with("a")) %>%
+                  mutate(entity = "Global",
+                         # Add dummy variables to match structure of the other two tables
+                         rel_in_agesex_flg = NA,
+                         g_whoregion = "" )
+
+
+# Create combined table in order of countries then regional and global estimates
+agesex <- combine_tables(agesex_country, agesex_region, agesex_global)
+rm(list=c("agesex_country", "agesex_region", "agesex_global"))
+
+# Convert zeros to NA in the detailed age ranges for sex unknown rows because they are not collected at country level
+# (Should already be NA at country level, but not for aggregates)
+agesex[!is.na(agesex$sex) &  agesex$sex == "Unknown",
+       c("a1524", "a2534", "a3544", "a4554", "a5564", "a65")] <- NA
+
+# Format variables for output
+
+age_variables = c("a04", "a514", "a014", "a1524", "a2534", "a3544", "a4554", "a5564", "a65", "ageunk", "a15plus" )
+
+# apply the rounder() function to the age variable
+agesex[ , age_variables] <- sapply(agesex[,age_variables], rounder)
+
+agesex <- within(agesex, {
+
+  # Keep entity only if sex is female or entiry is "WHO Regions"
+  entity <- ifelse(entity == "WHO regions" | sex == "Female", entity, NA )
+
+  # Flag for whether relapses were not included in age/sex table
+  rel_absent_flg <- ifelse(rel_in_agesex_flg==0 & sex == "Female", "*",NA)
+
+  # Add for blank columns
+  blank <- ""
+
+})
+
+# Insert "blank" placeholders for use in the output spreadsheet before writing out to CSV
+# dplyr's select statement won't repeat the blanks, hence use subset() from base r instead
+
+subset(agesex,
+       select=c("entity", "blank",
+                "rel_absent_flg", "blank",
+                "sex", "blank",
+                "a014", "blank", "a15plus", "blank", "ageunk", "blank",
+                "a04", "blank", "a514", "blank",
+                "a1524", "blank", "a2534", "blank", "a3544", "blank", "a4554", "blank", "a5564", "blank", "a65", "blank")) %>%
+  write.csv(file="agesex_alt.csv", row.names=FALSE, na="")
+
+# Don't leave any mess behind!
+rm(agesex)
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # rrmdr (Table 5) -----
@@ -655,27 +797,27 @@ rm(agesex)
 # Get country data
 # A. Notifications
 rrmdr_country <- filter(n, year == notification_maxyear) %>%
-  select(country, g_whoregion,
-         c_rrmdr, mdr,
-         rdst_new, rdst_ret,
-         new_labconf, c_ret)
+                  select(country, g_whoregion,
+                         c_rrmdr, mdr,
+                         rdst_new, rdst_ret,
+                         new_labconf, c_ret)
 
 # B. Combine with routine surveillance
 rrmdr_country <- filter(d, year == notification_maxyear) %>%
-  select(country,
-         dst_rlt_new, xpert_new,
-         dst_rlt_ret, xpert_ret) %>%
-  inner_join(rrmdr_country, by = "country")
+                  select(country,
+                         dst_rlt_new, xpert_new,
+                         dst_rlt_ret, xpert_ret) %>%
+                  inner_join(rrmdr_country, by = "country")
 
 # C. Combine with estimates among notified
 rrmdr_country <- filter(emdrn, year == notification_maxyear) %>%
-  select(country,
-         e_mdr_num, e_mdr_num_lo, e_mdr_num_hi,
-         e_new_mdr_num, e_new_mdr_num_lo, e_new_mdr_num_hi,
-         e_ret_mdr_num, e_ret_mdr_num_lo, e_ret_mdr_num_hi) %>%
-  inner_join(rrmdr_country, by = "country") %>%
-  rename(entity = country ) %>%
-  arrange(entity)
+                  select(country,
+                         e_mdr_num, e_mdr_num_lo, e_mdr_num_hi,
+                         e_new_mdr_num, e_new_mdr_num_lo, e_new_mdr_num_hi,
+                         e_ret_mdr_num, e_ret_mdr_num_lo, e_ret_mdr_num_hi) %>%
+                  inner_join(rrmdr_country, by = "country") %>%
+                  rename(entity = country ) %>%
+                  arrange(entity)
 
 # Calculate total number tested
 rrmdr_country <- within(rrmdr_country, {
@@ -710,42 +852,42 @@ rrmdr_country <- select(rrmdr_country,
 # Aggregate the notifications and dst results (from rrmdr_country)
 
 rrmdr_region <- rrmdr_country %>%
-  group_by(g_whoregion) %>%
-  summarise_each(funs(sum(., na.rm = TRUE)),
-                 c_rrmdr, mdr,
-                 new_labconf, c_ret,
-                 dst_new, dst_ret)
+                group_by(g_whoregion) %>%
+                summarise_each(funs(sum(., na.rm = TRUE)),
+                               c_rrmdr, mdr,
+                               new_labconf, c_ret,
+                               dst_new, dst_ret)
 
 # Merge with regional estimates of mdr among notified
 rrmdr_region <- filter(emdra, year == notification_maxyear & group_type == "g_whoregion") %>%
-  select(group_name, group_description,
-         e_mdr_num, e_mdr_num_lo, e_mdr_num_hi,
-         e_new_mdr_num, e_new_mdr_num_lo, e_new_mdr_num_hi,
-         e_ret_mdr_num, e_ret_mdr_num_lo, e_ret_mdr_num_hi) %>%
-  rename(g_whoregion = group_name) %>%
-  inner_join(rrmdr_region, by = "g_whoregion") %>%
-  rename(entity = group_description) %>%
-  arrange(entity)
+                select(group_name, group_description,
+                       e_mdr_num, e_mdr_num_lo, e_mdr_num_hi,
+                       e_new_mdr_num, e_new_mdr_num_lo, e_new_mdr_num_hi,
+                       e_ret_mdr_num, e_ret_mdr_num_lo, e_ret_mdr_num_hi) %>%
+                rename(g_whoregion = group_name) %>%
+                inner_join(rrmdr_region, by = "g_whoregion") %>%
+                rename(entity = group_description) %>%
+                arrange(entity)
 
 
 # Calculate the global aggregates using same logic as for regional aggregates
 rrmdr_global <- rrmdr_country %>%
-  summarise_each(funs(sum(., na.rm = TRUE)),
-                 c_rrmdr, mdr,
-                 new_labconf, c_ret,
-                 dst_new, dst_ret) %>%
-  mutate(entity = "Global Aggregate")
+                summarise_each(funs(sum(., na.rm = TRUE)),
+                               c_rrmdr, mdr,
+                               new_labconf, c_ret,
+                               dst_new, dst_ret) %>%
+                mutate(entity = "Global Aggregate")
 
 # Merge with global estimates of mdr among notified
 rrmdr_global <- filter(emdra, year == notification_maxyear & group_type == "global") %>%
-  select(group_name, group_description,
-         e_mdr_num, e_mdr_num_lo, e_mdr_num_hi,
-         e_new_mdr_num, e_new_mdr_num_lo, e_new_mdr_num_hi,
-         e_ret_mdr_num, e_ret_mdr_num_lo, e_ret_mdr_num_hi) %>%
-  rename(entity = group_description) %>%
-  inner_join(rrmdr_global, by = "entity") %>%
-  # change field name to match other tables
-  rename(g_whoregion = group_name)
+                select(group_name, group_description,
+                       e_mdr_num, e_mdr_num_lo, e_mdr_num_hi,
+                       e_new_mdr_num, e_new_mdr_num_lo, e_new_mdr_num_hi,
+                       e_ret_mdr_num, e_ret_mdr_num_lo, e_ret_mdr_num_hi) %>%
+                rename(entity = group_description) %>%
+                inner_join(rrmdr_global, by = "entity") %>%
+                # change field name to match other tables
+                rename(g_whoregion = group_name)
 
 
 # Create combined table in order of countries then regional and global estimates
@@ -809,41 +951,38 @@ rm(rrmdr)
 #  (final and provisional) numbers, plus adjusted variables for calculating aggregates.
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-# Get country data
-tb_hiv_country <- merge(tbhiv, subset(n, year %in% 2003:notification_maxyear, select= c(iso3, country, year, g_whoregion, c_notified, hiv_ipt)), all.y=TRUE)
-
 # A. Get adjusted tbhiv data
 tb_hiv_country <- filter(tbhiv, year == notification_maxyear)
 
 # B. Combine with IPT from notifications
 tb_hiv_country <- filter(n, year == notification_maxyear) %>%
-  select(iso2, hiv_ipt) %>%
-  inner_join(tb_hiv_country, by = "iso2") %>%
-  rename(entity = country ) %>%
-  arrange(entity)
+                  select(iso2, hiv_ipt) %>%
+                  inner_join(tb_hiv_country, by = "iso2") %>%
+                  rename(entity = country ) %>%
+                  arrange(entity)
 
 
 # Calculate regional aggregates, using the _pct_numerator and _pct_denominator fields
 tb_hiv_region <- tb_hiv_country %>%
-  group_by(g_whoregion) %>%
-  summarise_each(funs(sum(., na.rm = TRUE)),
-                 c_notified, hiv_ipt,
-                 matches("_pct_"))
+                  group_by(g_whoregion) %>%
+                  summarise_each(funs(sum(., na.rm = TRUE)),
+                                 c_notified, hiv_ipt,
+                                 matches("_pct_"))
 
 # merge with regional names
 tb_hiv_region <- filter(a, year == notification_maxyear & group_type == "g_whoregion") %>%
-  select(group_name, group_description) %>%
-  rename(g_whoregion = group_name) %>%
-  inner_join(tb_hiv_region, by = "g_whoregion") %>%
-  rename(entity = group_description) %>%
-  arrange(entity)
+                  select(group_name, group_description) %>%
+                  rename(g_whoregion = group_name) %>%
+                  inner_join(tb_hiv_region, by = "g_whoregion") %>%
+                  rename(entity = group_description) %>%
+                  arrange(entity)
 
 # Calculate global aggregate
 tb_hiv_global <- tb_hiv_region %>%
-  summarise_each(funs(sum(., na.rm = TRUE)),
-                 c_notified, hiv_ipt,
-                 matches("_pct_")) %>%
-  mutate(entity = "Global")
+                  summarise_each(funs(sum(., na.rm = TRUE)),
+                                 c_notified, hiv_ipt,
+                                 matches("_pct_")) %>%
+                  mutate(entity = "Global")
 
 
 # Calculate percentages for countries
@@ -924,7 +1063,9 @@ tb_hiv <- within(tb_hiv, {
 
 subset(tb_hiv,
        select = c("entity", "blank",
-                  "hivtest_prct", "blank", "hivtest", "blank", "c_notified", "blank", "hivtest_pos", "blank", "hivtest_pos_prct", "blank", "hiv_cpt_prct", "blank", "hiv_art_prct", "blank", "hiv_ipt"))  %>%
+                  "hivtest_prct", "blank", "hivtest", "blank", "c_notified", "blank",
+                  "hivtest_pos", "blank", "hivtest_pos_prct", "blank",
+                  "hiv_cpt_prct", "blank", "hiv_art_prct", "blank", "hiv_ipt"))  %>%
   write.csv(file="tb_hiv.csv", row.names=FALSE, na="")
 
 # Don't leave any mess behind!
@@ -1104,12 +1245,12 @@ rm(labs)
 # Get country data
 
 mdr_measured <- filter(emdr, year == notification_maxyear) %>%
-            select(country,
-                   source_mdr_new, source_drs_year_new, source_drs_coverage_new,
-                   e_new_mdr_pcnt,e_new_mdr_pcnt_lo, e_new_mdr_pcnt_hi,
-                   source_mdr_ret, source_drs_year_ret, source_drs_coverage_ret,
-                   e_ret_mdr_pcnt, e_ret_mdr_pcnt_lo, e_ret_mdr_pcnt_hi)  %>%
-            arrange(country)
+                select(country,
+                       source_mdr_new, source_drs_year_new, source_drs_coverage_new,
+                       e_new_mdr_pcnt,e_new_mdr_pcnt_lo, e_new_mdr_pcnt_hi,
+                       source_mdr_ret, source_drs_year_ret, source_drs_coverage_ret,
+                       e_ret_mdr_pcnt, e_ret_mdr_pcnt_lo, e_ret_mdr_pcnt_hi)  %>%
+                arrange(country)
 
 
 # blank out source, estimates etc if source is not survey or surveillance
