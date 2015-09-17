@@ -451,7 +451,7 @@ notif_region <- filter(a, year == notification_maxyear & group_type == "g_whoreg
                 rename(g_whoregion = group_name) %>%
                 inner_join(notif_region, by = "g_whoregion") %>%
                 rename(entity = group_description) %>%
-                arrange(entity)
+                arrange(g_whoregion)
 
 # Calculate global aggregate
 notif_global <- notif_country %>%
@@ -571,7 +571,7 @@ agesex_region <- filter(a, year == notification_maxyear & group_type == "g_whore
                   rename(g_whoregion = group_name) %>%
                   inner_join(agesex_region, by = "g_whoregion") %>%
                   rename(entity = group_description) %>%
-                  arrange(entity)
+                  arrange(g_whoregion)
 
 # Calculate global aggregate
 agesex_global <- agesex_country %>%
@@ -640,7 +640,7 @@ subset(agesex,
                 "newrel_sexunk014", "blank", "newrel_sexunk15plus", "blank", "newrel_sexunkageunk", "blank",
                 "u15_pct", "blank",
                 "mf_ratio", "blank")) %>%
-  write.csv(file="agesex.csv", row.names=FALSE, na="")
+  write.csv(file="agesex_old.csv", row.names=FALSE, na="")
 
 # Don't leave any mess behind!
 rm(agesex)
@@ -733,7 +733,7 @@ agesex_region <- filter(a, year == notification_maxyear & group_type == "g_whore
                   rename(g_whoregion = group_name) %>%
                   inner_join(agesex_region, by = "g_whoregion") %>%
                   rename(entity = group_description) %>%
-                  arrange(entity)
+                  arrange(g_whoregion)
 
 
 # Calculate global aggregate
@@ -786,7 +786,7 @@ subset(agesex,
                 "a014", "blank", "a15plus", "blank", "ageunk", "blank",
                 "a04", "blank", "a514", "blank",
                 "a1524", "blank", "a2534", "blank", "a3544", "blank", "a4554", "blank", "a5564", "blank", "a65", "blank")) %>%
-  write.csv(file="agesex_alt.csv", row.names=FALSE, na="")
+  write.csv(file="agesex.csv", row.names=FALSE, na="")
 
 # Don't leave any mess behind!
 rm(agesex)
@@ -870,7 +870,7 @@ rrmdr_region <- filter(emdra, year == notification_maxyear & group_type == "g_wh
                 rename(g_whoregion = group_name) %>%
                 inner_join(rrmdr_region, by = "g_whoregion") %>%
                 rename(entity = group_description) %>%
-                arrange(entity)
+                arrange(g_whoregion)
 
 
 # Calculate the global aggregates using same logic as for regional aggregates
@@ -978,7 +978,7 @@ tb_hiv_region <- filter(a, year == notification_maxyear & group_type == "g_whore
                   rename(g_whoregion = group_name) %>%
                   inner_join(tb_hiv_region, by = "g_whoregion") %>%
                   rename(entity = group_description) %>%
-                  arrange(entity)
+                  arrange(g_whoregion)
 
 # Calculate global aggregate
 tb_hiv_global <- tb_hiv_region %>%
@@ -1116,7 +1116,7 @@ outcome_region <- filter(a, year == notification_maxyear & group_type == "g_whor
                   rename(g_whoregion = group_name) %>%
                   inner_join(outcome_region, by = "g_whoregion") %>%
                   rename(entity = group_description) %>%
-                  arrange(entity)
+                  arrange(g_whoregion)
 
 
 # Calculate global aggregate
