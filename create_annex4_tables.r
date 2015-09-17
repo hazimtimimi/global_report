@@ -361,6 +361,9 @@ rm(list=c("inc_cdr_country", "inc_cdr_region", "inc_cdr_global"))
 # Format variables for output
 inc_cdr <- within(inc_cdr, {
 
+  # Calculate and format case notification rate
+  newrel_100k <- frmt(c_newinc * 100000 / e_pop_num , rates=TRUE)
+
   # round population to millions
   e_pop_num <- ifelse(e_pop_num / 1000000 < 1, "< 1", rounder(e_pop_num / 1000000))
 
@@ -409,7 +412,7 @@ subset(inc_cdr,
                 "inc_rate", "inc_rate_lo_hi", "blank",
                 "inc_tbhiv_num", "inc_tbhiv_num_lo_hi",
                 "inc_tbhiv_rate", "inc_tbhiv_rate_lo_hi", "blank",
-                "c_newinc", "blank",
+                "c_newinc", "blank", "newrel_100k", "blank",
                 "c_cdr", "c_cdr_lo_hi")) %>%
   write.csv(file="inc_cdr.csv", row.names=FALSE, na="")
 
