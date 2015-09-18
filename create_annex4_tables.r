@@ -1066,7 +1066,7 @@ outcome <- within(outcome, {
 subset(outcome,
        select = c("entity",
                   "newrel_coh", "blank", "c_new_tsr", "blank",
-                  "ret_nrel_coh", "newrel_flg", "c_ret_tsr", "blank",
+                  "ret_nrel_coh", "blank", "c_ret_tsr", "blank",
                   "tbhiv_coh", "blank", "c_tbhiv_tsr", "blank",
                   "mdr_coh", "blank", "c_mdr_tsr", "blank",
                   "xdr_coh", "blank", "c_xdr_tsr", "blank"))  %>%
