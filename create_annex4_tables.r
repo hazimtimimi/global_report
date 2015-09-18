@@ -158,6 +158,10 @@ rounder <- function(x) {
 # preceding the regional aggregates
 combine_tables <- function(by_country, by_region, by_global){
 
+  # Abbreviate Macedonia and the UK because their full names are too long
+  by_country$entity <- sub("The Former Yugoslav", "TFY", by_country$entity)
+  by_country$entity <- sub("of Great Britain and Northern Ireland", "", by_country$entity)
+
   # Add a placeholder row at the end of the countries table to use as a header for the regions
   by_country[nrow(by_country)+1,1] <- "WHO regions"
 
