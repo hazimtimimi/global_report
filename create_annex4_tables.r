@@ -1052,8 +1052,8 @@ outcome <- within(outcome, {
   c_mdr_tsr <- ifelse( is.na(mdr_coh), NA, rounder( mdr_succ * 100 / mdr_coh))
   c_xdr_tsr <- ifelse( is.na(mdr_coh), NA, rounder( xdr_succ * 100 / xdr_coh))
 
-  # Mark countries where relapses included with new cases
-  newrel_flg <- ifelse(NZ(rel_with_new_flg)==1, "*",NA)
+  # Flag country name if relapses were not included with new cases
+  entity <- ifelse(!is.na(rel_with_new_flg) & rel_with_new_flg==0, paste0(entity,"*"),entity)
 
   # Add for blank columns
   blank <- ""
@@ -1064,8 +1064,8 @@ outcome <- within(outcome, {
 # dplyr's select statement won't repeat the blanks, hence use subset() from base r instead
 
 subset(outcome,
-       select = c("entity", "blank",
-                  "newrel_coh", "newrel_flg", "c_new_tsr", "blank",
+       select = c("entity",
+                  "newrel_coh", "blank", "c_new_tsr", "blank",
                   "ret_nrel_coh", "newrel_flg", "c_ret_tsr", "blank",
                   "tbhiv_coh", "blank", "c_tbhiv_tsr", "blank",
                   "mdr_coh", "blank", "c_mdr_tsr", "blank",
