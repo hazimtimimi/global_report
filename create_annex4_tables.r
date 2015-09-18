@@ -1055,6 +1055,14 @@ outcome <- within(outcome, {
   # Flag country name if relapses were not included with new cases
   entity <- ifelse(!is.na(rel_with_new_flg) & rel_with_new_flg==0, paste0(entity,"*"),entity)
 
+  # Format the cohort sizes
+  newrel_coh <- rounder(newrel_coh)
+  ret_nrel_coh <- rounder(ret_nrel_coh)
+  tbhiv_coh <- rounder(tbhiv_coh)
+  mdr_coh <- rounder(mdr_coh)
+  xdr_coh <- rounder(xdr_coh)
+
+
   # Add for blank columns
   blank <- ""
 
