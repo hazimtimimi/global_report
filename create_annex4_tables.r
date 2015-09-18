@@ -964,7 +964,7 @@ tb_hiv <- within(tb_hiv, {
 
 subset(tb_hiv,
        select = c("entity", "blank",
-                  "hivtest_prct", "blank", "hivtest", "blank", "c_notified", "blank",
+                  "c_notified", "blank", "hivtest", "blank", "hivtest_prct", "blank",
                   "hivtest_pos", "blank", "hivtest_pos_prct", "blank",
                   "hiv_cpt_prct", "blank", "hiv_art_prct", "blank", "hiv_ipt"))  %>%
   write.csv(file="tb_hiv.csv", row.names=FALSE, na="")
