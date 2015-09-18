@@ -1136,8 +1136,7 @@ subset(labs,
        select=c("country", "blank",
                 "c_lab_sm_100k", "blank", "lab_sm_led_pct", "blank",
                 "c_lab_cul_5m", "blank", "c_lab_dst_5m", "blank", "c_lab_lpa_5m", "blank", "lab_xpert", "blank",
-                "sldst", "nrl", "blank",
-                "hcw_100k")) %>%
+                "sldst", "nrl", )) %>%
   write.csv(file="labs.csv", row.names=FALSE, na="")
 
 # Don't leave any mess behind!
