@@ -203,7 +203,7 @@ NZ <- function(x){
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#   mort_prev (Table 1) -----
+#   mort_prev (Table A4.2) -----
 #   Estimates of TB mortality and prevalence
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -311,7 +311,7 @@ rm(mort_prev)
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#   inc_cdr (Table 2)  ----
+#   inc_cdr (Table A4.1)  ----
 #   Incidence, notification and case detection rates, all forms
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -428,7 +428,7 @@ rm(inc_cdr)
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#   notif (Table 3) ----
+#   notif (Table A4.3) ----
 #   Case notifications
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -545,8 +545,8 @@ rm(notif)
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#   agesex  (Table 4) -----
-#   New and relapse case notification by age and sex
+#   agesex  (Table A4.4) -----
+#   New and relapse case notification rates per 100 000 population by age and sex
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # Get country data
@@ -567,6 +567,23 @@ agesex_country_m <- filter(n, year == notification_maxyear) %>%
                            a15plus = newrel_m15plus) %>%
                     mutate(sex = "Male")
 
+# Merge with population denominators
+agesex_country_m <- filter(p, year == notification_maxyear) %>%
+                    select(country,starts_with("e_pop_m")) %>%
+                    # Drop the 15plus field
+                    select(-e_pop_m15plus) %>%
+                    inner_join(agesex_country_m, by = "country") %>%
+                    rename(p04 = e_pop_m04,
+                           p514 = e_pop_m514,
+                           p014 = e_pop_m014,
+                           p1524 = e_pop_m1524,
+                           p2534 = e_pop_m2534,
+                           p3544 = e_pop_m3544,
+                           p4554 = e_pop_m4554,
+                           p5564 = e_pop_m5564,
+                           p65 = e_pop_m65)
+
+
 # B. Females
 agesex_country_f <- filter(n, year == notification_maxyear) %>%
                     select(country, g_whoregion,
@@ -583,6 +600,22 @@ agesex_country_f <- filter(n, year == notification_maxyear) %>%
                            ageunk = newrel_fu,
                            a15plus = newrel_f15plus) %>%
                     mutate(sex = "Female")
+
+# Merge with population denominators
+agesex_country_f <- filter(p, year == notification_maxyear) %>%
+                    select(country,starts_with("e_pop_f")) %>%
+                    # Drop the 15plus field
+                    select(-e_pop_f15plus) %>%
+                    inner_join(agesex_country_f, by = "country") %>%
+                    rename(p04 = e_pop_f04,
+                           p514 = e_pop_f514,
+                           p014 = e_pop_f014,
+                           p1524 = e_pop_f1524,
+                           p2534 = e_pop_f2534,
+                           p3544 = e_pop_f3544,
+                           p4554 = e_pop_f4554,
+                           p5564 = e_pop_f5564,
+                           p65 = e_pop_f65)
 
 # C. Age unknown
 agesex_country_sexunk <- filter(n, year == notification_maxyear) %>%
@@ -602,14 +635,24 @@ agesex_country_sexunk <- filter(agesex_country_sexunk,
                                  a014 = newrel_sexunk014,
                                  ageunk = newrel_sexunkageunk,
                                  a15plus = newrel_sexunk15plus) %>%
-                          # Add dummy variables to match structure of country table
+                          # Add dummy variables to match structure of male and female tables,
+                          # (note that we won't use newrel_sexunk04 and newrel_sexunk514 because cannot convert them to rates)
                           mutate(sex = "Unknown",
                                  a1524 = NA,
                                  a2534 = NA,
                                  a3544 = NA,
                                  a4554 = NA,
                                  a5564 = NA,
-                                 a65 = NA)
+                                 a65 = NA,
+                                 p04 = NA,
+                                 p514 = NA,
+                                 p014 = NA,
+                                 p1524 = NA,
+                                 p2534 = NA,
+                                 p3544 = NA,
+                                 p4554 = NA,
+                                 p5564 = NA,
+                                 p65 = NA)
 
 # Combine the country records into one
 agesex_country <-  rbind(agesex_country_m, agesex_country_f, agesex_country_sexunk) %>%
@@ -621,7 +664,7 @@ rm(list=c("agesex_country_m", "agesex_country_f", "agesex_country_sexunk"))
 agesex_region <- agesex_country %>%
                   group_by(g_whoregion, sex) %>%
                   summarise_each(funs(sum(., na.rm = TRUE)),
-                                 starts_with("a")) %>%
+                                 starts_with("a"), starts_with("p")) %>%
                   mutate(rel_in_agesex_flg = NA) # dummy variable to match structure of country table
 
 # merge with regional names
@@ -637,7 +680,7 @@ agesex_region <- filter(a, year == notification_maxyear & group_type == "g_whore
 agesex_global <- agesex_country %>%
                   group_by(sex) %>%
                   summarise_each(funs(sum(., na.rm = TRUE)),
-                                 starts_with("a")) %>%
+                                 starts_with("a"), starts_with("p")) %>%
                   mutate(entity = "Global",
                          # Add dummy variables to match structure of the other two tables
                          rel_in_agesex_flg = NA,
@@ -653,16 +696,25 @@ rm(list=c("agesex_country", "agesex_region", "agesex_global"))
 agesex[!is.na(agesex$sex) &  agesex$sex == "Unknown",
        c("a1524", "a2534", "a3544", "a4554", "a5564", "a65")] <- NA
 
-# Format variables for output
-
-age_variables = c("a04", "a514", "a014", "a1524", "a2534", "a3544", "a4554", "a5564", "a65", "ageunk", "a15plus" )
-
-# apply the rounder() function to the age variable
-agesex[ , age_variables] <- sapply(agesex[,age_variables], rounder)
-
+# Calculate and format variables for output
 agesex <- within(agesex, {
 
-  # Keep entity only if sex is female or entiry is "WHO Regions"
+  # Calculate notification rates per 100 000 population for the detailed age ranges
+  a04 <- ifelse(NZ(p04)==0, NA, frmt(a04 * 100000 / p04, rates=TRUE))
+  a514 <- ifelse(NZ(p514)==0, NA, frmt(a514 * 100000 / p514, rates=TRUE))
+  a1524 <- ifelse(NZ(p1524)==0, NA, frmt(a1524 * 100000 / p1524, rates=TRUE))
+  a2534 <- ifelse(NZ(p2534)==0, NA, frmt(a2534 * 100000 / p2534, rates=TRUE))
+  a3544 <- ifelse(NZ(p3544)==0, NA, frmt(a3544 * 100000 / p3544, rates=TRUE))
+  a4554 <- ifelse(NZ(p4554)==0, NA, frmt(a4554 * 100000 / p4554, rates=TRUE))
+  a5564 <- ifelse(NZ(p5564)==0, NA, frmt(a5564 * 100000 / p5564, rates=TRUE))
+  a65 <- ifelse(NZ(p65)==0, NA, frmt(a65 * 100000 / p65, rates=TRUE))
+
+  # Format the crude age ranges for numerical output (not rates)
+  a014 <- rounder(a014)
+  a15plus <- rounder(a15plus)
+  ageunk <- rounder(ageunk)
+
+  # Keep entity only if sex is female or entry is "WHO Regions"
   entity <- ifelse(entity == "WHO regions" | sex == "Female", entity, NA )
 
   # Flag country name if relapses were not included in age/sex table
@@ -688,7 +740,7 @@ subset(agesex,
 rm(agesex)
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# rrmdr (Table 5) -----
+# rrmdr (Table A4.7) -----
 # Detection of rifampicin-resistant and multidrug-resistant TB (RR-/MDR-TB),
 # and MDR-TB estimates
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -850,7 +902,7 @@ rm(rrmdr)
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# tb_hiv (Table 6)  -----
+# tb_hiv (Table A4.9)  -----
 # HIV testing for TB patients and provision of CPT, ART and IPT
 # Note that the tbhiv dataset already has rules built in for combining _p and _f
 #  (final and provisional) numbers, plus adjusted variables for calculating aggregates.
@@ -978,7 +1030,7 @@ rm(tb_hiv)
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#   outcome (Table 7) ----
+#   outcome (Table A4.5) ----
 #   Treatment outcomes, all types
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -1091,7 +1143,7 @@ rm(outcome)
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# labs (Table 8) -----
+# labs (Table A4.8) -----
 # Laboratories and infection control
 # Country level only, no need for aggregates
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1148,7 +1200,7 @@ rm(labs)
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# mdr_measured (Table 9) -----
+# mdr_measured (Table A4.6) -----
 # Measured percentage of TB cases with MDR-TB
 # Shows source of MDR-TB measurements for those countries with usable survey or surveillance data
 # No aggregates used
