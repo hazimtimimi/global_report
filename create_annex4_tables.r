@@ -661,13 +661,28 @@ agesex_country <-  rbind(agesex_country_m, agesex_country_f, agesex_country_sexu
 rm(list=c("agesex_country_m", "agesex_country_f", "agesex_country_sexunk"))
 
 # Calculate regional aggregates
+# A. Get totals of cases by under and over 15 categories
 agesex_region <- agesex_country %>%
                   group_by(g_whoregion, sex) %>%
                   summarise_each(funs(sum(., na.rm = TRUE)),
-                                 starts_with("a"), starts_with("p")) %>%
-                  mutate(rel_in_agesex_flg = NA) # dummy variable to match structure of country table
+                                 a014, a15plus, ageunk)
 
-# merge with regional names
+# B. Get totals for detailed age categories and populations only for countries that have reported data
+# for all of those age categories
+agesex_region <- filter(agesex_country,
+                        !is.na(a04) & !is.na(a514) & !is.na(a1524) & !is.na(a2534) &
+                          !is.na(a3544) & !is.na(a4554) & !is.na(a5564) & !is.na(a65)) %>%
+                  group_by(g_whoregion, sex) %>%
+                  summarise_each(funs(sum(., na.rm = TRUE)),
+                                 a04, a514, a1524, a2534,
+                                   a3544, a4554, a5564, a65, starts_with("p")) %>%
+                  # Merge with other totals
+                  right_join(agesex_region, by = c("g_whoregion", "sex")) %>%
+                  # Add dummy variable to match structure of country table
+                  mutate(rel_in_agesex_flg = NA)
+
+
+# C. Merge with regional names
 agesex_region <- filter(a, year == notification_maxyear & group_type == "g_whoregion") %>%
                   select(group_name, group_description) %>%
                   rename(g_whoregion = group_name) %>%
@@ -677,15 +692,27 @@ agesex_region <- filter(a, year == notification_maxyear & group_type == "g_whore
 
 
 # Calculate global aggregate
+# A. Get totals of cases by under and over 15 categories
 agesex_global <- agesex_country %>%
                   group_by(sex) %>%
                   summarise_each(funs(sum(., na.rm = TRUE)),
-                                 starts_with("a"), starts_with("p")) %>%
+                                 a014, a15plus, ageunk)
+
+# B. Get totals for detailed age categories and populations only for countries that have reported data
+# for all of those age categories
+agesex_global <- filter(agesex_country,
+                        !is.na(a04) & !is.na(a514) & !is.na(a1524) & !is.na(a2534) &
+                          !is.na(a3544) & !is.na(a4554) & !is.na(a5564) & !is.na(a65)) %>%
+                  group_by(sex) %>%
+                  summarise_each(funs(sum(., na.rm = TRUE)),
+                                 a04, a514, a1524, a2534,
+                                 a3544, a4554, a5564, a65, starts_with("p")) %>%
+                  # Merge with other totals
+                  right_join(agesex_global, by = "sex") %>%
                   mutate(entity = "Global",
                          # Add dummy variables to match structure of the other two tables
                          rel_in_agesex_flg = NA,
                          g_whoregion = "" )
-
 
 # Create combined table in order of countries then regional and global estimates
 agesex <- combine_tables(agesex_country, agesex_region, agesex_global)
