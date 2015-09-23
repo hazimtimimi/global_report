@@ -1094,7 +1094,13 @@ rm(list=c("outcome_country", "outcome_region", "outcome_global"))
 outcome <- within(outcome, {
 
   # New or new+relapse
-  c_new_tsr <- ifelse( is.na(newrel_coh), NA, rounder( newrel_succ * 100 /newrel_coh ))
+  c_newrel_tsr <- ifelse( is.na(newrel_coh), NA, rounder( newrel_succ * 100 /newrel_coh ))
+
+  # % of other outcomes for new+relapse
+  c_newrel_failr <- ifelse( is.na(newrel_coh), NA, rounder( newrel_fail * 100 /newrel_coh ))
+  c_newrel_diedr <- ifelse( is.na(newrel_coh), NA, rounder( newrel_died * 100 /newrel_coh ))
+  c_newrel_lostr <- ifelse( is.na(newrel_coh), NA, rounder( newrel_lost * 100 /newrel_coh ))
+  c_newrel_nevalr <- ifelse( is.na(newrel_coh), NA, rounder( c_newrel_neval * 100 /newrel_coh ))
 
   # Retreatment or retreatment excluding relapse
   c_ret_tsr <- ifelse( is.na(ret_nrel_coh), NA, rounder( ret_nrel_succ * 100 / ret_nrel_coh ))
@@ -1105,19 +1111,14 @@ outcome <- within(outcome, {
   # MDR
   c_mdr_tsr <- ifelse( is.na(mdr_coh), NA, rounder( mdr_succ * 100 / mdr_coh))
 
-  # Flag country name if relapses were not included with new cases
-  entity <- ifelse(!is.na(rel_with_new_flg) & rel_with_new_flg==0, paste0(entity,"*"),entity)
-
-  # Format the cohort sizes and the cohort breakdown for new and relapse cases
+  # Format the cohort sizes
   newrel_coh <- rounder(newrel_coh)
-  newrel_succ <- rounder(newrel_succ)
-  newrel_fail <- rounder(newrel_fail)
-  newrel_died <- rounder(newrel_died)
-  newrel_lost <- rounder(newrel_lost)
-  c_newrel_neval <- rounder(c_newrel_neval)
   ret_nrel_coh <- rounder(ret_nrel_coh)
   tbhiv_coh <- rounder(tbhiv_coh)
   mdr_coh <- rounder(mdr_coh)
+
+  # Flag country name if relapses were not included with new cases
+  entity <- ifelse(!is.na(rel_with_new_flg) & rel_with_new_flg==0, paste0(entity,"*"),entity)
 
   # Add for blank columns
   blank <- ""
@@ -1129,9 +1130,8 @@ outcome <- within(outcome, {
 
 subset(outcome,
        select = c("entity",
-                  "newrel_coh", "blank", "c_new_tsr", "blank",
-                  "newrel_succ", "blank", "newrel_fail", "blank",  "newrel_died", "blank",
-                  "newrel_lost", "blank", "c_newrel_neval", "blank",
+                  "newrel_coh", "blank", "c_newrel_tsr", "blank",
+                  "c_newrel_failr", "blank", "c_newrel_diedr", "blank",  "c_newrel_lostr", "blank", "c_newrel_nevalr", "blank",
                   "ret_nrel_coh", "blank", "c_ret_tsr", "blank",
                   "tbhiv_coh", "blank", "c_tbhiv_tsr", "blank",
                   "mdr_coh", "blank", "c_mdr_tsr", "blank"))  %>%
@@ -1145,7 +1145,7 @@ rm(outcome)
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # labs (Table A4.8) -----
-# Laboratories and infection control
+# Laboratories
 # Country level only, no need for aggregates
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
