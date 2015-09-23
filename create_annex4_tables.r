@@ -1039,15 +1039,15 @@ rm(tb_hiv)
 outcome_country <- filter(o, year == outcome_maxyear) %>%
                     select(country, g_whoregion,
                            rel_with_new_flg,
-                           newrel_coh, newrel_succ,
+                           newrel_coh, newrel_succ, newrel_fail,
+                              newrel_died, newrel_lost, c_newrel_neval,
                            ret_nrel_coh, ret_nrel_succ,
                            tbhiv_coh, tbhiv_succ)
 
-# B. Combine with M/XDR cohorts one year older than standard
+# B. Combine with MDR cohorts one year older than standard
 outcome_country <- filter(o, year == (outcome_maxyear - 1)) %>%
                     select(country,
-                           mdr_coh, mdr_succ,
-                           xdr_coh, xdr_succ) %>%
+                           mdr_coh, mdr_succ) %>%
                     inner_join(outcome_country, by = "country") %>%
                     rename(entity = country ) %>%
                     arrange(entity)
@@ -1057,11 +1057,10 @@ outcome_country <- filter(o, year == (outcome_maxyear - 1)) %>%
 outcome_region <- outcome_country %>%
                   group_by(g_whoregion) %>%
                   summarise_each(funs(sum(., na.rm = TRUE)),
-                                 newrel_coh, newrel_succ,
-                                 ret_nrel_coh, ret_nrel_succ,
-                                 tbhiv_coh, tbhiv_succ,
-                                 mdr_coh, mdr_succ,
-                                 xdr_coh, xdr_succ) %>%
+                                 contains("newrel_"),
+                                 starts_with("ret_nrel_"),
+                                 starts_with("tbhiv_"),
+                                 starts_with("mdr_")) %>%
                   mutate(rel_with_new_flg = NA) # dummy variable to match structure of country table
 
 # merge with regional names
@@ -1076,11 +1075,10 @@ outcome_region <- filter(a, year == notification_maxyear & group_type == "g_whor
 # Calculate global aggregate
 outcome_global <- outcome_country %>%
                   summarise_each(funs(sum(., na.rm = TRUE)),
-                                 newrel_coh, newrel_succ,
-                                 ret_nrel_coh, ret_nrel_succ,
-                                 tbhiv_coh, tbhiv_succ,
-                                 mdr_coh, mdr_succ,
-                                 xdr_coh, xdr_succ) %>%
+                                 contains("newrel_"),
+                                 starts_with("ret_nrel_"),
+                                 starts_with("tbhiv_"),
+                                 starts_with("mdr_")) %>%
                   mutate(entity = "Global") %>%
                   mutate(rel_with_new_flg = NA) %>% # dummy variable to match structure of the other two tables
                   mutate(g_whoregion = "")  # dummy variable to match structure of the other two tables
@@ -1104,20 +1102,22 @@ outcome <- within(outcome, {
   # HIV-positive, all cases
   c_tbhiv_tsr <- ifelse( is.na(tbhiv_coh), NA, rounder( tbhiv_succ * 100 / tbhiv_coh ))
 
-  # MDR and XDR
+  # MDR
   c_mdr_tsr <- ifelse( is.na(mdr_coh), NA, rounder( mdr_succ * 100 / mdr_coh))
-  c_xdr_tsr <- ifelse( is.na(mdr_coh), NA, rounder( xdr_succ * 100 / xdr_coh))
 
   # Flag country name if relapses were not included with new cases
   entity <- ifelse(!is.na(rel_with_new_flg) & rel_with_new_flg==0, paste0(entity,"*"),entity)
 
-  # Format the cohort sizes
+  # Format the cohort sizes and the cohort breakdown for new and relapse cases
   newrel_coh <- rounder(newrel_coh)
+  newrel_succ <- rounder(newrel_succ)
+  newrel_fail <- rounder(newrel_fail)
+  newrel_died <- rounder(newrel_died)
+  newrel_lost <- rounder(newrel_lost)
+  c_newrel_neval <- rounder(c_newrel_neval)
   ret_nrel_coh <- rounder(ret_nrel_coh)
   tbhiv_coh <- rounder(tbhiv_coh)
   mdr_coh <- rounder(mdr_coh)
-  xdr_coh <- rounder(xdr_coh)
-
 
   # Add for blank columns
   blank <- ""
@@ -1130,10 +1130,11 @@ outcome <- within(outcome, {
 subset(outcome,
        select = c("entity",
                   "newrel_coh", "blank", "c_new_tsr", "blank",
+                  "newrel_succ", "blank", "newrel_fail", "blank",  "newrel_died", "blank",
+                  "newrel_lost", "blank", "c_newrel_neval", "blank",
                   "ret_nrel_coh", "blank", "c_ret_tsr", "blank",
                   "tbhiv_coh", "blank", "c_tbhiv_tsr", "blank",
-                  "mdr_coh", "blank", "c_mdr_tsr", "blank",
-                  "xdr_coh", "blank", "c_xdr_tsr", "blank"))  %>%
+                  "mdr_coh", "blank", "c_mdr_tsr", "blank"))  %>%
   write.csv(file="outcome.csv", row.names=FALSE, na="")
 
 # Don't leave any mess behind!
