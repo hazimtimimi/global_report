@@ -767,58 +767,57 @@ subset(agesex,
 rm(agesex)
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# rrmdr (Table A4.7) -----
-# Detection of rifampicin-resistant and multidrug-resistant TB (RR-/MDR-TB),
-# and MDR-TB estimates
+# dst_rrmdr (Table A4.7) -----
+# Drug susceptibility testing, estimated MDR-TB among notified TB cases and RR-/MDR-TB cases detected
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # Get country data
 # A. Notifications
-rrmdr_country <- filter(n, year == notification_maxyear) %>%
+dst_rrmdr_country <- filter(n, year == notification_maxyear) %>%
                   select(country, g_whoregion,
                          c_rrmdr, mdr,
                          rdst_new, rdst_ret,
                          new_labconf, c_ret)
 
 # B. Combine with routine surveillance
-rrmdr_country <- filter(d, year == notification_maxyear) %>%
+dst_rrmdr_country <- filter(d, year == notification_maxyear) %>%
                   select(country,
                          dst_rlt_new, xpert_new,
                          dst_rlt_ret, xpert_ret) %>%
-                  inner_join(rrmdr_country, by = "country")
+                  inner_join(dst_rrmdr_country, by = "country")
 
 # C. Combine with estimates among notified
-rrmdr_country <- filter(emdrn, year == notification_maxyear) %>%
+dst_rrmdr_country <- filter(emdrn, year == notification_maxyear) %>%
                   select(country,
                          e_mdr_num, e_mdr_num_lo, e_mdr_num_hi,
                          e_new_mdr_num, e_new_mdr_num_lo, e_new_mdr_num_hi,
                          e_ret_mdr_num, e_ret_mdr_num_lo, e_ret_mdr_num_hi) %>%
-                  inner_join(rrmdr_country, by = "country") %>%
+                  inner_join(dst_rrmdr_country, by = "country") %>%
                   rename(entity = country ) %>%
                   arrange(entity)
 
 # Calculate total number tested
-rrmdr_country <- within(rrmdr_country, {
+dst_rrmdr_country <- within(dst_rrmdr_country, {
 
   # New cases tested for RR/MDR, including molecular diagnostics
   dst_new <- ifelse(is.na(rdst_new) & is.na(dst_rlt_new) & is.na(xpert_new),
                     NA,
-                    ifelse(NZ(rdst_new) > NZ(sum_of_row(rrmdr_country[c("dst_rlt_new","xpert_new")])),
+                    ifelse(NZ(rdst_new) > NZ(sum_of_row(dst_rrmdr_country[c("dst_rlt_new","xpert_new")])),
                            rdst_new,
-                           sum_of_row(rrmdr_country[c("dst_rlt_new","xpert_new")]))
+                           sum_of_row(dst_rrmdr_country[c("dst_rlt_new","xpert_new")]))
   )
 
   # previously treated cases tested for RR/MDR, including molecular diagnostics
   dst_ret <- ifelse(is.na(rdst_ret) & is.na(dst_rlt_ret) & is.na(xpert_ret),
                     NA,
-                    ifelse(NZ(rdst_ret) > NZ(sum_of_row(rrmdr_country[c("dst_rlt_ret","xpert_ret")])),
+                    ifelse(NZ(rdst_ret) > NZ(sum_of_row(dst_rrmdr_country[c("dst_rlt_ret","xpert_ret")])),
                            rdst_ret,
-                           sum_of_row(rrmdr_country[c("dst_rlt_ret","xpert_ret")]))
+                           sum_of_row(dst_rrmdr_country[c("dst_rlt_ret","xpert_ret")]))
   )
 })
 
 # Drop the variables used to derive dst_new and dst_ret
-rrmdr_country <- select(rrmdr_country,
+dst_rrmdr_country <- select(dst_rrmdr_country,
                         -rdst_new, -dst_rlt_new, -xpert_new,
                         -rdst_ret, -dst_rlt_ret, -xpert_ret)
 
@@ -827,9 +826,9 @@ rrmdr_country <- select(rrmdr_country,
 # Note: Cannot do a simple aggregate for estimates, instead have to
 #       take results of Babis's modelling from emdra data frame
 
-# Aggregate the notifications and dst results (from rrmdr_country)
+# Aggregate the notifications and dst results (from dst_rrmdr_country)
 
-rrmdr_region <- rrmdr_country %>%
+dst_rrmdr_region <- dst_rrmdr_country %>%
                 group_by(g_whoregion) %>%
                 summarise_each(funs(sum(., na.rm = TRUE)),
                                c_rrmdr, mdr,
@@ -837,19 +836,19 @@ rrmdr_region <- rrmdr_country %>%
                                dst_new, dst_ret)
 
 # Merge with regional estimates of mdr among notified
-rrmdr_region <- filter(emdra, year == notification_maxyear & group_type == "g_whoregion") %>%
+dst_rrmdr_region <- filter(emdra, year == notification_maxyear & group_type == "g_whoregion") %>%
                 select(group_name, group_description,
                        e_mdr_num, e_mdr_num_lo, e_mdr_num_hi,
                        e_new_mdr_num, e_new_mdr_num_lo, e_new_mdr_num_hi,
                        e_ret_mdr_num, e_ret_mdr_num_lo, e_ret_mdr_num_hi) %>%
                 rename(g_whoregion = group_name) %>%
-                inner_join(rrmdr_region, by = "g_whoregion") %>%
+                inner_join(dst_rrmdr_region, by = "g_whoregion") %>%
                 rename(entity = group_description) %>%
                 arrange(g_whoregion)
 
 
 # Calculate the global aggregates using same logic as for regional aggregates
-rrmdr_global <- rrmdr_country %>%
+dst_rrmdr_global <- dst_rrmdr_country %>%
                 summarise_each(funs(sum(., na.rm = TRUE)),
                                c_rrmdr, mdr,
                                new_labconf, c_ret,
@@ -857,26 +856,26 @@ rrmdr_global <- rrmdr_country %>%
                 mutate(entity = "Global Aggregate")
 
 # Merge with global estimates of mdr among notified
-rrmdr_global <- filter(emdra, year == notification_maxyear & group_type == "global") %>%
+dst_rrmdr_global <- filter(emdra, year == notification_maxyear & group_type == "global") %>%
                 select(group_name, group_description,
                        e_mdr_num, e_mdr_num_lo, e_mdr_num_hi,
                        e_new_mdr_num, e_new_mdr_num_lo, e_new_mdr_num_hi,
                        e_ret_mdr_num, e_ret_mdr_num_lo, e_ret_mdr_num_hi) %>%
                 rename(entity = group_description) %>%
-                inner_join(rrmdr_global, by = "entity") %>%
+                inner_join(dst_rrmdr_global, by = "entity") %>%
                 # change field name to match other tables
                 rename(g_whoregion = group_name)
 
 
 # Create combined table in order of countries then regional and global estimates
-rrmdr <- combine_tables(rrmdr_country, rrmdr_region, rrmdr_global)
-rm(list=c("rrmdr_country", "rrmdr_region", "rrmdr_global"))
+dst_rrmdr <- combine_tables(dst_rrmdr_country, dst_rrmdr_region, dst_rrmdr_global)
+rm(list=c("dst_rrmdr_country", "dst_rrmdr_region", "dst_rrmdr_global"))
 
 
 
 # Calculate testing percentages and format everything for output
 
-rrmdr <- within(rrmdr, {
+dst_rrmdr <- within(dst_rrmdr, {
 
   # % of new pulmonary lab-confirmed cases tested
   dst_new_pct <- ifelse(is.na(dst_new) | NZ(new_labconf) == 0, "", frmt(dst_new * 100 / new_labconf));
@@ -916,16 +915,18 @@ rrmdr <- within(rrmdr, {
 # Insert "blank" placeholders for use in the output spreadsheet before writing out to CSV
 # dplyr's select statement won't repeat the blanks, hence use subset() from base r instead
 
-subset(rrmdr,
+subset(dst_rrmdr,
        select=c("entity", "blank",
-                "c_rrmdr", "blank", "mdr", "blank",
+                "dst_new", "blank", "dst_new_pct", "blank",
+                "e_new_mdr_num", "e_new_mdr_num_lo_hi",  "blank",
+                "dst_ret", "blank", "dst_ret_pct", "blank",
+                "e_ret_mdr_num", "e_ret_mdr_num_lo_hi", "blank",
                 "e_mdr_num", "e_mdr_num_lo_hi", "blank",
-                "e_new_mdr_num", "e_new_mdr_num_lo_hi", "dst_new", "blank", "dst_new_pct", "blank", "blank",
-                "e_ret_mdr_num", "e_ret_mdr_num_lo_hi", "dst_ret", "blank", "dst_ret_pct")) %>%
-  write.csv(file="rrmdr.csv", row.names=FALSE, na="")
+                "c_rrmdr", "blank", "mdr", "blank")) %>%
+  write.csv(file="dst_rrmdr.csv", row.names=FALSE, na="")
 
 # Don't leave any mess behind!
-rm(rrmdr)
+rm(dst_rrmdr)
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
