@@ -158,10 +158,6 @@ rounder <- function(x) {
 # preceding the regional aggregates
 combine_tables <- function(by_country, by_region, by_global){
 
-  # Abbreviate Macedonia and the UK because their full names are too long
-  by_country$entity <- sub("The Former Yugoslav", "TFY", by_country$entity)
-  by_country$entity <- sub("of Great Britain and Northern Ireland", "", by_country$entity)
-
   # Add a placeholder row at the end of the countries table to use as a header for the regions
   by_country[nrow(by_country)+1,1] <- "WHO regions"
 
@@ -775,7 +771,7 @@ rm(agesex)
 # A. Notifications
 dst_rrmdr_country <- filter(n, year == notification_maxyear) %>%
                   select(country, g_whoregion,
-                         c_rrmdr, mdr,
+                         c_rrmdr,
                          rdst_new, rdst_ret,
                          new_labconf, c_ret)
 
@@ -789,9 +785,7 @@ dst_rrmdr_country <- filter(d, year == notification_maxyear) %>%
 # C. Combine with estimates among notified
 dst_rrmdr_country <- filter(emdrn, year == notification_maxyear) %>%
                   select(country,
-                         e_mdr_num, e_mdr_num_lo, e_mdr_num_hi,
-                         e_new_mdr_num, e_new_mdr_num_lo, e_new_mdr_num_hi,
-                         e_ret_mdr_num, e_ret_mdr_num_lo, e_ret_mdr_num_hi) %>%
+                         e_mdr_num, e_mdr_num_lo, e_mdr_num_hi) %>%
                   inner_join(dst_rrmdr_country, by = "country") %>%
                   rename(entity = country ) %>%
                   arrange(entity)
@@ -831,16 +825,14 @@ dst_rrmdr_country <- select(dst_rrmdr_country,
 dst_rrmdr_region <- dst_rrmdr_country %>%
                 group_by(g_whoregion) %>%
                 summarise_each(funs(sum(., na.rm = TRUE)),
-                               c_rrmdr, mdr,
+                               c_rrmdr,
                                new_labconf, c_ret,
                                dst_new, dst_ret)
 
 # Merge with regional estimates of mdr among notified
 dst_rrmdr_region <- filter(emdra, year == notification_maxyear & group_type == "g_whoregion") %>%
                 select(group_name, group_description,
-                       e_mdr_num, e_mdr_num_lo, e_mdr_num_hi,
-                       e_new_mdr_num, e_new_mdr_num_lo, e_new_mdr_num_hi,
-                       e_ret_mdr_num, e_ret_mdr_num_lo, e_ret_mdr_num_hi) %>%
+                       e_mdr_num, e_mdr_num_lo, e_mdr_num_hi) %>%
                 rename(g_whoregion = group_name) %>%
                 inner_join(dst_rrmdr_region, by = "g_whoregion") %>%
                 rename(entity = group_description) %>%
@@ -850,7 +842,7 @@ dst_rrmdr_region <- filter(emdra, year == notification_maxyear & group_type == "
 # Calculate the global aggregates using same logic as for regional aggregates
 dst_rrmdr_global <- dst_rrmdr_country %>%
                 summarise_each(funs(sum(., na.rm = TRUE)),
-                               c_rrmdr, mdr,
+                               c_rrmdr,
                                new_labconf, c_ret,
                                dst_new, dst_ret) %>%
                 mutate(entity = "Global Aggregate")
@@ -858,9 +850,7 @@ dst_rrmdr_global <- dst_rrmdr_country %>%
 # Merge with global estimates of mdr among notified
 dst_rrmdr_global <- filter(emdra, year == notification_maxyear & group_type == "global") %>%
                 select(group_name, group_description,
-                       e_mdr_num, e_mdr_num_lo, e_mdr_num_hi,
-                       e_new_mdr_num, e_new_mdr_num_lo, e_new_mdr_num_hi,
-                       e_ret_mdr_num, e_ret_mdr_num_lo, e_ret_mdr_num_hi) %>%
+                       e_mdr_num, e_mdr_num_lo, e_mdr_num_hi) %>%
                 rename(entity = group_description) %>%
                 inner_join(dst_rrmdr_global, by = "entity") %>%
                 # change field name to match other tables
@@ -883,9 +873,11 @@ dst_rrmdr <- within(dst_rrmdr, {
   # % of previously treated cases tested
   dst_ret_pct <- ifelse(is.na(dst_ret) | NZ(c_ret) == 0, "", frmt(dst_ret * 100 / c_ret))
 
+  # RR/MDR detected as % of total estimated MDR among notified (note that denominator is MDR only!)
+  rrmdr_pct <- ifelse(is.na(c_rrmdr) | NZ(e_mdr_num) == 0, "", frmt(c_rrmdr * 100 / e_mdr_num ))
+
   # format numbers
   c_rrmdr <- rounder(c_rrmdr)
-  mdr <- rounder(mdr)
   dst_new <- rounder(dst_new)
   dst_ret <- rounder(dst_ret)
 
@@ -896,15 +888,6 @@ dst_rrmdr <- within(dst_rrmdr, {
                                     e_mdr_num_hi, thou=TRUE)
   e_mdr_num <- frmt(e_mdr_num)
 
-  e_new_mdr_num_lo_hi <- frmt_intervals(e_new_mdr_num,
-                                        e_new_mdr_num_lo,
-                                        e_new_mdr_num_hi, thou=TRUE)
-  e_new_mdr_num <- frmt(e_new_mdr_num)
-
-  e_ret_mdr_num_lo_hi <- frmt_intervals(e_ret_mdr_num,
-                                        e_ret_mdr_num_lo,
-                                        e_ret_mdr_num_hi, thou=TRUE)
-  e_ret_mdr_num <- frmt(e_ret_mdr_num)
 
   # Add for blank columns
   blank <- ""
@@ -918,11 +901,9 @@ dst_rrmdr <- within(dst_rrmdr, {
 subset(dst_rrmdr,
        select=c("entity", "blank",
                 "dst_new", "blank", "dst_new_pct", "blank",
-                "e_new_mdr_num", "e_new_mdr_num_lo_hi",  "blank",
                 "dst_ret", "blank", "dst_ret_pct", "blank",
-                "e_ret_mdr_num", "e_ret_mdr_num_lo_hi", "blank",
                 "e_mdr_num", "e_mdr_num_lo_hi", "blank",
-                "c_rrmdr", "blank", "mdr", "blank")) %>%
+                "c_rrmdr", "blank","rrmdr_pct")) %>%
   write.csv(file="dst_rrmdr.csv", row.names=FALSE, na="")
 
 # Don't leave any mess behind!
@@ -1247,11 +1228,11 @@ mdr_measured <- filter(emdr, year == notification_maxyear) %>%
 
 
 # blank out source, estimates etc if source is not survey or surveillance
-mdr_measured[mdr_measured$source_mdr_new != "Surveillance" & mdr_measured$source_mdr_new != "Survey",
+mdr_measured[mdr_measured$source_mdr_new == "Model",
         c("source_mdr_new", "source_drs_year_new", "source_drs_coverage_new",
           "e_new_mdr_pcnt", "e_new_mdr_pcnt_lo", "e_new_mdr_pcnt_hi")] <- NA
 
-mdr_measured[mdr_measured$source_mdr_ret != "Surveillance" & mdr_measured$source_mdr_ret != "Survey",
+mdr_measured[mdr_measured$source_mdr_ret == "Model",
         c("source_mdr_ret", "source_drs_year_ret", "source_drs_coverage_ret",
           "e_ret_mdr_pcnt", "e_ret_mdr_pcnt_lo", "e_ret_mdr_pcnt_hi")] <- NA
 
