@@ -199,65 +199,65 @@ NZ <- function(x){
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#   mort_prev (Table A4.2) -----
-#   Estimates of TB mortality and prevalence
+#   mort (Table A4.2) -----
+#   Estimates of TB mortality
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # Get country estimates
-mort_prev_country <- filter(e, year == notification_maxyear) %>%
+mort_country <- filter(e, year == notification_maxyear) %>%
                 arrange(country) %>%
                 select(country, year, e_pop_num,
                       e_mort_exc_tbhiv_num, e_mort_exc_tbhiv_num_lo, e_mort_exc_tbhiv_num_hi,
                       e_mort_exc_tbhiv_100k, e_mort_exc_tbhiv_100k_lo, e_mort_exc_tbhiv_100k_hi,
                       e_mort_tbhiv_num, e_mort_tbhiv_num_lo, e_mort_tbhiv_num_hi,
                       e_mort_tbhiv_100k, e_mort_tbhiv_100k_lo, e_mort_tbhiv_100k_hi,
-                      e_prev_num, e_prev_num_lo, e_prev_num_hi,
-                      e_prev_100k, e_prev_100k_lo, e_prev_100k_hi) %>%
+                      e_mort_num, e_mort_num_lo, e_mort_num_hi,
+                      e_mort_100k, e_mort_100k_lo, e_mort_100k_hi) %>%
                 rename(entity = country )
 
 # Get regional estimates
-mort_prev_region <- filter(a, year == notification_maxyear & group_type == "g_whoregion") %>%
+mort_region <- filter(a, year == notification_maxyear & group_type == "g_whoregion") %>%
                     arrange(group_name) %>%
                     select(group_description, year, e_pop_num,
                          e_mort_exc_tbhiv_num, e_mort_exc_tbhiv_num_lo, e_mort_exc_tbhiv_num_hi,
                          e_mort_exc_tbhiv_100k, e_mort_exc_tbhiv_100k_lo, e_mort_exc_tbhiv_100k_hi,
                          e_mort_tbhiv_num, e_mort_tbhiv_num_lo, e_mort_tbhiv_num_hi,
                          e_mort_tbhiv_100k, e_mort_tbhiv_100k_lo, e_mort_tbhiv_100k_hi,
-                         e_prev_num, e_prev_num_lo, e_prev_num_hi,
-                         e_prev_100k, e_prev_100k_lo, e_prev_100k_hi) %>%
+                         e_mort_num, e_mort_num_lo, e_mort_num_hi,
+                         e_mort_100k, e_mort_100k_lo, e_mort_100k_hi) %>%
                     rename(entity = group_description )
 
 # Got global estimates
-mort_prev_global <- filter(a, year == notification_maxyear & group_type == "global") %>%
+mort_global <- filter(a, year == notification_maxyear & group_type == "global") %>%
                     select(group_description, year, e_pop_num,
                            e_mort_exc_tbhiv_num, e_mort_exc_tbhiv_num_lo, e_mort_exc_tbhiv_num_hi,
                            e_mort_exc_tbhiv_100k, e_mort_exc_tbhiv_100k_lo, e_mort_exc_tbhiv_100k_hi,
                            e_mort_tbhiv_num, e_mort_tbhiv_num_lo, e_mort_tbhiv_num_hi,
                            e_mort_tbhiv_100k, e_mort_tbhiv_100k_lo, e_mort_tbhiv_100k_hi,
-                           e_prev_num, e_prev_num_lo, e_prev_num_hi,
-                           e_prev_100k, e_prev_100k_lo, e_prev_100k_hi) %>%
+                           e_mort_num, e_mort_num_lo, e_mort_num_hi,
+                           e_mort_100k, e_mort_100k_lo, e_mort_100k_hi) %>%
                     rename(entity = group_description )
 
 # Create combined table in order of countries then regional and global estimates
-mort_prev <- combine_tables(mort_prev_country, mort_prev_region, mort_prev_global)
-rm(list=c("mort_prev_country", "mort_prev_region", "mort_prev_global"))
+mort <- combine_tables(mort_country, mort_region, mort_global)
+rm(list=c("mort_country", "mort_region", "mort_global"))
 
 
 
 # Format variables for output
-mort_prev <- within(mort_prev, {
+mort <- within(mort, {
 
   # round population to millions
   e_pop_num <- ifelse(e_pop_num / 1000000 < 1, "< 1", rounder(e_pop_num / 1000000))
 
-  # mortality excluding HIV (convert numbers to thousands)
-  mort_num <- frmt(e_mort_exc_tbhiv_num / 1000, thou=TRUE)
-  mort_num_lo_hi <- frmt_intervals(e_mort_exc_tbhiv_num / 1000,
+  # mortality (HIV-negative TB) (convert numbers to thousands)
+  mort_exc_tbhiv_num <- frmt(e_mort_exc_tbhiv_num / 1000, thou=TRUE)
+  mort_exc_tbhiv_num_lo_hi <- frmt_intervals(e_mort_exc_tbhiv_num / 1000,
                                  e_mort_exc_tbhiv_num_lo / 1000,
                                  e_mort_exc_tbhiv_num_hi / 1000, thou=TRUE)
 
-  mort_rate <- frmt(e_mort_exc_tbhiv_100k, rates=TRUE)
-  mort_rate_lo_hi <- frmt_intervals(e_mort_exc_tbhiv_100k,
+  mort_exc_tbhiv_rate <- frmt(e_mort_exc_tbhiv_100k, rates=TRUE)
+  mort_exc_tbhiv_rate_lo_hi <- frmt_intervals(e_mort_exc_tbhiv_100k,
                                 e_mort_exc_tbhiv_100k_lo,
                                 e_mort_exc_tbhiv_100k_hi, rates=TRUE)
 
@@ -272,16 +272,16 @@ mort_prev <- within(mort_prev, {
                                 e_mort_tbhiv_100k_lo,
                                 e_mort_tbhiv_100k_hi, rates=TRUE)
 
-  # prevalence (convert numbers to thousands)
-  prev_num <- frmt(e_prev_num / 1000, thou=TRUE)
-  prev_num_lo_hi <- frmt_intervals(e_prev_num / 1000,
-                                 e_prev_num_lo / 1000,
-                                 e_prev_num_hi / 1000, thou=TRUE)
+  # Mortality (HIV-negative and HIV-positive TB cases) (convert numbers to thousands)
+  mort_num <- frmt(e_mort_num / 1000, thou=TRUE)
+  mort_num_lo_hi <- frmt_intervals(e_mort_num / 1000,
+                                 e_mort_num_lo / 1000,
+                                 e_mort_num_hi / 1000, thou=TRUE)
 
-  prev_rate <- frmt(e_prev_100k, rates=TRUE)
-  prev_rate_lo_hi <- frmt_intervals(e_prev_100k,
-                                e_prev_100k_lo,
-                                e_prev_100k_hi, rates=TRUE)
+  mort_rate <- frmt(e_mort_100k, rates=TRUE)
+  mort_rate_lo_hi <- frmt_intervals(e_mort_100k,
+                                e_mort_100k_lo,
+                                e_mort_100k_hi, rates=TRUE)
 
   # Add for blank columns
   blank <- ""
@@ -291,16 +291,18 @@ mort_prev <- within(mort_prev, {
 # Insert "blank" placeholders for use in the output spreadsheet before writing out to CSV
 # dplyr's select statement won't repeat the blanks, hence use subset() from base r instead
 
-subset(mort_prev,
+subset(mort,
        select=c("entity", "e_pop_num", "blank", "blank",
-                "mort_num", "mort_num_lo_hi", "mort_rate", "mort_rate_lo_hi", "blank",
-                "mort_tbhiv_num", "mort_tbhiv_num_lo_hi", "mort_tbhiv_rate", "mort_tbhiv_rate_lo_hi", "blank",
-                "prev_num", "prev_num_lo_hi", "prev_rate", "prev_rate_lo_hi")) %>%
-  write.csv(file="mort_prev.csv", row.names=FALSE, na="")
+                "mort_exc_tbhiv_num", "mort_exc_tbhiv_num_lo_hi",
+                "mort_exc_tbhiv_rate", "mort_exc_tbhiv_rate_lo_hi", "blank",
+                "mort_tbhiv_num", "mort_tbhiv_num_lo_hi",
+                "mort_tbhiv_rate", "mort_tbhiv_rate_lo_hi", "blank",
+                "mort_num", "mort_num_lo_hi", "mort_rate", "mort_rate_lo_hi")) %>%
+  write.csv(file="mort.csv", row.names=FALSE, na="")
 
 
 # Don't leave any mess behind!
-rm(mort_prev)
+rm(mort)
 
 
 
@@ -990,21 +992,29 @@ tb_hiv_global <- within(tb_hiv_global, {
 tb_hiv_country <- select(tb_hiv_country,
                          entity, c_notified,
                          hivtest, hivtest_pos, hiv_ipt,
-                         hivtest_prct, hivtest_pos_prct, hiv_cpt_prct, hiv_art_prct)
+                         hivtest_prct, hivtest_pos_prct,
+                         hiv_cpt, hiv_cpt_prct,
+                         hiv_art, hiv_art_prct)
 
 tb_hiv_region <- select(tb_hiv_region,
                         entity, c_notified,
                         hivtest_pct_numerator, hivtest_pos_pct_numerator, hiv_ipt,
-                        hivtest_prct, hivtest_pos_prct, hiv_cpt_prct, hiv_art_prct) %>%
-  rename(hivtest = hivtest_pct_numerator,
-         hivtest_pos = hivtest_pos_pct_numerator)
+                        hivtest_prct, hivtest_pos_prct, hiv_cpt_prct, hiv_art_prct,
+                        hiv_cpt_pct_numerator, hiv_art_pct_numerator) %>%
+                  rename(hivtest = hivtest_pct_numerator,
+                         hivtest_pos = hivtest_pos_pct_numerator,
+                         hiv_cpt = hiv_cpt_pct_numerator,
+                         hiv_art = hiv_art_pct_numerator)
 
 tb_hiv_global <- select(tb_hiv_global,
                         entity, c_notified,
                         hivtest_pct_numerator, hivtest_pos_pct_numerator, hiv_ipt,
-                        hivtest_prct, hivtest_pos_prct, hiv_cpt_prct, hiv_art_prct) %>%
-  rename(hivtest = hivtest_pct_numerator,
-         hivtest_pos = hivtest_pos_pct_numerator)
+                        hivtest_prct, hivtest_pos_prct, hiv_cpt_prct, hiv_art_prct,
+                        hiv_cpt_pct_numerator, hiv_art_pct_numerator) %>%
+                  rename(hivtest = hivtest_pct_numerator,
+                         hivtest_pos = hivtest_pos_pct_numerator,
+                         hiv_cpt = hiv_cpt_pct_numerator,
+                         hiv_art = hiv_art_pct_numerator)
 
 # Create combined table in order of countries then regional and global estimates
 tb_hiv <- combine_tables(tb_hiv_country, tb_hiv_region, tb_hiv_global)
@@ -1017,6 +1027,8 @@ tb_hiv <- within(tb_hiv, {
   c_notified <- rounder(c_notified)
   hivtest <- rounder(hivtest)
   hivtest_pos <- rounder(hivtest_pos)
+  hiv_cpt <- rounder(hiv_cpt)
+  hiv_art <- rounder(hiv_art)
   hiv_ipt <- rounder(hiv_ipt)
 
   # Add for blank columns
@@ -1031,7 +1043,9 @@ subset(tb_hiv,
        select = c("entity", "blank",
                   "c_notified", "blank", "hivtest", "blank", "hivtest_prct", "blank",
                   "hivtest_pos", "blank", "hivtest_pos_prct", "blank",
-                  "hiv_cpt_prct", "blank", "hiv_art_prct", "blank", "hiv_ipt"))  %>%
+                  "hiv_cpt", "blank", "hiv_cpt_prct", "blank",
+                  "hiv_art", "blank", "hiv_art_prct", "blank",
+                  "hiv_ipt"))  %>%
   write.csv(file="tb_hiv.csv", row.names=FALSE, na="")
 
 # Don't leave any mess behind!
