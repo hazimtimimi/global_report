@@ -198,6 +198,124 @@ NZ <- function(x){
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+#   inc_cdr (Table A4.1)  ----
+#   Incidence, notification and case detection rates, all forms
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# Get country estimates
+inc_cdr_country <- filter(e, year == notification_maxyear) %>%
+                    arrange(country) %>%
+                    select(country, year, e_pop_num,
+                           e_inc_num, e_inc_num_lo, e_inc_num_hi,
+                           e_inc_100k, e_inc_100k_lo, e_inc_100k_hi,
+                           e_inc_tbhiv_num, e_inc_tbhiv_num_lo, e_inc_tbhiv_num_hi,
+                           e_inc_tbhiv_100k, e_inc_tbhiv_100k_lo, e_inc_tbhiv_100k_hi,
+                           c_cdr, c_cdr_lo, c_cdr_hi) %>%
+                    rename(entity = country )
+
+# get notifications and add them to the estimates
+inc_cdr_country <- filter(n, year  == notification_maxyear) %>%
+                    select(country, c_newinc) %>%
+                    rename(entity = country ) %>%
+                    inner_join(inc_cdr_country, by = "entity") %>%
+                    arrange(entity)
+
+# Get regional estimates (this view already includes c_newinc)
+inc_cdr_region <- filter(a, year == notification_maxyear & group_type == "g_whoregion") %>%
+                    arrange(group_name) %>%
+                    select(group_description, year, e_pop_num,
+                           e_inc_num, e_inc_num_lo, e_inc_num_hi,
+                           e_inc_100k, e_inc_100k_lo, e_inc_100k_hi,
+                           e_inc_tbhiv_num, e_inc_tbhiv_num_lo, e_inc_tbhiv_num_hi,
+                           e_inc_tbhiv_100k, e_inc_tbhiv_100k_lo, e_inc_tbhiv_100k_hi,
+                           c_cdr, c_cdr_lo, c_cdr_hi,
+                           c_newinc) %>%
+                    rename(entity = group_description )
+
+
+# Got global estimates (this view already includes c_newinc)
+inc_cdr_global <- filter(a, year == notification_maxyear & group_type == "global") %>%
+                    select(group_description, year, e_pop_num,
+                           e_inc_num, e_inc_num_lo, e_inc_num_hi,
+                           e_inc_100k, e_inc_100k_lo, e_inc_100k_hi,
+                           e_inc_tbhiv_num, e_inc_tbhiv_num_lo, e_inc_tbhiv_num_hi,
+                           e_inc_tbhiv_100k, e_inc_tbhiv_100k_lo, e_inc_tbhiv_100k_hi,
+                           c_cdr, c_cdr_lo, c_cdr_hi,
+                           c_newinc) %>%
+                    rename(entity = group_description )
+
+# Create combined table in order of countries then regional and global estimates
+inc_cdr <- combine_tables(inc_cdr_country, inc_cdr_region, inc_cdr_global)
+rm(list=c("inc_cdr_country", "inc_cdr_region", "inc_cdr_global"))
+
+
+# Format variables for output
+inc_cdr <- within(inc_cdr, {
+
+  # Calculate and format case notification rate
+  newrel_100k <- frmt(c_newinc * 100000 / e_pop_num , rates=TRUE)
+
+  # round population to millions
+  e_pop_num <- ifelse(e_pop_num / 1000000 < 1, "< 1", rounder(e_pop_num / 1000000))
+
+  # incidence (convert numbers to thousands)
+  inc_num <- frmt(e_inc_num / 1000, thou=TRUE)
+  inc_num_lo_hi <- frmt_intervals(e_inc_num / 1000,
+                                  e_inc_num_lo / 1000,
+                                  e_inc_num_hi / 1000, thou=TRUE)
+
+  inc_rate <- frmt(e_inc_100k, rates=TRUE)
+  inc_rate_lo_hi <- frmt_intervals(e_inc_100k,
+                                   e_inc_100k_lo,
+                                   e_inc_100k_hi, rates=TRUE)
+
+  # TB/HIV incidence (convert numbers to thousands)
+  inc_tbhiv_num <- frmt(e_inc_tbhiv_num / 1000, thou=TRUE, thouEst=TRUE)
+  inc_tbhiv_num_lo_hi <- frmt_intervals(e_inc_tbhiv_num / 1000,
+                                        e_inc_tbhiv_num_lo / 1000,
+                                        e_inc_tbhiv_num_hi / 1000, thou=TRUE, thouEst=TRUE)
+
+  inc_tbhiv_rate <- frmt(e_inc_tbhiv_100k, rates=TRUE)
+  inc_tbhiv_rate_lo_hi <- frmt_intervals(e_inc_tbhiv_100k,
+                                         e_inc_tbhiv_100k_lo,
+                                         e_inc_tbhiv_100k_hi, rates=TRUE)
+
+  # format c_newinc
+  c_newinc <- rounder(c_newinc)
+
+  # Case detection rate
+  c_cdr <- frmt(c_cdr)
+  c_cdr_lo_hi <- ifelse(is.na(c_cdr) | c_cdr==0,
+                        NA,
+                        paste0("(", frmt(c_cdr_lo), "–", frmt(c_cdr_hi), ")"))
+
+  # Add for blank columns
+  blank <- ""
+})
+
+# Insert "blank" placeholders for use in the output spreadsheet before writing out to CSV
+# dplyr's select statement won't repeat the blanks, hence use subset() from base r instead
+
+
+subset(inc_cdr,
+       select=c("entity", "e_pop_num", "blank", "blank",
+                "inc_num", "inc_num_lo_hi",
+                "inc_rate", "inc_rate_lo_hi", "blank",
+                "inc_tbhiv_num", "inc_tbhiv_num_lo_hi",
+                "inc_tbhiv_rate", "inc_tbhiv_rate_lo_hi", "blank",
+                "c_newinc", "blank", "newrel_100k", "blank",
+                "c_cdr", "c_cdr_lo_hi")) %>%
+  write.csv(file="inc_cdr.csv", row.names=FALSE, na="")
+
+
+# Don't leave any mess behind!
+rm(inc_cdr)
+
+
+
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 #   mort (Table A4.2) -----
 #   Estimates of TB mortality
@@ -309,123 +427,6 @@ rm(mort)
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#   inc_cdr (Table A4.1)  ----
-#   Incidence, notification and case detection rates, all forms
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-# Get country estimates
-inc_cdr_country <- filter(e, year == notification_maxyear) %>%
-              arrange(country) %>%
-              select(country, year, e_pop_num,
-                     e_inc_num, e_inc_num_lo, e_inc_num_hi,
-                     e_inc_100k, e_inc_100k_lo, e_inc_100k_hi,
-                     e_inc_tbhiv_num, e_inc_tbhiv_num_lo, e_inc_tbhiv_num_hi,
-                     e_inc_tbhiv_100k, e_inc_tbhiv_100k_lo, e_inc_tbhiv_100k_hi,
-                     c_cdr, c_cdr_lo, c_cdr_hi) %>%
-              rename(entity = country )
-
-# get notifications and add them to the estimates
-inc_cdr_country <- filter(n, year  == notification_maxyear) %>%
-              select(country, c_newinc) %>%
-              rename(entity = country ) %>%
-              inner_join(inc_cdr_country, by = "entity") %>%
-              arrange(entity)
-
-# Get regional estimates (this view already includes c_newinc)
-inc_cdr_region <- filter(a, year == notification_maxyear & group_type == "g_whoregion") %>%
-                  arrange(group_name) %>%
-                  select(group_description, year, e_pop_num,
-                         e_inc_num, e_inc_num_lo, e_inc_num_hi,
-                         e_inc_100k, e_inc_100k_lo, e_inc_100k_hi,
-                         e_inc_tbhiv_num, e_inc_tbhiv_num_lo, e_inc_tbhiv_num_hi,
-                         e_inc_tbhiv_100k, e_inc_tbhiv_100k_lo, e_inc_tbhiv_100k_hi,
-                         c_cdr, c_cdr_lo, c_cdr_hi,
-                         c_newinc) %>%
-                  rename(entity = group_description )
-
-
-# Got global estimates (this view already includes c_newinc)
-inc_cdr_global <- filter(a, year == notification_maxyear & group_type == "global") %>%
-                    select(group_description, year, e_pop_num,
-                           e_inc_num, e_inc_num_lo, e_inc_num_hi,
-                           e_inc_100k, e_inc_100k_lo, e_inc_100k_hi,
-                           e_inc_tbhiv_num, e_inc_tbhiv_num_lo, e_inc_tbhiv_num_hi,
-                           e_inc_tbhiv_100k, e_inc_tbhiv_100k_lo, e_inc_tbhiv_100k_hi,
-                           c_cdr, c_cdr_lo, c_cdr_hi,
-                           c_newinc) %>%
-                    rename(entity = group_description )
-
-# Create combined table in order of countries then regional and global estimates
-inc_cdr <- combine_tables(inc_cdr_country, inc_cdr_region, inc_cdr_global)
-rm(list=c("inc_cdr_country", "inc_cdr_region", "inc_cdr_global"))
-
-
-# Format variables for output
-inc_cdr <- within(inc_cdr, {
-
-  # Calculate and format case notification rate
-  newrel_100k <- frmt(c_newinc * 100000 / e_pop_num , rates=TRUE)
-
-  # round population to millions
-  e_pop_num <- ifelse(e_pop_num / 1000000 < 1, "< 1", rounder(e_pop_num / 1000000))
-
-  # incidence (convert numbers to thousands)
-  inc_num <- frmt(e_inc_num / 1000, thou=TRUE)
-  inc_num_lo_hi <- frmt_intervals(e_inc_num / 1000,
-                                 e_inc_num_lo / 1000,
-                                 e_inc_num_hi / 1000, thou=TRUE)
-
-  inc_rate <- frmt(e_inc_100k, rates=TRUE)
-  inc_rate_lo_hi <- frmt_intervals(e_inc_100k,
-                                e_inc_100k_lo,
-                                e_inc_100k_hi, rates=TRUE)
-
-  # TB/HIV incidence (convert numbers to thousands)
-  inc_tbhiv_num <- frmt(e_inc_tbhiv_num / 1000, thou=TRUE, thouEst=TRUE)
-  inc_tbhiv_num_lo_hi <- frmt_intervals(e_inc_tbhiv_num / 1000,
-                                 e_inc_tbhiv_num_lo / 1000,
-                                 e_inc_tbhiv_num_hi / 1000, thou=TRUE, thouEst=TRUE)
-
-  inc_tbhiv_rate <- frmt(e_inc_tbhiv_100k, rates=TRUE)
-  inc_tbhiv_rate_lo_hi <- frmt_intervals(e_inc_tbhiv_100k,
-                                e_inc_tbhiv_100k_lo,
-                                e_inc_tbhiv_100k_hi, rates=TRUE)
-
-  # format c_newinc
-  c_newinc <- rounder(c_newinc)
-
-  # Case detection rate
-  c_cdr <- frmt(c_cdr)
-  c_cdr_lo_hi <- ifelse(is.na(c_cdr) | c_cdr==0,
-                        NA,
-                        paste0("(", frmt(c_cdr_lo), "–", frmt(c_cdr_hi), ")"))
-
-  # Add for blank columns
-  blank <- ""
-})
-
-# Insert "blank" placeholders for use in the output spreadsheet before writing out to CSV
-# dplyr's select statement won't repeat the blanks, hence use subset() from base r instead
-
-
-subset(inc_cdr,
-       select=c("entity", "e_pop_num", "blank", "blank",
-                "inc_num", "inc_num_lo_hi",
-                "inc_rate", "inc_rate_lo_hi", "blank",
-                "inc_tbhiv_num", "inc_tbhiv_num_lo_hi",
-                "inc_tbhiv_rate", "inc_tbhiv_rate_lo_hi", "blank",
-                "c_newinc", "blank", "newrel_100k", "blank",
-                "c_cdr", "c_cdr_lo_hi")) %>%
-  write.csv(file="inc_cdr.csv", row.names=FALSE, na="")
-
-
-# Don't leave any mess behind!
-rm(inc_cdr)
-
-
-
-
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 #   notif (Table A4.3) ----
 #   Case notifications
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -433,11 +434,11 @@ rm(inc_cdr)
 # Get country data
 
 notif_country <- filter(n, year == notification_maxyear) %>%
-            arrange(country) %>%
-            select(country, g_whoregion,
-                   c_newinc, new_labconf, new_clindx, new_ep,
-                   ret_rel_labconf, ret_rel_clindx, ret_rel_ep, ret_nrel) %>%
-            rename(entity = country )
+                  arrange(country) %>%
+                  select(country, g_whoregion,
+                         c_newinc, new_labconf, new_clindx, new_ep,
+                         ret_rel_labconf, ret_rel_clindx, ret_rel_ep, ret_nrel) %>%
+                  rename(entity = country )
 
 
 # Calculate regional aggregates
@@ -764,6 +765,183 @@ subset(agesex,
 # Don't leave any mess behind!
 rm(agesex)
 
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+#   outcome (Table A4.5) ----
+#   Treatment outcomes, all types
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# Get country data
+# A. Standard chorts
+outcome_country <- filter(o, year == outcome_maxyear) %>%
+                    select(country, g_whoregion,
+                           rel_with_new_flg,
+                           newrel_coh, newrel_succ, newrel_fail,
+                           newrel_died, newrel_lost, c_newrel_neval,
+                           ret_nrel_coh, ret_nrel_succ,
+                           tbhiv_coh, tbhiv_succ)
+
+# B. Combine with MDR cohorts one year older than standard
+outcome_country <- filter(o, year == (outcome_maxyear - 1)) %>%
+                    select(country,
+                           mdr_coh, mdr_succ) %>%
+                    inner_join(outcome_country, by = "country") %>%
+                    rename(entity = country ) %>%
+                    arrange(entity)
+
+# Calculate regional aggregates
+
+outcome_region <- outcome_country %>%
+                    group_by(g_whoregion) %>%
+                    summarise_each(funs(sum(., na.rm = TRUE)),
+                                   contains("newrel_"),
+                                   starts_with("ret_nrel_"),
+                                   starts_with("tbhiv_"),
+                                   starts_with("mdr_")) %>%
+                    mutate(rel_with_new_flg = NA) # dummy variable to match structure of country table
+
+# merge with regional names
+outcome_region <- filter(a, year == notification_maxyear & group_type == "g_whoregion") %>%
+                    select(group_name, group_description) %>%
+                    rename(g_whoregion = group_name) %>%
+                    inner_join(outcome_region, by = "g_whoregion") %>%
+                    rename(entity = group_description) %>%
+                    arrange(g_whoregion)
+
+
+# Calculate global aggregate
+outcome_global <- outcome_country %>%
+                    summarise_each(funs(sum(., na.rm = TRUE)),
+                                   contains("newrel_"),
+                                   starts_with("ret_nrel_"),
+                                   starts_with("tbhiv_"),
+                                   starts_with("mdr_")) %>%
+                    mutate(entity = "Global") %>%
+                    mutate(rel_with_new_flg = NA) %>% # dummy variable to match structure of the other two tables
+                    mutate(g_whoregion = "")  # dummy variable to match structure of the other two tables
+
+
+
+# Create combined table in order of countries then regional and global estimates
+outcome <- combine_tables(outcome_country, outcome_region, outcome_global)
+rm(list=c("outcome_country", "outcome_region", "outcome_global"))
+
+
+# Calculate treatment success rates and format variables for output
+outcome <- within(outcome, {
+
+  # New or new+relapse
+  c_newrel_tsr <- ifelse( is.na(newrel_coh), NA, rounder( newrel_succ * 100 /newrel_coh ))
+
+  # % of other outcomes for new+relapse
+  c_newrel_failr <- ifelse( is.na(newrel_coh), NA, rounder( newrel_fail * 100 /newrel_coh ))
+  c_newrel_diedr <- ifelse( is.na(newrel_coh), NA, rounder( newrel_died * 100 /newrel_coh ))
+  c_newrel_lostr <- ifelse( is.na(newrel_coh), NA, rounder( newrel_lost * 100 /newrel_coh ))
+  c_newrel_nevalr <- ifelse( is.na(newrel_coh), NA, rounder( c_newrel_neval * 100 /newrel_coh ))
+
+  # Retreatment or retreatment excluding relapse
+  c_ret_tsr <- ifelse( is.na(ret_nrel_coh), NA, rounder( ret_nrel_succ * 100 / ret_nrel_coh ))
+
+  # HIV-positive, all cases
+  c_tbhiv_tsr <- ifelse( is.na(tbhiv_coh), NA, rounder( tbhiv_succ * 100 / tbhiv_coh ))
+
+  # MDR
+  c_mdr_tsr <- ifelse( is.na(mdr_coh), NA, rounder( mdr_succ * 100 / mdr_coh))
+
+  # Format the cohort sizes
+  newrel_coh <- rounder(newrel_coh)
+  ret_nrel_coh <- rounder(ret_nrel_coh)
+  tbhiv_coh <- rounder(tbhiv_coh)
+  mdr_coh <- rounder(mdr_coh)
+
+  # Flag country name if relapses were not included with new cases
+  entity <- ifelse(!is.na(rel_with_new_flg) & rel_with_new_flg==0, paste0(entity,"*"),entity)
+
+  # Add for blank columns
+  blank <- ""
+
+})
+
+# Insert "blank" placeholders for use in the output spreadsheet before writing out to CSV
+# dplyr's select statement won't repeat the blanks, hence use subset() from base r instead
+
+subset(outcome,
+       select = c("entity",
+                  "newrel_coh", "blank", "c_newrel_tsr", "blank",
+                  "c_newrel_failr", "blank", "c_newrel_diedr", "blank",  "c_newrel_lostr", "blank", "c_newrel_nevalr", "blank",
+                  "ret_nrel_coh", "blank", "c_ret_tsr", "blank",
+                  "tbhiv_coh", "blank", "c_tbhiv_tsr", "blank",
+                  "mdr_coh", "blank", "c_mdr_tsr", "blank"))  %>%
+  write.csv(file="outcome.csv", row.names=FALSE, na="")
+
+# Don't leave any mess behind!
+rm(outcome)
+
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# mdr_measured (Table A4.6) -----
+# Measured percentage of TB cases with MDR-TB
+# Shows source of MDR-TB measurements for those countries with usable survey or surveillance data
+# No aggregates used
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# Get country data
+
+mdr_measured <- filter(emdr, year == notification_maxyear) %>%
+                  select(country,
+                         source_mdr_new, source_drs_year_new, source_drs_coverage_new,
+                         e_new_mdr_pcnt,e_new_mdr_pcnt_lo, e_new_mdr_pcnt_hi,
+                         source_mdr_ret, source_drs_year_ret, source_drs_coverage_ret,
+                         e_ret_mdr_pcnt, e_ret_mdr_pcnt_lo, e_ret_mdr_pcnt_hi)  %>%
+                  arrange(country)
+
+
+# blank out source, estimates etc if source is not survey or surveillance
+mdr_measured[mdr_measured$source_mdr_new == "Model",
+             c("source_mdr_new", "source_drs_year_new", "source_drs_coverage_new",
+               "e_new_mdr_pcnt", "e_new_mdr_pcnt_lo", "e_new_mdr_pcnt_hi")] <- NA
+
+mdr_measured[mdr_measured$source_mdr_ret == "Model",
+             c("source_mdr_ret", "source_drs_year_ret", "source_drs_coverage_ret",
+               "e_ret_mdr_pcnt", "e_ret_mdr_pcnt_lo", "e_ret_mdr_pcnt_hi")] <- NA
+
+# Format variables for output
+mdr_measured <- within(mdr_measured, {
+
+  # concatenate confidence interval variables into bracketed strings
+  e_new_mdr_pcnt_lo_hi <- frmt_intervals(e_new_mdr_pcnt,
+                                         e_new_mdr_pcnt_lo,
+                                         e_new_mdr_pcnt_hi, rates=TRUE)
+
+  e_ret_mdr_pcnt_lo_hi <- frmt_intervals(e_ret_mdr_pcnt,
+                                         e_ret_mdr_pcnt_lo,
+                                         e_ret_mdr_pcnt_hi, rates=TRUE)
+
+  # Add for blank columns
+  blank <- ""
+
+})
+
+
+# Insert "blank" placeholders for use in the output spreadsheet before writing out to CSV
+# dplyr's select statement won't repeat the blanks, hence use subset() from base r instead
+
+subset(mdr_measured,
+       select=c("country", "blank",
+                "source_drs_year_new", "blank", "source_mdr_new", "blank", "source_drs_coverage_new", "blank",
+                "e_new_mdr_pcnt", "blank", "e_new_mdr_pcnt_lo_hi", "blank",
+                "source_drs_year_ret", "blank", "source_mdr_ret", "blank", "source_drs_coverage_ret", "blank",
+                "e_ret_mdr_pcnt", "blank", "e_ret_mdr_pcnt_lo_hi")) %>%
+  write.csv(file="mdr_measured.csv", row.names=FALSE, na="")
+
+# Don't leave any mess behind!
+rm(mdr_measured)
+
+
+
+
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # dst_rrmdr (Table A4.7) -----
 # Drug susceptibility testing, estimated MDR-TB among notified TB cases and RR-/MDR-TB cases detected
@@ -772,25 +950,25 @@ rm(agesex)
 # Get country data
 # A. Notifications
 dst_rrmdr_country <- filter(n, year == notification_maxyear) %>%
-                  select(country, g_whoregion,
-                         c_rrmdr,
-                         rdst_new, rdst_ret,
-                         new_labconf, c_ret)
+                      select(country, g_whoregion,
+                             c_rrmdr,
+                             rdst_new, rdst_ret,
+                             new_labconf, c_ret)
 
 # B. Combine with routine surveillance
 dst_rrmdr_country <- filter(d, year == notification_maxyear) %>%
-                  select(country,
-                         dst_rlt_new, xpert_new,
-                         dst_rlt_ret, xpert_ret) %>%
-                  inner_join(dst_rrmdr_country, by = "country")
+                      select(country,
+                             dst_rlt_new, xpert_new,
+                             dst_rlt_ret, xpert_ret) %>%
+                      inner_join(dst_rrmdr_country, by = "country")
 
 # C. Combine with estimates among notified
 dst_rrmdr_country <- filter(emdrn, year == notification_maxyear) %>%
-                  select(country,
-                         e_mdr_num, e_mdr_num_lo, e_mdr_num_hi) %>%
-                  inner_join(dst_rrmdr_country, by = "country") %>%
-                  rename(entity = country ) %>%
-                  arrange(entity)
+                      select(country,
+                             e_mdr_num, e_mdr_num_lo, e_mdr_num_hi) %>%
+                      inner_join(dst_rrmdr_country, by = "country") %>%
+                      rename(entity = country ) %>%
+                      arrange(entity)
 
 # Calculate total number tested
 dst_rrmdr_country <- within(dst_rrmdr_country, {
@@ -825,38 +1003,38 @@ dst_rrmdr_country <- select(dst_rrmdr_country,
 # Aggregate the notifications and dst results (from dst_rrmdr_country)
 
 dst_rrmdr_region <- dst_rrmdr_country %>%
-                group_by(g_whoregion) %>%
-                summarise_each(funs(sum(., na.rm = TRUE)),
-                               c_rrmdr,
-                               new_labconf, c_ret,
-                               dst_new, dst_ret)
+                      group_by(g_whoregion) %>%
+                      summarise_each(funs(sum(., na.rm = TRUE)),
+                                     c_rrmdr,
+                                     new_labconf, c_ret,
+                                     dst_new, dst_ret)
 
 # Merge with regional estimates of mdr among notified
 dst_rrmdr_region <- filter(emdra, year == notification_maxyear & group_type == "g_whoregion") %>%
-                select(group_name, group_description,
-                       e_mdr_num, e_mdr_num_lo, e_mdr_num_hi) %>%
-                rename(g_whoregion = group_name) %>%
-                inner_join(dst_rrmdr_region, by = "g_whoregion") %>%
-                rename(entity = group_description) %>%
-                arrange(g_whoregion)
+                      select(group_name, group_description,
+                             e_mdr_num, e_mdr_num_lo, e_mdr_num_hi) %>%
+                      rename(g_whoregion = group_name) %>%
+                      inner_join(dst_rrmdr_region, by = "g_whoregion") %>%
+                      rename(entity = group_description) %>%
+                      arrange(g_whoregion)
 
 
 # Calculate the global aggregates using same logic as for regional aggregates
 dst_rrmdr_global <- dst_rrmdr_country %>%
-                summarise_each(funs(sum(., na.rm = TRUE)),
-                               c_rrmdr,
-                               new_labconf, c_ret,
-                               dst_new, dst_ret) %>%
-                mutate(entity = "Global Aggregate")
+                      summarise_each(funs(sum(., na.rm = TRUE)),
+                                     c_rrmdr,
+                                     new_labconf, c_ret,
+                                     dst_new, dst_ret) %>%
+                      mutate(entity = "Global Aggregate")
 
 # Merge with global estimates of mdr among notified
 dst_rrmdr_global <- filter(emdra, year == notification_maxyear & group_type == "global") %>%
-                select(group_name, group_description,
-                       e_mdr_num, e_mdr_num_lo, e_mdr_num_hi) %>%
-                rename(entity = group_description) %>%
-                inner_join(dst_rrmdr_global, by = "entity") %>%
-                # change field name to match other tables
-                rename(g_whoregion = group_name)
+                      select(group_name, group_description,
+                             e_mdr_num, e_mdr_num_lo, e_mdr_num_hi) %>%
+                      rename(entity = group_description) %>%
+                      inner_join(dst_rrmdr_global, by = "entity") %>%
+                      # change field name to match other tables
+                      rename(g_whoregion = group_name)
 
 
 # Create combined table in order of countries then regional and global estimates
@@ -913,7 +1091,7 @@ rm(dst_rrmdr)
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# tb_hiv (Table A4.9)  -----
+# tb_hiv (Table A4.8)  -----
 # HIV testing for TB patients and provision of CPT, ART and IPT
 # Note that the tbhiv dataset already has rules built in for combining _p and _f
 #  (final and provisional) numbers, plus adjusted variables for calculating aggregates.
@@ -1051,177 +1229,5 @@ subset(tb_hiv,
 # Don't leave any mess behind!
 rm(tb_hiv)
 
-
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#   outcome (Table A4.5) ----
-#   Treatment outcomes, all types
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-# Get country data
-# A. Standard chorts
-outcome_country <- filter(o, year == outcome_maxyear) %>%
-                    select(country, g_whoregion,
-                           rel_with_new_flg,
-                           newrel_coh, newrel_succ, newrel_fail,
-                              newrel_died, newrel_lost, c_newrel_neval,
-                           ret_nrel_coh, ret_nrel_succ,
-                           tbhiv_coh, tbhiv_succ)
-
-# B. Combine with MDR cohorts one year older than standard
-outcome_country <- filter(o, year == (outcome_maxyear - 1)) %>%
-                    select(country,
-                           mdr_coh, mdr_succ) %>%
-                    inner_join(outcome_country, by = "country") %>%
-                    rename(entity = country ) %>%
-                    arrange(entity)
-
-# Calculate regional aggregates
-
-outcome_region <- outcome_country %>%
-                  group_by(g_whoregion) %>%
-                  summarise_each(funs(sum(., na.rm = TRUE)),
-                                 contains("newrel_"),
-                                 starts_with("ret_nrel_"),
-                                 starts_with("tbhiv_"),
-                                 starts_with("mdr_")) %>%
-                  mutate(rel_with_new_flg = NA) # dummy variable to match structure of country table
-
-# merge with regional names
-outcome_region <- filter(a, year == notification_maxyear & group_type == "g_whoregion") %>%
-                  select(group_name, group_description) %>%
-                  rename(g_whoregion = group_name) %>%
-                  inner_join(outcome_region, by = "g_whoregion") %>%
-                  rename(entity = group_description) %>%
-                  arrange(g_whoregion)
-
-
-# Calculate global aggregate
-outcome_global <- outcome_country %>%
-                  summarise_each(funs(sum(., na.rm = TRUE)),
-                                 contains("newrel_"),
-                                 starts_with("ret_nrel_"),
-                                 starts_with("tbhiv_"),
-                                 starts_with("mdr_")) %>%
-                  mutate(entity = "Global") %>%
-                  mutate(rel_with_new_flg = NA) %>% # dummy variable to match structure of the other two tables
-                  mutate(g_whoregion = "")  # dummy variable to match structure of the other two tables
-
-
-
-# Create combined table in order of countries then regional and global estimates
-outcome <- combine_tables(outcome_country, outcome_region, outcome_global)
-rm(list=c("outcome_country", "outcome_region", "outcome_global"))
-
-
-# Calculate treatment success rates and format variables for output
-outcome <- within(outcome, {
-
-  # New or new+relapse
-  c_newrel_tsr <- ifelse( is.na(newrel_coh), NA, rounder( newrel_succ * 100 /newrel_coh ))
-
-  # % of other outcomes for new+relapse
-  c_newrel_failr <- ifelse( is.na(newrel_coh), NA, rounder( newrel_fail * 100 /newrel_coh ))
-  c_newrel_diedr <- ifelse( is.na(newrel_coh), NA, rounder( newrel_died * 100 /newrel_coh ))
-  c_newrel_lostr <- ifelse( is.na(newrel_coh), NA, rounder( newrel_lost * 100 /newrel_coh ))
-  c_newrel_nevalr <- ifelse( is.na(newrel_coh), NA, rounder( c_newrel_neval * 100 /newrel_coh ))
-
-  # Retreatment or retreatment excluding relapse
-  c_ret_tsr <- ifelse( is.na(ret_nrel_coh), NA, rounder( ret_nrel_succ * 100 / ret_nrel_coh ))
-
-  # HIV-positive, all cases
-  c_tbhiv_tsr <- ifelse( is.na(tbhiv_coh), NA, rounder( tbhiv_succ * 100 / tbhiv_coh ))
-
-  # MDR
-  c_mdr_tsr <- ifelse( is.na(mdr_coh), NA, rounder( mdr_succ * 100 / mdr_coh))
-
-  # Format the cohort sizes
-  newrel_coh <- rounder(newrel_coh)
-  ret_nrel_coh <- rounder(ret_nrel_coh)
-  tbhiv_coh <- rounder(tbhiv_coh)
-  mdr_coh <- rounder(mdr_coh)
-
-  # Flag country name if relapses were not included with new cases
-  entity <- ifelse(!is.na(rel_with_new_flg) & rel_with_new_flg==0, paste0(entity,"*"),entity)
-
-  # Add for blank columns
-  blank <- ""
-
-})
-
-# Insert "blank" placeholders for use in the output spreadsheet before writing out to CSV
-# dplyr's select statement won't repeat the blanks, hence use subset() from base r instead
-
-subset(outcome,
-       select = c("entity",
-                  "newrel_coh", "blank", "c_newrel_tsr", "blank",
-                  "c_newrel_failr", "blank", "c_newrel_diedr", "blank",  "c_newrel_lostr", "blank", "c_newrel_nevalr", "blank",
-                  "ret_nrel_coh", "blank", "c_ret_tsr", "blank",
-                  "tbhiv_coh", "blank", "c_tbhiv_tsr", "blank",
-                  "mdr_coh", "blank", "c_mdr_tsr", "blank"))  %>%
-  write.csv(file="outcome.csv", row.names=FALSE, na="")
-
-# Don't leave any mess behind!
-rm(outcome)
-
-
-
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# mdr_measured (Table A4.6) -----
-# Measured percentage of TB cases with MDR-TB
-# Shows source of MDR-TB measurements for those countries with usable survey or surveillance data
-# No aggregates used
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-# Get country data
-
-mdr_measured <- filter(emdr, year == notification_maxyear) %>%
-                select(country,
-                       source_mdr_new, source_drs_year_new, source_drs_coverage_new,
-                       e_new_mdr_pcnt,e_new_mdr_pcnt_lo, e_new_mdr_pcnt_hi,
-                       source_mdr_ret, source_drs_year_ret, source_drs_coverage_ret,
-                       e_ret_mdr_pcnt, e_ret_mdr_pcnt_lo, e_ret_mdr_pcnt_hi)  %>%
-                arrange(country)
-
-
-# blank out source, estimates etc if source is not survey or surveillance
-mdr_measured[mdr_measured$source_mdr_new == "Model",
-        c("source_mdr_new", "source_drs_year_new", "source_drs_coverage_new",
-          "e_new_mdr_pcnt", "e_new_mdr_pcnt_lo", "e_new_mdr_pcnt_hi")] <- NA
-
-mdr_measured[mdr_measured$source_mdr_ret == "Model",
-        c("source_mdr_ret", "source_drs_year_ret", "source_drs_coverage_ret",
-          "e_ret_mdr_pcnt", "e_ret_mdr_pcnt_lo", "e_ret_mdr_pcnt_hi")] <- NA
-
-# Format variables for output
-mdr_measured <- within(mdr_measured, {
-
-  # concatenate confidence interval variables into bracketed strings
-  e_new_mdr_pcnt_lo_hi <- frmt_intervals(e_new_mdr_pcnt,
-                                        e_new_mdr_pcnt_lo,
-                                        e_new_mdr_pcnt_hi, rates=TRUE)
-
-  e_ret_mdr_pcnt_lo_hi <- frmt_intervals(e_ret_mdr_pcnt,
-                                        e_ret_mdr_pcnt_lo,
-                                        e_ret_mdr_pcnt_hi, rates=TRUE)
-
-  # Add for blank columns
-  blank <- ""
-
-})
-
-
-# Insert "blank" placeholders for use in the output spreadsheet before writing out to CSV
-# dplyr's select statement won't repeat the blanks, hence use subset() from base r instead
-
-subset(mdr_measured,
-       select=c("country", "blank",
-                "source_drs_year_new", "blank", "source_mdr_new", "blank", "source_drs_coverage_new", "blank",
-                "e_new_mdr_pcnt", "blank", "e_new_mdr_pcnt_lo_hi", "blank",
-                "source_drs_year_ret", "blank", "source_mdr_ret", "blank", "source_drs_coverage_ret", "blank",
-                "e_ret_mdr_pcnt", "blank", "e_ret_mdr_pcnt_lo_hi")) %>%
-  write.csv(file="mdr_measured.csv", row.names=FALSE, na="")
-
-# Don't leave any mess behind!
-rm(mdr_measured)
 
 
