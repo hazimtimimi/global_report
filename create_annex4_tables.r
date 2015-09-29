@@ -1165,64 +1165,6 @@ rm(outcome)
 
 
 
-
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# labs (Table A4.8) -----
-# Laboratories
-# Country level only, no need for aggregates
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-
-# Get country data
-labs <- filter(s, year == notification_maxyear) %>%
-        select(country,
-               c_lab_sm_100k, lab_sm_f, lab_sm_led,
-               c_lab_cul_5m, c_lab_dst_5m, c_lab_lpa_5m, lab_xpert,
-               sldst_avail_incntry, sldst_avail_outcntry, nrl,
-               hcw_tot, hcw_tb_infected) %>%
-        arrange(country)
-
-
-# Calculate some variables and format for output
-labs <- within(labs, {
-
-  # % smear labs using LED microscopy
-  lab_sm_led_pct <- ifelse(is.na(lab_sm_led) | is.na(lab_sm_f), '–', rounder(lab_sm_led * 100 / lab_sm_f))
-
-  # Availability of 2nd line DST
-  sldst <- ifelse(sldst_avail_incntry==1 & sldst_avail_outcntry==1, 'In and out of country',
-                  ifelse(sldst_avail_incntry==1, 'In country',
-                         ifelse(sldst_avail_outcntry==1, 'Out of country',
-                                ifelse(sldst_avail_incntry==0 & sldst_avail_outcntry==0, 'No', NA))))
-
-  # Convert nrl variable to its full description using the datacodes table
-  nrl <- factor(nrl, levels=datacodes$option_id, labels=datacodes$optiontext_EN)
-
-  # notification rate among health care workers
-  # (ignore records where numerator = denominator!)
-  hcw_100k <- ifelse(is.na(hcw_tb_infected) | NZ(hcw_tot)==0 | hcw_tb_infected == hcw_tot ,
-                     "",
-                     rounder(hcw_tb_infected * 100000 / hcw_tot ))
-
-  # Add for blank columns
-  blank <- ""
-
-})
-
-# Insert "blank" placeholders for use in the output spreadsheet before writing out to CSV
-# dplyr's select statement won't repeat the blanks, hence use subset() from base r instead
-
-subset(labs,
-       select=c("country", "blank",
-                "c_lab_sm_100k", "blank", "lab_sm_led_pct", "blank",
-                "c_lab_cul_5m", "blank", "c_lab_dst_5m", "blank", "c_lab_lpa_5m", "blank", "lab_xpert", "blank",
-                "sldst", "nrl")) %>%
-  write.csv(file="labs.csv", row.names=FALSE, na="")
-
-# Don't leave any mess behind!
-rm(labs)
-
-
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # mdr_measured (Table A4.6) -----
 # Measured percentage of TB cases with MDR-TB
