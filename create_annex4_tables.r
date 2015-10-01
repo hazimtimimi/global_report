@@ -951,7 +951,7 @@ rm(mdr_measured)
 # A. Notifications
 dst_rrmdr_country <- filter(n, year == notification_maxyear) %>%
                       select(country, g_whoregion,
-                             c_rrmdr,
+                             c_rrmdr, unconf_rrmdr_tx, conf_rrmdr_tx,
                              rdst_new, rdst_ret,
                              new_labconf, c_ret)
 
@@ -970,7 +970,7 @@ dst_rrmdr_country <- filter(emdrn, year == notification_maxyear) %>%
                       rename(entity = country ) %>%
                       arrange(entity)
 
-# Calculate total number tested
+# Calculate total number tested and total number started on treatment
 dst_rrmdr_country <- within(dst_rrmdr_country, {
 
   # New cases tested for RR/MDR, including molecular diagnostics
@@ -988,12 +988,16 @@ dst_rrmdr_country <- within(dst_rrmdr_country, {
                            rdst_ret,
                            sum_of_row(dst_rrmdr_country[c("dst_rlt_ret","xpert_ret")]))
   )
+
+  # Number started on treatment (confirmed or unconfirmed)
+  c_rrmdr_tx <- sum_of_row(dst_rrmdr_country[c("unconf_rrmdr_tx", "conf_rrmdr_tx")])
 })
 
-# Drop the variables used to derive dst_new and dst_ret
+# Drop the variables used to derive dst_new, dst_ret and c_rrmdr_tx
 dst_rrmdr_country <- select(dst_rrmdr_country,
                         -rdst_new, -dst_rlt_new, -xpert_new,
-                        -rdst_ret, -dst_rlt_ret, -xpert_ret)
+                        -rdst_ret, -dst_rlt_ret, -xpert_ret,
+                        -unconf_rrmdr_tx, -conf_rrmdr_tx)
 
 
 # Calculate the regional aggregates
@@ -1007,7 +1011,8 @@ dst_rrmdr_region <- dst_rrmdr_country %>%
                       summarise_each(funs(sum(., na.rm = TRUE)),
                                      c_rrmdr,
                                      new_labconf, c_ret,
-                                     dst_new, dst_ret)
+                                     dst_new, dst_ret,
+                                     c_rrmdr_tx)
 
 # Merge with regional estimates of mdr among notified
 dst_rrmdr_region <- filter(emdra, year == notification_maxyear & group_type == "g_whoregion") %>%
@@ -1024,7 +1029,8 @@ dst_rrmdr_global <- dst_rrmdr_country %>%
                       summarise_each(funs(sum(., na.rm = TRUE)),
                                      c_rrmdr,
                                      new_labconf, c_ret,
-                                     dst_new, dst_ret) %>%
+                                     dst_new, dst_ret,
+                                     c_rrmdr_tx) %>%
                       mutate(entity = "Global Aggregate")
 
 # Merge with global estimates of mdr among notified
@@ -1060,7 +1066,7 @@ dst_rrmdr <- within(dst_rrmdr, {
   c_rrmdr <- rounder(c_rrmdr)
   dst_new <- rounder(dst_new)
   dst_ret <- rounder(dst_ret)
-
+  c_rrmdr_tx <- rounder(c_rrmdr_tx)
 
   # format the estimates
   e_mdr_num_lo_hi <- frmt_intervals(e_mdr_num,
@@ -1083,7 +1089,8 @@ subset(dst_rrmdr,
                 "dst_new", "blank", "dst_new_pct", "blank",
                 "dst_ret", "blank", "dst_ret_pct", "blank",
                 "e_mdr_num", "e_mdr_num_lo_hi", "blank",
-                "c_rrmdr", "blank","rrmdr_pct")) %>%
+                "c_rrmdr", "blank","rrmdr_pct", "blank",
+                "c_rrmdr_tx")) %>%
   write.csv(file="dst_rrmdr.csv", row.names=FALSE, na="")
 
 # Don't leave any mess behind!
