@@ -71,13 +71,18 @@ figures_folder  <- "D:/Example/tables_figures/"
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Paths, etc for creating the CSV files for the annex tables to be
-# published on the web, and also for splitting/merging PDFs
+# published in the global report and also on the web, and also for splitting/merging PDFs
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# Parent folder fo CSV, Excel and PDF files for annex 4 tables in the printed report
+
+annex4_folder    <- "D:/Example/Annex_4_data_tables/"
 
 
 # Parent folder for CSV and PDF files:
 
 annexweb_folder    <- "D:/Example/annex_for_web/"
+
 
 # Define input/output PDF subfolder locations:
 
