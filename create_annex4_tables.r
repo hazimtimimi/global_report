@@ -944,7 +944,8 @@ rm(mdr_measured)
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # dst_rrmdr (Table A4.7) -----
-# Drug susceptibility testing, estimated MDR-TB among notified TB cases and RR-/MDR-TB cases detected
+# Drug susceptibility testing, estimated MDR-TB among notified TB cases, RR-/MDR-TB cases detected
+# and enrolments on MDR-TB treatment
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # Get country data
@@ -1049,7 +1050,7 @@ rm(list=c("dst_rrmdr_country", "dst_rrmdr_region", "dst_rrmdr_global"))
 
 
 
-# Calculate testing percentages and format everything for output
+# Calculate testing percentages, enrolment percentages and format everything for output
 
 dst_rrmdr <- within(dst_rrmdr, {
 
@@ -1061,6 +1062,9 @@ dst_rrmdr <- within(dst_rrmdr, {
 
   # RR/MDR detected as % of total estimated MDR among notified (note that denominator is MDR only!)
   rrmdr_pct <- ifelse(is.na(c_rrmdr) | NZ(e_mdr_num) == 0, "", frmt(c_rrmdr * 100 / e_mdr_num ))
+
+  # number enrolled on MDR-TB treatment as % of number of RR-/MDR-TB cases detected
+  rrmdr_tx_pct <- ifelse(is.na(c_rrmdr_tx) | NZ(c_rrmdr) == 0, "", frmt(c_rrmdr_tx * 100 / c_rrmdr ))
 
   # format numbers
   c_rrmdr <- rounder(c_rrmdr)
@@ -1090,7 +1094,7 @@ subset(dst_rrmdr,
                 "dst_ret", "blank", "dst_ret_pct", "blank",
                 "e_mdr_num", "e_mdr_num_lo_hi", "blank",
                 "c_rrmdr", "blank","rrmdr_pct", "blank",
-                "c_rrmdr_tx")) %>%
+                "c_rrmdr_tx", "blank", "rrmdr_tx_pct")) %>%
   write.csv(file="dst_rrmdr.csv", row.names=FALSE, na="")
 
 # Don't leave any mess behind!
