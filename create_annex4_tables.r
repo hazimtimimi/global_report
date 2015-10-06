@@ -192,6 +192,15 @@ NZ <- function(x){
   return(x)
 }
 
+# Calculate % using numerator and denominator, format the output and cap at 100%
+cap_frmt_pct <- function(numerator, denominator) {
+
+  pct <- ifelse(is.na(numerator) | NZ(denominator) == 0, "",
+         ifelse((numerator * 100 / denominator) > 100, ">100", frmt(numerator * 100 / denominator)))
+
+  return(pct)
+}
+
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # stop("OK, see what we have!")
@@ -1055,16 +1064,16 @@ rm(list=c("dst_rrmdr_country", "dst_rrmdr_region", "dst_rrmdr_global"))
 dst_rrmdr <- within(dst_rrmdr, {
 
   # % of new pulmonary lab-confirmed cases tested
-  dst_new_pct <- ifelse(is.na(dst_new) | NZ(new_labconf) == 0, "", frmt(dst_new * 100 / new_labconf));
+  dst_new_pct <-  cap_frmt_pct(dst_new, new_labconf)
 
   # % of previously treated cases tested
-  dst_ret_pct <- ifelse(is.na(dst_ret) | NZ(c_ret) == 0, "", frmt(dst_ret * 100 / c_ret))
+  dst_ret_pct <- cap_frmt_pct(dst_ret, c_ret)
 
   # RR/MDR detected as % of total estimated MDR among notified (note that denominator is MDR only!)
-  rrmdr_pct <- ifelse(is.na(c_rrmdr) | NZ(e_mdr_num) == 0, "", frmt(c_rrmdr * 100 / e_mdr_num ))
+  rrmdr_pct <- cap_frmt_pct(c_rrmdr, e_mdr_num)
 
   # number enrolled on MDR-TB treatment as % of number of RR-/MDR-TB cases detected
-  rrmdr_tx_pct <- ifelse(is.na(c_rrmdr_tx) | NZ(c_rrmdr) == 0, "", frmt(c_rrmdr_tx * 100 / c_rrmdr ))
+  rrmdr_tx_pct <- cap_frmt_pct(c_rrmdr_tx, c_rrmdr)
 
   # format numbers
   c_rrmdr <- rounder(c_rrmdr)
