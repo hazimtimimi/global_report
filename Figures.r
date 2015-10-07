@@ -67,9 +67,9 @@ if(flg_show_estimates){
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
   # 2_3_incmort_num_glo ------------------------------------------------
-  
+
   ima <- araw.t %>% filter(group_name=="global") %>% select(year, matches(".*inc.*num.*"), matches(".*mort.*num.*"))
-  
+
   # Reshape
   imaf <- NULL
   for(var in c("inc", "inc_tbhiv", "mort_tbhiv", "mort_exc_tbhiv")){
@@ -79,17 +79,17 @@ if(flg_show_estimates){
     df$var <- var
     imaf <- rbind(imaf, df)
   }
-  
+
   incmort_num_glo1 <- imaf %>% filter(var %in% c("inc", "inc_tbhiv")) %>% ggplot(aes(year, best, fill=var, ymin=0)) + geom_line(size=1, aes(color=var)) + geom_ribbon(aes (year, best, ymin=lo, ymax=hi), alpha=0.2) + theme_glb.rpt() + theme(legend.position="none") + scale_x_continuous("", minor_breaks=seq(1990, 2015, 1)) + scale_y_continuous(breaks=pretty_breaks()) + ylab("Millions") + scale_color_manual(values = c(inc.color, inch.color)) + scale_fill_manual(values = c(inc.color, inch.color)) + geom_text(aes(2004,8.3, label="All TB cases")) + geom_text(aes(2004,2.3, label="HIV-positive TB cases")) + ggtitle("TB incidence")
 
   figsave(incmort_num_glo1, imaf, "f2_3_incmort_num_glo1", width=6, height=6)
-  
-  incmort_num_glo2 <- imaf %>% filter(var %in% c("mort_tbhiv", "mort_exc_tbhiv")) %>% ggplot(aes(year, best, fill=var, ymin=0)) + geom_line(size=1, aes(color=var)) + geom_ribbon(aes (year, best, ymin=lo, ymax=hi), alpha=0.2) + theme_glb.rpt() + theme(legend.position="none") + scale_x_continuous("", minor_breaks=seq(1990, 2015, 1)) + scale_y_continuous(breaks=pretty_breaks()) + ylab("Millions") + scale_color_manual(values = c(mort.color, inch.color)) + scale_fill_manual(values = c(mort.color, inch.color)) + geom_text(aes(1998,1.2, label="TB deaths among \nHIV-negative people")) + geom_text(aes(2004,0.7, label="TB deaths among HIV-positive people(a)")) + ggtitle("TB deaths")  
-  
+
+  incmort_num_glo2 <- imaf %>% filter(var %in% c("mort_tbhiv", "mort_exc_tbhiv")) %>% ggplot(aes(year, best, fill=var, ymin=0)) + geom_line(size=1, aes(color=var)) + geom_ribbon(aes (year, best, ymin=lo, ymax=hi), alpha=0.2) + theme_glb.rpt() + theme(legend.position="none") + scale_x_continuous("", minor_breaks=seq(1990, 2015, 1)) + scale_y_continuous(breaks=pretty_breaks()) + ylab("Millions") + scale_color_manual(values = c(mort.color, inch.color)) + scale_fill_manual(values = c(mort.color, inch.color)) + geom_text(aes(1998,1.2, label="TB deaths among \nHIV-negative people")) + geom_text(aes(2004,0.7, label="TB deaths among HIV-positive people(a)")) + ggtitle("TB deaths")
+
   # Footnote:  "HIV-associated deaths are classified as HIV deaths according to ICD-10"
-  
+
   figsave(incmort_num_glo2, imaf, "f2_3_incmort_num_glo2", width=6, height=6)
-  
+
   # incmort_num <- arrangeGrob(incmort_num_glo1, incmort_num_glo2)
 
   # 2_4_topten ---------------------------------------------------------
@@ -180,13 +180,13 @@ if(flg_show_estimates){
   incprevmort_glo <- ggplot(esti, aes(year, best, fill=var, ymin=0)) + geom_line(size=1, aes(color=var)) + geom_ribbon(aes (year, best, ymin=lo, ymax=hi), alpha=0.2) + geom_hline(aes(yintercept=target), linetype=2) + theme_glb.rpt() + facet_wrap(~panel, scales="free_y") + theme(legend.position="none") + scale_x_continuous("", minor_breaks=seq(1990, 2015, 1)) + scale_y_continuous(breaks=pretty_breaks()) + ylab("Rate per 100 000 population per year") +
     scale_color_manual(values = c(inc.color, inch.color, mort.color, prev.color)) + scale_fill_manual(values = c(inc.color, inch.color, mort.color, prev.color)) +
     ggtitle(paste0("
-Figure 2.8 Global trends in estimated rates of TB incidence (1990–", report_year-1, ", 
-and prevalence and mortality rates (1990–", report_year, "). Left: Estimated incidence rate including 
-HIV-positive TB (", inc.color, ") and estimated incidence rate of 
-HIV-positive TB (", inch.color,"). Centre and right: The 
-horizontal dashed lines represent the Stop TB Partnership targets 
-of a 50% reduction in prevalence and mortality rates by 2015 
-compared with 1990. Shaded areas represent uncertainty bands. 
+Figure 2.8 Global trends in estimated rates of TB incidence (1990–", report_year-1, ",
+and prevalence and mortality rates (1990–", report_year, "). Left: Estimated incidence rate including
+HIV-positive TB (", inc.color, ") and estimated incidence rate of
+HIV-positive TB (", inch.color,"). Centre and right: The
+horizontal dashed lines represent the Stop TB Partnership targets
+of a 50% reduction in prevalence and mortality rates by 2015
+compared with 1990. Shaded areas represent uncertainty bands.
 Mortality excludes TB deaths among HIV-positive people."))
 
   figsave(incprevmort_glo, esti, "f2_8_incprevmort_glo")
@@ -305,16 +305,16 @@ Mortality excludes TB deaths among HIV-positive people."))
   figsave(prev_reg, prev_mort_reg_aggs, "f2_13_prev_reg")
 
   # 2_14_prev_hbc ----------------------------------------------------
-  
+
   # Get prevalence estimates for the HBCs
   prev_hbc_data <- eraw.t %>%
     filter(g_hbc22=="high") %>%
     select(country, iso2, year, e_prev_100k, e_prev_100k_lo, e_prev_100k_hi) %>% arrange(iso2, year) %>% group_by(iso2) %>% mutate(target.prev=e_prev_100k[1]/2)  %>% # Add variable for STP target prevalence rates (half of 1990 values) to be displayed as dashed lines
     .shortnames() %>% mutate(country=ifelse(country=="Bangladesh", "Bangladesh(a)", country))
-  
+
   prev_hbc_data$forecast <- ifelse(prev_hbc_data$year >= report_year, "forecast", "current")
-  
-  
+
+
   prev_hbc <- qplot(year, e_prev_100k, data=prev_hbc_data, geom='line', colour=I(prev.color)) +
     geom_ribbon(aes(year,
                     ymin=e_prev_100k_lo,
@@ -326,11 +326,11 @@ Mortality excludes TB deaths among HIV-positive people."))
     theme_glb.rpt() +
     theme(legend.position='none') +
     ggtitle(paste0("Figure 2.14 Estimated TB prevalence rates 1990-", report_year, ", 22 high-burden countries. \nShaded areas represent uncertainty bands. The horizontal dashed lines represent the Stop TB Partnership \ntarget of a 50% reduction in the prevalence rate by 2015 compared with 1990."))
-  
+
 
   figsave(prev_hbc, prev_hbc_data, "f2_14_prev_hbc")
-  
-  
+
+
   # 2_18_mort_reg ----------------------------------------------------
 
   mort_reg <- ggplot(prev_mort_reg_aggs,
@@ -347,11 +347,11 @@ Mortality excludes TB deaths among HIV-positive people."))
     theme_glb.rpt() +
     theme(legend.position="none") +
     ggtitle(paste0(
-"Figure 2.18 Estimated TB mortality rates 1990-", report_year, ", 
-by WHO region. Estimated TB mortality excludes TB deaths among 
-HIV-positive people. Shaded areas represent uncertainty bands.(a) 
-The horizontal dashed lines represent the Stop TB Partnership 
-target of a 50% reduction in the mortality rate by 2015 compared 
+"Figure 2.18 Estimated TB mortality rates 1990-", report_year, ",
+by WHO region. Estimated TB mortality excludes TB deaths among
+HIV-positive people. Shaded areas represent uncertainty bands.(a)
+The horizontal dashed lines represent the Stop TB Partnership
+target of a 50% reduction in the mortality rate by 2015 compared
 with 1990."))
 
   figsave(mort_reg, prev_mort_reg_aggs, "f2_18_mort_reg")
@@ -386,13 +386,13 @@ with 1990."))
     theme_glb.rpt() +
     theme(legend.position='none') +
     ggtitle(paste0(
-"Figure 2.19 Estimated TB mortality rates 1990-", report_year, ", 
-22 high-burden countries. Estimated TB mortality excludes TB deaths 
-among HIV-positive people. The horizontal dashed lines represent 
-the Stop TB Partnership target of a 50% reduction in the mortality 
-rate by 2015 compared with 1990. Uncertainty is due to adjustments 
-made to the mortality data from vital registration systems that 
-were reported by countries(a) (mortality data from vital registration 
+"Figure 2.19 Estimated TB mortality rates 1990-", report_year, ",
+22 high-burden countries. Estimated TB mortality excludes TB deaths
+among HIV-positive people. The horizontal dashed lines represent
+the Stop TB Partnership target of a 50% reduction in the mortality
+rate by 2015 compared with 1990. Uncertainty is due to adjustments
+made to the mortality data from vital registration systems that
+were reported by countries(a) (mortality data from vital registration
 systems are represented by the 'x' symbol)."))
 
   # Add footnote
@@ -489,7 +489,7 @@ systems are represented by the 'x' symbol)."))
 
 psIDN.d <- readWorksheetFromFile(file.path(rdata_folder, "Extra data", "BS", "Data_b_2_4_2.xlsx"), sheet="Sheet1") %>% mutate(type=factor(c(rep("Smear-positive TB", 15), rep("Bacteriologically confirmed TB", 28-15)), levels=c("Smear-positive TB", "Bacteriologically confirmed TB"))) %>% slice(c(4:9, 11:13, 19:24, 26:28)) %>% separate(Col3, c("lo", "hi"), sep="-", remove=FALSE, convert = TRUE, extra = "drop") %>% mutate(groups=factor(Col1, levels=c("INDONESIA", "15-24", "25-34", "35-44", "45-54", "55-64", "65+", "Male", "Female"), labels=c("All", "15-24", "25-34", "35-44", "45-54", "55-64", "65+", "Male", "Female")), best=as.numeric(Col2), cat=ifelse(groups=="All", "a", ifelse(groups %in% c("Male", "Female"), "b", "c")))
 
-psIDN <- ggplot(psIDN.d, aes(groups, best, color=cat)) + geom_point() + geom_errorbar(aes(ymin=lo, ymax=hi), size=1, width=0.2) + theme_glb.rpt() + facet_wrap(~type) + labs(x="", y="Rate per 100 000 population") + theme(legend.position="none") + scale_color_manual(values=c("black", "red", "blue")) + scale_y_continuous(breaks=c(250,500,750,1000,1500,2000)) + ggtitle("Overall, and age and sex-specific TB prevalence rates as measured in the 
+psIDN <- ggplot(psIDN.d, aes(groups, best, color=cat)) + geom_point() + geom_errorbar(aes(ymin=lo, ymax=hi), size=1, width=0.2) + theme_glb.rpt() + facet_wrap(~type) + labs(x="", y="Rate per 100 000 population") + theme(legend.position="none") + scale_color_manual(values=c("black", "red", "blue")) + scale_y_continuous(breaks=c(250,500,750,1000,1500,2000)) + ggtitle("Overall, and age and sex-specific TB prevalence rates as measured in the
 2013-2014 national TB prevalence survey in Indonesia, with 95% confidence intervals")
 
   figsave(psIDN, psIDN.d, "B2_4_2_psIDN")
@@ -550,8 +550,8 @@ if(flg_show_estimates){
 
   eha <- subset(araw.t, group_type=="global")
 
-  # Absolute number 
-  
+  # Absolute number
+
   ehba <- merge(subset(eha, select=c("group_name", "year", "e_inc_num", "e_inc_num_lo", "e_inc_num_hi", "e_inc_tbhiv_num", "e_inc_tbhiv_num_lo", "e_inc_tbhiv_num_hi", "e_pop_num")), aggregate(n.t['c_newinc'], by=list(year=n.t$year), FUN=sum, na.rm=TRUE))
 
 #   ehba$c_newinc_mil <- ehba$c_newinc / 1e6
@@ -563,21 +563,21 @@ if(flg_show_estimates){
     ggtitle(paste0('Global trends in absolute number of notified TB cases (black) and \nestimated TB incidence (green), 1990-', report_year-1, ". \nCase notifications include new and relapse cases (all forms)."))
 
   figsave(inc_notif_gloa, ehba, "f3_1a_inc_notif_glo", width=6, height=6)
-  
+
   # Rates
-  
+
   ehb <- merge(subset(eha, select=c("group_name", "year", "e_inc_100k", "e_inc_100k_lo", "e_inc_100k_hi", "e_inc_tbhiv_100k", "e_inc_tbhiv_100k_lo", "e_inc_tbhiv_100k_hi", "e_pop_num")), aggregate(n.t['c_newinc'], by=list(year=n.t$year), FUN=sum, na.rm=TRUE))
-  
+
   ehb$newrel_100k <- ehb$c_newinc / ehb$e_pop_num * 100000
-  
+
   inc_notif_glob <- ggplot(ehb, aes(year, e_inc_100k, ymin=0)) + geom_line(colour=I('#00FF33')) +
     geom_ribbon(aes(year, ymin=e_inc_100k_lo, ymax=e_inc_100k_hi), fill=I('#00FF33'), alpha=0.4) +
     geom_line(aes(year, newrel_100k)) + scale_x_continuous('') +
     ylab('Rate per 100 000 population per year')  + theme_glb.rpt() +
     ggtitle(paste0('Global trends in case notification (black) and estimated TB \nincidence (green) rates, 1990-', report_year-1, ". \nCase notifications include new and relapse cases (all forms)."))
-  
+
   figsave(inc_notif_glob, ehb, "f3_1b_inc_notif_glo", width=6, height=6)
-  
+
 
   # Regional rates of incidence, and notifications
   # 3_2_inc_notif_reg ----------------------------------------------------
@@ -676,12 +676,12 @@ rm(list=c("tsr", "tsr_table", "tsr_table_melted"))
 # - tbhiv outcomes (tbhiv_coh) in order to compare within reporting countries.
 
 # Subset the data
-hma <- o %>% filter(year==report_year-2, !is.na(newrel_coh), newrel_coh!=0, !is.na(tbhiv_coh), tbhiv_coh != 0) %>% select(country, year, newrel_coh, newrel_succ, newrel_fail, newrel_died, newrel_lost, c_newrel_neval, ret_nrel_coh, ret_nrel_succ, ret_nrel_fail, ret_nrel_died, ret_nrel_lost, c_ret_nrel_neval, tbhiv_coh, tbhiv_succ, tbhiv_fail, tbhiv_died, tbhiv_lost, c_tbhiv_neval) 
+hma <- o %>% filter(year==report_year-2, !is.na(newrel_coh), newrel_coh!=0, !is.na(tbhiv_coh), tbhiv_coh != 0) %>% select(country, year, newrel_coh, newrel_succ, newrel_fail, newrel_died, newrel_lost, c_newrel_neval, ret_nrel_coh, ret_nrel_succ, ret_nrel_fail, ret_nrel_died, ret_nrel_lost, c_ret_nrel_neval, tbhiv_coh, tbhiv_succ, tbhiv_fail, tbhiv_died, tbhiv_lost, c_tbhiv_neval)
 
 # Country adjustments
 # Remove a few who did not put any outcomes, but did list the cohort
 if(report_year==2015){
-  hma <- hma %>% filter(!country %in% c("Togo", "Angola")) 
+  hma <- hma %>% filter(!country %in% c("Togo", "Angola"))
     warning("Togo and Angola are removed from TB/HIV outcomes graph.")
 }
 
@@ -731,20 +731,20 @@ figsave(hiv_ts_d, hmg, "B3_6_hiv_ts_d")
 
 # B3_2_notif_ind ----------------------------------------------------
 
-inda <- n.t %>%
+india <- n.t %>%
   filter(year>=2000, iso3=="IND") %>%
   select(iso3, year, c_newinc) %>%
-  inner_join(subset(p, select=c(iso3, year, e_pop_num))) %>%
-  mutate(c_newinc_100k=c_newinc * 1e5 /e_pop_num )
+  mutate(c_newinc_mill=c_newinc /1000000 )  %>%
+  select(iso3, year, c_newinc_mill)
 
-B3_2_notif_ind <- ggplot(inda, aes(year, c_newinc_100k, ymin=0)) +
+B3_2_notif_ind <- ggplot(india, aes(year, c_newinc_mill, ymin=0)) +
   geom_line() +
   scale_x_continuous("") +
-  ylab("Cases per 100 000 population per year")  +
+  ylab("Cases per year (millions)")  +
   theme_glb.rpt() +
   ggtitle(paste0("Case notifications in India, 2000-", report_year-1))
 
-figsave(B3_2_notif_ind, inda, "B3_2_notif_ind", width=6, height=6)
+figsave(B3_2_notif_ind, india, "B3_2_notif_ind", width=6, height=6)
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
