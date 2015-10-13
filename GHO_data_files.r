@@ -154,6 +154,8 @@ frmt <- function(x, rates=FALSE, thou=FALSE, thouEst=FALSE) {
 sum_of_row <- function(x) {
   tosum <- as.matrix(x)
   summed <- rowMeans((tosum), na.rm=TRUE) * rowSums(!is.na((tosum)))
+  # Flush out any NaN's
+  summed <- ifelse(is.nan(summed), NA, summed)
   return(summed)
 }
 
