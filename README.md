@@ -79,6 +79,11 @@ figures_folder  <- "D:/Example/tables_figures/"
 annex4_folder    <- "D:/Example/Annex_4_data_tables/"
 
 
+# Folder for CSV files sent to the GHO
+
+gho_folder  <- "D:/Example/GHO"
+
+
 # Parent folder for CSV and PDF files:
 
 annexweb_folder    <- "D:/Example/annex_for_web/"
