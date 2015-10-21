@@ -366,7 +366,7 @@ rm(list=c("est_c_best",  "est_c_lo", "est_c_hi", "est", "est_mdr"))
 # Get data
 notif <- filter(n, year >= 1990) %>%
           select(iso3, year, g_whoregion, g_income,
-                 c_newinc, c_notified,
+                 c_newinc,
                  new_labconf, new_sp, new_clindx, new_sn, new_su, new_ep, new_oth,
                  ret_rel_labconf, ret_rel_clindx, ret_rel_ep, ret_rel,
                  ret_nrel, ret_taf, ret_tad, ret_oth, newret_oth)
@@ -433,7 +433,7 @@ rm(list=c("notif_agg_r",  "notif_agg_i", "notif_agg_g"))
 # because with na.rm=TRUE I get a 0 for the sum. However I think all aggregates should be > 0 therefore easiest
 # thing to do is to assume all zeros in the resulting aggregates should be NA
 
-notif_agg[3:15] <- sapply(notif_agg[3:15], function(x){ ifelse(x==0,NA,x)})
+notif_agg[3:14] <- sapply(notif_agg[3:14], function(x){ ifelse(x==0,NA,x)})
 
 # convert to GHO group codes
 notif_agg <- inner_join(notif_agg, gho_group_codes, by = "group_name") %>%
@@ -528,7 +528,7 @@ hiv_test <- tbhiv %>%
 hiv_test_agg_r <- hiv_test %>%
                   group_by(g_whoregion, year) %>%
                   summarise_each(funs(sum(., na.rm = TRUE)),
-                                 contains("_pct_")) %>%
+                                 contains("_pct_"), c_notified) %>%
                   ungroup() %>%
                   rename(group_name = g_whoregion )
 
@@ -536,7 +536,7 @@ hiv_test_agg_r <- hiv_test %>%
 hiv_test_agg_i <- hiv_test %>%
                   group_by(g_income, year) %>%
                   summarise_each(funs(sum(., na.rm = TRUE)),
-                                 contains("_pct_")) %>%
+                                 contains("_pct_"), c_notified) %>%
                   ungroup() %>%
                   rename(group_name = g_income )
 
@@ -544,7 +544,7 @@ hiv_test_agg_i <- hiv_test %>%
 hiv_test_agg_g <- hiv_test %>%
                   group_by(year) %>%
                   summarise_each(funs(sum(., na.rm = TRUE)),
-                                 contains("_pct_")) %>%
+                                 contains("_pct_"), c_notified) %>%
                   ungroup() %>%
                   mutate(group_name = "global" )
 
@@ -558,7 +558,7 @@ rm(list=c("hiv_test_agg_r",  "hiv_test_agg_i", "hiv_test_agg_g"))
 # because with na.rm=TRUE I get a 0 for the sum. However I think all aggregates should be > 0 therefore easiest
 # thing to do is to assume all zeros in the resulting aggregates should be NA
 
-hiv_test_agg[3:10] <- sapply(hiv_test_agg[3:10], function(x){ ifelse(x==0,NA,x)})
+hiv_test_agg[3:11] <- sapply(hiv_test_agg[3:11], function(x){ ifelse(x==0,NA,x)})
 
 # convert to GHO group codes
 hiv_test_agg <- inner_join(hiv_test_agg, gho_group_codes, by = "group_name") %>%
@@ -578,7 +578,7 @@ hiv_test_agg <- within(hiv_test_agg, {
 # Restrict to the variables needed
 hiv_test_agg <- hiv_test_agg  %>%
                 rename(time_period = year) %>%
-                select(time_period, location_code, hivtest_pct, hivtest_pos_pct, hiv_cpt_pct, hiv_art_pct)
+                select(time_period, location_code, c_notified, hivtest_pct, hivtest_pos_pct, hiv_cpt_pct, hiv_art_pct)
 
 
 
@@ -604,7 +604,7 @@ hiv_test <- hiv_test  %>%
             rename(location_code = iso3,
                    time_period = year) %>%
             #restrict to variables needed
-            select(time_period, location_code, hivtest_pct, hivtest_pos_pct, hiv_cpt_pct, hiv_art_pct)
+            select(time_period, location_code, c_notified, hivtest_pct, hivtest_pos_pct, hiv_cpt_pct, hiv_art_pct)
 
 # combine country and aggregates
 hiv_test <- rbind(hiv_test_agg, hiv_test)
@@ -612,7 +612,8 @@ rm(hiv_test_agg)
 
 # Change variable names to GHO versions
 hiv_test <- hiv_test  %>%
-            rename(TB_hivtest_pct = hivtest_pct,
+            rename(TB_c_notified = c_notified,
+                   TB_hivtest_pct = hivtest_pct,
                    TB_hivtest_pos_pct = hivtest_pos_pct,
                    TB_hiv_cpt_pct = hiv_cpt_pct,
                    TB_hiv_art_pct = hiv_art_pct)
