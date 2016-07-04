@@ -4,6 +4,13 @@
 # Hazim Timimi, October 2015 (dplyr'ed version of script written last year!)
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+#  !!!! Change in 2016 so only data for WHO-member states are included in the file sent to GHO   !!!!!!!
+
+
+
+
+
+
 
 # Clear the decks ----
 rm(list=ls())
