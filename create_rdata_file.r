@@ -23,29 +23,30 @@ source("load_data_from_database.r")
 
 setwd(rdata_folder)
 
-# Save the views
-save (n,
-      nk,
-      tbhiv,
-      e,
-      eraw,
-      f,
-      be,
-      p,
-      o,
-      s,
-      i,
-      a,
-      araw,
-      d,
-      dsvy,
-      dictionary,
-      datacodes,
-      emdr,
-      emdrn,
-      emdra,
+# Save the data frames
+save (aggregated_estimates_epi,
+      aggregated_estimates_epi_rawvalues,
+      aggregated_estimates_mdr_in_notified,
+      budget_expenditure,
+      data_codes,
+      data_collection,
+      data_dictionary,
+      dr_surveillance,
+      drs,
+      estimates_epi,
+      estimates_epi_rawvalues,
+      estimates_mdr,
+      estimates_mdr_in_notified,
+      estimates_population,
+      finance,
+      notification,
+      notification_exceptions,
+      outcomes,
+      prevalence_survey,
+      strategy,
+      TBHIV_for_aggregates,
       data.date,
-      file=paste("data_",Sys.Date(),".Rdata",sep=""))
+      file=paste0("data_",Sys.Date(),".Rdata"))
 
 # Clear the decks ----
 rm(list=ls())

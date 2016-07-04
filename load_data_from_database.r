@@ -1,27 +1,12 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Connect to the global TB database and copy views to a standard set
-# of data frames:
+# of data frames. Each data frame is named according to the underlying
+# SQL-Server view, but without the leading "view_TME_" or "view_TME_master_" bits, so
 #
-# n:     dataframe copy of view_TME_master_notification
-# nk:    dataframe copy of view_TME_master_notification_exceptions
-# tbhiv: dataframe copy of view_TME_master_TBHIV_for_aggregates
-# e:     dataframe copy of view_TME_estimates_epi
-# eraw:  dataframe copy of view_TME_estimates_epi_rawvalues
-# f:     dataframe copy of view_TME_master_finance
-# be:    dataframe copy of view_TME_master_budget_expenditure
-# p:     dataframe copy of view_TME_estimates_population
-# o:     dataframe copy of view_TME_master_outcomes
-# s:     dataframe copy of view_TME_master_strategy
-# i:     dataframe copy of view_TME_master_data_collection
-# a:     dataframe copy of view_TME_aggregated_estimates_epi
-# araw:  dataframe copy of view_TME_aggregated_estimates_epi_rawvalues
-# d:     dataframe copy of view_TME_master_dr_surveillance
-# dsvy:  dataframe copy of view_TME_master_drs
-# dictionary:  dataframe copy of view_TME_data_dictionary
-# datacodes:   dataframe copy of view_TME_data_codes
-# emdr:  dataframe copy of view_TME_estimates_mdr
-# emdrn: dataframe copy of view_TME_estimates_mdr_in_notified
-# emdra: dataframe copy of view_TME_aggregated_estimates_mdr_in_notified
+#
+# notification:       dataframe copy of view_TME_master_notification
+# estimates_epi:      dataframe copy of view_TME_estimates_epi
+# ... etc.
 #
 # data.date: When the source datasets were created
 #
@@ -49,51 +34,46 @@ require(RODBC)
 ch <- odbcDriverConnect(connection_string)
 
 # load views into dataframes
-n <- .fixnamibia(sqlFetch(ch, "view_TME_master_notification"))
-nk <- sqlFetch(ch, "view_TME_master_notification_exceptions")
+aggregated_estimates_epi   <- sqlFetch(ch, "view_TME_aggregated_estimates_epi")
+aggregated_estimates_epi_rawvalues   <- sqlFetch(ch, "view_TME_aggregated_estimates_epi_rawvalues")
+aggregated_estimates_mdr_in_notified <- sqlFetch(ch, "view_TME_aggregated_estimates_mdr_in_notified")
+budget_expenditure         <- .fixnamibia(sqlFetch(ch, "view_TME_master_budget_expenditure"))
+data_codes                 <- sqlFetch(ch, "view_TME_data_codes")
+data_collection            <- .fixnamibia(sqlFetch(ch, "view_TME_master_data_collection"))
+data_dictionary            <- sqlFetch(ch, "view_TME_data_dictionary")
+dr_surveillance            <- .fixnamibia(sqlFetch(ch, "view_TME_master_dr_surveillance"))
+drs                        <- .fixnamibia(sqlFetch(ch, "view_TME_master_drs"))
+estimates_epi              <- .fixnamibia(sqlFetch(ch, "view_TME_estimates_epi"))
+estimates_epi_rawvalues    <- .fixnamibia(sqlFetch(ch, "view_TME_estimates_epi_rawvalues"))
+estimates_mdr              <- .fixnamibia(sqlFetch(ch, "view_TME_estimates_mdr"))
+estimates_mdr_in_notified  <- .fixnamibia(sqlFetch(ch, "view_TME_estimates_mdr_in_notified"))
+estimates_population       <- .fixnamibia(sqlFetch(ch, "view_TME_estimates_population"))
+finance                    <- .fixnamibia(sqlFetch(ch, "view_TME_master_finance"))
+notification               <- .fixnamibia(sqlFetch(ch, "view_TME_master_notification"))
+notification_exceptions    <- sqlFetch(ch, "view_TME_master_notification_exceptions")
+outcomes                   <- .fixnamibia(sqlFetch(ch, "view_TME_master_outcomes"))
+prevalence_survey          <- sqlFetch(ch, "view_TME_prevalence_survey")
+strategy                   <- .fixnamibia(sqlFetch(ch, "view_TME_master_strategy"))
+TBHIV_for_aggregates       <- .fixnamibia(sqlFetch(ch, "view_TME_master_TBHIV_for_aggregates"))
 
-if (exists("notification_maxyear")) {
-  # get the TB/HIV figures appropriate for the data collection year
-  # (This is used by create_tables_annex_for_web because the tables could be updated at the same time as the following
-  # year's report is being compiled so it is important to keep unpublished 'final' TB/HIV data out)
-  tbhiv	<- .fixnamibia(sqlQuery(ch, paste0("SELECT * FROM TBHIV_for_aggregates_for_dcyear(", notification_maxyear + 1 , ")")))
-} else {
-  tbhiv <- .fixnamibia(sqlFetch(ch, "view_TME_master_TBHIV_for_aggregates"))
-}
-
-e <- .fixnamibia(sqlFetch(ch, "view_TME_estimates_epi"))
-eraw <- .fixnamibia(sqlFetch(ch, "view_TME_estimates_epi_rawvalues"))
-f <- .fixnamibia(sqlFetch(ch, "view_TME_master_finance"))
-be <- .fixnamibia(sqlFetch(ch, "view_TME_master_budget_expenditure"))
-p <- .fixnamibia(sqlFetch(ch, "view_TME_estimates_population"))
-o <- .fixnamibia(sqlFetch(ch, "view_TME_master_outcomes"))
-s <- .fixnamibia(sqlFetch(ch, "view_TME_master_strategy"))
-i <- .fixnamibia(sqlFetch(ch, "view_TME_master_data_collection"))
-a <- sqlFetch(ch, "view_TME_aggregated_estimates_epi")
-araw <- sqlFetch(ch, "view_TME_aggregated_estimates_epi_rawvalues")
-d <- .fixnamibia(sqlFetch(ch, "view_TME_master_dr_surveillance"))
-dsvy <- .fixnamibia(sqlFetch(ch, "view_TME_master_drs"))
-dictionary <- sqlFetch(ch, "view_TME_data_dictionary")
-datacodes <- sqlFetch(ch, "view_TME_data_codes")
-emdr <- .fixnamibia(sqlFetch(ch, "view_TME_estimates_mdr"))
-emdrn <- .fixnamibia(sqlFetch(ch, "view_TME_estimates_mdr_in_notified"))
-emdra <- sqlFetch(ch, "view_TME_aggregated_estimates_mdr_in_notified")
 close(ch)
 
-# format d to play nicer with the other data.frames
+# format dr_surveillance to play nicer with the other data.frames
 # - Removing records that aren't explicitly covering a whole country
-# - Adding in past years so the number of records is identical with view_TME_master_notification (with NAs filled in for missing data.)
-# - Adding in grouping variables and other meta (1:19 in n)
+# - Adding in past years so the number of records is identical with notification (with NAs filled in for missing data.)
+# - Adding in grouping variables and other metadata (1:6 in notification)
 
-d <- merge(n[n$year>=min(d$year), 1:19], d[d$all_areas_covered==1 |
-  is.na(d$all_areas_covered),], all.x=T)
+dr_surveillance <- merge(notification[notification$year>=min(dr_surveillance$year), 1:6],
+                         dr_surveillance[dr_surveillance$all_areas_covered==1 |
+                                           is.na(dr_surveillance$all_areas_covered),],
+                         all.x=TRUE)
 
 # Add an internal date'n'time stamp
 data.date <- Sys.time()
 
 
 # set e_pop_num to numeric to avoid integer overflow error
-e$e_pop_num <- as.numeric(e$e_pop_num)
+estimates_population$e_pop_num <- as.numeric(estimates_population$e_pop_num)
 
 
 # That's it folks ----
