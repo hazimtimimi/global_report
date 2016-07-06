@@ -36,27 +36,6 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # ******************************************************
-# Old figures
-
-# Find this code in past repository commits
-
-# Dropped in 2014
-# prev_glo
-# 7_xxxx_hivtest_num
-# cpt_graph
-# art_graph
-# 7_xxxx_tbscr_graph
-# hivdist_graph
-# hiv_txout _rep and _tsr
-# hiv_tsr_graph
-# txout_reg
-# inc_glo
-
-# Dropped in 2015 (done by others):
-# 2_6_fig_global
-# 5_9_txout_mdr
-
-# ******************************************************
 
 
 if(flg_show_estimates){
@@ -484,63 +463,161 @@ systems are represented by the 'x' symbol)."))
   # End of figures including estimates
 }
 
-# B2_4_2_psIDN ---------------------------------------------------------
-# Prevalence survey results from Indonesia
-
-psIDN.d <- readWorksheetFromFile(file.path(rdata_folder, "Extra data", "BS", "Data_b_2_4_2.xlsx"), sheet="Sheet1") %>% mutate(type=factor(c(rep("Smear-positive TB", 15), rep("Bacteriologically confirmed TB", 28-15)), levels=c("Smear-positive TB", "Bacteriologically confirmed TB"))) %>% slice(c(4:9, 11:13, 19:24, 26:28)) %>% separate(Col3, c("lo", "hi"), sep="-", remove=FALSE, convert = TRUE, extra = "drop") %>% mutate(groups=factor(Col1, levels=c("INDONESIA", "15-24", "25-34", "35-44", "45-54", "55-64", "65+", "Male", "Female"), labels=c("All", "15-24", "25-34", "35-44", "45-54", "55-64", "65+", "Male", "Female")), best=as.numeric(Col2), cat=ifelse(groups=="All", "a", ifelse(groups %in% c("Male", "Female"), "b", "c")))
-
-psIDN <- ggplot(psIDN.d, aes(groups, best, color=cat)) + geom_point() + geom_errorbar(aes(ymin=lo, ymax=hi), size=1, width=0.2) + theme_glb.rpt() + facet_wrap(~type) + labs(x="", y="Rate per 100 000 population") + theme(legend.position="none") + scale_color_manual(values=c("black", "red", "blue")) + scale_y_continuous(breaks=c(250,500,750,1000,1500,2000)) + ggtitle("Overall, and age and sex-specific TB prevalence rates as measured in the
-2013-2014 national TB prevalence survey in Indonesia, with 95% confidence intervals")
-
-  figsave(psIDN, psIDN.d, "B2_4_2_psIDN")
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Chapter 3 ------
-# TB Case notifications and treatment outcomes
+# Chapter 4 ------
+# Diagnosis and treatment of TB, HIV-associated TB and drug-resistant TB
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-# 3_4_agesex_reg -------------------------------------------------------------
 
-fa <- subset(n, year==report_year-1, c("country", "g_whoregion", "newrel_m014", "newrel_m1524", "newrel_m2534", "newrel_m3544", "newrel_m4554", "newrel_m5564", "newrel_m65", "newrel_f014", "newrel_f1524", "newrel_f2534", "newrel_f3544", "newrel_f4554", "newrel_f5564", "newrel_f65"))
+# Figure 4.1 New and relapse TB case notification rates by age group and sex,  all WHO regions and global, 2015
 
-fb <- subset(p, year==report_year-1, c("country", "e_pop_m014", "e_pop_m1524", "e_pop_m2534", "e_pop_m3544", "e_pop_m4554", "e_pop_m5564", "e_pop_m65", "e_pop_f014", "e_pop_f1524", "e_pop_f2534", "e_pop_f3544", "e_pop_f4554", "e_pop_f5564", "e_pop_f65"))
 
-fc <- merge(fa, fb)
+# Get data ----
+agesex_notifs <- filter(notification, year == (report_year - 1)) %>%
+                 select(iso2,
+                        g_whoregion,
+                        newrel_m014, newrel_m1524, newrel_m2534, newrel_m3544, newrel_m4554, newrel_m5564, newrel_m65,
+                        newrel_f014, newrel_f1524, newrel_f2534, newrel_f3544, newrel_f4554, newrel_f5564, newrel_f65)
 
-# Drop pop numbers from non reporters
-fc$check <- sum_of_row(fc[c("newrel_m1524", "newrel_m2534", "newrel_m3544", "newrel_m4554", "newrel_m5564", "newrel_m65", "newrel_f1524", "newrel_f2534", "newrel_f3544", "newrel_f4554", "newrel_f5564", "newrel_f65")] )
 
-fc1 <- fc[!is.na(fc$check), -ncol(fc)]
+agesex_pop    <- filter(estimates_population, year == (report_year - 1)) %>%
+                 select(iso2,
+                        e_pop_m014, e_pop_m1524, e_pop_m2534, e_pop_m3544, e_pop_m4554, e_pop_m5564, e_pop_m65,
+                        e_pop_f014, e_pop_f1524, e_pop_f2534, e_pop_f3544, e_pop_f4554, e_pop_f5564, e_pop_f65)
 
-fd <- aggregate(fc1[3:ncol(fc1)], by=list(Region=fc1$g_whoregion), FUN=sum, na.rm=TRUE)
+agesex        <- merge(agesex_notifs, agesex_pop)
 
-fe <- melt(fd, id=1)
+rm(list=c("agesex_notifs","agesex_pop"))
 
-fe$type <- str_extract(fe$variable, "newrel|e_pop")
-fe$sex <- str_extract(fe$variable, "m|f")
-fe$age <- str_extract(fe$variable, "014|1524|2534|3544|4554|5564|65")
 
-fg <- cast(fe, Region+age~type, fun.aggregate = sum) # This aggregates male and female
+# Drop numbers from countries who didn't report cases in the 10-year age intervals for ages 15 and above
 
-fg$newrel_100k <- fg$newrel / fg$e_pop * 1e5
+agesex$tot_notified <- sum_of_row(agesex[c("newrel_m1524", "newrel_m2534", "newrel_m3544", "newrel_m4554", "newrel_m5564", "newrel_m65",
+                                           "newrel_f1524", "newrel_f2534", "newrel_f3544", "newrel_f4554", "newrel_f5564", "newrel_f65")] )
 
-fg <- .shortnames(fg, col="Region")
-fg$age <- factor(fg$age, levels=c("014", "1524", "2534", "3544", "4554", "5564", "65"), labels=c("0\u201314", "15\u201324", "25\u201334", "35\u201344", "45\u201354", "55\u201364", "\u226565"))
 
-agesex_reg1 <- ggplot(fg, aes(age, newrel_100k, colour=Region, group=Region)) + geom_line(size=1) + scale_y_continuous(name = "Rate per 100 000 population per year") + scale_x_discrete("Age group (years)", labels=levels(fg$age)) + scale_color_brewer(name="", palette="Dark2") + ggtitle(paste0("Regional TB notification rates by age, ", report_year-1, "(a)")) + theme_glb.rpt()
+agesex_filtered_agg <- agesex %>%
+                    filter(!is.na(tot_notified)) %>%
+                    group_by(g_whoregion) %>%
+                    summarise_each(funs(sum(.,na.rm = TRUE)),
+                                   newrel_m014:tot_notified) %>%
+
+                    # Calculate rate per 100 000 population for each age/sex group
+                    mutate(m014 = newrel_m014 * 1e5 / e_pop_m014,
+                           m1524 = newrel_m1524 * 1e5 / e_pop_m1524,
+                           m2534 = newrel_m2534 * 1e5 / e_pop_m2534,
+                           m3544 = newrel_m3544 * 1e5 / e_pop_m3544,
+                           m4554 = newrel_m4554 * 1e5 / e_pop_m4554,
+                           m5564 = newrel_m5564 * 1e5 / e_pop_m5564,
+                           m65 = newrel_m65 * 1e5 / e_pop_m65,
+
+                           f014 = newrel_f014 * 1e5 / e_pop_f014,
+                           f1524 = newrel_f1524 * 1e5 / e_pop_f1524,
+                           f2534 = newrel_f2534 * 1e5 / e_pop_f2534,
+                           f3544 = newrel_f3544 * 1e5 / e_pop_f3544,
+                           f4554 = newrel_f4554 * 1e5 / e_pop_f4554,
+                           f5564 = newrel_f5564 * 1e5 / e_pop_f5564,
+                           f65 = newrel_f65 * 1e5 / e_pop_f65
+                           ) %>%
+
+                    # select only the rates
+                    select(g_whoregion,
+                           m014, m1524, m2534, m3544, m4554, m5564, m65,
+                           f014, f1524, f2534, f3544, f4554, f5564, f65) %>%
+
+                    # merge with regional names
+                    inner_join(who_region_names, by = "g_whoregion") %>%
+                    select(-g_whoregion)
+
+# Switch to long ('tidy') format to plot
+agesex_agg_long <- agesex_filtered_agg %>%
+                      gather("group", "rate", 1:14)
+
+
+# Extract sex and agegroup from the group field
+agesex_agg_long$sex <- str_extract(agesex_agg_long$group, "f|m")
+agesex_agg_long$sex <- factor(agesex_agg_long$sex,
+                                   levels=c("f", "m"),
+                                   labels=c("Female", "Male"))
+agesex_agg_long$agegroup <- str_extract(agesex_agg_long$group, "014|1524|2534|3544|4554|5564|65")
+agesex_agg_long$agegroup <- factor(agesex_agg_long$agegroup,
+                                   levels=c("014", "1524", "2534", "3544", "4554", "5564", "65"),
+                                   labels=c("0\u201314", "15\u201324", "25\u201334", "35\u201344", "45\u201354", "55\u201364", "\u226565"))
+
+agesex_agg_long <- agesex_agg_long %>% select(-group)
+
+
+# Now plot the aggregates
+
+# A. Plot as lines (similar to 2015 global report)
+agesex_plotA <- agesex_agg_long %>%
+                ggplot(aes(x=agegroup, y=rate, colour=sex, group=sex)) +
+                  geom_line(size=1) +
+                  scale_y_continuous(name = "TB case notification rate per 100 000 population per year") +
+                  scale_x_discrete("Age group (years)",
+                                   labels=levels(agesex_agg_long$agegroup)) +
+                  facet_wrap( ~ entity) +
+                  ggtitle(paste0("Figure 4.1 New and relapse TB case notification rates by age group and sex, all WHO regions, ",
+                               report_year-1,
+                               "(a)")) +
+                  theme_glb.rpt() +
+                  theme(legend.position="top",
+                        legend.title=element_blank())
+
+
+# B. Plot as pyramids
+# See first code example at https://github.com/JuanGaleano/Population-pyramids-ggplot2/blob/master/POPULATION%20PYRAMID%20GGPLOT2.R
+
+agesex_plotB <- agesex_agg_long %>%
+                # Multiply all the female rates by -1
+                mutate(rate = ifelse(sex=="Female", rate * -1, rate )) %>%
+                ggplot(aes(x=agegroup, y=rate, fill=sex)) +
+                geom_bar(stat="identity",
+                         size=.3,
+                         colour="black",
+                         position="identity") +
+                scale_y_continuous(name = "TB case notification rate per 100 000 population per year") +
+                scale_x_discrete("Age group (years)",
+                                 labels=levels(agesex_agg_long$agegroup)) +
+                coord_flip() +
+                facet_wrap( ~ entity) +
+                ggtitle(paste0("Figure 4.1 New and relapse TB case notification rates by age group and sex, all WHO regions, ",
+                               report_year-1,
+                               "(a)")) +
+                theme_glb.rpt() +
+                theme(legend.position="top",
+                      legend.title=element_blank())
+
 
 # Add footnote
-fgf1 <- rounder(sum(fg$newrel) / sum(n[n$year==report_year -1, "c_newinc"], na.rm=TRUE) * 100)
-fgf2 <- n[n$year==report_year -1 & n$g_hbc22=="high", "country"]
-fgf3 <- fgf2[!fgf2 %in% fc1$country]
-fgf4 <- .shortnames(data.frame(country=fgf3), col="country")
+agesex_pcnt <- rounder(sum(agesex$tot_notified, na.rm=TRUE)  * 100
+                       /
+                       sum(notification[notification$year==report_year -1, "c_newinc"], na.rm=TRUE))
 
-fgfoot <- paste0("(a) Countries not reporting cases in these categories are excluded. \nCases included make up ", fgf1, "% of reported cases and exclude the following high-burden countries: \n", lister.text(fgf4$country), ".")
+agesex_foot <- paste0("(a) Countries not reporting cases in these categories are excluded. Cases included make up ",
+                      agesex_pcnt,
+                      "% of reported cases.")
 
-agesex_reg <- arrangeGrob(agesex_reg1, sub = textGrob(fgfoot, x = 0, hjust = -0.1, vjust=0.1, gp = gpar(fontsize = 10)))
 
-# windows(11, 7); gad; dev.off()
-figsave(agesex_reg, fg, "f3_4_agesex_reg")
+
+
+agesex_plotA <- arrangeGrob(agesex_plotA, bottom = textGrob(agesex_foot, x = 0, hjust = -0.1, vjust=0.1, gp = gpar(fontsize = 10)))
+agesex_plotB <- arrangeGrob(agesex_plotB, bottom = textGrob(agesex_foot, x = 0, hjust = -0.1, vjust=0.1, gp = gpar(fontsize = 10)))
+
+
+# Save the plots
+figsave(agesex_plotA, agesex_agg_long, "f4_1_agesex_plotA")
+figsave(agesex_plotB, agesex_agg_long, "f4_1_agesex_plotB")
+
+# Clean up (remove any objects with their name beginning with 'agesex')
+rm(list=ls(pattern = "^agesex"))
+
+stop("
+
+     >>>>>>>>>>
+     Stopping here so can do the rest manually!
+     <<<<<<<<<<<<")
 
 
 if(flg_show_estimates){

@@ -73,6 +73,16 @@ if (use_live_db==TRUE){
   load(paste(rdata_folder, rdata_name, sep="/"))
 }
 
+# Generate lookup table for regional names to be used for publication ----
+g_whoregion <- c("AFR", "AMR", "EMR", "EUR", "SEA", "WPR")
+entity <- c("Africa", "Americas", "Eastern Mediterranean", "Europe", "South-East Asia", "Western Pacific")
+
+who_region_names <- data.frame(g_whoregion, entity)
+
+rm(g_whoregion)
+rm(entity)
+
+
 
 # Repeated footnotes -----
 bangladesh.est.foot <- "For Bangladesh, a joint reassessment of estimates of TB disease burden will be undertaken following completion of the national TB prevalence survey."
