@@ -10,7 +10,7 @@
 # tables I just save the final files in my folders and iterate with the creator to get them in a ready format.
 #
 # Tom Hiatt
-# 6 July 2012, revised July 2015
+# 6 July 2012, revised July 2016
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # Clear the decks ----
@@ -21,13 +21,13 @@ starting_time <- Sys.time()
 
 # Establish the report year ----
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-report_year <- 2015
+report_year <- 2016
 
 # Include estimates tables and figures? ----
 # Decide whether or not to produce the tables and figures relying upon burden estimates
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-flg_show_estimates <- TRUE
-flg_forecast_estimates_ready <- TRUE
+flg_show_estimates <- FALSE
+flg_forecast_estimates_ready <- FALSE
 
 # Kill any attempt at using factors, unless we explicitly want them!
 options(stringsAsFactors=FALSE)
@@ -44,28 +44,13 @@ options(stringsAsFactors=FALSE)
 # use_live_db:    Flag -- if TRUE then data loaded durectly from the global TB database
 #                 if FALSE then data loaded from the .RData file
 #
-# and, from the global TB database,
+# and, from the global TB database, each data frame is named according to the underlying
+# SQL-Server view, but without the leading "view_TME_" or "view_TME_master_" bits, so
 #
-# n:     dataframe copy of view_TME_master_notification
-# nk:    dataframe copy of view_TME_master_notification_exceptions
-# tbhiv: dataframe copy of view_TME_master_TBHIV_for_aggregates
-# e:     dataframe copy of view_TME_estimates_epi
-# eraw:  dataframe copy of view_TME_estimates_epi_rawvalues
-# f:     dataframe copy of view_TME_master_finance
-# be:    dataframe copy of view_TME_master_budget_expenditure
-# p:     dataframe copy of view_TME_estimates_population
-# o:     dataframe copy of view_TME_master_outcomes
-# s:     dataframe copy of view_TME_master_strategy
-# i:     dataframe copy of view_TME_master_data_collection
-# a:     dataframe copy of view_TME_aggregated_estimates_epi
-# araw:  dataframe copy of view_TME_aggregated_estimates_epi_rawvalues
-# d:     dataframe copy of view_TME_master_dr_surveillance
-# dsvy:  dataframe copy of view_TME_master_drs
-# dictionary:  dataframe copy of view_TME_data_dictionary
-# datacodes:   dataframe copy of view_TME_data_codes
-# emdr:  dataframe copy of view_TME_estimates_mdr
-# emdrn: dataframe copy of view_TME_estimates_mdr_in_notified
-# emdra: dataframe copy of view_TME_aggregated_estimates_mdr_in_notified
+#
+# notification:       dataframe copy of view_TME_master_notification
+# estimates_epi:      dataframe copy of view_TME_estimates_epi
+# ... etc.
 #
 # data.date: When the source datasets were created
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -166,64 +151,68 @@ inch.color <- "red"
 prev.color <- "blue"
 mort.color <- "violet"
 
-# Dummy data ----
-# Create dummy data for latest year until data are available
-# new dataframes have names with .t appended ...
+# # Dummy data ----
+# # Create dummy data for latest year until data are available
+# # new dataframes have names with _dummy appended ...
+#
+# for(df in c("estimates_epi",
+#             "estimates_epi_rawvalues",
+#             "aggregate_estimates_epi",
+#             "aggregate_estimates_epi_rawvalues",
+#             "notification",
+#             "dr_surveillance")){
+#   obj <- get(df)
+#   if(max(obj["year"]) < report_year-1) {
+#     warning(paste("Still need to get updated dataset for", df, "!!!"))
+#     copy <- obj[obj["year"]==report_year-2,]
+#     copy$year <- report_year-1
+#     comb <- rbind(obj, copy)
+#   }
+#   else(comb <- obj)
+#   assign(paste(df, "dummy", sep="_"), comb)
+# }
 
-for(df in c('e', 'eraw', 'a', 'araw', 'n', 'd')){
-  obj <- get(df)
-  if(max(obj["year"]) < report_year-1) {
-    warning(paste('Still need to get updated dataset for', df, '!!!'))
-    copy <- obj[obj['year']==report_year-1-1,]
-    copy$year <- report_year-1
-    comb <- rbind(obj, copy)
-    if(df=="n") comb[comb$iso3=="DZA" & comb$year==report_year-1, 'tot_newrel'] <- NA
-  }
-  else(comb <- obj)
-  assign(paste(df, "t", sep="."), comb)
-}
-
-# Real forecast data (Download from PG's GitHub and save to dropbox)
-if (max(araw.t$year) < report_year & flg_forecast_estimates_ready) {
-  # Load from dropbox
-  load(paste(rdata_folder, "Extra data/PG/global_ff.Rdata", sep="/"))
-  load(paste(rdata_folder, "Extra data/PG/regional_ff.Rdata", sep="/"))
-  
-  # Keep only forecast years and prev and mort; combine global and regional
-  glbl <- global.ff %>% data.frame() %>% filter(year==report_year) %>% select(year, e_pop_num=e.pop.num, e_prev_100k=prev, e_prev_100k_lo=prev.lo, e_prev_100k_hi=prev.hi, e_mort_exc_tbhiv_100k=mort.nh, e_mort_exc_tbhiv_100k_lo=mort.nh.lo, e_mort_exc_tbhiv_100k_hi=mort.nh.hi, forecast) %>% mutate(group_name="global", group_type="global")
-  reglo <- regional.ff %>% data.frame() %>% filter(year==report_year) %>% select(group_name=g.whoregion, year, e_pop_num=e.pop.num, e_prev_100k=prev, e_prev_100k_lo=prev.lo, e_prev_100k_hi=prev.hi, e_mort_exc_tbhiv_100k=mort.nh, e_mort_exc_tbhiv_100k_lo=mort.nh.lo, e_mort_exc_tbhiv_100k_hi=mort.nh.hi, forecast)%>% mutate(group_type="g_whoregion") %>% rbind(glbl)
-
-    araw.t <- merge(araw.t, reglo, all=TRUE) %>% mutate(forecast=ifelse(is.na(forecast), FALSE, forecast))
-}
-
-if (max(eraw.t$year) < report_year & flg_forecast_estimates_ready) {
-  # Load from dropbox
-  load(paste(rdata_folder, "Extra data/PG/hbc_ff.Rdata", sep="/"))
-  # Keep only forecast years and prev and mort
-  hbcff <- hbc.ff %>% data.frame() %>% filter(year==report_year) %>% select(iso3, year, e_pop_num=e.pop.num, e_prev_100k=prev, e_prev_100k_lo=prev.lo, e_prev_100k_hi=prev.hi, e_mort_exc_tbhiv_100k=mort.nh, e_mort_exc_tbhiv_100k_lo=mort.nh.lo, e_mort_exc_tbhiv_100k_hi=mort.nh.hi, forecast) 
-  
-  # Get est Rdata as well for vr.raw (necessary for HBC mortality plot)
-  # Load from dropbox
-  load(paste(rdata_folder, "Extra data/PG/est.Rdata", sep="/"))
-  # Keep only forecast years and prev and mort
-  hbcvr <- est %>% data.frame() %>% select(iso3, year, vr.raw) 
-  eraw.t <- merge(eraw.t, hbcff, all=TRUE) %>% mutate(forecast=ifelse(is.na(forecast), FALSE, forecast)) %>% merge(hbcvr, all=TRUE)
-}
-
-
-while(max(araw.t$year) < 2015) {
-  warning(paste('Still need to get updated forecast for araw!'))
-  copy <- araw.t[araw.t$year==max(araw.t$year),]
-  copy$year <- max(araw.t$year) + 1
-  araw.t <- rbind(araw.t, copy)
-}
-
-while(max(eraw.t$year) < 2015) {
-  warning(paste('Still need to get updated forecast for eraw!'))
-  copy <- eraw.t[eraw.t$year==max(eraw.t$year),]
-  copy$year <- max(eraw.t$year) + 1
-  eraw.t <- rbind(eraw.t, copy)
-}
+# # Real forecast data (Download from PG's GitHub and save to dropbox)
+# if (max(araw.t$year) < report_year & flg_forecast_estimates_ready) {
+#   # Load from dropbox
+#   load(paste(rdata_folder, "Extra data/PG/global_ff.Rdata", sep="/"))
+#   load(paste(rdata_folder, "Extra data/PG/regional_ff.Rdata", sep="/"))
+#
+#   # Keep only forecast years and prev and mort; combine global and regional
+#   glbl <- global.ff %>% data.frame() %>% filter(year==report_year) %>% select(year, e_pop_num=e.pop.num, e_prev_100k=prev, e_prev_100k_lo=prev.lo, e_prev_100k_hi=prev.hi, e_mort_exc_tbhiv_100k=mort.nh, e_mort_exc_tbhiv_100k_lo=mort.nh.lo, e_mort_exc_tbhiv_100k_hi=mort.nh.hi, forecast) %>% mutate(group_name="global", group_type="global")
+#   reglo <- regional.ff %>% data.frame() %>% filter(year==report_year) %>% select(group_name=g.whoregion, year, e_pop_num=e.pop.num, e_prev_100k=prev, e_prev_100k_lo=prev.lo, e_prev_100k_hi=prev.hi, e_mort_exc_tbhiv_100k=mort.nh, e_mort_exc_tbhiv_100k_lo=mort.nh.lo, e_mort_exc_tbhiv_100k_hi=mort.nh.hi, forecast)%>% mutate(group_type="g_whoregion") %>% rbind(glbl)
+#
+#     araw.t <- merge(araw.t, reglo, all=TRUE) %>% mutate(forecast=ifelse(is.na(forecast), FALSE, forecast))
+# }
+#
+# if (max(eraw.t$year) < report_year & flg_forecast_estimates_ready) {
+#   # Load from dropbox
+#   load(paste(rdata_folder, "Extra data/PG/hbc_ff.Rdata", sep="/"))
+#   # Keep only forecast years and prev and mort
+#   hbcff <- hbc.ff %>% data.frame() %>% filter(year==report_year) %>% select(iso3, year, e_pop_num=e.pop.num, e_prev_100k=prev, e_prev_100k_lo=prev.lo, e_prev_100k_hi=prev.hi, e_mort_exc_tbhiv_100k=mort.nh, e_mort_exc_tbhiv_100k_lo=mort.nh.lo, e_mort_exc_tbhiv_100k_hi=mort.nh.hi, forecast)
+#
+#   # Get est Rdata as well for vr.raw (necessary for HBC mortality plot)
+#   # Load from dropbox
+#   load(paste(rdata_folder, "Extra data/PG/est.Rdata", sep="/"))
+#   # Keep only forecast years and prev and mort
+#   hbcvr <- est %>% data.frame() %>% select(iso3, year, vr.raw)
+#   eraw.t <- merge(eraw.t, hbcff, all=TRUE) %>% mutate(forecast=ifelse(is.na(forecast), FALSE, forecast)) %>% merge(hbcvr, all=TRUE)
+# }
+#
+#
+# while(max(araw.t$year) < 2015) {
+#   warning(paste('Still need to get updated forecast for araw!'))
+#   copy <- araw.t[araw.t$year==max(araw.t$year),]
+#   copy$year <- max(araw.t$year) + 1
+#   araw.t <- rbind(araw.t, copy)
+# }
+#
+# while(max(eraw.t$year) < 2015) {
+#   warning(paste('Still need to get updated forecast for eraw!'))
+#   copy <- eraw.t[eraw.t$year==max(eraw.t$year),]
+#   copy$year <- max(eraw.t$year) + 1
+#   eraw.t <- rbind(eraw.t, copy)
+# }
 
 
 # Report rounding convention ----
@@ -522,6 +511,14 @@ lister.text <- function(x){
   if(length(x)==1) return(x)
   if(length(x)>1) paste(paste(x[1:(length(x)-1)], collapse=", "), x[length(x)], sep=" and ")
 }
+
+
+stop("
+
+     >>>>>>>>>>
+     Stopping here so can do the rest manually!
+     <<<<<<<<<<<<")
+
 
 
 # Run everything -----

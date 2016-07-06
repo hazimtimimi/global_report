@@ -30,7 +30,7 @@ if (exists("connection_string")==FALSE) {
 }
 
 # connect to the database
-require(RODBC)
+library(RODBC)
 ch <- odbcDriverConnect(connection_string)
 
 # load views into dataframes

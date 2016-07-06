@@ -2,7 +2,7 @@
 # Tables in the global report
 # Called from create_tables_figures.r which sets up the necessary dependencies
 # Tom Hiatt
-# 6 July 2012, updated July 2015
+# 6 July 2012, updated July 2016
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -24,16 +24,6 @@
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-# ******************************************************
-# Old tables
-
-# Find this code in past repository commits
-
-# Dropped in 2014
-# 'top 10 countries' table
-# tsr_sp
-
-# ******************************************************
 
 
 if(flg_show_estimates){
@@ -51,7 +41,7 @@ if(flg_show_estimates){
   names(tag1)[1] <- 'group_name'
 
   tag <- rbind(tag1, subset(araw.t, group_type %in% c('global', 'g_whoregion', "g_hbc22") & year==report_year-1, c('group_name', tagvars)))
-  
+
   # A fudge to make a row for HBC aggregates. I wonder if I can get Hazim to store these in the database...
     load(paste(rdata_folder, "Extra data/PG/hbc.Rdata", sep="/"))
 fujj <- hbc %>% data.frame() %>% filter(year==report_year-1) %>% select(e_pop_num=e.pop.num, e_mort_exc_tbhiv_num=mort.nh.num, e_mort_exc_tbhiv_num_lo=mort.nh.lo.num, e_mort_exc_tbhiv_num_hi=mort.nh.hi.num, e_mort_tbhiv_num=mort.h.num, e_mort_tbhiv_num_lo=mort.h.lo.num, e_mort_tbhiv_num_hi=mort.h.hi.num, e_prev_num=prev.num, e_prev_num_lo=prev.lo.num, e_prev_num_hi=prev.hi.num, e_inc_num=inc.num, e_inc_num_lo=inc.lo.num, e_inc_num_hi=inc.hi.num, e_inc_tbhiv_num=inc.h.num, e_inc_tbhiv_num_lo=inc.h.lo.num, e_inc_tbhiv_num_hi=inc.h.hi.num) %>% mutate(group_name="High-burden countries")
@@ -79,7 +69,7 @@ fujj <- hbc %>% data.frame() %>% filter(year==report_year-1) %>% select(e_pop_nu
   # Fix names
   tak <- .shortnames(tah, col = "rowname", ord = "hbc")
 
-  # Add footnotes for some countries 
+  # Add footnotes for some countries
   tak[tak$rowname=="Bangladesh", "rowname"] <- "Bangladesh(c)"
 
 
@@ -117,13 +107,13 @@ fujj <- hbc %>% data.frame() %>% filter(year==report_year-1) %>% select(e_pop_nu
 
   names(tai)[1] <- 'group_name'
   tah <- rbind(tai, subset(araw.t, group_type %in% c('global', 'g_whoregion', "g_hbc22") & year==report_year-1, c('group_name', tahvars)))
-  
+
   # A fudge to make a row for HBC aggregates. I wonder if I can get Hazim to store these in the database...
   load(paste(rdata_folder, "Extra data/PG/hbc.Rdata", sep="/"))
   fuj <- hbc %>% data.frame() %>% filter(year==report_year-1) %>% transmute(e_pop_num=e.pop.num, e_mort_exc_tbhiv_100k=mort.nh, e_mort_exc_tbhiv_100k_lo=mort.nh.lo, e_mort_exc_tbhiv_100k_hi=mort.nh.hi, e_mort_tbhiv_100k=mort.h, e_mort_tbhiv_100k_lo=mort.h.lo, e_mort_tbhiv_100k_hi=mort.h.hi, e_prev_100k=prev, e_prev_100k_lo=prev.lo, e_prev_100k_hi=prev.hi, e_inc_100k=inc, e_inc_100k_lo=inc.lo, e_inc_100k_hi=inc.hi, e_tbhiv_prct=tbhiv*100, e_tbhiv_prct_lo=tbhiv.lo*100, e_tbhiv_prct_hi=tbhiv.hi*100) %>% mutate(group_name="High-burden countries")
-  
+
   tah <- rbind(tah, fuj)
-  
+
 
   names(tah)[1] <- 'rowname'
 
@@ -201,69 +191,140 @@ fujj <- hbc %>% data.frame() %>% filter(year==report_year-1) %>% select(e_pop_nu
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Chapter 3 ------
-# TB Case notifications and treatment outcomes
+# Chapter 4 ------
+# Diagnosis and treatment of TB, HIV-associated TB and drug-resistant TB
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
-# 3_1_notif -------------------------------------------------------------------
-notif <- subset(n,
-                year==report_year-1,
-                select=c("country", "year", "g_whoregion", "g_hbc22", "c_notified", "c_newinc", "new_labconf", "new_clindx", "new_ep", "ret_rel_labconf", "ret_rel_clindx", "ret_rel_ep", "ret_nrel"))
+# Table 4.1 Notifications of TB, TB/HIV and RR-TB cases for WHO regions and globally, 2015 ----
 
-# create a combined table with HBCs and aggregates
-notif_table <- hbc_and_aggs_table(df = notif, country.col = 1, year.col = 2, data.cols = 5:ncol(notif) )
+notifs_summary <- filter(notification, year == (report_year - 1)) %>%
+                  select(g_whoregion,
+                         c_notified,
+                         c_newinc,
+                         new_labconf, new_clindx, new_ep,
+                         ret_rel_labconf, ret_rel_clindx, ret_rel_ep,
+                         ret_nrel,
+                         newrel_hivpos,
+                         conf_rrmdr,
+                         all_conf_xdr) %>%
 
-# calculate % of cases that are pulmonary
-notif_table$nrpulm_lab_pct <- (sum_of_row(notif_table[c("new_labconf", "ret_rel_labconf")] ) * 100 /
-                               sum_of_row(notif_table[c("new_labconf", "new_clindx", "ret_rel_labconf", "ret_rel_clindx")]))
+                  # calculate regional aggregates
+                  group_by(g_whoregion) %>%
+                  summarise_each(funs(sum(., na.rm = TRUE)),
+                                 c_notified,
+                                 c_newinc,
+                                 new_labconf, new_clindx, new_ep,
+                                 ret_rel_labconf, ret_rel_clindx, ret_rel_ep,
+                                 ret_nrel,
+                                 newrel_hivpos,
+                                 conf_rrmdr,
+                                 all_conf_xdr)
 
-# format data
-for(var in 3:ncol(notif_table)){
-  notif_table[var] <- rounder(notif_table[[var]])
+# merge with regional names
+notifs_summary <- filter(aggregated_estimates_epi, year == 2010 & group_type == "g_whoregion") %>%
+                 select(group_name, group_description) %>%
+                 rename(g_whoregion = group_name) %>%
+                 inner_join(notifs_summary, by = "g_whoregion") %>%
+                 rename(entity = group_description) %>%
+                 arrange(g_whoregion) %>%
+                 select(-g_whoregion) %>%
+                 # Remove the unnecessary "WHO " text at the beginning of region names
+                 mutate(entity = sub("^WHO |^WHO/PAHO ", "", entity))
+
+
+# Add global summary to the regional summary
+notifs_global <- notifs_summary %>%
+                 summarise_each(funs(sum(., na.rm = TRUE)),
+                                -entity) %>%
+                  mutate(entity="Global")
+
+
+notifs_summary <- rbind(notifs_summary, notifs_global)
+
+
+# Calculate total pulmonary and %ages that are bac confirmed and that are extrapulmonary
+notifs_summary <- notifs_summary %>%
+                  mutate( newrel_pulm = new_labconf + new_clindx + ret_rel_labconf + ret_rel_clindx,
+                          newrel_pulm_conf_pct = (new_labconf + ret_rel_labconf) * 100
+                                                  /
+                                                  (new_labconf + new_clindx + ret_rel_labconf + ret_rel_clindx),
+                          newrel_ep_pct = (new_ep + ret_rel_ep) * 100
+                                          /
+                                          (c_newinc)
+                        ) %>%
+                  # Restrict to variables needed in the final output
+                  select(entity,
+                         c_notified,
+                         c_newinc,
+                         newrel_pulm,
+                         newrel_pulm_conf_pct,
+                         newrel_ep_pct,
+                         ret_nrel,
+                         newrel_hivpos,
+                         conf_rrmdr,
+                         all_conf_xdr)
+
+
+# format the data
+for(var in 2:ncol(notifs_summary)){
+  notifs_summary[var] <- rounder(notifs_summary[[var]])
 }
-notif_table$nrpulm_lab_pct <- ifelse(is.na(notif_table$nrpulm_lab_pct), "\u2013", notif_table$nrpulm_lab_pct)
 
 
 # Create HTM output
-notif_table_html <- xtable(notif_table[c("area", "c_notified", "c_newinc", "ret_nrel", "new_labconf", "new_clindx", "new_ep", "ret_rel_labconf", "ret_rel_clindx", "ret_rel_ep", "nrpulm_lab_pct")])
+notif_table_html <- xtable(notifs_summary)
 
 digits(notif_table_html) <- 0
 
-cat(paste("<h3>Table 3.1 Case notifications,", report_year-1, "</h3>"), file=paste0("Tables/t3_1_notif", Sys.Date(), ".htm"))
+notif_table_filename <- paste0("Tables/t4_1_notifs_summary", Sys.Date(), ".htm")
 
-print(notif_table_html, type="html", file=paste0("Tables/t3_1_notif", Sys.Date(), ".htm"),
-      include.rownames=F, include.colnames=F,
-      html.table.attributes="border='0' rules='rows' width='1100' cellpadding='5'", append=T,
-      add.to.row=list(pos=list(0, nrow(notif_table_html)),
-            command=c("<tr>
-                          <td colspan='4' style='border-right: solid 2px black;'></td>
-                          <th colspan='3' style='border-right: solid 2px black;'>NEW OR PREVIOUS TREATMENT HISTORY UNKNOWN</th>
-                          <th colspan='3' style='border-right: solid 2px black;'>RELAPSE</th>
-                          <td></td>
-                      </tr>
-                      <tr>
-                          <td></td>
-                          <td>TOTAL NOTIFIED</td>
-                          <td>NEW AND RELAPSE<sup>a</sup></td>
-                          <td style='border-right: solid 2px black;'>RETREATMENT EXCLUDING RELAPSE</td>
-                          <td>PULMONARY BACTERIO-<br />LOGICALLY CONFIRMED</td>
-                          <td>PULMONARY CLINICALLY DIAGNOSED</td>
-                          <td style='border-right: solid 2px black;'>EXTRA-<br />PULMONARY</td>
-                          <td>PULMONARY BACTERIO-<br />LOGICALLY CONFIRMED</td>
-                          <td>PULMONARY CLINICALLY DIAGNOSED</td>
-                          <td style='border-right: solid 2px black;'>EXTRA-<br />PULMONARY</td>
-                          <td>PERCENTAGE OF PULMONARY CASES BACTERIO-<br />LOGICALLY CONFIRMED</td>
-                      </tr>",
-                      "<tr><td colspan='11'>Blank cells indicate data not reported.<br />
+cat(paste("<h3>Table 4.1 Notifications of TB, TB/HIV and RR-TB cases for WHO regions and globally, ",
+          report_year-1,
+          "</h3>"),
+    file=notif_table_filename)
 
-                            <sup>a</sup> New and relapse includes cases for which the treatment history is unknown.</td>
-                      </tr>")))
+print(notif_table_html,
+      type="html",
+      file=notif_table_filename,
+      include.rownames=FALSE,
+      include.colnames=FALSE,
+      html.table.attributes="border='0' rules='rows' width='1100' cellpadding='5'",
+      append=TRUE,
+      add.to.row=list(pos=list(0,
+                               nrow(notif_table_html)),
+                      command=c("<tr>
+                                  <td></td>
+                                  <td>Total notified</td>
+                                  <td>New and relapse<sup>a</sup></td>
+                                  <td>Pulmonary new and relapse</td>
+                                  <td>Pulmonary new and relapse<br />bacteriologically confirmed (%)</td>
+                                  <td>Extrapulmonary<br />new and relapse (%)</td>
+                                  <td>Previously treated,<br />excluding relapse</td>
+                                  <td>HIV-positive<br /> new and relapse</td>
+                                  <td>RR-TB cases</td>
+                                  <td>XDR-TB cases</td>
+                              </tr>",
+                              "<tr><td colspan='10'>Blank cells indicate data not reported.<br />
 
-tablecopy("t3_1_notif")
+                                    <sup>a</sup> New and relapse includes cases for which the treatment history is unknown.</td>
+                              </tr>")
+                      )
+      )
+
+tablecopy("t4_1_notifs_summary")
+
+
+stop("
+
+     >>>>>>>>>>
+     Stopping here for testing!
+     <<<<<<<<<<<<")
 
 # and now clear up the mess left behind
-rm(list=c("notif", "notif_table", "notif_table_html"))
+rm(list=c("notifs_global", "notifs_summary", "notif_table_html", "notif_table_filename"))
+
+
 
 
 # 3_2_agesex -------------------------------------------------------------------
@@ -463,11 +524,11 @@ tsr_pivoted <- tsr_pivoted[standard_table_order, ]
 
 # Add an asterisk to the name if country included relapse cases in the outcomes cohort DELETE THIS COMEMENT
 # Count the number of countries without relapse included for the footnote.
-include.relapse <- o %>% filter(year >= 2012, g_hbc22=="high", rel_with_new_flg==1) %>% group_by(year) %>% summarize(total=n()) 
+include.relapse <- o %>% filter(year >= 2012, g_hbc22=="high", rel_with_new_flg==1) %>% group_by(year) %>% summarize(total=n())
 
 # # coh_pivoted$area <- ifelse(coh_pivoted$area %in% asterisks$country,
 #                            paste0(coh_pivoted$area, "*"), coh_pivoted$area)
-# 
+#
 # tsr_pivoted$area <- ifelse(tsr_pivoted$area %in% asterisks$country,
 #                             paste0(tsr_pivoted$area, "*"), tsr_pivoted$area)
 
@@ -631,7 +692,7 @@ tff <- xtable(tfd[c("country", "g_hbc22", "g_hbmdr27", "xpert_in_guide_TBHIV", "
 # Footnote 1
 tffoot <- ifelse(any(is.na(tff[4:ncol(tff)])), "Blank cells indicate data not reported.<br>", "")
 
-print(tff, type="html", file=paste0("Tables/t5_2_lab_policy", Sys.Date(), ".htm"),include.rownames=F, include.colnames=F, #sanitize.text.function=identity, 
+print(tff, type="html", file=paste0("Tables/t5_2_lab_policy", Sys.Date(), ".htm"),include.rownames=F, include.colnames=F, #sanitize.text.function=identity,
       html.table.attributes="border=0 rules=rows width=1100 cellpadding=0", add.to.row=list(pos=list(0, nrow(tff)), command=c(paste0("<h2 align=\"left\">Table 5.2 Incorporation of WHO policy guidance on Xpert MTB/RIF, ", report_year-1, "<sup>a</sup></h2>
 
 <TR> <TH colspan=3></TH> <TH colspan=4 style='border: solid 1px black;'>XPERT MTB/RIF AS THE INITIAL DIAGNOSTIC TEST</TH> </TR>
@@ -718,7 +779,7 @@ tec[1] <- 'Global'
 tec <- aggregate(tec[2:ncol(tec)], by=list(country=tec$country), FUN=sum, na.rm=T)
 
 # create country/agg flag ("type")
-# Format table columns 
+# Format table columns
 
 ted <- within(ted, {
   hivtest1000 <- rounder(hivtest_pct_numerator / 1000, decimals=TRUE)
@@ -726,10 +787,10 @@ ted <- within(ted, {
   hivtest_pos_prct <- rounder(hivtest_pos_pct_numerator / hivtest_pos_pct_denominator * 100, decimals=TRUE)
   hiv_cpt_prct <- rounder(hiv_cpt_pct_numerator / hiv_cpt_pct_denominator * 100, decimals=TRUE)
   hiv_art_prct <- rounder(hiv_art_pct_numerator / hiv_art_pct_denominator * 100, decimals=TRUE)
-  hiv_tb_prct <- rounder(hiv_tbdetect / hiv_reg_new2 * 100, decimals=TRUE) 
-  
+  hiv_tb_prct <- rounder(hiv_tbdetect / hiv_reg_new2 * 100, decimals=TRUE)
+
   hiv_art_est_prct <- rounder(hiv_art_pct_numerator / e_inc_tbhiv_num * 100, decimals=TRUE)
-  
+
   hiv_ipt2 <- rounder(hiv_ipt / 1000, decimals=TRUE)
 })
 
