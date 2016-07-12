@@ -285,8 +285,8 @@ kids_data$kids_pct <- ifelse(is.na(kids_data$c_new_014) | NZ(kids_data$c_agesex_
 
 
 kids_data$cat <- cut(kids_data$kids_pct,
-                     c(0, 5.0, 10.0, 15.0, Inf),
-                     c('0-4.9%', '5-9.9%', '10-14.9%', '>=15%'),
+                     c(0, 2.0, 5.0, 10.0, Inf),
+                     c('0-1.9%', '2-4.9%', '5-9.9%', '>=10%'),
                right=FALSE)
 
 # produce the map
