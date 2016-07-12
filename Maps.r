@@ -363,13 +363,99 @@ figsave(rdx_map,
                          cat),
         "4_3_pct_rapid_dx_map")
 
-# Clean up (remove any objects with their name beginning with 'agesex')
+# Clean up (remove any objects with their name beginning with 'rdx')
 rm(list=ls(pattern = "^rdx"))
 
 
+# 4_5_pct_bacconf_map -------------------------------------------------
+
+
+bacconf_data <- notification %>%
+                filter(year == report_year - 1) %>%
+                select(iso3,
+                      new_labconf, new_clindx,
+                      ret_rel_labconf, ret_rel_clindx)
+
+
+#calculate % of pulmonary cases with bac confirmation
+bacconf_data$pulm_tot <- bacconf_data %>%
+                          select(new_labconf:ret_rel_clindx)%>%
+                          sum_of_row()
+
+bacconf_data$pulm_bacconf_tot <- bacconf_data %>%
+                                  select(new_labconf, ret_rel_labconf) %>%
+                                  sum_of_row()
+
+
+bacconf_data$bacconf_pct <- ifelse(is.na(bacconf_data$pulm_bacconf_tot) | NZ(bacconf_data$pulm_tot) == 0, NA,
+                                  bacconf_data$pulm_bacconf_tot * 100 / bacconf_data$pulm_tot)
 
 
 
+
+bacconf_data$cat <- cut(bacconf_data$bacconf_pct,
+                     c(0, 25, 50, 75, Inf),
+                     c('0-24.9%', '25-49.9%', '50-74.9%', '>=75%'),
+               right=FALSE)
+
+# produce the map
+bacconf_map <- WHOmap.print(bacconf_data,
+                        paste("Percentage of new and relapse pulmonary TB cases with bacteriological confirmation,", report_year-1),
+                           "Percentage",
+                           copyright=FALSE,
+                           colors=c('yellow', 'lightgreen', 'green', 'darkgreen'),
+                           show=FALSE)
+
+figsave(bacconf_map,
+        select(bacconf_data,
+                         iso3,
+                         bacconf_pct,
+                         cat),
+        "4_5_pct_bacconf_map")
+
+# Clean up (remove any objects with their name beginning with 'bacconf')
+rm(list=ls(pattern = "^bacconf"))
+
+
+
+# 4_7_pct_HIV_status_map -------------------------------------------------
+
+
+hivstatus_data <- notification %>%
+                  filter(year == report_year - 1) %>%
+                  select(iso3,
+                         c_newinc,
+                         newrel_hivtest) %>%
+
+                  # Calculate % with known HIV status
+                  mutate(hivstatus_pct = ifelse(is.na(newrel_hivtest) | NZ(c_newinc) == 0, NA,
+                                                newrel_hivtest * 100 / c_newinc))
+
+
+
+hivstatus_data$cat <- cut(hivstatus_data$hivstatus_pct,
+                     c(0, 25, 50, 75, Inf),
+                     c('0-24.9%', '25-49.9%', '50-74.9%', '>=75%'),
+               right=FALSE)
+
+
+# produce the map
+hivstatus_map <- WHOmap.print(hivstatus_data,
+                        paste("Percentage of new and relapse new and relapse TB cases with documented HIV status,", report_year-1),
+                           "Percentage",
+                           copyright=FALSE,
+                           colors=c('yellow', 'lightgreen', 'green', 'darkgreen'),
+                           show=FALSE)
+
+figsave(hivstatus_map,
+        select(hivstatus_data,
+                         iso3,
+                         hivstatus_pct,
+                         cat),
+        "4_7_pct_HIV_status_map")
+
+# Clean up (remove any objects with their name beginning with 'hivstatus')
+rm(list=ls(pattern = "^hivstatus"))
 
 
 
