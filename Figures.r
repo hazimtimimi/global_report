@@ -865,6 +865,17 @@ inctbhiv_plot <- inctbhiv_data %>%
                   theme_glb.rpt()
 
 
+# Add footnote
+inctbhiv_foot <- "(a) The calculation is for all cases in years prior to 2015."
+
+inctbhiv_plot <- arrangeGrob(inctbhiv_plot, bottom = textGrob(inctbhiv_foot, x = 0, hjust = -0.1, vjust=0.1, gp = gpar(fontsize = 10)))
+
+
+# Save the plot
+figsave(inctbhiv_plot, inctbhiv_data, "f4_10ii_inctbhiv_plot")
+
+# Clean up (remove any objects with their name containing 'tbhiv')
+rm(list=ls(pattern = "tbhiv"))
 
 
 stop("
