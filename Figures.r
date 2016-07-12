@@ -613,6 +613,79 @@ figsave(agesex_plotB, agesex_agg_long, "f4_1_agesex_plotB")
 # Clean up (remove any objects with their name beginning with 'agesex')
 rm(list=ls(pattern = "^agesex"))
 
+
+
+# Figure 4.4 Percentage of new and relapse pulmonary TB cases with bacteriological confirmation,  all WHO regions and global, 2009-2015
+
+bacconf_data <- notification %>%
+                filter(year >= 2009) %>%
+                select(iso3,
+                       year,
+                       g_whoregion,
+                       # old variables pre-2013
+                       new_sp,
+                       new_sn,
+                       new_su,
+                       # new variables
+                       new_labconf, new_clindx,
+                       ret_rel_labconf, ret_rel_clindx) %>%
+                group_by(year, g_whoregion) %>%
+                summarise_each(funs(sum(.,na.rm = TRUE)),
+                               new_sp:ret_rel_clindx) %>%
+
+                #calculate % of pulmonary cases with bac confirmation
+                # a bit tricky for years before 2013, so do for new only by smear only
+                mutate(bacconf_pct = ifelse(year < 2013 & g_whoregion != 'EUR',
+                                            # old variables, do for new only outside EUR
+                                            new_sp * 100 / (new_sp + new_sn + new_su),
+                                            # new variables
+                                           (new_labconf + ret_rel_labconf) * 100
+                                            /
+                                            (new_labconf + new_clindx + ret_rel_labconf + ret_rel_clindx))) %>%
+
+                # Adjust calculation for EUR pre-2013
+                 mutate(bacconf_pct = ifelse(year < 2013 & g_whoregion == 'EUR',
+                                            # old variables, but using new_labconf
+                                            new_labconf * 100 / (new_sp + new_sn + new_su),
+                                            # otherwise keep calculation from previous step
+                                            bacconf_pct)) %>%
+
+
+                # get rid of raw totals
+                select(g_whoregion,
+                       year,
+                       bacconf_pct) %>%
+
+                # merge with regional names
+                inner_join(who_region_names, by = "g_whoregion") %>%
+                select(-g_whoregion)
+
+
+# A. Plot as lines
+bacconf_plot <- bacconf_data %>%
+                ggplot(aes(x=year, y=bacconf_pct)) +
+                  geom_line(size=1) +
+                  scale_y_continuous(name = "% bacteriologically confirmed") +
+                  expand_limits(y=c(0,100)) +
+                  xlab("Year") +
+                  #scale_x_discrete(name = "Year") +
+                  facet_wrap( ~ entity) +
+                  ggtitle(paste0("Figure 4.4 Percentage of new and relapse pulmonary TB cases with bacteriological confirmation, all WHO regions(a), 2009 - ",
+                               report_year-1)) +
+                  theme_glb.rpt() +
+                  theme(legend.position="top",
+                        legend.title=element_blank())
+
+# Add footnote
+bacconf_foot <- "(a) The calculation is for new pulmonary cases only in years prior to 2013 based on smear results only, except for the European Region where data on confirmation by culture was also available."
+
+bacconf_plot <- arrangeGrob(bacconf_plot, bottom = textGrob(bacconf_foot, x = 0, hjust = -0.1, vjust=0.1, gp = gpar(fontsize = 10)))
+
+
+# Save the plot
+figsave(bacconf_plot, bacconf_data, "f4_4_bacconf_plot")
+
+
 stop("
 
      >>>>>>>>>>
