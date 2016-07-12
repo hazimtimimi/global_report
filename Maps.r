@@ -22,17 +22,6 @@
 # 6.5  Percentage of HIV-positive TB patients enrolled on ART: 6_5_HIVart_map
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-# ******************************************************
-# Old maps
-
-# Find this code in past repository commits
-
-# Dropped in 2014
-# HIVipt_map
-# Xpert_map
-
-# ******************************************************
-
 # This script does not use Philippe's who mapping package (see https://github.com/glaziou/whomap)
 # instead it uses Tom's original version which allows us to add 'Not applicable' and 'No estimate'
 # options to the legends, etc.
@@ -43,6 +32,10 @@ source(file.path(scripts_folder, "WHO_map_functions.r"))
 # Contrasting colors for easier re-layout
 con.col <- c('red', 'blue', 'orange', 'green', 'purple', 'violet', 'sienna', 'dark orange')
 
+ignore_for_now <- TRUE
+
+
+if(ignore_for_now) {
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Chapter 2 ------
 # The burden of disease caused by TB
@@ -58,7 +51,7 @@ mcnt <- table(mna$g_hbc22)
 mna$cat <- factor(mna$g_hbc22, levels=c("high", "low"), labels=c(paste0("High-burden countries (", mcnt[1], ")"), paste0("Other countries (", mcnt[2], ")")))
 
 # map
-sb_map <- WHOmap.print(mna, 
+sb_map <- WHOmap.print(mna,
 "Figure 2.1 Countries that had completed a systematic assessment
 of TB surveillance using the WHO TB surveillance checklist of
 standards and benchmarks by August 2015", "",
@@ -129,8 +122,8 @@ mfa$cat <- factor(mfa$var, levels=c('Case notifications','Prevalence survey', 'H
 
 
 # map
-inc_src_map <- WHOmap.print(mfa, 
-"Figure 2.2. Main method used to estimate TB incidence(a)", 
+inc_src_map <- WHOmap.print(mfa,
+"Figure 2.2. Main method used to estimate TB incidence(a)",
                              "Main method",
 colors=con.col[1:4],
                              copyright=FALSE,
@@ -145,14 +138,14 @@ figsave(inc_src_map, mfa, "f2_2_inc_src_map")
 mea <- subset(e.t, year==report_year-1, select=c("g_whoregion", 'country', 'iso3', 'source_mort'))
 
 # Mortality with VR data
-meb <- subset(mea, source_mort != "indirect", select=c("g_whoregion", "country", "iso3", "source_mort")) 
+meb <- subset(mea, source_mort != "indirect", select=c("g_whoregion", "country", "iso3", "source_mort"))
 meb$cat <- factor("Estimated with \nVR data")
 
 # map
 mort_src_map <- WHOmap.print(meb,
                              paste0(
-"Figure 2.15 Countries (in ", mort.color, ") for which TB 
-mortality is estimated using measurements from vital registration 
+"Figure 2.15 Countries (in ", mort.color, ") for which TB
+mortality is estimated using measurements from vital registration
 systems (n=", nrow(meb)-2, ") and/or mortality surveys (n=2)"),
                              "[remove legend]",
                              low.color=mort.color,
@@ -175,7 +168,7 @@ mia$cat <- cut(mia$e_mort_exc_tbhiv_100k,
 # map
 mort_map <- WHOmap.print(mia,
                          paste(
-"Figure 2.17 Estimated TB mortality rates excluding TB deaths among 
+"Figure 2.17 Estimated TB mortality rates excluding TB deaths among
 HIV-positive \npeople,", report_year-1),
                          "Estimated TB \ndeaths per \n100 000 population",
                          na.label="No estimate",
@@ -224,19 +217,19 @@ figsave(mhc, mhb, "f2_xx_err_map")
 # find countries which did not report yet this year.
 mjc <- n.t %>% filter(year==report_year-1, is.na(c_newinc)) %>% select(iso3)
 
-mja <- n.t %>% 
+mja <- n.t %>%
   # Get the last two years
-  filter(year %in% c(report_year-2,report_year-1), !is.na(c_newinc)) %>% 
+  filter(year %in% c(report_year-2,report_year-1), !is.na(c_newinc)) %>%
   # Get all the age-sex variables
-  select(country, year, iso3, rel_in_agesex_flg, matches("newrel_[m|f|sex]")) %>% 
+  select(country, year, iso3, rel_in_agesex_flg, matches("newrel_[m|f|sex]")) %>%
   # Remove the variables with age unknown
-  select(-newrel_mu, -newrel_fu, -newrel_sexunkageunk) %>% 
+  select(-newrel_mu, -newrel_fu, -newrel_sexunkageunk) %>%
   # Rename values of last two years (for reshaping later)
-  mutate(year=ifelse(year==report_year-1, "latest", "previous")) %>% 
-  # Replace with previous year if latest year missing. 
-  gather(vari, value, rel_in_agesex_flg:newrel_sexunk15plus) %>% spread(year, value) %>% 
+  mutate(year=ifelse(year==report_year-1, "latest", "previous")) %>%
+  # Replace with previous year if latest year missing.
+  gather(vari, value, rel_in_agesex_flg:newrel_sexunk15plus) %>% spread(year, value) %>%
   # but only if in the list of non-reporters (to exclude countries which reported the previous year, but not the latest)
-  mutate(value=ifelse(is.na(latest) & iso3 %in% mjc$iso3, previous, latest)) %>% select(-latest, -previous) %>% 
+  mutate(value=ifelse(is.na(latest) & iso3 %in% mjc$iso3, previous, latest)) %>% select(-latest, -previous) %>%
   # Get back to normal with only one row per country
   spread(variable, value)
 
@@ -260,21 +253,144 @@ age_map <- WHOmap.print(mjb,
 
 figsave(age_map, mjb, "f2_21_age_map")
 
+}
+
+
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Chapter 3 ------
-# TB case notifications and treatment outcomes
+# Chapter 4 ------
+# Diagnosis and treatment of TB, HIV-associated TB and drug-resistant TB
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+
+# 4_2_pct_children_map -------------------------------------------------
+
+kids_data <- notification %>%
+             filter(year == report_year - 1) %>%
+             select(iso3,
+                    c_new_014,
+                    newrel_m15plus,
+                    newrel_mu,
+                    newrel_f15plus,
+                    newrel_sexunk15plus,
+                    newrel_fu)
+
+#calculate % of kids in agesex data
+kids_data$c_agesex_tot <- kids_data %>%
+                          select(c_new_014:newrel_fu) %>%
+                          sum_of_row()
+
+kids_data$kids_pct <- ifelse(is.na(kids_data$c_new_014) | NZ(kids_data$c_agesex_tot) == 0, NA,
+                              kids_data$c_new_014 * 100 / kids_data$c_agesex_tot)
+
+
+
+kids_data$cat <- cut(kids_data$kids_pct,
+                     c(0, 5.0, 10.0, 15.0, Inf),
+                     c('0-4.9%', '5-9.9%', '10-14.9%', '>=15%'),
+               right=FALSE)
+
+# produce the map
+kids_map <- WHOmap.print(kids_data,
+                        paste("Percentage notified new and relapse TB cases in children,", report_year-1),
+                           "Percentage",
+                           copyright=FALSE,
+                           colors=c('yellow', 'lightgreen', 'green', 'darkgreen'),
+                           show=FALSE)
+
+figsave(kids_map,
+        select(kids_data,
+                         iso3,
+                         kids_pct,
+                         cat),
+        "4_2_pct_children_map")
+
+# Clean up (remove any objects with their name beginning with 'agesex')
+rm(list=ls(pattern = "^kids"))
+
+
+
+# 4_3_pct_rapid_dx_map -------------------------------------------------
+
+rdx_data <- notification %>%
+             filter(year == report_year - 1) %>%
+             select(iso3,
+                    rdx_data_available,
+                    newinc_rdx,
+                    c_newinc,
+                    rdxsurvey_newinc_rdx,
+                    rdxsurvey_newinc)
+
+#calculate % of cases which had rapid diagnostics
+rdx_data <- within(rdx_data, {
+
+  rdx_pct <- NA
+
+  # Check if said from routine surveillance
+  rdx_pct <- ifelse(NZ(rdx_data_available)==60,
+                    ifelse((is.na(newinc_rdx) | NZ(c_newinc) == 0),
+                             NA,
+                             newinc_rdx * 100 / c_newinc),
+                    rdx_pct)
+
+
+  # Check if said from survey of patient records
+  rdx_pct <- ifelse(NZ(rdx_data_available)==61,
+                    ifelse((is.na(rdxsurvey_newinc_rdx) | NZ(rdxsurvey_newinc) == 0),
+                             NA,
+                             rdxsurvey_newinc_rdx * 100 / rdxsurvey_newinc),
+                    rdx_pct)
+
+})
+
+
+rdx_data$cat <- cut(rdx_data$rdx_pct,
+                     c(0, 25, 50, 75, Inf),
+                     c('0-24.9%', '25-49.9%', '50-74.9%', '>=75%'),
+               right=FALSE)
+
+# produce the map
+rdx_map <- WHOmap.print(rdx_data,
+                        paste("Percentage of notified new and relapse TB cases tested\nusing WHO-approved rapid diagnostics at the time of diagnosis,", report_year-1),
+                           "Percentage",
+                           copyright=FALSE,
+                           colors=c('yellow', 'lightgreen', 'green', 'darkgreen'),
+                           show=FALSE)
+
+figsave(rdx_map,
+        select(rdx_data,
+                         iso3,
+                         rdx_pct,
+                         cat),
+        "4_3_pct_rapid_dx_map")
+
+# Clean up (remove any objects with their name beginning with 'agesex')
+rm(list=ls(pattern = "^rdx"))
+
+
+
+
+
+
+
+
+stop("
+
+     >>>>>>>>>>
+     Stopping here so can do the rest manually!
+     <<<<<<<<<<<<")
+
+
 
 
 # 3_7_ltbipolicy_map -------------------------------------------------
 # Countries with national LTBI policy
 
-ltbipolicy <- readWorksheetFromFile(file.path(rdata_folder, "Extra data", "YH", "LTBI_page_maps2207..xlsx"), sheet="policy") %>%  
-  mutate(cat=factor(Availability.on.national.policy.on.LTBI, 
+ltbipolicy <- readWorksheetFromFile(file.path(rdata_folder, "Extra data", "YH", "LTBI_page_maps2207..xlsx"), sheet="policy") %>%
+  mutate(cat=factor(Availability.on.national.policy.on.LTBI,
                     levels=c("National policy on LTBI available ",
                              "No national policy on LTBI",
                              "No data",
-                             "Estimated TB incidence>=100 or low/lower middle income"), 
+                             "Estimated TB incidence>=100 or low/lower middle income"),
                     labels=c("National policy on LTBI \navailable",
                              "No national policy on LTBI",
                              "No data",
@@ -283,7 +399,7 @@ ltbipolicy <- readWorksheetFromFile(file.path(rdata_folder, "Extra data", "YH", 
 
 
 ltbipolicy_map <- WHOmap.print(ltbipolicy,
-                               paste("Reported national policies on LTBI,", report_year-1), 
+                               paste("Reported national policies on LTBI,", report_year-1),
                                "",
                                colors=con.col[1:4],
                                copyright=FALSE,
@@ -295,15 +411,15 @@ figsave(ltbipolicy_map, ltbipolicy, "f3_7_ltbipolicy_map")
 # 3_6_ltbisurvey_map -------------------------------------------------
 # Countries included in the LTBI survey
 
-ltbisurvey <- readWorksheetFromFile(file.path(rdata_folder, "Extra data", "YH", "LTBI_page_maps.xlsx"), sheet=1) %>%  
-  mutate(cat=factor(primary_target, 
-                    levels=c("Estimated TB incidence<100 and high/upper-middle income"), 
+ltbisurvey <- readWorksheetFromFile(file.path(rdata_folder, "Extra data", "YH", "LTBI_page_maps.xlsx"), sheet=1) %>%
+  mutate(cat=factor(primary_target,
+                    levels=c("Estimated TB incidence<100 and high/upper-middle income"),
                     labels=c("Estimated TB incidence<100 or \nhigh/upper-middle income"))
   )
 
 
 ltbisurvey_map <- WHOmap.print(ltbisurvey,
-                                 "The 113 upper-middle-income and high-income countries with \nan estimated incidence rate of less than \n100 per 100 000 population that are the \nprimary audience for 2015 WHO guidelines on the \nmanagement of latent TB infection", 
+                                 "The 113 upper-middle-income and high-income countries with \nan estimated incidence rate of less than \n100 per 100 000 population that are the \nprimary audience for 2015 WHO guidelines on the \nmanagement of latent TB infection",
                                  "[Remove legend]",
                                  copyright=FALSE,
                                  show=FALSE)
@@ -376,18 +492,18 @@ figsave(dst_map, dst_dta, "f5_1_dst_map")
 # 5_2_xpertcart_map -------------------------------------------------
 # numbers of xpert cartridges procured
 
-xpert_cart <- readWorksheetFromFile(file.path(rdata_folder, "Extra data", "WvG", "Figure 5.2 accompanying data.xlsx"), sheet=1) %>%  
+xpert_cart <- readWorksheetFromFile(file.path(rdata_folder, "Extra data", "WvG", "Figure 5.2 accompanying data.xlsx"), sheet=1) %>%
   mutate(cart1=ifelse(is.na(cartridges), 0, cartridges), # NA same as 0
-         cart2=as.numeric(cart1)/1000, 
-         cat=cut(cart2, 
-                   c(0, 5, 50, 100, 300, Inf), 
-                   c("0-4", "5-49", "50-99", "100-299", ">=300"), 
-                   right=FALSE) 
+         cart2=as.numeric(cart1)/1000,
+         cat=cut(cart2,
+                   c(0, 5, 50, 100, 300, Inf),
+                   c("0-4", "5-49", "50-99", "100-299", ">=300"),
+                   right=FALSE)
          )
 
 
 xpert_cart_map <- WHOmap.print(xpert_cart,
-                        paste("Xpert MTB/RIF cartridge procurements in", report_year-1, "at concessional prices"), 
+                        paste("Xpert MTB/RIF cartridge procurements in", report_year-1, "at concessional prices"),
                         "Xpert MTB/RIF \ncartridges \nprocured in 2014 \n(thousands)",
                         colors=con.col[1:5],
                         copyright=FALSE,

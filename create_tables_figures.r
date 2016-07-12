@@ -523,6 +523,13 @@ lister.text <- function(x){
 }
 
 
+# Convert a null (NA) to zero
+NZ <- function(x){
+  x <- ifelse(is.na(x),0,x)
+  return(x)
+}
+
+
 stop("
 
      >>>>>>>>>>
