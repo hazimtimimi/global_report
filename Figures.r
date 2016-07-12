@@ -677,13 +677,64 @@ bacconf_plot <- bacconf_data %>%
                         legend.title=element_blank())
 
 # Add footnote
-bacconf_foot <- "(a) The calculation is for new pulmonary cases only in years prior to 2013 based on smear results only, except for the European Region where data on confirmation by culture was also available."
+bacconf_foot <- "(a) The calculation is for new pulmonary cases only in years prior to 2013 based on smear results only, except for the European Region\nwhere data on confirmation by culture was also available."
 
 bacconf_plot <- arrangeGrob(bacconf_plot, bottom = textGrob(bacconf_foot, x = 0, hjust = -0.1, vjust=0.1, gp = gpar(fontsize = 10)))
 
 
 # Save the plot
 figsave(bacconf_plot, bacconf_data, "f4_4_bacconf_plot")
+
+
+# Figure 4.6 Percentage of new and relapse TB cases with documented HIV status,  all WHO regions and global, 2009-2015
+
+
+hivstatus_data <- TBHIV_for_aggregates %>%
+                  filter(year >= 2009) %>%
+                  select(g_whoregion,
+                         year,
+                         hivtest_pct_numerator,
+                         hivtest_pct_denominator) %>%
+                  group_by(year, g_whoregion) %>%
+                  summarise_each(funs(sum(.,na.rm = TRUE)),
+                                 hivtest_pct_numerator:hivtest_pct_denominator) %>%
+
+                  # Calculate % with known HIV status
+                  mutate(hivstatus_pct = hivtest_pct_numerator * 100
+                                        / hivtest_pct_denominator) %>%
+
+                  # get rid of raw totals
+                  select(g_whoregion,
+                         year,
+                         hivstatus_pct) %>%
+
+                  # merge with regional names
+                  inner_join(who_region_names, by = "g_whoregion") %>%
+                  select(-g_whoregion)
+
+# A. Plot as lines
+hivstatus_plot <- hivstatus_data %>%
+                  ggplot(aes(x=year, y=hivstatus_pct)) +
+                  geom_line(size=1) +
+                  scale_y_continuous(name = "% with documented status") +
+                  expand_limits(y=c(0,100)) +
+                  xlab("Year") +
+                  #scale_x_discrete(name = "Year") +
+                  facet_wrap( ~ entity) +
+                  ggtitle(paste0("Figure 4.6 Percentage of new and relapse TB cases with documented HIV status, all WHO regions (a), 2009 - ",
+                               report_year-1)) +
+                  theme_glb.rpt() +
+                  theme(legend.position="top",
+                        legend.title=element_blank())
+
+# Add footnote
+hivstatus_foot <- "(a) The calculation is for all cases in years prior to 2015."
+
+hivstatus_plot <- arrangeGrob(hivstatus_plot, bottom = textGrob(hivstatus_foot, x = 0, hjust = -0.1, vjust=0.1, gp = gpar(fontsize = 10)))
+
+
+# Save the plot
+figsave(hivstatus_plot, bacconf_data, "f4_6_hivstatus_plot")
 
 
 stop("
