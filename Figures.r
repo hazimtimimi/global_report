@@ -470,7 +470,9 @@ systems are represented by the 'x' symbol)."))
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Figure 4.1 New and relapse TB case notification rates by age group and sex,  all WHO regions and global, 2015
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
 # Get data ----
@@ -615,7 +617,9 @@ rm(list=ls(pattern = "^agesex"))
 
 
 
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Figure 4.4 Percentage of new and relapse pulmonary TB cases with bacteriological confirmation,  all WHO regions and global, 2009-2015
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 bacconf_data <- notification %>%
                 filter(year >= 2009) %>%
@@ -661,7 +665,7 @@ bacconf_data <- notification %>%
                 select(-g_whoregion)
 
 
-# A. Plot as lines
+# Plot as lines
 bacconf_plot <- bacconf_data %>%
                 ggplot(aes(x=year, y=bacconf_pct)) +
                   geom_line(size=1) +
@@ -685,8 +689,12 @@ bacconf_plot <- arrangeGrob(bacconf_plot, bottom = textGrob(bacconf_foot, x = 0,
 # Save the plot
 figsave(bacconf_plot, bacconf_data, "f4_4_bacconf_plot")
 
+# Clean up (remove any objects with their name beginning with 'bacconf')
+rm(list=ls(pattern = "^bacconf"))
 
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Figure 4.6 Percentage of new and relapse TB cases with documented HIV status,  all WHO regions and global, 2009-2015
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
 hivstatus_data <- TBHIV_for_aggregates %>%
@@ -712,7 +720,7 @@ hivstatus_data <- TBHIV_for_aggregates %>%
                   inner_join(who_region_names, by = "g_whoregion") %>%
                   select(-g_whoregion)
 
-# A. Plot as lines
+# Plot as lines
 hivstatus_plot <- hivstatus_data %>%
                   ggplot(aes(x=year, y=hivstatus_pct)) +
                   geom_line(size=1) +
@@ -735,6 +743,60 @@ hivstatus_plot <- arrangeGrob(hivstatus_plot, bottom = textGrob(hivstatus_foot, 
 
 # Save the plot
 figsave(hivstatus_plot, bacconf_data, "f4_6_hivstatus_plot")
+
+# Clean up (remove any objects with their name beginning with 'hivstatus')
+rm(list=ls(pattern = "^hivstatus"))
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Figure 4.10i Number of new and relapse cases notified and estimated number of TB incidence cases, global, 2009-2015
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+newinc_data <- notification %>%
+                filter(year >= 2009) %>%
+                select(year, c_newinc) %>%
+                group_by(year) %>%
+                summarise_each(funs(sum(.,na.rm = TRUE)),
+                               c_newinc) %>%
+                mutate(c_newinc = c_newinc / 1e6)
+
+inc_data <- aggregated_estimates_epi_rawvalues %>%
+            filter( year >= 2009 & group_name == 'global') %>%
+            select(year,
+                   e_inc_num,
+                   e_inc_num_lo,
+                   e_inc_num_hi) %>%
+            mutate(e_inc_num = e_inc_num / 1e6,
+                   e_inc_num_lo = e_inc_num_lo / 1e6,
+                   e_inc_num_hi = e_inc_num_hi / 1e6) %>%
+            # Use a right-join so can see the data for the final year even in the absence of estimates
+            right_join(newinc_data)
+
+# Plot as lines
+inc_plot <- inc_data %>%
+            ggplot(aes(x=year, y=c_newinc, ymin=0)) +
+            geom_line(size=1) +
+            geom_ribbon(aes(x=year, ymin=e_inc_num_lo, ymax=e_inc_num_hi),
+                        fill=I('#00FF33'),
+                        alpha=0.4) +
+            geom_line(aes(year, e_inc_num),
+                      size=1,
+                      colour=I('#00FF33')) +
+
+            scale_y_continuous(name = "New and relapse cases per year (millions)") +
+            xlab("Year") +
+
+            ggtitle(paste0("Figure 4.10i Number of new and relapse cases notified and estimated number of TB incidence cases, global, 2009 - ",
+                         report_year-1)) +
+            theme_glb.rpt() +
+            theme(legend.position="top",
+                  legend.title=element_blank())
+
+# Save the plot
+figsave(inc_plot, inc_data, "f4_10i_inc_plot")
+
+# Clean up (remove any objects with their name containing 'inc_')
+rm(list=ls(pattern = "inc_"))
 
 
 stop("
