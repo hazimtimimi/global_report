@@ -459,6 +459,117 @@ rm(list=ls(pattern = "^hivstatus"))
 
 
 
+# 4_14_pct_BMU_community_map -------------------------------------------------
+# 4.14 Percentage of BMUs with community referral or treatment adherence support, 2015
+
+comm_data <- strategy %>%
+              filter(year==report_year - 1) %>%
+              select(iso3,
+                     bmu,
+                     bmu_community_impl,
+                     community_data_available) %>%
+              mutate(comm_pct = ifelse(is.na(bmu_community_impl) | NZ(bmu) == 0,
+                                       NA,
+                                       bmu_community_impl * 100 / bmu))
+
+
+comm_data$cat <- cut(comm_data$comm_pct,
+                     c(0, 25, 50, 75, Inf),
+                     c('0-24.9%', '25-49.9%', '50-74.9%', '>=75%'),
+               right=FALSE)
+
+
+# produce the map
+comm_map <- WHOmap.print(comm_data,
+                        paste("Figure 4.14 Percentage of BMUs with community referral or treatment adherence support,", report_year-1),
+                           "Percentage",
+                           copyright=FALSE,
+                           colors=c('yellow', 'lightgreen', 'green', 'darkgreen'),
+                           show=FALSE)
+
+figsave(comm_map,
+        select(comm_data,
+               iso3,
+               comm_pct,
+               cat),
+        "4_14_pct_BMU_community_map")
+
+
+
+# Try an alternative map focussing on data availability
+comm_availability <- data_collection %>%
+                      filter(datcol_year == report_year) %>%
+                      select(iso3,
+                             dc_engage_community_display) %>%
+                      inner_join(comm_data) %>%
+                      select(-cat)
+
+
+comm_availability <- within(comm_availability, {
+
+  cat <- ifelse(dc_engage_community_display == 0,
+                "notapp",
+                NA)
+
+
+  cat <- ifelse(is.na(cat) & (NZ(bmu) == 0 | NZ(bmu_community_impl) == 0),
+                "nodata",
+                cat)
+
+  cat <- ifelse(is.na(cat) & community_data_available == 1,
+                "detaileddata",
+                cat)
+
+  cat <- ifelse(is.na(cat) &
+                  bmu > 0 &
+                  bmu_community_impl > 0 &
+                  bmu_community_impl * 100.00 / bmu > 50,
+                "nodetails_51_100",
+                cat)
+
+  cat <- ifelse(is.na(cat) &
+                  bmu > 0 &
+                  bmu_community_impl > 0 &
+                  bmu_community_impl * 100.00 / bmu <= 50,
+                "nodetails_0_50",
+                cat)
+
+  cat <- factor(cat,
+                levels = c("detaileddata",
+                           "nodetails_51_100",
+                           "nodetails_0_50",
+                           "nodata",
+                           "notapp"),
+                labels = c("Detailed data available",
+                           "No details, activity in\n51 - 100% of BMUs",
+                           "No details, activity in\n0 - 50% of BMUs",
+                           "No data",
+                           "Not applicable"))
+
+})
+
+
+# produce the map
+comm_map <- WHOmap.print(comm_availability,
+                        paste("Figure 4.14 (alternative) Availability of data on BMUs with community referral or treatment adherence support,", report_year-1),
+                           "Availability",
+                           copyright=FALSE,
+                           colors=c('green', 'blue', 'yellow', 'white', 'grey75'),
+                           show=FALSE)
+
+
+figsave(comm_map,
+        select(comm_data,
+               iso3,
+               comm_pct,
+               cat),
+        "4_14alt_pct_BMU_community_map")
+
+
+# Clean up (remove any objects with their name beginning with 'comm')
+rm(list=ls(pattern = "^comm"))
+
+
 stop("
 
      >>>>>>>>>>
