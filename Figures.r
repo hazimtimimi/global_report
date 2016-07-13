@@ -942,6 +942,98 @@ rm(list=ls(pattern = "inc_"))
 
 
 
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Figure 4.12 Number of new and relapse cases known to be HIV-positive,
+# number started on ART and estimated number of incident HIV-positive TB cases,
+# 30 high TB/HIV burden countries, 2009-2015
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+tbhiv_30hbc <- report_country %>%
+                filter(g_hb_tbhiv==1) %>%
+                select(iso2)
+
+tbhiv_data <- TBHIV_for_aggregates %>%
+              filter(year >= 2009) %>%
+              inner_join(tbhiv_30hbc) %>%
+              select(year,
+                     iso2,
+                     country,
+                     hivtest_pos,
+                     hiv_art,
+                     # new variables from 2015 onwards
+                     newrel_hivpos,
+                     newrel_art) %>%
+
+              # Convert to thousands and merge pre/post 2014 variables
+              mutate(hivtest_pos = ifelse(year < 2015,
+                                          hivtest_pos / 1e3,
+                                          newrel_hivpos / 1e3),
+                     hiv_art = ifelse(year < 2015,
+                                      hiv_art / 1e3,
+                                      newrel_art / 1e3)) %>%
+              select(year,
+                     iso2,
+                     country,
+                     hivtest_pos,
+                     hiv_art)
+
+inctbhiv_data <- estimates_epi_rawvalues %>%
+                  filter(year >= 2009) %>%
+                  inner_join(tbhiv_30hbc) %>%
+                  select(year,
+                         iso2,
+                         e_inc_tbhiv_num,
+                         e_inc_tbhiv_num_lo,
+                         e_inc_tbhiv_num_hi) %>%
+                  mutate(e_inc_tbhiv_num = e_inc_tbhiv_num / 1e3,
+                         e_inc_tbhiv_num_lo = e_inc_tbhiv_num_lo / 1e3,
+                         e_inc_tbhiv_num_hi = e_inc_tbhiv_num_hi / 1e3) %>%
+
+                  # Use a right-join so can see the data for the final year even in the absence of estimates
+                  right_join(tbhiv_data)
+
+
+# Plot as lines
+inctbhiv_plot <- inctbhiv_data %>%
+                  ggplot(aes(x=year, y=hivtest_pos, ymin=0)) +
+                  geom_line(size=1) +
+                  geom_ribbon(aes(x=year, ymin=e_inc_tbhiv_num_lo, ymax=e_inc_tbhiv_num_hi),
+                              fill="red",
+                              alpha=0.4) +
+                  geom_line(aes(year, e_inc_tbhiv_num),
+                            size=1,
+                            colour="red") +
+
+                  geom_line(aes(year, hiv_art),
+                            size=1,
+                            colour="blue") +
+
+                  scale_y_continuous(name = "New and relapse cases per year (thousands)") +
+                  xlab("Year") +
+
+                  facet_wrap( ~ country,
+                              scales = "free_y") +
+
+                  ggtitle(paste0("Figure 4.12 Number of new and relapse cases(a) known to be HIV-positive,\nnumber started on ART and estimated number of incident HIV-positive TB cases,\n30 high TB/HIV burden countries, 2009 - ",
+                               report_year-1)) +
+                  theme_glb.rpt()
+
+
+# Add footnote
+inctbhiv_foot <- "(a) The calculation is for all cases in years prior to 2015."
+
+inctbhiv_plot <- arrangeGrob(inctbhiv_plot, bottom = textGrob(inctbhiv_foot, x = 0, hjust = -0.1, vjust=0.1, gp = gpar(fontsize = 10)))
+
+
+# Save the plot
+figsave(inctbhiv_plot, inctbhiv_data, "f4_12_inctbhiv_plot_hbc")
+
+# Clean up (remove any objects with their name containing 'tbhiv')
+rm(list=ls(pattern = "tbhiv"))
+
+
+
+
 stop("
 
      >>>>>>>>>>
