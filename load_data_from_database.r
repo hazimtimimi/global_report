@@ -53,6 +53,7 @@ notification               <- .fixnamibia(sqlFetch(ch, "view_TME_master_notifica
 notification_exceptions    <- sqlFetch(ch, "view_TME_master_notification_exceptions")
 outcomes                   <- .fixnamibia(sqlFetch(ch, "view_TME_master_outcomes"))
 prevalence_survey          <- sqlFetch(ch, "view_TME_prevalence_survey")
+report_country             <- .fixnamibia(sqlFetch(ch, "view_TME_master_report_country"))
 strategy                   <- .fixnamibia(sqlFetch(ch, "view_TME_master_strategy"))
 TBHIV_for_aggregates       <- .fixnamibia(sqlFetch(ch, "view_TME_master_TBHIV_for_aggregates"))
 
