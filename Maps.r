@@ -35,7 +35,7 @@ con.col <- c('red', 'blue', 'orange', 'green', 'purple', 'violet', 'sienna', 'da
 ignore_for_now <- TRUE
 
 
-if(ignore_for_now) {
+if(!ignore_for_now) {
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Chapter 2 ------
 # The burden of disease caused by TB
@@ -291,7 +291,7 @@ kids_data$cat <- cut(kids_data$kids_pct,
 
 # produce the map
 kids_map <- WHOmap.print(kids_data,
-                        paste("Percentage notified new and relapse TB cases in children,", report_year-1),
+                        paste("Figure 4.2 Percentage new and relapse TB cases that were children,", report_year-1),
                            "Percentage",
                            copyright=FALSE,
                            colors=c('yellow', 'lightgreen', 'green', 'darkgreen'),
@@ -302,7 +302,7 @@ figsave(kids_map,
                          iso3,
                          kids_pct,
                          cat),
-        "4_2_pct_children_map")
+        "f4_2_pct_children_map")
 
 # Clean up (remove any objects with their name beginning with 'agesex')
 rm(list=ls(pattern = "^kids"))
@@ -350,7 +350,7 @@ rdx_data$cat <- cut(rdx_data$rdx_pct,
 
 # produce the map
 rdx_map <- WHOmap.print(rdx_data,
-                        paste("Percentage of notified new and relapse TB cases tested\nusing WHO-approved rapid diagnostics at the time of diagnosis,", report_year-1),
+                        paste("Figure 4.3 Percentage of new and relapse TB cases tested\nusing WHO-approved rapid diagnostics at the time of diagnosis,", report_year-1),
                            "Percentage",
                            copyright=FALSE,
                            colors=c('yellow', 'lightgreen', 'green', 'darkgreen'),
@@ -361,7 +361,7 @@ figsave(rdx_map,
                          iso3,
                          rdx_pct,
                          cat),
-        "4_3_pct_rapid_dx_map")
+        "f4_3_pct_rapid_dx_map")
 
 # Clean up (remove any objects with their name beginning with 'rdx')
 rm(list=ls(pattern = "^rdx"))
@@ -400,7 +400,7 @@ bacconf_data$cat <- cut(bacconf_data$bacconf_pct,
 
 # produce the map
 bacconf_map <- WHOmap.print(bacconf_data,
-                        paste("Percentage of new and relapse pulmonary TB cases with bacteriological confirmation,", report_year-1),
+                        paste("Figure 4.5 Percentage of new and relapse pulmonary TB cases with bacteriological confirmation,", report_year-1),
                            "Percentage",
                            copyright=FALSE,
                            colors=c('yellow', 'lightgreen', 'green', 'darkgreen'),
@@ -411,7 +411,7 @@ figsave(bacconf_map,
                          iso3,
                          bacconf_pct,
                          cat),
-        "4_5_pct_bacconf_map")
+        "f4_5_pct_bacconf_map")
 
 # Clean up (remove any objects with their name beginning with 'bacconf')
 rm(list=ls(pattern = "^bacconf"))
@@ -441,7 +441,7 @@ hivstatus_data$cat <- cut(hivstatus_data$hivstatus_pct,
 
 # produce the map
 hivstatus_map <- WHOmap.print(hivstatus_data,
-                        paste("Percentage of new and relapse new and relapse TB cases with documented HIV status,", report_year-1),
+                        paste("Figure 4.7 Percentage of new and relapse TB cases with documented HIV status,", report_year-1),
                            "Percentage",
                            copyright=FALSE,
                            colors=c('yellow', 'lightgreen', 'green', 'darkgreen'),
@@ -452,15 +452,15 @@ figsave(hivstatus_map,
                          iso3,
                          hivstatus_pct,
                          cat),
-        "4_7_pct_HIV_status_map")
+        "f4_7_pct_HIV_status_map")
 
 # Clean up (remove any objects with their name beginning with 'hivstatus')
 rm(list=ls(pattern = "^hivstatus"))
 
 
 
-# 4_14_pct_BMU_community_map -------------------------------------------------
-# 4.14 Percentage of BMUs with community referral or treatment adherence support, 2015
+# 4_15_pct_BMU_community_map -------------------------------------------------
+# 4.15 Percentage of BMUs with community referral or treatment adherence support, 2015
 
 comm_data <- strategy %>%
               filter(year==report_year - 1) %>%
@@ -481,7 +481,7 @@ comm_data$cat <- cut(comm_data$comm_pct,
 
 # produce the map
 comm_map <- WHOmap.print(comm_data,
-                        paste("Figure 4.14 Percentage of BMUs with community referral or treatment adherence support,", report_year-1),
+                        paste("Figure 4.15 Percentage of BMUs with community referral or treatment adherence support,", report_year-1),
                            "Percentage",
                            copyright=FALSE,
                            colors=c('yellow', 'lightgreen', 'green', 'darkgreen'),
@@ -492,7 +492,7 @@ figsave(comm_map,
                iso3,
                comm_pct,
                cat),
-        "4_14_pct_BMU_community_map")
+        "f4_15_pct_BMU_community_map")
 
 
 
@@ -551,7 +551,7 @@ comm_availability <- within(comm_availability, {
 
 # produce the map
 comm_map <- WHOmap.print(comm_availability,
-                        paste("Figure 4.14 (alternative) Availability of data on BMUs with community referral or treatment adherence support,", report_year-1),
+                        paste("Figure 4.15 (alternative) Availability of data on BMUs with community referral or treatment adherence support,", report_year-1),
                            "Availability",
                            copyright=FALSE,
                            colors=c('green', 'blue', 'yellow', 'white', 'grey75'),
@@ -563,7 +563,7 @@ figsave(comm_map,
                iso3,
                comm_pct,
                cat),
-        "4_14alt_pct_BMU_community_map")
+        "f4_15alt_pct_BMU_community_map")
 
 
 # Clean up (remove any objects with their name beginning with 'comm')

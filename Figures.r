@@ -584,7 +584,7 @@ agesex_plotB <- agesex_agg_long %>%
                                  labels=levels(agesex_agg_long$agegroup)) +
                 coord_flip() +
                 facet_wrap( ~ entity) +
-                ggtitle(paste0("Figure 4.1 New and relapse TB case notification rates by age group and sex, all WHO regions, ",
+                ggtitle(paste0("Figure 4.1 New and relapse TB case notification rates by age group and sex, globally and for all WHO regions, ",
                                report_year-1,
                                "(a)")) +
                 theme_glb.rpt() +
@@ -609,8 +609,8 @@ agesex_plotB <- arrangeGrob(agesex_plotB, bottom = textGrob(agesex_foot, x = 0, 
 
 
 # Save the plots
-figsave(agesex_plotA, agesex_agg_long, "f4_1_agesex_plotA")
-figsave(agesex_plotB, agesex_agg_long, "f4_1_agesex_plotB")
+figsave(agesex_plotA, agesex_agg_long, "f4_1_agesex_pyramids")
+figsave(agesex_plotB, agesex_agg_long, "f4_1_agesex_linecharts")
 
 # Clean up (remove any objects with their name beginning with 'agesex')
 rm(list=ls(pattern = "^agesex"))
@@ -674,7 +674,7 @@ bacconf_plot <- bacconf_data %>%
                   xlab("Year") +
                   #scale_x_discrete(name = "Year") +
                   facet_wrap( ~ entity) +
-                  ggtitle(paste0("Figure 4.4 Percentage of new and relapse pulmonary TB cases with bacteriological confirmation, all WHO regions(a), 2009 - ",
+                  ggtitle(paste0("Figure 4.4 Percentage of new and relapse(a) pulmonary TB cases with bacteriological confirmation, globally and for all WHO regions, 2009 - ",
                                report_year-1)) +
                   theme_glb.rpt() +
                   theme(legend.position="top",
@@ -729,7 +729,7 @@ hivstatus_plot <- hivstatus_data %>%
                   xlab("Year") +
                   #scale_x_discrete(name = "Year") +
                   facet_wrap( ~ entity) +
-                  ggtitle(paste0("Figure 4.6 Percentage of new and relapse TB cases with documented HIV status, all WHO regions (a), 2009 - ",
+                  ggtitle(paste0("Figure 4.6 Percentage of new and relapse(a) TB cases with documented HIV status, globally and for all WHO regions, 2009 - ",
                                report_year-1)) +
                   theme_glb.rpt() +
                   theme(legend.position="top",
@@ -742,7 +742,7 @@ hivstatus_plot <- arrangeGrob(hivstatus_plot, bottom = textGrob(hivstatus_foot, 
 
 
 # Save the plot
-figsave(hivstatus_plot, bacconf_data, "f4_6_hivstatus_plot")
+figsave(hivstatus_plot, hivstatus_data, "f4_6_hivstatus_plot")
 
 # Clean up (remove any objects with their name beginning with 'hivstatus')
 rm(list=ls(pattern = "^hivstatus"))
@@ -786,7 +786,7 @@ inc_plot <- inc_data %>%
             scale_y_continuous(name = "New and relapse cases per year (millions)") +
             xlab("Year") +
 
-            ggtitle(paste0("Figure 4.10i Number of new and relapse cases notified and estimated number of TB incidence cases, global, 2009 - ",
+            ggtitle(paste0("Figure 4.10.i Number of new and relapse cases notified and estimated number of TB incidence cases, global, 2009 - ",
                          report_year-1)) +
             theme_glb.rpt() +
             theme(legend.position="top",
@@ -860,7 +860,7 @@ inctbhiv_plot <- inctbhiv_data %>%
                   scale_y_continuous(name = "New and relapse cases per year (millions)") +
                   xlab("Year") +
 
-                  ggtitle(paste0("Figure 4.10ii Number of new and relapse cases(a) known to be HIV-positive,\nnumber started on ART and estimated number of incident HIV-positive TB cases, global, 2009 - ",
+                  ggtitle(paste0("Figure 4.10.ii Number of new and relapse cases(a) known to be HIV-positive,\nnumber started on ART and estimated number of incident HIV-positive TB cases, global, 2009 - ",
                                report_year-1)) +
                   theme_glb.rpt()
 
@@ -880,7 +880,7 @@ rm(list=ls(pattern = "tbhiv"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 4.11 Number of new and relapse cases notified and estimated number of TB incidence cases,
+# Figure 4.11 Number of new and relapse cases notified compared with estimated number of incident TB cases,
 # 30 high TB burden countries, 2009-2015
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -928,7 +928,7 @@ inc_plot <- inc_data %>%
             facet_wrap( ~ country,
                         scales = "free_y") +
 
-            ggtitle(paste0("Figure 4.11 Number of new and relapse cases notified and estimated number of TB incidence cases,\n30 high TB burden countries, 2009 - ",
+            ggtitle(paste0("Figure 4.11 Number of new and relapse cases notified compared with estimated number of incident TB cases,\n30 high TB burden countries, 2009 - ",
                          report_year-1)) +
             theme_glb.rpt() +
             theme(legend.position="top",
@@ -943,7 +943,7 @@ rm(list=ls(pattern = "inc_"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 4.12 Number of new and relapse cases known to be HIV-positive,
+# Figure 4.13 Number of new and relapse cases known to be HIV-positive,
 # number started on ART and estimated number of incident HIV-positive TB cases,
 # 30 high TB/HIV burden countries, 2009-2015
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1014,7 +1014,7 @@ inctbhiv_plot <- inctbhiv_data %>%
                   facet_wrap( ~ country,
                               scales = "free_y") +
 
-                  ggtitle(paste0("Figure 4.12 Number of new and relapse cases(a) known to be HIV-positive,\nnumber started on ART and estimated number of incident HIV-positive TB cases,\n30 high TB/HIV burden countries, 2009 - ",
+                  ggtitle(paste0("Figure 4.13 Number of new and relapse cases(a) known to be HIV-positive,\nnumber started on ART and estimated number of incident HIV-positive TB cases,\n30 high TB/HIV burden countries, 2009 - ",
                                report_year-1)) +
                   theme_glb.rpt()
 
@@ -1026,12 +1026,135 @@ inctbhiv_plot <- arrangeGrob(inctbhiv_plot, bottom = textGrob(inctbhiv_foot, x =
 
 
 # Save the plot
-figsave(inctbhiv_plot, inctbhiv_data, "f4_12_inctbhiv_plot_hbc")
+figsave(inctbhiv_plot, inctbhiv_data, "f4_13_inctbhiv_plot_hbc")
 
 # Clean up (remove any objects with their name containing 'tbhiv')
 rm(list=ls(pattern = "tbhiv"))
 
 
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Figure 4.20.a Treatment outcomes for new and relapse TB cases,
+# for 30 high TB burden countries, 6 WHO regions and globally, 2014
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+
+txout_country  <- outcomes %>%
+                  filter(year==report_year - 2) %>%
+                  select(country,
+                         iso2,
+                         g_whoregion,
+                         rel_with_new_flg,
+                         contains("newrel_")) %>%
+                  rename(entity = country ) %>%
+
+                  # Add an asterisk to the name if country did not include
+                  #relapse cases in the outcomes cohort
+
+                  mutate(entity = ifelse(!is.na(rel_with_new_flg) & rel_with_new_flg == 0,
+                                         paste0(entity, "*"),
+                                         entity)) %>%
+                  select(-rel_with_new_flg) %>%
+                  arrange(entity)
+
+# Calculate regional aggregates
+txout_region <- txout_country %>%
+                group_by(g_whoregion) %>%
+                summarise_each(funs(sum(., na.rm = TRUE)),
+                               contains("newrel_")) %>%
+
+                  # merge with regional names and simplify to match structure of country table
+                inner_join(who_region_names, by = "g_whoregion") %>%
+                select(-g_whoregion)
+
+
+# Calculate global aggregate
+txout_global <- txout_country %>%
+                summarise_each(funs(sum(., na.rm = TRUE)),
+                               contains("newrel_")) %>%
+                # Add dummy variable to match structure of country table
+                mutate(rel_with_new_flg = NA) %>%
+
+                # Add dummy variable and simplify to match structure of country table
+                mutate(entity = "Global") %>%
+                select(-rel_with_new_flg)
+
+# Filter the country list down to high burden ones
+txout_30hbc <- report_country %>%
+                filter(g_hb_tb==1) %>%
+                select(iso2)
+
+txout_country <- txout_country %>%
+                  inner_join(txout_30hbc) %>%
+                  #remove the iso2 field to match regional and countries aggregates
+                  select(-iso2,
+                         -g_whoregion)
+
+# Create combined table in order of countries then regional and global estimates
+txout <- rbind(txout_country, txout_region, txout_global)
+
+# Calculate outcome proportions for plotting as stacked bars
+txout <- txout %>%
+          mutate(`Treatment success` = ifelse(NZ(newrel_coh) > 0,
+                                              newrel_succ * 100 / newrel_coh,
+                                              NA),
+                 Failure = ifelse(NZ(newrel_coh) > 0,
+                                      newrel_fail * 100 / newrel_coh,
+                                      NA),
+                 Died = ifelse(NZ(newrel_coh) > 0,
+                                  newrel_died * 100 / newrel_coh,
+                                  NA),
+                 `Lost to follow-up` = ifelse(NZ(newrel_coh) > 0,
+                                              newrel_lost * 100 / newrel_coh,
+                                              NA),
+                 `Not evaluated` = ifelse(NZ(newrel_coh) > 0,
+                                          c_newrel_neval * 100 / newrel_coh,
+                                          NA)) %>%
+          # Keep record of current order (in reverse) so plot comes out as we want it
+          mutate(entity = factor(entity, levels=rev(entity))) %>%
+          # Drop the actual numbers and keep percentages
+          select(-contains("newrel"))
+
+
+#tsr_table$area <- factor(tsr_table$area, levels=rev(tsr_table$area))
+
+
+# Flip into long mode for stacked bar plotting
+txout_long <- melt(txout, id=1)
+
+
+
+# Plot as stacked bars
+txout_plot <- txout_long %>%
+              ggplot(aes(entity, value, fill=variable)) +
+                      geom_bar(stat="identity",
+                               position="stack") +
+                      coord_flip() +
+
+                      theme_glb.rpt() +
+                      scale_fill_brewer("",
+                                        type = "qual",
+                                        palette = 8) +
+                      labs(x="", y="Percentage of cohort (%)") +
+
+                      theme(legend.position="bottom",
+                            panel.grid=element_blank()) +
+
+                      expand_limits(c(0,0)) +
+
+                      ggtitle(paste0("Figure 4.20.a Treatment outcomes for new and relapse TB cases,\nfor 30 high TB burden countries, 6 WHO regions and globally, ", report_year - 2))
+
+txout_plot <- arrangeGrob(txout_plot,
+                          bottom = textGrob("* Treatment outcomes are for new cases only.",
+                                         x = 0,
+                                         hjust = -0.1,
+                                         vjust=0,
+                                         gp = gpar(fontsize = 10)))
+
+
+figsave(txout_plot, txout, "f4_20a_outcomes_tb") # Designer needs wide data
+
+# Clean up (remove any objects with their name starting with 'txout')
+rm(list=ls(pattern = "^txout"))
 
 
 stop("
