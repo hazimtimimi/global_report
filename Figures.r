@@ -878,6 +878,70 @@ figsave(inctbhiv_plot, inctbhiv_data, "f4_10ii_inctbhiv_plot")
 rm(list=ls(pattern = "tbhiv"))
 
 
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Figure 4.11 Number of new and relapse cases notified and estimated number of TB incidence cases,
+# 30 high TB burden countries, 2009-2015
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+newinc_30hbc <- report_country %>%
+                filter(g_hb_tb==1) %>%
+                select(iso2)
+
+newinc_data <- notification %>%
+                filter(year >= 2009) %>%
+                inner_join(newinc_30hbc) %>%
+                select(year,
+                       iso2,
+                       country,
+                       c_newinc) %>%
+                mutate(c_newinc = c_newinc / 1e3)
+
+inc_data <- estimates_epi_rawvalues %>%
+            filter(year >= 2009) %>%
+            inner_join(newinc_30hbc) %>%
+            select(year,
+                   iso2,
+                   e_inc_num,
+                   e_inc_num_lo,
+                   e_inc_num_hi) %>%
+            mutate(e_inc_num = e_inc_num / 1e3,
+                   e_inc_num_lo = e_inc_num_lo / 1e3,
+                   e_inc_num_hi = e_inc_num_hi / 1e3) %>%
+            # Use a right-join so can see the data for the final year even in the absence of estimates
+            right_join(newinc_data)
+
+# Plot as lines
+inc_plot <- inc_data %>%
+            ggplot(aes(x=year, y=c_newinc, ymin=0)) +
+            geom_line(size=1) +
+            geom_ribbon(aes(x=year, ymin=e_inc_num_lo, ymax=e_inc_num_hi),
+                        fill=I('#00FF33'),
+                        alpha=0.4) +
+            geom_line(aes(year, e_inc_num),
+                      size=1,
+                      colour=I('#00FF33')) +
+
+            scale_y_continuous(name = "New and relapse cases per year (thousands)") +
+            xlab("Year") +
+
+            facet_wrap( ~ country,
+                        scales = "free_y") +
+
+            ggtitle(paste0("Figure 4.11 Number of new and relapse cases notified and estimated number of TB incidence cases,\n30 high TB burden countries, 2009 - ",
+                         report_year-1)) +
+            theme_glb.rpt() +
+            theme(legend.position="top",
+                  legend.title=element_blank())
+
+# Save the plot
+figsave(inc_plot, inc_data, "f4_11_inc_plot_hbc")
+
+# Clean up (remove any objects with their name containing 'inc_')
+rm(list=ls(pattern = "inc_"))
+
+
+
 stop("
 
      >>>>>>>>>>
