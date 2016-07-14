@@ -1156,6 +1156,110 @@ figsave(txout_plot, txout, "f4_20a_outcomes_tb") # Designer needs wide data
 # Clean up (remove any objects with their name starting with 'txout')
 rm(list=ls(pattern = "^txout"))
 
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Figure 4.20.b Treatment outcomes for new and relapse TB/HIV cases
+# for 30 high TB/HIV burden countries, 6 WHO regions and globally, 2014
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+
+txtbhivout_country  <- outcomes %>%
+                  filter(year==report_year - 2) %>%
+                  select(country,
+                         iso2,
+                         g_whoregion,
+                         contains("tbhiv_")) %>%
+                  rename(entity = country ) %>%
+                  arrange(entity)
+
+# Calculate regional aggregates
+txtbhivout_region <- txtbhivout_country %>%
+                group_by(g_whoregion) %>%
+                summarise_each(funs(sum(., na.rm = TRUE)),
+                               contains("tbhiv_")) %>%
+
+                  # merge with regional names and simplify to match structure of country table
+                inner_join(who_region_names, by = "g_whoregion") %>%
+                select(-g_whoregion)
+
+
+# Calculate global aggregate
+txtbhivout_global <- txtbhivout_country %>%
+                summarise_each(funs(sum(., na.rm = TRUE)),
+                               contains("tbhiv_")) %>%
+
+                # Add dummy variable and simplify to match structure of country table
+                mutate(entity = "Global")
+
+# Filter the country list down to high burden ones
+txtbhivout_30hbc <- report_country %>%
+                filter(g_hb_tbhiv==1) %>%
+                select(iso2)
+
+txtbhivout_country <- txtbhivout_country %>%
+                  inner_join(txtbhivout_30hbc) %>%
+                  #remove the iso2 field to match regional and countries aggregates
+                  select(-iso2,
+                         -g_whoregion)
+
+# Create combined table in order of countries then regional and global estimates
+txtbhivout <- rbind(txtbhivout_country, txtbhivout_region, txtbhivout_global)
+
+# Calculate outcome proportions for plotting as stacked bars
+txtbhivout <- txtbhivout %>%
+          mutate(`Treatment success` = ifelse(NZ(tbhiv_coh) > 0,
+                                              tbhiv_succ * 100 / tbhiv_coh,
+                                              NA),
+                 Failure = ifelse(NZ(tbhiv_coh) > 0,
+                                      tbhiv_fail * 100 / tbhiv_coh,
+                                      NA),
+                 Died = ifelse(NZ(tbhiv_coh) > 0,
+                                  tbhiv_died * 100 / tbhiv_coh,
+                                  NA),
+                 `Lost to follow-up` = ifelse(NZ(tbhiv_coh) > 0,
+                                              tbhiv_lost * 100 / tbhiv_coh,
+                                              NA),
+                 `Not evaluated` = ifelse(NZ(tbhiv_coh) > 0,
+                                          c_tbhiv_neval * 100 / tbhiv_coh,
+                                          NA)) %>%
+          # Keep record of current order (in reverse) so plot comes out as we want it
+          mutate(entity = factor(entity, levels=rev(entity))) %>%
+          # Drop the actual numbers and keep percentages
+          select(-contains("tbhiv"))
+
+
+#tsr_table$area <- factor(tsr_table$area, levels=rev(tsr_table$area))
+
+
+# Flip into long mode for stacked bar plotting
+txtbhivout_long <- melt(txtbhivout, id=1)
+
+
+
+# Plot as stacked bars
+txtbhivout_plot <- txtbhivout_long %>%
+              ggplot(aes(entity, value, fill=variable)) +
+                      geom_bar(stat="identity",
+                               position="stack") +
+                      coord_flip() +
+
+                      theme_glb.rpt() +
+                      scale_fill_brewer("",
+                                        type = "qual",
+                                        palette = 8) +
+                      labs(x="", y="Percentage of cohort (%)") +
+
+                      theme(legend.position="bottom",
+                            panel.grid=element_blank()) +
+
+                      expand_limits(c(0,0)) +
+
+                      ggtitle(paste0("Figure 4.20.b Treatment outcomes for new and relapse TB/HIV cases,\nfor 30 high TB/HIV burden countries, 6 WHO regions and globally, ", report_year - 2))
+
+
+figsave(txtbhivout_plot, txtbhivout, "f4_20b_outcomes_tbhiv") # Designer needs wide data
+
+# Clean up (remove any objects with their name starting with 'txtbhivout')
+rm(list=ls(pattern = "^txtbhivout"))
 
 stop("
 
