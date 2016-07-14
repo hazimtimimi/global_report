@@ -272,7 +272,7 @@ for(var in 2:ncol(notifs_summary)){
 }
 
 
-# Create HTM output
+# Create HTML output
 notif_table_html <- xtable(notifs_summary)
 
 digits(notif_table_html) <- 0
@@ -315,16 +315,148 @@ print(notif_table_html,
 tablecopy("t4_1_notifs_summary")
 
 
+# and now clear up the mess left behind
+rm(list=c("notifs_global", "notifs_summary", "notif_table_html", "notif_table_filename"))
+
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Table 4.2 National policies on the use of WHO-recommended rapid tests and DST in HBCs, 2015 ----
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+
+rdxpolicy_hbccodes <- report_country %>%
+                      select(iso2,
+                             starts_with("g_hb_"))
+
+rdxpolicy_country <- strategy %>%
+                     filter(year == report_year - 1) %>%
+                     select(country,
+                            iso2,
+                            xpert_in_guide_tb,
+                            xpert_in_guide_TBHIV,
+                            xpert_in_guide_drtb,
+                            xpert_in_guide_children,
+                            xpert_in_guide_eptb) %>%
+                     inner_join(rdxpolicy_hbccodes) %>%
+                     # drop iso2 and re-order fields as per desired output
+                     select(entity = country,
+                            g_hb_tb,
+                            g_hb_tbhiv,
+                            g_hb_mdr,
+                            xpert_in_guide_tb,
+                            xpert_in_guide_TBHIV,
+                            xpert_in_guide_drtb,
+                            xpert_in_guide_children,
+                            xpert_in_guide_eptb)
+
+
+# calculate aggregates (% of non-empty responses that are 1 out of the 30 countries in each HB list)
+rdxpolicy_g_hb_tb <- rdxpolicy_country %>%
+                     filter(g_hb_tb == 1) %>%
+                     summarise_each(funs(paste0(
+                                          round(sum(., na.rm = TRUE) * 100
+                                         /
+                                        (sum(ifelse(is.na(.),0,1)))),"%")),
+                                  starts_with("xpert_in_guide")) %>%
+                     mutate(entity="High TB burden countries")
+
+rdxpolicy_g_hb_tbhiv <- rdxpolicy_country %>%
+                     filter(g_hb_tbhiv == 1) %>%
+                     summarise_each(funs(paste0(
+                                          round(sum(., na.rm = TRUE) * 100
+                                         /
+                                        (sum(ifelse(is.na(.),0,1)))),"%")),
+                                  starts_with("xpert_in_guide")) %>%
+                     mutate(entity="High TB/HIV burden countries")
+
+
+rdxpolicy_g_hb_mdr <- rdxpolicy_country %>%
+                     filter(g_hb_mdr == 1) %>%
+                     summarise_each(funs(paste0(
+                                          round(sum(., na.rm = TRUE) * 100
+                                         /
+                                        (sum(ifelse(is.na(.),0,1)))),"%")),
+                                  starts_with("xpert_in_guide")) %>%
+                     mutate(entity="High MDR burden countries")
+
+
+rdxpolicy_global <- rdxpolicy_country %>%
+                     summarise_each(funs(paste0(
+                                          round(sum(., na.rm = TRUE) * 100
+                                         /
+                                        (sum(ifelse(is.na(.),0,1)))),"%")),
+                                  starts_with("xpert_in_guide")) %>%
+                     mutate(entity="Global")
+
+rdxpolicy_aggs <- rbind(rdxpolicy_g_hb_tb,
+                        rdxpolicy_g_hb_tbhiv,
+                        rdxpolicy_g_hb_mdr,
+                        rdxpolicy_global) %>%
+                  # Add placeholder variables to match structure of country list
+                  mutate(g_hb_tb = NA,
+                         g_hb_tbhiv = NA,
+                         g_hb_mdr = NA)
+
+
+# Restrict country data to the high burden countries and then append aggregates
+rdxpolicy_hbcs <- rdxpolicy_country %>%
+                  filter(g_hb_tb == 1 | g_hb_tbhiv == 1 | g_hb_mdr == 1) %>%
+                  rbind(rdxpolicy_aggs)
+
+
+# Create HTML output
+rdxpolicy_table_html <- xtable(rdxpolicy_hbcs)
+
+rdxpolicy_table_filename <- paste0("Tables/t4_2_xpert_policy", Sys.Date(), ".htm")
+
+cat(paste("<h3>Table 4.2 National policies on use of WHO-recommended rapid tests and drug susceptibility testing in high burden countries, ",
+          report_year-1,
+          "</h3>
+          <style>
+            table td {text-align:center;}
+            table td:first-child {text-align: left;}
+          </style>"),
+    file=rdxpolicy_table_filename)
+
+print(rdxpolicy_table_html,
+      type="html",
+      file=rdxpolicy_table_filename,
+      include.rownames=FALSE,
+      include.colnames=FALSE,
+      html.table.attributes="border='0' rules='rows' width='1100' cellpadding='5'",
+      append=TRUE,
+      add.to.row=list(pos=list(0,
+                               nrow(rdxpolicy_table_html)),
+                      command=c("<tr>
+                                  <td colspan='4'>&nbsp;</td>
+                                  <td colspan='5'>National policy stipulating Xpert MTB/RIF as the
+                                                  <i>initial</i> diagnostic test for: </td>
+                              <tr>
+                              <tr>
+                                  <td>&nbsp;</td>
+                                  <td>High TB burden</td>
+                                  <td>High TB/HIV burden</td>
+                                  <td>High MDR-TB burden</td>                                                                             <td>All people presumed to have TB</td>
+                                  <td>People at risk of HIV-associated TB</td>
+                                  <td>People at risk of drug-resistant TB</td>
+                                  <td>Children presumed to have TB</td>
+                                  <td>Extrapulmonary TB using selected specimens </td>
+                              </tr>",
+                              "<tr><td colspan='9'>Blank cells indicate data not reported.<br />
+
+                              <sup>a</sup> The regional and global figures are aggregates of data reported by low- and middle-income countries and territories. Data for the variables shown in the table are not requested from high-income countries in the WHO data collection form.</td>
+                              </tr>")
+                      )
+      )
+
+tablecopy("t4_2_xpert_policy")
+
 stop("
 
      >>>>>>>>>>
      Stopping here for testing!
      <<<<<<<<<<<<")
-
-# and now clear up the mess left behind
-rm(list=c("notifs_global", "notifs_summary", "notif_table_html", "notif_table_filename"))
-
-
 
 
 # 3_2_agesex -------------------------------------------------------------------
