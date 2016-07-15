@@ -333,6 +333,7 @@ rdxpolicy_country <- strategy %>%
                      filter(year == report_year - 1) %>%
                      select(country,
                             iso2,
+                            g_whoregion,
                             xpert_in_guide_tb,
                             xpert_in_guide_TBHIV,
                             xpert_in_guide_drtb,
@@ -341,6 +342,7 @@ rdxpolicy_country <- strategy %>%
                      inner_join(rdxpolicy_hbccodes) %>%
                      # drop iso2 and re-order fields as per desired output
                      select(entity = country,
+                            g_whoregion,
                             g_hb_tb,
                             g_hb_tbhiv,
                             g_hb_mdr,
@@ -351,48 +353,65 @@ rdxpolicy_country <- strategy %>%
                             xpert_in_guide_eptb)
 
 
+# - - - - - - - - - - - - - - - - - - - - - - -
+# Define function to calculate aggregates (% of non-empty responses that are == 1)
+# Results in string of the form n/n=n%
+rdxpolicy_pcnt  <- function(x){
+
+  paste0(sum(x, na.rm = TRUE),
+         "/",
+         sum(ifelse(is.na(x),0,1)),
+         "=",
+         round(sum(x, na.rm = TRUE) * 100
+               /
+               (sum(ifelse(is.na(x),0,1)))),
+         "%")
+}
+# - - - - - - - - - - - - - - - - - - - - - - -
+
+
 # calculate aggregates (% of non-empty responses that are 1 out of the 30 countries in each HB list)
 rdxpolicy_g_hb_tb <- rdxpolicy_country %>%
                      filter(g_hb_tb == 1) %>%
-                     summarise_each(funs(paste0(
-                                          round(sum(., na.rm = TRUE) * 100
-                                         /
-                                        (sum(ifelse(is.na(.),0,1)))),"%")),
+                     summarise_each(funs(rdxpolicy_pcnt(.)),
                                   starts_with("xpert_in_guide")) %>%
                      mutate(entity="High TB burden countries")
 
 rdxpolicy_g_hb_tbhiv <- rdxpolicy_country %>%
                      filter(g_hb_tbhiv == 1) %>%
-                     summarise_each(funs(paste0(
-                                          round(sum(., na.rm = TRUE) * 100
-                                         /
-                                        (sum(ifelse(is.na(.),0,1)))),"%")),
+                     summarise_each(funs(rdxpolicy_pcnt(.)),
                                   starts_with("xpert_in_guide")) %>%
                      mutate(entity="High TB/HIV burden countries")
 
 
 rdxpolicy_g_hb_mdr <- rdxpolicy_country %>%
                      filter(g_hb_mdr == 1) %>%
-                     summarise_each(funs(paste0(
-                                          round(sum(., na.rm = TRUE) * 100
-                                         /
-                                        (sum(ifelse(is.na(.),0,1)))),"%")),
+                     summarise_each(funs(rdxpolicy_pcnt(.)),
                                   starts_with("xpert_in_guide")) %>%
                      mutate(entity="High MDR burden countries")
 
+# Aggregate by WHO region
+rdxpolicy_regions <- rdxpolicy_country %>%
+                     group_by(g_whoregion) %>%
+                     summarise_each(funs(rdxpolicy_pcnt(.)),
+                                  starts_with("xpert_in_guide")) %>%
+                     # merge with region names
+                     inner_join(who_region_names) %>%
+                     # drop region code
+                     select(-g_whoregion)
 
+# Global aggregate
 rdxpolicy_global <- rdxpolicy_country %>%
-                     summarise_each(funs(paste0(
-                                          round(sum(., na.rm = TRUE) * 100
-                                         /
-                                        (sum(ifelse(is.na(.),0,1)))),"%")),
+                     summarise_each(funs(rdxpolicy_pcnt(.)),
                                   starts_with("xpert_in_guide")) %>%
                      mutate(entity="Global")
 
+
+# Wayne decided in the end to only show high burden country aggregates
+
 rdxpolicy_aggs <- rbind(rdxpolicy_g_hb_tb,
                         rdxpolicy_g_hb_tbhiv,
-                        rdxpolicy_g_hb_mdr,
-                        rdxpolicy_global) %>%
+                        rdxpolicy_g_hb_mdr) %>%
                   # Add placeholder variables to match structure of country list
                   mutate(g_hb_tb = NA,
                          g_hb_tbhiv = NA,
@@ -401,6 +420,7 @@ rdxpolicy_aggs <- rbind(rdxpolicy_g_hb_tb,
 
 # Restrict country data to the high burden countries and then append aggregates
 rdxpolicy_hbcs <- rdxpolicy_country %>%
+                  select(-g_whoregion) %>%
                   filter(g_hb_tb == 1 | g_hb_tbhiv == 1 | g_hb_mdr == 1) %>%
                   rbind(rdxpolicy_aggs)
 
@@ -410,7 +430,7 @@ rdxpolicy_table_html <- xtable(rdxpolicy_hbcs)
 
 rdxpolicy_table_filename <- paste0("Tables/t4_2_xpert_policy", Sys.Date(), ".htm")
 
-cat(paste("<h3>Table 4.2 National policies on use of WHO-recommended rapid tests and drug susceptibility testing in high burden countries, ",
+cat(paste("<h3>Table 4.2 National guidance in place on use of Xpert MTB/RIF in high burden countries, ",
           report_year-1,
           "</h3>
           <style>
@@ -443,14 +463,15 @@ print(rdxpolicy_table_html,
                                   <td>Children presumed to have TB</td>
                                   <td>Extrapulmonary TB using selected specimens </td>
                               </tr>",
-                              "<tr><td colspan='9'>Blank cells indicate data not reported.<br />
-
-                              <sup>a</sup> The regional and global figures are aggregates of data reported by low- and middle-income countries and territories. Data for the variables shown in the table are not requested from high-income countries in the WHO data collection form.</td>
+                              "<tr><td colspan='9'>Blank cells indicate data not reported.</td>
                               </tr>")
                       )
       )
 
 tablecopy("t4_2_xpert_policy")
+
+# Clean up (remove any objects with their name beginning with 'rdxpolicy')
+rm(list=ls(pattern = "^rdxpolicy"))
 
 stop("
 
