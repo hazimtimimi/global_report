@@ -609,8 +609,8 @@ agesex_plotB <- arrangeGrob(agesex_plotB, bottom = textGrob(agesex_foot, x = 0, 
 
 
 # Save the plots
-figsave(agesex_plotA, agesex_agg_long, "f4_1_agesex_pyramids")
-figsave(agesex_plotB, agesex_agg_long, "f4_1_agesex_linecharts")
+figsave(agesex_plotA, agesex_agg_long, "f4_1_agesex_linecharts")
+figsave(agesex_plotB, agesex_agg_long, "f4_1_agesex_pyramids")
 
 # Clean up (remove any objects with their name beginning with 'agesex')
 rm(list=ls(pattern = "^agesex"))
