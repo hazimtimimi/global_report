@@ -577,7 +577,7 @@ rm(list=ls(pattern = "^comm"))
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Figure 5.1 Availability of data on the number of children aged <5 years who were
-# household contacts of bacteriologically-confirmed TB cases and were started on
+# household contacts of bacteriologically confirmed TB cases and were started on
 # TB preventive treatment, 2015
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -601,7 +601,7 @@ kids_data <- within(kids_data, {
 # produce the map
 kids_map <- WHOmap.print(kids_data,
                         paste("Figure 5.1 Availability of data on the number number of children aged <5 years who were,",
-                              "\nhousehold contacts of bacteriologically-confirmed TB cases and were started on",
+                              "\nhousehold contacts of bacteriologically confirmed TB cases and were started on",
                               "\nTB preventive treatment,",
                               report_year-1),
                            legend.title = "Country response",
@@ -619,6 +619,68 @@ figsave(kids_map,
 rm(list=ls(pattern = "^kids"))
 
 
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Figure 5.2 Incident (notification?) rate ratio of TB among healthcare workers compared with the general population, 2015
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+hcw_notif_hcw <-  strategy %>%
+                  filter(year == report_year - 1) %>%
+                  select(iso3,
+                         hcw_tb_infected,
+                         hcw_tot)
+
+hcw_pop_adults <- estimates_population %>%
+                  filter(year == report_year - 1) %>%
+                  select(iso3,
+                         e_pop_15plus)
+
+hcw_notif_adults <- notification %>%
+                    filter(year == report_year - 1) %>%
+                    mutate(c_15plus = NZ(newrel_f15plus) +
+                                      NZ(newrel_m15plus) +
+                                      NZ(newrel_sexunk15plus)) %>%
+                    select(iso3,
+                           c_15plus) %>%
+                    inner_join(hcw_pop_adults)
+
+
+hcw_data <-  hcw_notif_adults %>%
+                    inner_join(hcw_notif_hcw) %>%
+
+                    # Calculate notification rate ratio
+                    # Use as.numeric() to avoid integer overflow
+                    # Exclude Kenya this year because of implausible denominator
+                    mutate(nrr = ifelse(NZ(hcw_tot) > 0 &
+                                        NZ(c_15plus) > 0 &
+                                        iso3 != 'KEN',
+                                        (as.numeric(hcw_tb_infected) * as.numeric(e_pop_15plus))
+                                        /
+                                        (as.numeric(hcw_tot) * c_15plus),
+                                        NA)) %>%
+                    select(iso3,
+                           nrr)
+
+
+hcw_data$cat <- cut(hcw_data$nrr,
+                     c(0, 1, 2, 3, Inf),
+                     c('0-0.9', '1-1.9%', '2-2.9%', '>=3'),
+               right=FALSE)
+
+
+# produce the map
+hcw_map <- WHOmap.print(hcw_data,
+                        paste("Figure 5.2 Notification rate ratio of TB among healthcare workers\ncompared with the general population,", report_year-1),
+                           "Notification rate ratio",
+                           copyright=FALSE,
+                           colors=c('yellow', 'lightgreen', 'green', 'darkgreen'),
+                           show=FALSE)
+
+figsave(hcw_map,
+        hcw_data,
+        "f5_2_hcw_notf_rate_ratio")
+
+# Clean up (remove any objects with their name beginning with 'hcw')
+rm(list=ls(pattern = "^hcw"))
 
 stop("
 
