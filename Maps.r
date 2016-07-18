@@ -570,6 +570,56 @@ figsave(comm_map,
 rm(list=ls(pattern = "^comm"))
 
 
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Chapter 5 ------
+# TB prevention services
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Figure 5.1 Availability of data on the number of children aged <5 years who were
+# household contacts of bacteriologically-confirmed TB cases and were started on
+# TB preventive treatment, 2015
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+
+kids_data <-  strategy %>%
+              filter(year==report_year - 1) %>%
+              select(iso3,
+                     prevtx_data_available)
+
+# Assign categories
+kids_data <- within(kids_data, {
+
+  cat <- ifelse(prevtx_data_available==0,"Number not available", NA)
+  cat <- ifelse(prevtx_data_available==60,"Number available from routine surveillance", cat)
+  cat <- ifelse(prevtx_data_available==61,"Number estimated from a survey", cat)
+  cat <- factor(cat)
+
+})
+
+
+# produce the map
+kids_map <- WHOmap.print(kids_data,
+                        paste("Figure 5.1 Availability of data on the number number of children aged <5 years who were,",
+                              "\nhousehold contacts of bacteriologically-confirmed TB cases and were started on",
+                              "\nTB preventive treatment,",
+                              report_year-1),
+                           legend.title = "Country response",
+                           copyright=FALSE,
+                           colors=c('green', 'blue', 'yellow'),
+                           na.label="No response",
+                           show=FALSE)
+
+figsave(kids_map,
+        kids_data,
+        "f5_1_kids_prevtx_map")
+
+
+# Clean up (remove any objects with their name beginning with 'kids')
+rm(list=ls(pattern = "^kids"))
+
+
+
 stop("
 
      >>>>>>>>>>
