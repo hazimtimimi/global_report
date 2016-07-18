@@ -940,6 +940,52 @@ figsave(inc_plot, inc_data, "f4_11_inc_plot_hbc")
 # Clean up (remove any objects with their name containing 'inc_')
 rm(list=ls(pattern = "inc_"))
 
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Figure 4.12 Estimated number of missed cases in top-ten countries, 2015
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+missing_inc <- estimates_epi_rawvalues %>%
+               filter(year == report_year - 2) %>%
+               select(country,
+                      iso2,
+                      e_inc_num,
+                      e_inc_num_lo,
+                      e_inc_num_hi)
+
+missing_data <- notification %>%
+                 filter(year == report_year - 2) %>%
+                 select(iso2,
+                        c_newinc) %>%
+                 inner_join(missing_inc) %>%
+                 mutate(missing_best = (e_inc_num - c_newinc) / 1e6,
+                        missing_lo = (e_inc_num_lo - c_newinc) / 1e6,
+                        missing_hi = (e_inc_num_hi - c_newinc) / 1e6) %>%
+                 arrange(desc(missing_best)) %>%
+                 slice(1:10)
+
+# plot as horizontal error bars
+missing_plot <- missing_data %>%
+                ggplot(aes(x=reorder(country, missing_best),
+                           y=missing_best)) +
+                geom_point() +
+                labs(x="",
+                     y="Millions",
+                     title=paste("Figure 4.12 Estimated number of missed cases in top-ten countries,",
+                                 report_year - 2,
+                                 "\n!!! Change to 2015 when new estimates available!!!")) +
+                geom_pointrange(aes(ymin=missing_lo,
+                                    ymax=missing_hi)) +
+                theme_glb.rpt() +
+                theme(plot.title = element_text(hjust = 0)) +
+                expand_limits(y=0) +
+                coord_flip()
+
+# Save the plot
+figsave(missing_plot, missing_data, "f4_12_missing_plot")
+
+# Clean up (remove any objects with their name starting with 'missing')
+rm(list=ls(pattern = "^missing"))
+
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
