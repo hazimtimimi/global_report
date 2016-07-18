@@ -1081,7 +1081,8 @@ rm(list=ls(pattern = "tbhiv"))
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Figure 4.16a Percentage coverage of treatment for TB,
-# 30 TB high burden countries, WHO Regions and globally, 2015
+# (new and relapse patients as % of estimated incidence)
+# 30 high TB burden countries, WHO Regions and globally, 2015
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 coverage_inc_country <- estimates_epi_rawvalues %>%
@@ -1152,8 +1153,9 @@ coverage_plot <- coverage_data %>%
                   geom_point() +
                   labs(x="",
                        y="Treatment coverage (%)",
-                       title=paste("Figure 4.16a Percentage coverage of treatment for TB,\n",
-                                   "30 TB high burden countries, WHO Regions and globally,",
+                       title=paste("Figure 4.16a Percentage coverage of treatment for TB\n",
+                                   "(new and relapse patients as % of estimated incidence)\n",
+                                   "30 high TB burden countries, WHO Regions and globally,",
                                    report_year - 2,
                                    "\n!!! Change to 2015 when new estimates available!!!")) +
                   geom_pointrange(aes(ymin=c_cdr_lo,
@@ -1168,6 +1170,134 @@ figsave(coverage_plot, coverage_data, "f4_16a_txcoverage_tb")
 
 # Clean up (remove any objects with their name starting with 'coverage')
 rm(list=ls(pattern = "^coverage"))
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Figure 4.16b Percentage coverage of treatment for TB/HIV
+# (patients started on antiretroviral therapy as % of estimated TB/HIV incidence number)
+# 30 high TB/HIV burden countries, WHO Regions and globally, 2015
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+coveragehiv_inc_country <- estimates_epi_rawvalues %>%
+                           filter(year == report_year - 2) %>%
+                           select(entity = country,
+                                  iso2,
+                                  e_inc_tbhiv_num,
+                                  e_inc_tbhiv_num_lo,
+                                  e_inc_tbhiv_num_hi)
+
+# Filter the country list down to high burden ones
+coveragehiv_30hbc <- report_country %>%
+                      filter(g_hb_tbhiv==1) %>%
+                      select(iso2)
+
+coveragehiv_inc_country <- coveragehiv_inc_country %>%
+                            inner_join(coveragehiv_30hbc)
+
+coveragehiv_country <- TBHIV_for_aggregates %>%
+                       filter(year == report_year - 2) %>%
+                       select(iso2,
+                              hivtest_pos,
+                              hiv_art) %>%
+                       inner_join(coveragehiv_inc_country) %>%
+                       select(-iso2) %>%
+                       mutate(c_art = hiv_art * 100 / e_inc_tbhiv_num,
+                              c_art_lo = hiv_art * 100  / e_inc_tbhiv_num_hi,
+                              c_art_hi = hiv_art * 100  / e_inc_tbhiv_num_lo) %>%
+                       select(entity,
+                              c_art,
+                              c_art_lo,
+                              c_art_hi) %>%
+                       arrange(desc(c_art))
+
+
+coveragehiv_inc_region <- aggregated_estimates_epi_rawvalues %>%
+                          filter(year == report_year - 2 & group_type == "g_whoregion") %>%
+                          select(g_whoregion = group_name,
+                                  e_inc_tbhiv_num,
+                                  e_inc_tbhiv_num_lo,
+                                  e_inc_tbhiv_num_hi)
+
+coveragehiv_region <- TBHIV_for_aggregates %>%
+                      filter(year == report_year - 2) %>%
+                      group_by(g_whoregion) %>%
+                      summarise_each(funs(sum(., na.rm = TRUE)),
+                                     hiv_art_pct_numerator) %>%
+
+                      # merge with estimates and calculate ART treatment coverage
+                      inner_join(coveragehiv_inc_region) %>%
+                      mutate( c_art = hiv_art_pct_numerator * 100 / e_inc_tbhiv_num,
+                              c_art_lo = hiv_art_pct_numerator * 100 / e_inc_tbhiv_num_hi,
+                              c_art_hi = hiv_art_pct_numerator * 100 / e_inc_tbhiv_num_lo) %>%
+
+                      # merge with regional names and simplify
+                      inner_join(who_region_names, by = "g_whoregion") %>%
+                      select(entity,
+                            c_art,
+                            c_art_lo,
+                            c_art_hi)  %>%
+                      arrange(entity)
+
+
+coveragehiv_inc_global <- aggregated_estimates_epi_rawvalues %>%
+                          filter(year == report_year - 2 & group_type == "global") %>%
+                          select(e_inc_tbhiv_num,
+                                  e_inc_tbhiv_num_lo,
+                                  e_inc_tbhiv_num_hi)%>%
+                          mutate(entity = "Global")
+
+
+coveragehiv_global <- TBHIV_for_aggregates %>%
+                      filter(year == report_year - 2) %>%
+                      summarise_each(funs(sum(., na.rm = TRUE)),
+                                     hiv_art_pct_numerator) %>%
+                      mutate(entity = "Global") %>%
+
+                      # merge with estimates and calculate ART treatment coverage
+                      inner_join(coveragehiv_inc_global) %>%
+                      mutate( c_art = hiv_art_pct_numerator * 100 / e_inc_tbhiv_num,
+                              c_art_lo = hiv_art_pct_numerator * 100 / e_inc_tbhiv_num_hi,
+                              c_art_hi = hiv_art_pct_numerator * 100 / e_inc_tbhiv_num_lo) %>%
+                      select(entity,
+                            c_art,
+                            c_art_lo,
+                            c_art_hi)
+
+
+# Create combined dataframe in order of countries then regional and global estimates
+coveragehiv_data <- rbind(coveragehiv_country, coveragehiv_region, coveragehiv_global)
+
+# The dataframe is in the order I want, so make entity an ordered factor based on
+# what I already have. That way ggplot will not reorder by entity name
+# But I need to reverse order for plotting
+
+coveragehiv_data$entity <- factor(coveragehiv_data$entity, levels = rev(coveragehiv_data$entity))
+
+
+# plot as horizontal error bars
+coveragehiv_plot <- coveragehiv_data %>%
+                    ggplot(aes(x=entity,
+                               y=c_art)) +
+                    geom_point() +
+                    labs(x="",
+                         y="Treatment coverage (%)",
+                         title=paste("Figure 4.16b Percentage coverage of treatment for TB/HIV\n",
+                                     "(patients started on antiretroviral therapy as % of estimated TB/HIV incidence number)\n",
+                                     "30 high TB/HIV burden countries, WHO Regions and globally,",
+                                     report_year - 2,
+                                     "\n!!! Change to 2015 when new estimates available!!!")) +
+                    geom_pointrange(aes(ymin=c_art_lo,
+                                        ymax=c_art_hi)) +
+                    theme_glb.rpt() +
+                    theme(plot.title = element_text(hjust = 0)) +
+                    expand_limits(y=0) +
+                    coord_flip()
+
+# Save the plot
+figsave(coveragehiv_plot, coveragehiv_data, "f4_16b_txcoverage_tbhiv")
+
+# Clean up (remove any objects with their name starting with 'coveragehiv')
+rm(list=ls(pattern = "^coveragehiv"))
 
 
 
