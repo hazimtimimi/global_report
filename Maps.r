@@ -620,7 +620,7 @@ rm(list=ls(pattern = "^kids"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 5.2 Incident (notification?) rate ratio of TB among healthcare workers compared with the general population, 2015
+# Figure 5.2 Notification rate ratio of TB among healthcare workers compared with the general population, 2015
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 hcw_notif_hcw <-  strategy %>%
@@ -669,7 +669,7 @@ hcw_data$cat <- cut(hcw_data$nrr,
 
 # produce the map
 hcw_map <- WHOmap.print(hcw_data,
-                        paste("Figure 5.2 Notification rate ratio of TB among healthcare workers\ncompared with the general population,", report_year-1),
+                        paste("Figure 5.2 Notification rate ratio of TB among healthcare workers\ncompared with the general adult population,", report_year-1),
                            "Notification rate ratio",
                            copyright=FALSE,
                            colors=c('yellow', 'lightgreen', 'green', 'darkgreen'),
