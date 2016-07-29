@@ -65,9 +65,11 @@ notifs_summary <- rbind(notifs_summary, notifs_global)
 # Calculate total pulmonary and %ages that are bac confirmed and that are extrapulmonary
 notifs_summary <- notifs_summary %>%
                   mutate( newrel_pulm = new_labconf + new_clindx + ret_rel_labconf + ret_rel_clindx,
+                          newrel_pulm_conf = new_labconf + ret_rel_labconf,
                           newrel_pulm_conf_pct = (new_labconf + ret_rel_labconf) * 100
                                                   /
                                                   (new_labconf + new_clindx + ret_rel_labconf + ret_rel_clindx),
+                          newrel_ep = new_ep + ret_rel_ep,
                           newrel_ep_pct = (new_ep + ret_rel_ep) * 100
                                           /
                                           (c_newinc)
@@ -77,7 +79,9 @@ notifs_summary <- notifs_summary %>%
                          c_notified,
                          c_newinc,
                          newrel_pulm,
+                         newrel_pulm_conf,
                          newrel_pulm_conf_pct,
+                         newrel_ep,
                          newrel_ep_pct,
                          ret_nrel,
                          newrel_hivpos,
@@ -90,6 +94,10 @@ for(var in 2:ncol(notifs_summary)){
   notifs_summary[var] <- rounder(notifs_summary[[var]])
 }
 
+# Enclode % fields with parens and add % symbol
+notifs_summary <- notifs_summary %>%
+                  mutate(newrel_pulm_conf_pct = paste0("(", newrel_pulm_conf_pct, "%)"),
+                         newrel_ep_pct = paste0("(", newrel_ep_pct, "%)"))
 
 # Create HTML output
 notif_table_html <- xtable(notifs_summary)
@@ -117,8 +125,8 @@ print(notif_table_html,
                                   <td>Total notified</td>
                                   <td>New and relapse<sup>a</sup></td>
                                   <td>Pulmonary new and relapse</td>
-                                  <td>Pulmonary new and relapse<br />bacteriologically confirmed (%)</td>
-                                  <td>Extrapulmonary<br />new and relapse (%)</td>
+                                  <td colspan='2'>Pulmonary new and relapse<br />bacteriologically confirmed (%)</td>
+                                  <td colspan='2'>Extrapulmonary<br />new and relapse (%)</td>
                                   <td>Previously treated,<br />excluding relapse</td>
                                   <td>HIV-positive<br /> new and relapse</td>
                                   <td>RR-TB cases</td>
