@@ -6,7 +6,6 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
-
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Chapter 4 ------
 # Diagnosis and treatment of TB, HIV-associated TB and drug-resistant TB
@@ -941,7 +940,10 @@ txout <- txout %>%
                                               NA),
                  `Not evaluated` = ifelse(NZ(newrel_coh) > 0,
                                           c_newrel_neval * 100 / newrel_coh,
-                                          NA)) %>%
+                                          NA),
+                 # Add a 'no data' option so non-reporters are highlighted in the output
+                 `No data` = ifelse(is.na(newrel_coh),100,0)
+                 ) %>%
           # Keep record of current order (in reverse) so plot comes out as we want it
           mutate(entity = factor(entity, levels=rev(entity))) %>%
           # Drop the actual numbers and keep percentages
@@ -956,6 +958,7 @@ txout_long <- melt(txout, id=1)
 
 
 
+
 # Plot as stacked bars
 txout_plot <- txout_long %>%
               ggplot(aes(entity, value, fill=variable)) +
@@ -964,9 +967,7 @@ txout_plot <- txout_long %>%
                       coord_flip() +
 
                       theme_glb.rpt() +
-                      scale_fill_brewer("",
-                                        type = "qual",
-                                        palette = 8) +
+                      scale_fill_manual("", values = outcomes_palette) +
                       labs(x="", y="Percentage of cohort (%)") +
 
                       theme(legend.position="bottom",
@@ -974,7 +975,7 @@ txout_plot <- txout_long %>%
 
                       expand_limits(c(0,0)) +
 
-                      ggtitle(paste0("Figure 4.20.a Treatment outcomes for new and relapse TB cases,\nfor 30 high TB burden countries, 6 WHO regions and globally, ", report_year - 2))
+                      ggtitle(paste0("Figure 4.20.a Treatment outcomes for new and relapse TB cases,\nfor 30 high TB burden countries,\n6 WHO regions and globally, ", report_year - 2))
 
 txout_plot <- arrangeGrob(txout_plot,
                           bottom = textGrob("* Treatment outcomes are for new cases only.",
@@ -984,7 +985,7 @@ txout_plot <- arrangeGrob(txout_plot,
                                          gp = gpar(fontsize = 10)))
 
 
-figsave(txout_plot, txout, "f4_20a_outcomes_tb") # Designer needs wide data
+figsave(txout_plot, txout, "f4_20a_outcomes_tb", width=7, height=11) # Designer needs wide data; output portrait mode
 
 # Clean up (remove any objects with their name starting with 'txout')
 rm(list=ls(pattern = "^txout"))
@@ -1054,7 +1055,10 @@ txtbhivout <- txtbhivout %>%
                                               NA),
                  `Not evaluated` = ifelse(NZ(tbhiv_coh) > 0,
                                           c_tbhiv_neval * 100 / tbhiv_coh,
-                                          NA)) %>%
+                                          NA),
+                 # Add a 'no data' option so non-reporters are highlighted in the output
+                 `No data` = ifelse(is.na(tbhiv_coh),100,0)
+                 ) %>%
           # Keep record of current order (in reverse) so plot comes out as we want it
           mutate(entity = factor(entity, levels=rev(entity))) %>%
           # Drop the actual numbers and keep percentages
@@ -1077,9 +1081,7 @@ txtbhivout_plot <- txtbhivout_long %>%
                       coord_flip() +
 
                       theme_glb.rpt() +
-                      scale_fill_brewer("",
-                                        type = "qual",
-                                        palette = 8) +
+                      scale_fill_manual("", values = outcomes_palette) +
                       labs(x="", y="Percentage of cohort (%)") +
 
                       theme(legend.position="bottom",
@@ -1087,10 +1089,10 @@ txtbhivout_plot <- txtbhivout_long %>%
 
                       expand_limits(c(0,0)) +
 
-                      ggtitle(paste0("Figure 4.20.b Treatment outcomes for new and relapse TB/HIV cases,\nfor 30 high TB/HIV burden countries, 6 WHO regions and globally, ", report_year - 2))
+                      ggtitle(paste0("Figure 4.20.b Treatment outcomes for new and relapse\nTB/HIV cases, for 30 high TB/HIV burden countries,\n6 WHO regions and globally, ", report_year - 2))
 
 
-figsave(txtbhivout_plot, txtbhivout, "f4_20b_outcomes_tbhiv") # Designer needs wide data
+figsave(txtbhivout_plot, txtbhivout, "f4_20b_outcomes_tbhiv", width=7, height=11) # Designer needs wide data; output portrait mode
 
 # Clean up (remove any objects with their name starting with 'txtbhivout')
 rm(list=ls(pattern = "^txtbhivout"))

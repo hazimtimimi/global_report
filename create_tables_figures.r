@@ -162,6 +162,19 @@ inch.color <- "red"
 prev.color <- "blue"
 mort.color <- "violet"
 
+# Palette for treatment outcomes ----
+# (adapted from colourblind-friendly palettes at http://www.cookbook-r.com/Graphs/Colors_(ggplot2)/)
+
+outcomes_palette <- c("#009E73",   # Success (green)
+                      "#D55E00",   # Failure (red)
+                      "#E69F00",   # Died (orange)
+                      "#F0E442",   # Lost to follow-up (yellow)
+                      "#999999",   # Not evaluated (gray)
+                      "#CCCCCC"    # No data (light gray)
+                      )
+
+
+
 # # Dummy data ----
 # # Create dummy data for latest year until data are available
 # # new dataframes have names with _dummy appended ...
