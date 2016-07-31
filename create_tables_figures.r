@@ -75,9 +75,10 @@ if (use_live_db==TRUE){
 
 # Generate lookup table for regional names to be used for publication ----
 g_whoregion <- c("AFR", "AMR", "EMR", "EUR", "SEA", "WPR")
-entity <- c("Africa", "Americas", "Eastern Mediterranean", "Europe", "South-East Asia", "Western Pacific")
+entity <- c("Africa", "The Americas", "Eastern Mediterranean", "Europe", "South-East Asia", "Western Pacific")
 
-who_region_names <- data.frame(g_whoregion, entity)
+who_region_names <- data.frame(g_whoregion, entity) %>%
+                    arrange(g_whoregion)
 
 rm(g_whoregion)
 rm(entity)
@@ -316,12 +317,14 @@ standard_table_order <- c("Afghanistan", "Bangladesh", "Brazil", "Cambodia", "Ch
 
 .shortnames <- function(d, col='country', ord='somethingelse'){
   d[col] <- as.character(d[[col]])
-  d[col] <- ifelse(d[[col]]=='Democratic Republic of the Congo', 'DR Congo',
+  d[col] <- ifelse(d[[col]]=='Central African Republic', 'Central African R',
+            ifelse(d[[col]]=='Democratic Republic of the Congo', 'DR Congo',
             ifelse(d[[col]]=='Democratic People\'s Republic of Korea', 'DPR Korea',
+            ifelse(d[[col]]=='Papua New Guinea', 'PN Guinea',
+            ifelse(d[[col]]=='Republic of Moldova', 'R Moldova',
             ifelse(d[[col]]=='United Republic of Tanzania', 'UR Tanzania',
-            ifelse(d[[col]]=='hbc22', 'High-burden countries',
             ifelse(d[[col]]=='global', 'Global',
-            ifelse(d[[col]]=='SEA', 'SEAR', d[[col]]))))))
+            ifelse(d[[col]]=='SEA', 'SEAR', d[[col]]))))))))
 
 
   if (ord=='hbc') {

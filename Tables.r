@@ -23,7 +23,6 @@ notifs_summary <- filter(notification, year == (report_year - 1)) %>%
                          c_newinc,
                          new_labconf, new_clindx, new_ep,
                          ret_rel_labconf, ret_rel_clindx, ret_rel_ep,
-                         ret_nrel,
                          newrel_hivpos,
                          conf_rrmdr,
                          all_conf_xdr) %>%
@@ -35,21 +34,15 @@ notifs_summary <- filter(notification, year == (report_year - 1)) %>%
                                  c_newinc,
                                  new_labconf, new_clindx, new_ep,
                                  ret_rel_labconf, ret_rel_clindx, ret_rel_ep,
-                                 ret_nrel,
                                  newrel_hivpos,
                                  conf_rrmdr,
                                  all_conf_xdr)
 
 # merge with regional names
-notifs_summary <- filter(aggregated_estimates_epi, year == 2010 & group_type == "g_whoregion") %>%
-                 select(group_name, group_description) %>%
-                 rename(g_whoregion = group_name) %>%
-                 inner_join(notifs_summary, by = "g_whoregion") %>%
-                 rename(entity = group_description) %>%
-                 arrange(g_whoregion) %>%
-                 select(-g_whoregion) %>%
-                 # Remove the unnecessary "WHO " text at the beginning of region names
-                 mutate(entity = sub("^WHO |^WHO/PAHO ", "", entity))
+notifs_summary <- notifs_summary %>%
+                  inner_join(who_region_names) %>%
+                  arrange(g_whoregion) %>%
+                  select(-g_whoregion)
 
 
 # Add global summary to the regional summary
@@ -65,11 +58,9 @@ notifs_summary <- rbind(notifs_summary, notifs_global)
 # Calculate total pulmonary and %ages that are bac confirmed and that are extrapulmonary
 notifs_summary <- notifs_summary %>%
                   mutate( newrel_pulm = new_labconf + new_clindx + ret_rel_labconf + ret_rel_clindx,
-                          newrel_pulm_conf = new_labconf + ret_rel_labconf,
                           newrel_pulm_conf_pct = (new_labconf + ret_rel_labconf) * 100
                                                   /
                                                   (new_labconf + new_clindx + ret_rel_labconf + ret_rel_clindx),
-                          newrel_ep = new_ep + ret_rel_ep,
                           newrel_ep_pct = (new_ep + ret_rel_ep) * 100
                                           /
                                           (c_newinc)
@@ -79,11 +70,8 @@ notifs_summary <- notifs_summary %>%
                          c_notified,
                          c_newinc,
                          newrel_pulm,
-                         newrel_pulm_conf,
                          newrel_pulm_conf_pct,
-                         newrel_ep,
                          newrel_ep_pct,
-                         ret_nrel,
                          newrel_hivpos,
                          conf_rrmdr,
                          all_conf_xdr)
@@ -94,10 +82,10 @@ for(var in 2:ncol(notifs_summary)){
   notifs_summary[var] <- rounder(notifs_summary[[var]])
 }
 
-# Enclode % fields with parens and add % symbol
+# Add % symbol to pct fields
 notifs_summary <- notifs_summary %>%
-                  mutate(newrel_pulm_conf_pct = paste0("(", newrel_pulm_conf_pct, "%)"),
-                         newrel_ep_pct = paste0("(", newrel_ep_pct, "%)"))
+                  mutate(newrel_pulm_conf_pct = paste0(newrel_pulm_conf_pct, "%"),
+                         newrel_ep_pct = paste0(newrel_ep_pct, "%"))
 
 # Create HTML output
 notif_table_html <- xtable(notifs_summary)
@@ -106,7 +94,7 @@ digits(notif_table_html) <- 0
 
 notif_table_filename <- paste0("Tables/t4_1_notifs_summary", Sys.Date(), ".htm")
 
-cat(paste("<h3>Table 4.1 Notifications of TB, TB/HIV and RR-TB cases for WHO regions and globally, ",
+cat(paste("<h3>Table 4.1 Notifications of TB, TB/HIV and MDR/RR-TB cases for WHO regions and globally, ",
           report_year-1,
           "</h3>"),
     file=notif_table_filename)
@@ -121,20 +109,20 @@ print(notif_table_html,
       add.to.row=list(pos=list(0,
                                nrow(notif_table_html)),
                       command=c("<tr>
-                                  <td></td>
-                                  <td>Total notified</td>
-                                  <td>New and relapse<sup>a</sup></td>
-                                  <td>Pulmonary new and relapse</td>
-                                  <td colspan='2'>Pulmonary new and relapse<br />bacteriologically confirmed (%)</td>
-                                  <td colspan='2'>Extrapulmonary<br />new and relapse (%)</td>
-                                  <td>Previously treated,<br />excluding relapse</td>
-                                  <td>HIV-positive<br /> new and relapse</td>
-                                  <td>RR-TB cases</td>
-                                  <td>XDR-TB cases</td>
+                                  <td rowspan='2'></td>
+                                  <td rowspan='2' style='border-right: black 2px solid;'>Total notified</td>
+                                  <td rowspan='2'>New and relapse<sup>a</sup></td>
+                                  <td colspan='2'>Pulmonary new and relapse</td>
+                                  <td rowspan='2' style='border-right: black 2px solid;'>Extrapulmonary<br />new and relapse (%)</td>
+                                  <td rowspan='2' style='border-right: black 2px solid;'>HIV-positive<br /> new and relapse</td>
+                                  <td rowspan='2'>MDR/RR-TB</td>
+                                  <td rowspan='2'>XDR-TB</td>
+                              </tr>
+                              <tr>
+                                  <td>Number</td>
+                                  <td>Of which<br />bacteriologically<br />confirmed (%)</td>
                               </tr>",
-                              "<tr><td colspan='10'>Blank cells indicate data not reported.<br />
-
-                                    <sup>a</sup> New and relapse includes cases for which the treatment history is unknown.</td>
+                              "<tr><td colspan='9'><sup>a</sup> <i>New and relapse</i> includes cases for which the treatment history is unknown. It excludes cases that have been re-registered as <i>treatment after failure</i>, as <i>treatment after lost to follow up</i> or as <i>other previously treated</i> (whose outcome after the most recent course of treatment is unknown or undocumented).</td>
                               </tr>")
                       )
       )
@@ -166,7 +154,7 @@ rdxpolicy_country <- strategy %>%
                             xpert_in_guide_children,
                             xpert_in_guide_eptb) %>%
                      inner_join(rdxpolicy_hbccodes) %>%
-                     # drop iso2 and re-order fields as per desired output
+                     # drop iso2
                      select(entity = country,
                             g_whoregion,
                             g_hb_tb,
@@ -176,7 +164,9 @@ rdxpolicy_country <- strategy %>%
                             xpert_in_guide_TBHIV,
                             xpert_in_guide_drtb,
                             xpert_in_guide_children,
-                            xpert_in_guide_eptb)
+                            xpert_in_guide_eptb) %>%
+                      # shorten long country names
+                      .shortnames( col = "entity")
 
 
 # - - - - - - - - - - - - - - - - - - - - - - -

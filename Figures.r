@@ -1,8 +1,7 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Figures in the global report
 # Called from create_tables_figures.r which sets up the necessary dependencies
-# Tom Hiatt
-# 10 July 2012, updated July 2015
+# Hazim Timimi, July 2016
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
@@ -99,28 +98,10 @@ agesex_agg_long$agegroup <- factor(agesex_agg_long$agegroup,
 agesex_agg_long <- agesex_agg_long %>% select(-group)
 
 
-# Now plot the aggregates
-
-# A. Plot as lines (similar to 2015 global report)
-agesex_plotA <- agesex_agg_long %>%
-                ggplot(aes(x=agegroup, y=rate, colour=sex, group=sex)) +
-                  geom_line(size=1) +
-                  scale_y_continuous(name = "TB case notification rate per 100 000 population per year") +
-                  scale_x_discrete("Age group (years)",
-                                   labels=levels(agesex_agg_long$agegroup)) +
-                  facet_wrap( ~ entity) +
-                  ggtitle(paste0("Figure 4.1 New and relapse TB case notification rates by age group and sex, all WHO regions, ",
-                               report_year-1,
-                               "(a)")) +
-                  theme_glb.rpt() +
-                  theme(legend.position="top",
-                        legend.title=element_blank())
-
-
-# B. Plot as pyramids
+# Now plot the aggregates as pyramids
 # See first code example at https://github.com/JuanGaleano/Population-pyramids-ggplot2/blob/master/POPULATION%20PYRAMID%20GGPLOT2.R
 
-agesex_plotB <- agesex_agg_long %>%
+agesex_plot <- agesex_agg_long %>%
                 # Multiply all the female rates by -1
                 mutate(rate = ifelse(sex=="Female", rate * -1, rate )) %>%
                 ggplot(aes(x=agegroup, y=rate, fill=sex)) +
@@ -155,14 +136,11 @@ agesex_foot <- paste0("(a) Countries not reporting cases in these categories are
 
 
 
-
-agesex_plotA <- arrangeGrob(agesex_plotA, bottom = textGrob(agesex_foot, x = 0, hjust = -0.1, vjust=0.1, gp = gpar(fontsize = 10)))
-agesex_plotB <- arrangeGrob(agesex_plotB, bottom = textGrob(agesex_foot, x = 0, hjust = -0.1, vjust=0.1, gp = gpar(fontsize = 10)))
+agesex_plot <- arrangeGrob(agesex_plot, bottom = textGrob(agesex_foot, x = 0, hjust = -0.1, vjust=0.1, gp = gpar(fontsize = 10)))
 
 
 # Save the plots
-figsave(agesex_plotA, agesex_agg_long, "f4_1_agesex_linecharts")
-figsave(agesex_plotB, agesex_agg_long, "f4_1_agesex_pyramids")
+figsave(agesex_plot, agesex_agg_long, "f4_1_agesex")
 
 # Clean up (remove any objects with their name beginning with 'agesex')
 rm(list=ls(pattern = "^agesex"))
