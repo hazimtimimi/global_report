@@ -77,8 +77,7 @@ if (use_live_db==TRUE){
 g_whoregion <- c("AFR", "AMR", "EMR", "EUR", "SEA", "WPR")
 entity <- c("Africa", "The Americas", "Eastern Mediterranean", "Europe", "South-East Asia", "Western Pacific")
 
-who_region_names <- data.frame(g_whoregion, entity) %>%
-                    arrange(g_whoregion)
+who_region_names <- data.frame(g_whoregion, entity)
 
 rm(g_whoregion)
 rm(entity)

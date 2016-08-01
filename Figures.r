@@ -152,6 +152,7 @@ rm(list=ls(pattern = "^agesex"))
 # Percentage of new and relapse pulmonary TB cases with bacteriological confirmation,  all WHO regions and global, 2009-2015
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+
 bacconf_data <- notification %>%
                 filter(year >= 2009) %>%
                 select(iso3,
@@ -170,30 +171,59 @@ bacconf_data <- notification %>%
 
                 #calculate % of pulmonary cases with bac confirmation
                 # a bit tricky for years before 2013, so do for new only by smear only
-                mutate(bacconf_pct = ifelse(year < 2013 & g_whoregion != 'EUR',
-                                            # old variables, do for new only outside EUR
-                                            new_sp * 100 / (new_sp + new_sn + new_su),
-                                            # new variables
-                                           (new_labconf + ret_rel_labconf) * 100
-                                            /
-                                            (new_labconf + new_clindx + ret_rel_labconf + ret_rel_clindx))) %>%
+                mutate(bacconf_pct_numerator = ifelse(year < 2013 & g_whoregion != 'EUR',
+                                                      # old variables, do for new only outside EUR
+                                                      new_sp,
+                                                      # new variables
+                                                     (new_labconf + ret_rel_labconf)),
+                       bacconf_pct_denominator = ifelse(year < 2013 & g_whoregion != 'EUR',
+                                                      # old variables, do for new only outside EUR
+                                                      (new_sp + new_sn + new_su),
+                                                      # new variables
+                                                      (new_labconf + new_clindx + ret_rel_labconf + ret_rel_clindx))) %>%
 
                 # Adjust calculation for EUR pre-2013
-                 mutate(bacconf_pct = ifelse(year < 2013 & g_whoregion == 'EUR',
-                                            # old variables, but using new_labconf
-                                            new_labconf * 100 / (new_sp + new_sn + new_su),
-                                            # otherwise keep calculation from previous step
-                                            bacconf_pct)) %>%
-
-
-                # get rid of raw totals
-                select(g_whoregion,
-                       year,
-                       bacconf_pct) %>%
+                 mutate(bacconf_pct_numerator = ifelse(year < 2013 & g_whoregion == 'EUR',
+                                                      # old variables, but using new_labconf
+                                                      new_labconf,
+                                                      # otherwise keep calculation from previous step
+                                                      bacconf_pct_numerator),
+                        bacconf_pct_denominator = ifelse(year < 2013 & g_whoregion == 'EUR',
+                                                      # old variables
+                                                      (new_sp + new_sn + new_su),
+                                                      # otherwise keep calculation from previous step
+                                                      bacconf_pct_denominator)) %>%
 
                 # merge with regional names
                 inner_join(who_region_names, by = "g_whoregion") %>%
-                select(-g_whoregion)
+                select(-g_whoregion) %>%
+
+                # get rid of extra variables
+                select(entity,
+                       year,
+                       bacconf_pct_numerator,
+                       bacconf_pct_denominator) %>%
+
+                # get rid of the oh-so-pesky grouping variables within the dataframe
+                ungroup()
+
+bacconf_global <- bacconf_data %>%
+                  group_by(year) %>%
+                  summarise_each(funs(sum(.,na.rm = TRUE)),
+                                bacconf_pct_numerator:bacconf_pct_denominator) %>%
+                  mutate(entity = 'Global')
+
+# Add global to the regional aggregates
+bacconf_data <- rbind(bacconf_data, bacconf_global) %>%
+
+                # Calculate the percentages
+                mutate(bacconf_pct = bacconf_pct_numerator * 100 / bacconf_pct_denominator)
+
+# Change the order
+bacconf_data$entity <- factor(bacconf_data$entity,
+                              levels = c("Africa", "The Americas", "Eastern Mediterranean", "Europe", "South-East Asia", "Western Pacific", "Global"))
+
+
 
 
 # Plot as lines
@@ -201,11 +231,11 @@ bacconf_plot <- bacconf_data %>%
                 ggplot(aes(x=year, y=bacconf_pct)) +
                   geom_line(size=1) +
                   scale_y_continuous(name = "% bacteriologically confirmed") +
-                  expand_limits(y=c(0,100)) +
+                  expand_limits(y=c(20,80)) +
                   xlab("Year") +
                   #scale_x_discrete(name = "Year") +
                   facet_wrap( ~ entity) +
-                  ggtitle(paste0("Figure 4.4 Percentage of new and relapse(a) pulmonary TB cases with bacteriological confirmation, globally and for all WHO regions, 2009 - ",
+                  ggtitle(paste0("Figure 4.4 Percentage of new and relapse(a) pulmonary TB cases with bacteriological confirmation,\nglobally and for all WHO regions, 2009 - ",
                                report_year-1)) +
                   theme_glb.rpt() +
                   theme(legend.position="top",
@@ -239,18 +269,30 @@ hivstatus_data <- TBHIV_for_aggregates %>%
                   summarise_each(funs(sum(.,na.rm = TRUE)),
                                  hivtest_pct_numerator:hivtest_pct_denominator) %>%
 
-                  # Calculate % with known HIV status
-                  mutate(hivstatus_pct = hivtest_pct_numerator * 100
-                                        / hivtest_pct_denominator) %>%
-
-                  # get rid of raw totals
-                  select(g_whoregion,
-                         year,
-                         hivstatus_pct) %>%
-
                   # merge with regional names
                   inner_join(who_region_names, by = "g_whoregion") %>%
-                  select(-g_whoregion)
+                  select(-g_whoregion) %>%
+
+                  # squash that darn grouping stuff
+                  ungroup()
+
+hivstatus_global <- TBHIV_for_aggregates %>%
+                    filter(year >= 2009) %>%
+                    select(year,
+                           hivtest_pct_numerator,
+                           hivtest_pct_denominator) %>%
+                    group_by(year) %>%
+                    summarise_each(funs(sum(.,na.rm = TRUE)),
+                                   hivtest_pct_numerator:hivtest_pct_denominator) %>%
+                    mutate(entity = "Global")
+
+hivstatus_data <- rbind(hivstatus_data, hivstatus_global) %>%
+
+                 # Calculate % with known HIV status
+                  mutate(hivstatus_pct = hivtest_pct_numerator * 100
+                                        / hivtest_pct_denominator)
+
+
 
 # Plot as lines
 hivstatus_plot <- hivstatus_data %>%
@@ -319,8 +361,10 @@ inc_plot <- inc_data %>%
             scale_y_continuous(name = "New and relapse cases per year (millions)") +
             xlab("Year") +
 
-            ggtitle(paste0("Figure 4.10.i Number of new and relapse cases notified and estimated number of TB incidence cases, global, 2009 - ",
-                         report_year-1)) +
+            ggtitle(paste0("Figure 4.10.i Number of new and relapse cases notified (black) and estimated number of TB incidence cases (green), global, 2009 - ",
+                         report_year-1,
+                         ".\nShaded areas represent uncertainty bands.")) +
+
             theme_glb.rpt() +
             theme(legend.position="top",
                   legend.title=element_blank())
@@ -394,8 +438,10 @@ inctbhiv_plot <- inctbhiv_data %>%
                   scale_y_continuous(name = "New and relapse cases per year (millions)") +
                   xlab("Year") +
 
-                  ggtitle(paste0("Figure 4.10.ii Number of new and relapse cases(a) known to be HIV-positive,\nnumber started on ART and estimated number of incident HIV-positive TB cases, global, 2009 - ",
-                               report_year-1)) +
+                  ggtitle(paste0("Figure 4.10.ii Number of new and relapse cases(a) known to be HIV-positive (black),\nnumber started on ART (blue) and estimated number of incident HIV-positive TB cases (red), global, 2009 - ",
+                               report_year-1,
+                         ".\nShaded areas represent uncertainty bands.")) +
+
                   theme_glb.rpt()
 
 
@@ -443,8 +489,12 @@ inc_data <- estimates_epi_rawvalues %>%
             mutate(e_inc_num = e_inc_num / 1e3,
                    e_inc_num_lo = e_inc_num_lo / 1e3,
                    e_inc_num_hi = e_inc_num_hi / 1e3) %>%
+
             # Use a right-join so can see the data for the final year even in the absence of estimates
-            right_join(newinc_data)
+            right_join(newinc_data) %>%
+
+            # shorten long country names
+            .shortnames( col = "country")
 
 # Plot as lines
 inc_plot <- inc_data %>%
@@ -461,9 +511,10 @@ inc_plot <- inc_data %>%
             xlab("Year") +
 
             facet_wrap( ~ country,
-                        scales = "free_y") +
+                        scales = "free_y",
+                        ncol = 5) +
 
-            ggtitle(paste0("Figure 4.11 Number of new and relapse cases notified compared with estimated number of incident TB cases,\n30 high TB burden countries, 2009 - ",
+            ggtitle(paste0("Figure 4.11 Number of new and relapse cases notified (black) compared with estimated number of incident TB cases (green),\n30 high TB burden countries, 2009 - ",
                          report_year-1)) +
             theme_glb.rpt() +
             theme(legend.position="top",
@@ -481,15 +532,16 @@ rm(list=ls(pattern = "inc_"))
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 missing_inc <- estimates_epi_rawvalues %>%
-               filter(year == report_year - 2) %>%
+               filter(year == report_year - 1) %>%
                select(country,
                       iso2,
                       e_inc_num,
                       e_inc_num_lo,
-                      e_inc_num_hi)
+                      e_inc_num_hi) %>%
+                .shortnames()
 
 missing_data <- notification %>%
-                 filter(year == report_year - 2) %>%
+                 filter(year == report_year - 1) %>%
                  select(iso2,
                         c_newinc) %>%
                  inner_join(missing_inc) %>%
@@ -507,8 +559,7 @@ missing_plot <- missing_data %>%
                 labs(x="",
                      y="Millions",
                      title=paste("Figure 4.12 Estimated number of missed cases in top-ten countries,",
-                                 report_year - 2,
-                                 "\n!!! Change to 2015 when new estimates available!!!")) +
+                                 report_year - 1)) +
                 geom_pointrange(aes(ymin=missing_lo,
                                     ymax=missing_hi)) +
                 theme_glb.rpt() +
@@ -573,7 +624,10 @@ inctbhiv_data <- estimates_epi_rawvalues %>%
                          e_inc_tbhiv_num_hi = e_inc_tbhiv_num_hi / 1e3) %>%
 
                   # Use a right-join so can see the data for the final year even in the absence of estimates
-                  right_join(tbhiv_data)
+                  right_join(tbhiv_data) %>%
+
+                  # change to shortened country names
+                  .shortnames()
 
 
 # Plot as lines
@@ -595,9 +649,10 @@ inctbhiv_plot <- inctbhiv_data %>%
                   xlab("Year") +
 
                   facet_wrap( ~ country,
-                              scales = "free_y") +
+                              scales = "free_y",
+                              ncol = 5) +
 
-                  ggtitle(paste0("Figure 4.13 Number of new and relapse cases(a) known to be HIV-positive,\nnumber started on ART and estimated number of incident HIV-positive TB cases,\n30 high TB/HIV burden countries, 2009 - ",
+                  ggtitle(paste0("Figure 4.13 Number of new and relapse cases(a) known to be HIV-positive (black),\nnumber started on ART (blue) and estimated number of incident HIV-positive TB cases (red),\n30 high TB/HIV burden countries, 2009 - ",
                                report_year-1)) +
                   theme_glb.rpt()
 
