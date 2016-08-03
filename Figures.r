@@ -679,7 +679,7 @@ rm(list=ls(pattern = "tbhiv"))
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 coverage_inc_country <- estimates_epi_rawvalues %>%
-                         filter(year == report_year - 2) %>%
+                         filter(year == report_year - 1) %>%
                          select(entity = country,
                                 iso2,
                                 e_inc_num,
@@ -696,14 +696,16 @@ coverage_inc_country <- coverage_inc_country %>%
 
 
 coverage_country <- notification %>%
-                     filter(year == report_year - 2) %>%
+                     filter(year == report_year - 1) %>%
                      select(iso2,
                             c_newinc) %>%
                      inner_join(coverage_inc_country) %>%
                      select(-iso2) %>%
                      mutate(c_cdr = c_newinc * 100 / e_inc_num,
                             c_cdr_lo = c_newinc * 100  / e_inc_num_hi,
-                            c_cdr_hi = c_newinc * 100  / e_inc_num_lo) %>%
+                            c_cdr_hi = c_newinc * 100  / e_inc_num_lo,
+                            # highlight countries with no data
+                            entity = ifelse(is.na(c_newinc), paste0(entity, "*"), entity )) %>%
                      select(entity,
                             c_cdr,
                             c_cdr_lo,
@@ -712,25 +714,31 @@ coverage_country <- notification %>%
 
 
 coverage_region <- aggregated_estimates_epi_rawvalues %>%
-                   filter(year == report_year - 2 & group_type == "g_whoregion") %>%
+                   filter(year == report_year - 1 & group_type == "g_whoregion") %>%
                    select(g_whoregion = group_name,
                           c_cdr,
                           c_cdr_lo,
                           c_cdr_hi) %>%
                    # merge with regional names and simplify to match structure of country table
                    inner_join(who_region_names, by = "g_whoregion") %>%
-                   select(-g_whoregion)
+                   select(-g_whoregion) %>%
+                   arrange(desc(c_cdr))
 
 coverage_global <- aggregated_estimates_epi_rawvalues %>%
-                   filter(year == report_year - 2 & group_type == "global") %>%
+                   filter(year == report_year - 1 & group_type == "global") %>%
                    select(c_cdr,
                           c_cdr_lo,
                           c_cdr_hi) %>%
                    # Add dummy variable to match structure of country table
                    mutate(entity = "Global")
 
+# Create dummy records so can see a horizontal line in the output to separate countries, regions and global parts
+coverage_dummy1 <- data.frame(entity = "-----", c_cdr = NA, c_cdr_lo = 0, c_cdr_hi = 100)
+coverage_dummy2 <- data.frame(entity = "------", c_cdr = NA, c_cdr_lo = 0, c_cdr_hi = 100)
+
+
 # Create combined dataframe in order of countries then regional and global estimates
-coverage_data <- rbind(coverage_country, coverage_region, coverage_global)
+coverage_data <- rbind(coverage_country, coverage_dummy1, coverage_region, coverage_dummy2, coverage_global)
 
 # The dataframe is in the order I want, so make entity an ordered factor based on
 # what I already have. That way ggplot will not reorder by entity name
@@ -746,17 +754,23 @@ coverage_plot <- coverage_data %>%
                   geom_point() +
                   labs(x="",
                        y="Treatment coverage (%)",
-                       title=paste("Figure 4.16a Percentage coverage of treatment for TB\n",
+                       title=paste("Figure 4.16a Estimated percentage coverage of treatment for TB\n",
                                    "(new and relapse patients as % of estimated incidence)\n",
                                    "30 high TB burden countries, WHO Regions and globally,",
-                                   report_year - 2,
-                                   "\n!!! Change to 2015 when new estimates available!!!")) +
+                                   report_year - 1)) +
                   geom_pointrange(aes(ymin=c_cdr_lo,
                                       ymax=c_cdr_hi)) +
                   theme_glb.rpt() +
                   theme(plot.title = element_text(hjust = 0)) +
                   expand_limits(y=0) +
                   coord_flip()
+
+coverage_plot <- arrangeGrob(coverage_plot,
+                              bottom = textGrob("* No data",
+                                             x = 0,
+                                             hjust = -0.1,
+                                             vjust=0,
+                                             gp = gpar(fontsize = 10)))
 
 # Save the plot
 figsave(coverage_plot, coverage_data, "f4_16a_txcoverage_tb")
@@ -773,7 +787,7 @@ rm(list=ls(pattern = "^coverage"))
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 coveragehiv_inc_country <- estimates_epi_rawvalues %>%
-                           filter(year == report_year - 2) %>%
+                           filter(year == report_year - 1) %>%
                            select(entity = country,
                                   iso2,
                                   e_inc_tbhiv_num,
@@ -789,15 +803,16 @@ coveragehiv_inc_country <- coveragehiv_inc_country %>%
                             inner_join(coveragehiv_30hbc)
 
 coveragehiv_country <- TBHIV_for_aggregates %>%
-                       filter(year == report_year - 2) %>%
+                       filter(year == report_year - 1) %>%
                        select(iso2,
-                              hivtest_pos,
-                              hiv_art) %>%
+                              newrel_art) %>%
                        inner_join(coveragehiv_inc_country) %>%
                        select(-iso2) %>%
-                       mutate(c_art = hiv_art * 100 / e_inc_tbhiv_num,
-                              c_art_lo = hiv_art * 100  / e_inc_tbhiv_num_hi,
-                              c_art_hi = hiv_art * 100  / e_inc_tbhiv_num_lo) %>%
+                       mutate(c_art = newrel_art * 100 / e_inc_tbhiv_num,
+                              c_art_lo = newrel_art * 100  / e_inc_tbhiv_num_hi,
+                              c_art_hi = newrel_art * 100  / e_inc_tbhiv_num_lo,
+                              # highlight countries with no data
+                              entity = ifelse(is.na(newrel_art), paste0(entity, "*"), entity )) %>%
                        select(entity,
                               c_art,
                               c_art_lo,
@@ -806,14 +821,14 @@ coveragehiv_country <- TBHIV_for_aggregates %>%
 
 
 coveragehiv_inc_region <- aggregated_estimates_epi_rawvalues %>%
-                          filter(year == report_year - 2 & group_type == "g_whoregion") %>%
+                          filter(year == report_year - 1 & group_type == "g_whoregion") %>%
                           select(g_whoregion = group_name,
                                   e_inc_tbhiv_num,
                                   e_inc_tbhiv_num_lo,
                                   e_inc_tbhiv_num_hi)
 
 coveragehiv_region <- TBHIV_for_aggregates %>%
-                      filter(year == report_year - 2) %>%
+                      filter(year == report_year - 1) %>%
                       group_by(g_whoregion) %>%
                       summarise_each(funs(sum(., na.rm = TRUE)),
                                      hiv_art_pct_numerator) %>%
@@ -830,11 +845,11 @@ coveragehiv_region <- TBHIV_for_aggregates %>%
                             c_art,
                             c_art_lo,
                             c_art_hi)  %>%
-                      arrange(entity)
+                       arrange(desc(c_art))
 
 
 coveragehiv_inc_global <- aggregated_estimates_epi_rawvalues %>%
-                          filter(year == report_year - 2 & group_type == "global") %>%
+                          filter(year == report_year - 1 & group_type == "global") %>%
                           select(e_inc_tbhiv_num,
                                   e_inc_tbhiv_num_lo,
                                   e_inc_tbhiv_num_hi)%>%
@@ -842,7 +857,7 @@ coveragehiv_inc_global <- aggregated_estimates_epi_rawvalues %>%
 
 
 coveragehiv_global <- TBHIV_for_aggregates %>%
-                      filter(year == report_year - 2) %>%
+                      filter(year == report_year - 1) %>%
                       summarise_each(funs(sum(., na.rm = TRUE)),
                                      hiv_art_pct_numerator) %>%
                       mutate(entity = "Global") %>%
@@ -857,9 +872,12 @@ coveragehiv_global <- TBHIV_for_aggregates %>%
                             c_art_lo,
                             c_art_hi)
 
+# Create dummy records so can see a horizontal line in the output to separate countries, regions and global parts
+coveragehiv_dummy1 <- data.frame(entity = "-----", c_art = NA, c_art_lo = 0, c_art_hi = 100)
+coveragehiv_dummy2 <- data.frame(entity = "------", c_art = NA, c_art_lo = 0, c_art_hi = 100)
 
 # Create combined dataframe in order of countries then regional and global estimates
-coveragehiv_data <- rbind(coveragehiv_country, coveragehiv_region, coveragehiv_global)
+coveragehiv_data <- rbind(coveragehiv_country, coveragehiv_dummy1, coveragehiv_region, coveragehiv_dummy2, coveragehiv_global)
 
 # The dataframe is in the order I want, so make entity an ordered factor based on
 # what I already have. That way ggplot will not reorder by entity name
@@ -875,11 +893,10 @@ coveragehiv_plot <- coveragehiv_data %>%
                     geom_point() +
                     labs(x="",
                          y="Treatment coverage (%)",
-                         title=paste("Figure 4.16b Percentage coverage of treatment for TB/HIV\n",
+                         title=paste("Figure 4.16b Estimated percentage coverage of treatment for TB/HIV\n",
                                      "(patients started on antiretroviral therapy as % of estimated TB/HIV incidence number)\n",
                                      "30 high TB/HIV burden countries, WHO Regions and globally,",
-                                     report_year - 2,
-                                     "\n!!! Change to 2015 when new estimates available!!!")) +
+                                     report_year - 1)) +
                     geom_pointrange(aes(ymin=c_art_lo,
                                         ymax=c_art_hi)) +
                     theme_glb.rpt() +
@@ -887,11 +904,167 @@ coveragehiv_plot <- coveragehiv_data %>%
                     expand_limits(y=0) +
                     coord_flip()
 
+coveragehiv_plot <- arrangeGrob(coveragehiv_plot,
+                              bottom = textGrob("* No data",
+                                             x = 0,
+                                             hjust = -0.1,
+                                             vjust=0,
+                                             gp = gpar(fontsize = 10)))
+
 # Save the plot
 figsave(coveragehiv_plot, coveragehiv_data, "f4_16b_txcoverage_tbhiv")
 
 # Clean up (remove any objects with their name starting with 'coveragehiv')
 rm(list=ls(pattern = "^coveragehiv"))
+
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Figure 4.16c   ------
+# Percentage coverage of treatment for MDR/RR-TB,
+# (patients enrolled on treatment as % of estimated incidence of MDR/RR-TB)
+# 30 high MDR-TB burden countries, WHO Regions and globally, 2015
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+
+coveragerr_inc_country <- estimates_drtb_rawvalues %>%
+                          filter(year == report_year - 1) %>%
+                          select(entity = country,
+                                  iso2,
+                                  e_inc_rr_num,
+                                  e_inc_rr_num_lo,
+                                  e_inc_rr_num_hi)
+
+# Filter the country list down to high burden ones
+coveragerr_30hbc <- report_country %>%
+                    filter(g_hb_mdr==1) %>%
+                    select(iso2)
+
+coveragerr_inc_country <- coveragerr_inc_country %>%
+                          inner_join(coveragerr_30hbc)
+
+coveragerr_country <-  notification %>%
+                       filter(year == report_year - 1) %>%
+                       select(iso2,
+                              unconf_rrmdr_tx,
+                              conf_rrmdr_tx)
+
+coveragerr_country$rrmdr_tx <- sum_of_row(coveragerr_country[c("unconf_rrmdr_tx", "conf_rrmdr_tx")] )
+
+
+
+coveragerr_country <- coveragerr_country %>%
+                       inner_join(coveragerr_inc_country) %>%
+                       mutate(c_rr_coverage = rrmdr_tx * 100 / e_inc_rr_num,
+                              c_rr_coverage_lo = rrmdr_tx * 100  / e_inc_rr_num_hi,
+                              c_rr_coverage_hi = rrmdr_tx * 100  / e_inc_rr_num_lo,
+                              # highlight countries with no data
+                              entity = ifelse(is.na(rrmdr_tx), paste0(entity, "*"), entity )) %>%
+                       select(entity,
+                              c_rr_coverage,
+                              c_rr_coverage_lo,
+                              c_rr_coverage_hi) %>%
+                       arrange(desc(c_rr_coverage))
+
+
+coveragerr_inc_region <- aggregated_estimates_drtb_rawvalues %>%
+                          filter(year == report_year - 1 & group_type == "g_whoregion") %>%
+                          select(g_whoregion = group_name,
+                                  e_inc_rr_num,
+                                  e_inc_rr_num_lo,
+                                  e_inc_rr_num_hi)
+
+coveragerr_region <- notification %>%
+                      filter(year == report_year - 1) %>%
+                      group_by(g_whoregion) %>%
+                      summarise_each(funs(sum(., na.rm = TRUE)),
+                                     unconf_rrmdr_tx, conf_rrmdr_tx) %>%
+                      mutate(rrmdr_tx = unconf_rrmdr_tx +  conf_rrmdr_tx) %>%
+
+                      # merge with estimates and calculate treatment coverage
+                      inner_join(coveragerr_inc_region) %>%
+                       mutate(c_rr_coverage = rrmdr_tx * 100 / e_inc_rr_num,
+                              c_rr_coverage_lo = rrmdr_tx * 100  / e_inc_rr_num_hi,
+                              c_rr_coverage_hi = rrmdr_tx * 100  / e_inc_rr_num_lo) %>%
+
+                      # merge with regional names and simplify
+                      inner_join(who_region_names, by = "g_whoregion") %>%
+                      select(entity,
+                              c_rr_coverage,
+                              c_rr_coverage_lo,
+                              c_rr_coverage_hi)  %>%
+                      arrange(desc(c_rr_coverage))
+
+
+coveragerr_inc_global <- aggregated_estimates_drtb_rawvalues %>%
+                         filter(year == report_year - 1 & group_type == "global") %>%
+                         select(e_inc_rr_num,
+                                e_inc_rr_num_lo,
+                                e_inc_rr_num_hi)%>%
+                         mutate(entity = "Global")
+
+
+coveragerr_global <- notification %>%
+                      filter(year == report_year - 1) %>%
+                      summarise_each(funs(sum(., na.rm = TRUE)),
+                                     unconf_rrmdr_tx, conf_rrmdr_tx) %>%
+                      mutate(rrmdr_tx = unconf_rrmdr_tx +  conf_rrmdr_tx,
+                             entity = "Global") %>%
+
+                      # merge with estimates and calculate treatment coverage
+                      inner_join(coveragerr_inc_global) %>%
+                      mutate(c_rr_coverage = rrmdr_tx * 100 / e_inc_rr_num,
+                              c_rr_coverage_lo = rrmdr_tx * 100  / e_inc_rr_num_hi,
+                              c_rr_coverage_hi = rrmdr_tx * 100  / e_inc_rr_num_lo) %>%
+                      select(entity,
+                              c_rr_coverage,
+                              c_rr_coverage_lo,
+                              c_rr_coverage_hi)
+
+# Create dummy records so can see a horizontal line in the output to separate countries, regions and global parts
+coveragerr_dummy1 <- data.frame(entity = "-----", c_rr_coverage = NA, c_rr_coverage_lo = 0, c_rr_coverage_hi = 100)
+coveragerr_dummy2 <- data.frame(entity = "------", c_rr_coverage = NA, c_rr_coverage_lo = 0, c_rr_coverage_hi = 100)
+
+# Create combined dataframe in order of countries then regional and global estimates
+coveragerr_data <- rbind(coveragerr_country, coveragerr_dummy1, coveragerr_region, coveragerr_dummy2, coveragerr_global)
+
+# The dataframe is in the order I want, so make entity an ordered factor based on
+# what I already have. That way ggplot will not reorder by entity name
+# But I need to reverse order for plotting
+
+coveragerr_data$entity <- factor(coveragerr_data$entity, levels = rev(coveragerr_data$entity))
+
+
+# plot as horizontal error bars
+coveragerr_plot <- coveragerr_data %>%
+                    ggplot(aes(x=entity,
+                               y=c_rr_coverage)) +
+                    geom_point() +
+                    labs(x="",
+                         y="Treatment coverage (%)",
+                         title=paste("Figure 4.16c Estimated percentage coverage of treatment for MDR/RR-TB\n",
+                                     "(patients started on treatment for MDR-TB as % of estimated MDR/RR-TB incidence number)\n",
+                                     "30 high MDR-TB burden countries, WHO Regions and globally,",
+                                     report_year - 1)) +
+                    geom_pointrange(aes(ymin=c_rr_coverage_lo,
+                                        ymax=c_rr_coverage_hi)) +
+                    theme_glb.rpt() +
+                    theme(plot.title = element_text(hjust = 0)) +
+                    expand_limits(y=0) +
+                    coord_flip()
+
+coveragerr_plot <- arrangeGrob(coveragerr_plot,
+                              bottom = textGrob("* No data",
+                                             x = 0,
+                                             hjust = -0.1,
+                                             vjust=0,
+                                             gp = gpar(fontsize = 10)))
+# Save the plot
+figsave(coveragerr_plot, coveragerr_data, "f4_16c_txcoverage_drtb")
+
+# Clean up (remove any objects with their name starting with 'coveragehiv')
+rm(list=ls(pattern = "^coveragerr"))
+
 
 
 
