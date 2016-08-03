@@ -684,7 +684,9 @@ coverage_inc_country <- estimates_epi_rawvalues %>%
                                 iso2,
                                 e_inc_num,
                                 e_inc_num_lo,
-                                e_inc_num_hi)
+                                e_inc_num_hi) %>%
+                         # shorten long country names
+                         .shortnames( col = "entity")
 
 # Filter the country list down to high burden ones
 coverage_30hbc <- report_country %>%
@@ -792,7 +794,9 @@ coveragehiv_inc_country <- estimates_epi_rawvalues %>%
                                   iso2,
                                   e_inc_tbhiv_num,
                                   e_inc_tbhiv_num_lo,
-                                  e_inc_tbhiv_num_hi)
+                                  e_inc_tbhiv_num_hi)  %>%
+                           # shorten long country names
+                           .shortnames( col = "entity")
 
 # Filter the country list down to high burden ones
 coveragehiv_30hbc <- report_country %>%
@@ -933,7 +937,9 @@ coveragerr_inc_country <- estimates_drtb_rawvalues %>%
                                   iso2,
                                   e_inc_rr_num,
                                   e_inc_rr_num_lo,
-                                  e_inc_rr_num_hi)
+                                  e_inc_rr_num_hi)  %>%
+                          # shorten long country names
+                          .shortnames( col = "entity")
 
 # Filter the country list down to high burden ones
 coveragerr_30hbc <- report_country %>%
