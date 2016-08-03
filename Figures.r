@@ -1088,7 +1088,9 @@ txout_country  <- outcomes %>%
                          iso2,
                          g_whoregion,
                          rel_with_new_flg,
-                         contains("newrel_")) %>%
+                         contains("newrel_"))  %>%
+                  # shorten long country names
+                  .shortnames() %>%
                   rename(entity = country ) %>%
 
                   # Add an asterisk to the name if country did not include
@@ -1133,8 +1135,16 @@ txout_country <- txout_country %>%
                   select(-iso2,
                          -g_whoregion)
 
+# Create dummy records so can see a horizontal line in the output to separate countries, regions and global parts
+txout_dummy1 <- data.frame(entity = "-----", newrel_coh = NA, newrel_succ = NA, newrel_fail = NA,
+                           newrel_died = NA, newrel_lost = NA, c_newrel_neval = NA)
+txout_dummy2 <- data.frame(entity = "------", newrel_coh = NA, newrel_succ = NA, newrel_fail = NA,
+                           newrel_died = NA, newrel_lost = NA, c_newrel_neval = NA)
+
+
+
 # Create combined table in order of countries then regional and global estimates
-txout <- rbind(txout_country, txout_region, txout_global)
+txout <- rbind(txout_country, txout_dummy1, txout_region, txout_dummy2, txout_global)
 
 # Calculate outcome proportions for plotting as stacked bars
 txout <- txout %>%
@@ -1154,7 +1164,7 @@ txout <- txout %>%
                                           c_newrel_neval * 100 / newrel_coh,
                                           NA),
                  # Add a 'no data' option so non-reporters are highlighted in the output
-                 `No data` = ifelse(is.na(newrel_coh),100,0)
+                 `No data reported` = ifelse(is.na(newrel_coh) & substring(entity,1,2) != "--" ,100,0)
                  ) %>%
           # Keep record of current order (in reverse) so plot comes out as we want it
           mutate(entity = factor(entity, levels=rev(entity))) %>%
@@ -1215,6 +1225,8 @@ txtbhivout_country  <- outcomes %>%
                          iso2,
                          g_whoregion,
                          contains("tbhiv_")) %>%
+                  # shorten long country names
+                  .shortnames() %>%
                   rename(entity = country ) %>%
                   arrange(entity)
 
@@ -1248,8 +1260,16 @@ txtbhivout_country <- txtbhivout_country %>%
                   select(-iso2,
                          -g_whoregion)
 
+# Create dummy records so can see a horizontal line in the output to separate countries, regions and global parts
+txtbhivout_dummy1 <- data.frame(entity = "-----", tbhiv_coh = NA, tbhiv_succ = NA, tbhiv_fail = NA,
+                           tbhiv_died = NA, tbhiv_lost = NA, c_tbhiv_neval = NA, c_tbhiv_tsr = NA)
+txtbhivout_dummy2 <- data.frame(entity = "------", tbhiv_coh = NA, tbhiv_succ = NA, tbhiv_fail = NA,
+                           tbhiv_died = NA, tbhiv_lost = NA, c_tbhiv_neval = NA, c_tbhiv_tsr = NA)
+
+
+
 # Create combined table in order of countries then regional and global estimates
-txtbhivout <- rbind(txtbhivout_country, txtbhivout_region, txtbhivout_global)
+txtbhivout <- rbind(txtbhivout_country, txtbhivout_dummy1, txtbhivout_region, txtbhivout_dummy2, txtbhivout_global)
 
 # Calculate outcome proportions for plotting as stacked bars
 txtbhivout <- txtbhivout %>%
@@ -1269,7 +1289,7 @@ txtbhivout <- txtbhivout %>%
                                           c_tbhiv_neval * 100 / tbhiv_coh,
                                           NA),
                  # Add a 'no data' option so non-reporters are highlighted in the output
-                 `No data` = ifelse(is.na(tbhiv_coh),100,0)
+                 `No data reported` = ifelse(is.na(tbhiv_coh) & substring(entity,1,2) != "--" ,100,0)
                  ) %>%
           # Keep record of current order (in reverse) so plot comes out as we want it
           mutate(entity = factor(entity, levels=rev(entity))) %>%
