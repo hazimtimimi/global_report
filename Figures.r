@@ -148,7 +148,7 @@ rm(list=ls(pattern = "^agesex"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 4.4  ------
+# Figure 4.3  ------
 # Percentage of new and relapse pulmonary TB cases with bacteriological confirmation,  all WHO regions and global, 2009-2015
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -235,7 +235,7 @@ bacconf_plot <- bacconf_data %>%
                   xlab("Year") +
                   #scale_x_discrete(name = "Year") +
                   facet_wrap( ~ entity) +
-                  ggtitle(paste0("Figure 4.4 Percentage of new and relapse(a) pulmonary TB cases with bacteriological confirmation,\nglobally and for all WHO regions, 2009 - ",
+                  ggtitle(paste0("Figure 4.3 Percentage of new and relapse(a) pulmonary TB cases with bacteriological confirmation,\nglobally and for all WHO regions, 2009 - ",
                                report_year-1)) +
                   theme_glb.rpt() +
                   theme(legend.position="top",
@@ -248,13 +248,13 @@ bacconf_plot <- arrangeGrob(bacconf_plot, bottom = textGrob(bacconf_foot, x = 0,
 
 
 # Save the plot
-figsave(bacconf_plot, bacconf_data, "f4_4_bacconf_plot")
+figsave(bacconf_plot, bacconf_data, "f4_3_bacconf_plot")
 
 # Clean up (remove any objects with their name beginning with 'bacconf')
 rm(list=ls(pattern = "^bacconf"))
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 4.6  ------
+# Figure 4.5  ------
 # Percentage of new and relapse TB cases with documented HIV status,  all WHO regions and global, 2009-2015
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -303,7 +303,7 @@ hivstatus_plot <- hivstatus_data %>%
                   xlab("Year") +
                   #scale_x_discrete(name = "Year") +
                   facet_wrap( ~ entity) +
-                  ggtitle(paste0("Figure 4.6 Percentage of new and relapse(a) TB cases with documented HIV status, globally and for all WHO regions, 2009 - ",
+                  ggtitle(paste0("Figure 4.5 Percentage of new and relapse(a) TB cases with documented HIV status, globally and for all WHO regions, 2009 - ",
                                report_year-1)) +
                   theme_glb.rpt() +
                   theme(legend.position="top",
@@ -316,14 +316,14 @@ hivstatus_plot <- arrangeGrob(hivstatus_plot, bottom = textGrob(hivstatus_foot, 
 
 
 # Save the plot
-figsave(hivstatus_plot, hivstatus_data, "f4_6_hivstatus_plot")
+figsave(hivstatus_plot, hivstatus_data, "f4_5_hivstatus_plot")
 
 # Clean up (remove any objects with their name beginning with 'hivstatus')
 rm(list=ls(pattern = "^hivstatus"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 4.10i   ------
+# Figure 4.9i   ------
 # Number of new and relapse cases notified and estimated number of TB incidence cases, global, 2009-2015
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -361,7 +361,7 @@ inc_plot <- inc_data %>%
             scale_y_continuous(name = "New and relapse cases per year (millions)") +
             xlab("Year") +
 
-            ggtitle(paste0("Figure 4.10.i Number of new and relapse cases notified (black) and estimated number of TB incidence cases (green), global, 2009 - ",
+            ggtitle(paste0("Figure 4.9.i Number of new and relapse cases notified (black) and estimated number of TB incidence cases (green), global, 2009 - ",
                          report_year-1,
                          ".\nShaded areas represent uncertainty bands.")) +
 
@@ -370,14 +370,14 @@ inc_plot <- inc_data %>%
                   legend.title=element_blank())
 
 # Save the plot
-figsave(inc_plot, inc_data, "f4_10i_inc_plot")
+figsave(inc_plot, inc_data, "f4_9i_inc_plot")
 
 # Clean up (remove any objects with their name containing 'inc_')
 rm(list=ls(pattern = "inc_"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 4.10ii   ------
+# Figure 4.9ii   ------
 # Number of new and relapse cases  known to be HIV-positive,
 # number started on ART and estimated number of incident HIV-positive TB cases, global, 2009-2015
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -438,7 +438,7 @@ inctbhiv_plot <- inctbhiv_data %>%
                   scale_y_continuous(name = "New and relapse cases per year (millions)") +
                   xlab("Year") +
 
-                  ggtitle(paste0("Figure 4.10.ii Number of new and relapse cases(a) known to be HIV-positive (black),\nnumber started on ART (blue) and estimated number of incident HIV-positive TB cases (red), global, 2009 - ",
+                  ggtitle(paste0("Figure 4.9.ii Number of new and relapse cases(a) known to be HIV-positive (black),\nnumber started on ART (blue) and estimated number of incident HIV-positive TB cases (red), global, 2009 - ",
                                report_year-1,
                          ".\nShaded areas represent uncertainty bands.")) +
 
@@ -452,7 +452,7 @@ inctbhiv_plot <- arrangeGrob(inctbhiv_plot, bottom = textGrob(inctbhiv_foot, x =
 
 
 # Save the plot
-figsave(inctbhiv_plot, inctbhiv_data, "f4_10ii_inctbhiv_plot")
+figsave(inctbhiv_plot, inctbhiv_data, "f4_9ii_inctbhiv_plot")
 
 # Clean up (remove any objects with their name containing 'tbhiv')
 rm(list=ls(pattern = "tbhiv"))
@@ -460,7 +460,7 @@ rm(list=ls(pattern = "tbhiv"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 4.11   ------
+# Figure 4.10   ------
 # Number of new and relapse cases notified compared with estimated number of incident TB cases,
 # 30 high TB burden countries, 2009-2015
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -514,20 +514,20 @@ inc_plot <- inc_data %>%
                         scales = "free_y",
                         ncol = 5) +
 
-            ggtitle(paste0("Figure 4.11 Number of new and relapse cases notified (black) compared with estimated number of incident TB cases (green),\n30 high TB burden countries, 2009 - ",
+            ggtitle(paste0("Figure 4.10 Number of new and relapse cases notified (black) compared with estimated number of incident TB cases (green),\n30 high TB burden countries, 2009 - ",
                          report_year-1)) +
             theme_glb.rpt() +
             theme(legend.position="top",
                   legend.title=element_blank())
 
 # Save the plot
-figsave(inc_plot, inc_data, "f4_11_inc_plot_hbc")
+figsave(inc_plot, inc_data, "f4_10_inc_plot_hbc")
 
 # Clean up (remove any objects with their name containing 'inc_')
 rm(list=ls(pattern = "inc_"))
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 4.12   ------
+# Figure 4.11   ------
 # Estimated number of missed cases in top-ten countries, 2015
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -558,7 +558,7 @@ missing_plot <- missing_data %>%
                 geom_point() +
                 labs(x="",
                      y="Millions",
-                     title=paste("Figure 4.12 Estimated number of missed cases in top-ten countries,",
+                     title=paste("Figure 4.11 Estimated number of missed cases in top-ten countries,",
                                  report_year - 1)) +
                 geom_pointrange(aes(ymin=missing_lo,
                                     ymax=missing_hi)) +
@@ -568,7 +568,7 @@ missing_plot <- missing_data %>%
                 coord_flip()
 
 # Save the plot
-figsave(missing_plot, missing_data, "f4_12_missing_plot")
+figsave(missing_plot, missing_data, "f4_11_missing_plot")
 
 # Clean up (remove any objects with their name starting with 'missing')
 rm(list=ls(pattern = "^missing"))
@@ -576,7 +576,7 @@ rm(list=ls(pattern = "^missing"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 4.13   ------
+# Figure 4.12   ------
 # Number of new and relapse cases known to be HIV-positive,
 # number started on ART and estimated number of incident HIV-positive TB cases,
 # 30 high TB/HIV burden countries, 2009-2015
@@ -652,7 +652,7 @@ inctbhiv_plot <- inctbhiv_data %>%
                               scales = "free_y",
                               ncol = 5) +
 
-                  ggtitle(paste0("Figure 4.13 Number of new and relapse cases(a) known to be HIV-positive (black),\nnumber started on ART (blue) and estimated number of incident HIV-positive TB cases (red),\n30 high TB/HIV burden countries, 2009 - ",
+                  ggtitle(paste0("Figure 4.12 Number of new and relapse cases(a) known to be HIV-positive (black),\nnumber started on ART (blue) and estimated number of incident HIV-positive TB cases (red),\n30 high TB/HIV burden countries, 2009 - ",
                                report_year-1)) +
                   theme_glb.rpt()
 
@@ -664,7 +664,7 @@ inctbhiv_plot <- arrangeGrob(inctbhiv_plot, bottom = textGrob(inctbhiv_foot, x =
 
 
 # Save the plot
-figsave(inctbhiv_plot, inctbhiv_data, "f4_13_inctbhiv_plot_hbc")
+figsave(inctbhiv_plot, inctbhiv_data, "f4_12_inctbhiv_plot_hbc")
 
 # Clean up (remove any objects with their name containing 'tbhiv')
 rm(list=ls(pattern = "tbhiv"))
@@ -672,7 +672,7 @@ rm(list=ls(pattern = "tbhiv"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 4.16a   ------
+# Figure 4.15a   ------
 # Percentage coverage of treatment for TB,
 # (new and relapse patients as % of estimated incidence)
 # 30 high TB burden countries, WHO Regions and globally, 2015
@@ -756,7 +756,7 @@ coverage_plot <- coverage_data %>%
                   geom_point() +
                   labs(x="",
                        y="Treatment coverage (%)",
-                       title=paste("Figure 4.16a Estimated percentage coverage of treatment for TB\n",
+                       title=paste("Figure 4.15a Estimated percentage coverage of treatment for TB\n",
                                    "(new and relapse patients as % of estimated incidence)\n",
                                    "30 high TB burden countries, WHO Regions and globally,",
                                    report_year - 1)) +
@@ -775,14 +775,14 @@ coverage_plot <- arrangeGrob(coverage_plot,
                                              gp = gpar(fontsize = 10)))
 
 # Save the plot
-figsave(coverage_plot, coverage_data, "f4_16a_txcoverage_tb")
+figsave(coverage_plot, coverage_data, "f4_15a_txcoverage_tb")
 
 # Clean up (remove any objects with their name starting with 'coverage')
 rm(list=ls(pattern = "^coverage"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 4.16b   ------
+# Figure 4.15b   ------
 # Percentage coverage of treatment for TB/HIV
 # (patients started on antiretroviral therapy as % of estimated TB/HIV incidence number)
 # 30 high TB/HIV burden countries, WHO Regions and globally, 2015
@@ -897,7 +897,7 @@ coveragehiv_plot <- coveragehiv_data %>%
                     geom_point() +
                     labs(x="",
                          y="Treatment coverage (%)",
-                         title=paste("Figure 4.16b Estimated percentage coverage of treatment for TB/HIV\n",
+                         title=paste("Figure 4.15b Estimated percentage coverage of treatment for TB/HIV\n",
                                      "(patients started on antiretroviral therapy as % of estimated TB/HIV incidence number)\n",
                                      "30 high TB/HIV burden countries, WHO Regions and globally,",
                                      report_year - 1)) +
@@ -916,7 +916,7 @@ coveragehiv_plot <- arrangeGrob(coveragehiv_plot,
                                              gp = gpar(fontsize = 10)))
 
 # Save the plot
-figsave(coveragehiv_plot, coveragehiv_data, "f4_16b_txcoverage_tbhiv")
+figsave(coveragehiv_plot, coveragehiv_data, "f4_15b_txcoverage_tbhiv")
 
 # Clean up (remove any objects with their name starting with 'coveragehiv')
 rm(list=ls(pattern = "^coveragehiv"))
@@ -924,7 +924,7 @@ rm(list=ls(pattern = "^coveragehiv"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 4.16c   ------
+# Figure 4.15c   ------
 # Percentage coverage of treatment for MDR/RR-TB,
 # (patients enrolled on treatment as % of estimated incidence of MDR/RR-TB)
 # 30 high MDR-TB burden countries, WHO Regions and globally, 2015
@@ -1048,7 +1048,7 @@ coveragerr_plot <- coveragerr_data %>%
                     geom_point() +
                     labs(x="",
                          y="Treatment coverage (%)",
-                         title=paste("Figure 4.16c Estimated percentage coverage of treatment for MDR/RR-TB\n",
+                         title=paste("Figure 4.15c Estimated percentage coverage of treatment for MDR/RR-TB\n",
                                      "(patients started on treatment for MDR-TB as % of estimated MDR/RR-TB incidence number)\n",
                                      "30 high MDR-TB burden countries, WHO Regions and globally,",
                                      report_year - 1)) +
@@ -1066,7 +1066,7 @@ coveragerr_plot <- arrangeGrob(coveragerr_plot,
                                              vjust=0,
                                              gp = gpar(fontsize = 10)))
 # Save the plot
-figsave(coveragerr_plot, coveragerr_data, "f4_16c_txcoverage_drtb")
+figsave(coveragerr_plot, coveragerr_data, "f4_15c_txcoverage_drtb")
 
 # Clean up (remove any objects with their name starting with 'coveragehiv')
 rm(list=ls(pattern = "^coveragerr"))
@@ -1076,7 +1076,7 @@ rm(list=ls(pattern = "^coveragerr"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 4.20.a   ------
+# Figure 4.19.a   ------
 # Treatment outcomes for new and relapse TB cases,
 # for 30 high TB burden countries, 6 WHO regions and globally, 2014
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1197,7 +1197,7 @@ txout_plot <- txout_long %>%
 
                       expand_limits(c(0,0)) +
 
-                      ggtitle(paste0("Figure 4.20.a Treatment outcomes for new and relapse TB cases,\nfor 30 high TB burden countries,\n6 WHO regions and globally, ", report_year - 2))
+                      ggtitle(paste0("Figure 4.19.a Treatment outcomes for new and relapse TB cases,\nfor 30 high TB burden countries,\n6 WHO regions and globally, ", report_year - 2))
 
 txout_plot <- arrangeGrob(txout_plot,
                           bottom = textGrob("* Treatment outcomes are for new cases only.",
@@ -1207,13 +1207,13 @@ txout_plot <- arrangeGrob(txout_plot,
                                          gp = gpar(fontsize = 10)))
 
 
-figsave(txout_plot, txout, "f4_20a_outcomes_tb", width=7, height=11) # Designer needs wide data; output portrait mode
+figsave(txout_plot, txout, "f4_19a_outcomes_tb", width=7, height=11) # Designer needs wide data; output portrait mode
 
 # Clean up (remove any objects with their name starting with 'txout')
 rm(list=ls(pattern = "^txout"))
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 4.20.b   ------
+# Figure 4.19.b   ------
 # Treatment outcomes for new and relapse TB/HIV cases
 # for 30 high TB/HIV burden countries, 6 WHO regions and globally, 2014
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1321,10 +1321,10 @@ txtbhivout_plot <- txtbhivout_long %>%
 
                       expand_limits(c(0,0)) +
 
-                      ggtitle(paste0("Figure 4.20.b Treatment outcomes for new and relapse\nTB/HIV cases, for 30 high TB/HIV burden countries,\n6 WHO regions and globally, ", report_year - 2))
+                      ggtitle(paste0("Figure 4.19.b Treatment outcomes for new and relapse\nTB/HIV cases, for 30 high TB/HIV burden countries,\n6 WHO regions and globally, ", report_year - 2))
 
 
-figsave(txtbhivout_plot, txtbhivout, "f4_20b_outcomes_tbhiv", width=7, height=11) # Designer needs wide data; output portrait mode
+figsave(txtbhivout_plot, txtbhivout, "f4_19b_outcomes_tbhiv", width=7, height=11) # Designer needs wide data; output portrait mode
 
 # Clean up (remove any objects with their name starting with 'txtbhivout')
 rm(list=ls(pattern = "^txtbhivout"))
