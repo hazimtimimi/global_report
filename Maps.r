@@ -28,8 +28,9 @@ con.col <- c('red', 'blue', 'orange', 'green', 'purple', 'violet', 'sienna', 'da
 
 
 kids_data <- notification %>%
-             filter(year == report_year - 1) %>%
+             filter(year >= report_year - 2) %>%
              select(iso3,
+                    year,
                     c_new_014,
                     newrel_m15plus,
                     newrel_mu,
@@ -52,23 +53,53 @@ kids_data$cat <- cut(kids_data$kids_pct,
                      c('0-1.9%', '2-4.9%', '5-9.9%', '>=10%'),
                right=FALSE)
 
+# Find the countries with empty data for latest year and see if there are data for the previous year
+kids_prev_year_data <- kids_data %>%
+                       filter(year == report_year - 1 & is.na(kids_pct)) %>%
+                       select(iso3) %>%
+                       inner_join(filter(kids_data, year == report_year - 2)) %>%
+                       filter(!is.na(kids_pct))
+
+# Now combine into one dataframe, with previous data used if latest year's data are not available
+
+kids_data_combined <- kids_data %>%
+                       filter(year == report_year - 1) %>%
+                        anti_join(kids_prev_year_data, by= "iso3") %>%
+                        rbind(kids_prev_year_data)
+
+
 # produce the map
-kids_map <- WHOmap.print(kids_data,
-                        paste("Figure 4.2 Percentage new and relapse TB cases that were children (aged < 15),", report_year-1),
+kids_map <- WHOmap.print(kids_data_combined,
+                        paste0("Figure 4.2 Percentage new and relapse TB cases that were children (aged < 15), ",
+                               report_year-1,
+                               "(a)"),
                            "Percentage",
                            copyright=FALSE,
                            #colors=c('yellow', 'lightgreen', 'green', 'darkgreen'),
                            colors=c('#edf8e9', '#bae4b3', '#74c476', '#238b45'),
                            show=FALSE)
 
+# Add footnote about using earlier data for some countries
+kids_foot <- paste("(a)",
+                    report_year - 2,
+                    "data were used for ",
+                    nrow(kids_prev_year_data),
+                    "countries")
+
+
+
+kids_map <- arrangeGrob(kids_map, bottom = textGrob(kids_foot, x = 0, hjust = -0.1, vjust=0.1, gp = gpar(fontsize = 10)))
+
+
+
 figsave(kids_map,
-        select(kids_data,
+        select(kids_data_combined,
                          iso3,
                          kids_pct,
                          cat),
         "f4_2_pct_children_map")
 
-# Clean up (remove any objects with their name beginning with 'agesex')
+# Clean up (remove any objects with their name beginning with 'kids')
 rm(list=ls(pattern = "^kids"))
 
 
@@ -78,8 +109,9 @@ rm(list=ls(pattern = "^kids"))
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 bacconf_data <- notification %>%
-                filter(year == report_year - 1) %>%
+                filter(year  >= report_year - 2) %>%
                 select(iso3,
+                       year,
                       new_labconf, new_clindx,
                       ret_rel_labconf, ret_rel_clindx)
 
@@ -105,17 +137,46 @@ bacconf_data$cat <- cut(bacconf_data$bacconf_pct,
                      c('0-49.9%', '50-64.9%', '65-79.9%', '>=80%'),
                right=FALSE)
 
+
+# Find the countries with empty data for latest year and see if there are data for the previous year
+bacconf_prev_year_data <- bacconf_data %>%
+                           filter(year == report_year - 1 & is.na(bacconf_pct)) %>%
+                           select(iso3) %>%
+                           inner_join(filter(bacconf_data, year == report_year - 2)) %>%
+                           filter(!is.na(bacconf_pct))
+
+# Now combine into one dataframe, with previous data used if latest year's data are not available
+bacconf_data_combined <- bacconf_data %>%
+                          filter(year == report_year - 1) %>%
+                          anti_join(bacconf_prev_year_data, by= "iso3") %>%
+                          rbind(bacconf_prev_year_data)
+
+
 # produce the map
-bacconf_map <- WHOmap.print(bacconf_data,
-                        paste("Figure 4.4 Percentage of new and relapse pulmonary TB cases with bacteriological confirmation,", report_year-1),
+bacconf_map <- WHOmap.print(bacconf_data_combined,
+                        paste0("Figure 4.4 Percentage of new and relapse pulmonary TB cases with bacteriological confirmation, ",
+                              report_year-1,
+                               "(a)"),
                            "Percentage",
                            copyright=FALSE,
                            #colors=c('yellow', 'lightgreen', 'green', 'darkgreen'),
                            colors=c('#edf8e9', '#bae4b3', '#74c476', '#238b45'),
                            show=FALSE)
 
+# Add footnote about using earlier data for some countries
+bacconf_foot <- paste("(a)",
+                      report_year - 2,
+                      "data were used for ",
+                      nrow(bacconf_prev_year_data),
+                      "countries")
+
+
+bacconf_map <- arrangeGrob(bacconf_map, bottom = textGrob(bacconf_foot, x = 0, hjust = -0.1, vjust=0.1, gp = gpar(fontsize = 10)))
+
+
+
 figsave(bacconf_map,
-        select(bacconf_data,
+        select(bacconf_data_combined,
                          iso3,
                          bacconf_pct,
                          cat),
@@ -151,12 +212,21 @@ hivstatus_data$cat <- cut(hivstatus_data$hivstatus_pct,
 
 # produce the map
 hivstatus_map <- WHOmap.print(hivstatus_data,
-                        paste("Figure 4.6 Percentage of new and relapse TB cases with documented HIV status,", report_year-1),
+                        paste("Figure 4.6 Percentage of new and relapse TB cases with documented HIV status(a),", report_year-1),
                            "Percentage",
                            copyright=FALSE,
                            #colors=c('yellow', 'lightgreen', 'green', 'darkgreen'),
                            colors=c('#edf8e9', '#bae4b3', '#74c476', '#238b45'),
                            show=FALSE)
+
+
+# Add footnote about Russia
+hivstatus_foot <- "(a) Data for the Russian Federation are for new TB patients in the civilian sector only"
+
+
+
+hivstatus_map <- arrangeGrob(hivstatus_map, bottom = textGrob(hivstatus_foot, x = 0, hjust = -0.1, vjust=0.1, gp = gpar(fontsize = 10)))
+
 
 figsave(hivstatus_map,
         select(hivstatus_data,
