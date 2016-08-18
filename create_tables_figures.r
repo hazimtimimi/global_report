@@ -316,14 +316,12 @@ standard_table_order <- c("Afghanistan", "Bangladesh", "Brazil", "Cambodia", "Ch
 
 .shortnames <- function(d, col='country', ord='somethingelse'){
   d[col] <- as.character(d[[col]])
-  d[col] <- ifelse(d[[col]]=='Central African Republic', 'Central African R',
+  d[col] <- ifelse(d[[col]]=='Central African Republic', 'Central African Rep',
             ifelse(d[[col]]=='Democratic Republic of the Congo', 'DR Congo',
             ifelse(d[[col]]=='Democratic People\'s Republic of Korea', 'DPR Korea',
-            ifelse(d[[col]]=='Papua New Guinea', 'PN Guinea',
-            ifelse(d[[col]]=='Republic of Moldova', 'R Moldova',
             ifelse(d[[col]]=='United Republic of Tanzania', 'UR Tanzania',
             ifelse(d[[col]]=='global', 'Global',
-            ifelse(d[[col]]=='SEA', 'SEAR', d[[col]]))))))))
+            ifelse(d[[col]]=='SEA', 'SEAR', d[[col]]))))))
 
 
   if (ord=='hbc') {

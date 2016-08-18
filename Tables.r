@@ -13,7 +13,7 @@
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Table 4.1  ------
-# Notifications of TB, TB/HIV and RR-TB cases for WHO regions and globally, 2015
+# Notifications of TB, TB/HIV and MDR/RR-TB cases, globally and for WHO regions, 2015
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
@@ -94,7 +94,7 @@ digits(notif_table_html) <- 0
 
 notif_table_filename <- paste0("Tables/t4_1_notifs_summary", Sys.Date(), ".htm")
 
-cat(paste("<h3>Table 4.1 Notifications of TB, TB/HIV and MDR/RR-TB cases for WHO regions and globally, ",
+cat(paste("<h3>Table 4.1 Notifications of TB, TB/HIV and MDR/RR-TB cases, globally and for WHO regions,",
           report_year-1,
           "</h3>"),
     file=notif_table_filename)
@@ -135,8 +135,8 @@ rm(list=c("notifs_global", "notifs_summary", "notif_table_html", "notif_table_fi
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Table 4.2  ------
-# National policies on the use of WHO-recommended rapid tests and DST in HBCs, 2015
+# Table 4.3  ------
+# National guidance in place on use of Xpert MTB/RIF in high burden countries, 2015
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 rdxpolicy_hbccodes <- report_country %>%
@@ -172,16 +172,25 @@ rdxpolicy_country <- strategy %>%
 # - - - - - - - - - - - - - - - - - - - - - - -
 # Define function to calculate aggregates (% of non-empty responses that are == 1)
 # Results in string of the form n/n=n%
-rdxpolicy_pcnt  <- function(x){
+rdxpolicy_pcnt  <- function(x, show_calc = FALSE){
 
-  paste0(sum(x, na.rm = TRUE),
-         "/",
-         sum(ifelse(is.na(x),0,1)),
-         "=",
-         round(sum(x, na.rm = TRUE) * 100
+  if (show_calc == TRUE)
+    {
+    paste0(sum(x, na.rm = TRUE),
+           "/",
+           sum(ifelse(is.na(x),0,1)),
+           "=",
+           round(sum(x, na.rm = TRUE) * 100
+                 /
+                 (sum(ifelse(is.na(x),0,1)))),
+           "%")
+    }
+  else
+    {  paste0(round(sum(x, na.rm = TRUE) * 100
                /
                (sum(ifelse(is.na(x),0,1)))),
          "%")
+    }
 }
 # - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -244,9 +253,9 @@ rdxpolicy_hbcs <- rdxpolicy_country %>%
 # Create HTML output
 rdxpolicy_table_html <- xtable(rdxpolicy_hbcs)
 
-rdxpolicy_table_filename <- paste0("Tables/t4_2_xpert_policy", Sys.Date(), ".htm")
+rdxpolicy_table_filename <- paste0("Tables/t4_3_xpert_policy", Sys.Date(), ".htm")
 
-cat(paste("<h3>Table 4.2 National guidance in place on use of Xpert MTB/RIF in high burden countries, ",
+cat(paste("<h3>Table 4.3 National guidance in place on use of Xpert MTB/RIF in high burden countries<sup>a</sup>, ",
           report_year-1,
           "</h3>
           <style>
@@ -279,12 +288,12 @@ print(rdxpolicy_table_html,
                                   <td>Children presumed to have TB</td>
                                   <td>Extrapulmonary TB using selected specimens </td>
                               </tr>",
-                              "<tr><td colspan='9'>Blank cells indicate data not reported.</td>
+                              "<tr><td colspan='9'><sup>a</sup>The 48 countries shown in the table are the countries that are in one of more of the three lists of high TB, TB/HIV and MDR-TB burden countries (see also Chapter 2, Figure 2.3 and Table 2.2).</td>
                               </tr>")
                       )
       )
 
-tablecopy("t4_2_xpert_policy")
+tablecopy("t4_3_xpert_policy")
 
 # Clean up (remove any objects with their name beginning with 'rdxpolicy')
 rm(list=ls(pattern = "^rdxpolicy"))

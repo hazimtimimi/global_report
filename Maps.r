@@ -22,7 +22,7 @@ con.col <- c('red', 'blue', 'orange', 'green', 'purple', 'violet', 'sienna', 'da
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 4.2  ------
+# Figure 4.3  ------
 # Percentage new and relapse TB cases that were children (aged < 15), 2015
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -70,7 +70,7 @@ kids_data_combined <- kids_data %>%
 
 # produce the map
 kids_map <- WHOmap.print(kids_data_combined,
-                        paste0("Figure 4.2 Percentage new and relapse TB cases that were children (aged < 15), ",
+                        paste0("Figure 4.3 Percentage new and relapse TB cases that were children (aged < 15), ",
                                report_year-1,
                                "(a)"),
                            "Percentage",
@@ -97,14 +97,14 @@ figsave(kids_map,
                          iso3,
                          kids_pct,
                          cat),
-        "f4_2_pct_children_map")
+        "f4_3_pct_children_map")
 
 # Clean up (remove any objects with their name beginning with 'kids')
 rm(list=ls(pattern = "^kids"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 4.4  ------
+# Figure 4.5  ------
 # Percentage of new and relapse pulmonary TB cases with bacteriological confirmation, 2015
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -154,7 +154,7 @@ bacconf_data_combined <- bacconf_data %>%
 
 # produce the map
 bacconf_map <- WHOmap.print(bacconf_data_combined,
-                        paste0("Figure 4.4 Percentage of new and relapse pulmonary TB cases with bacteriological confirmation, ",
+                        paste0("Figure 4.5 Percentage of new and relapse pulmonary TB cases with bacteriological confirmation, ",
                               report_year-1,
                                "(a)"),
                            "Percentage",
@@ -180,15 +180,15 @@ figsave(bacconf_map,
                          iso3,
                          bacconf_pct,
                          cat),
-        "f4_4_pct_bacconf_map")
+        "f4_5_pct_bacconf_map")
 
 # Clean up (remove any objects with their name beginning with 'bacconf')
 rm(list=ls(pattern = "^bacconf"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 4.6  ------
-# Percentage of new and relapse TB cases with documented HIV status,", 2015
+# Figure 4.8  ------
+# Percentage of new and relapse TB cases with documented HIV status, 2015
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
@@ -212,7 +212,7 @@ hivstatus_data$cat <- cut(hivstatus_data$hivstatus_pct,
 
 # produce the map
 hivstatus_map <- WHOmap.print(hivstatus_data,
-                        paste("Figure 4.6 Percentage of new and relapse TB cases with documented HIV status(a),", report_year-1),
+                        paste("Figure 4.8 Percentage of new and relapse TB cases with documented HIV status(a),", report_year-1),
                            "Percentage",
                            copyright=FALSE,
                            #colors=c('yellow', 'lightgreen', 'green', 'darkgreen'),
@@ -233,7 +233,7 @@ figsave(hivstatus_map,
                          iso3,
                          hivstatus_pct,
                          cat),
-        "f4_6_pct_HIV_status_map")
+        "f4_8_pct_HIV_status_map")
 
 # Clean up (remove any objects with their name beginning with 'hivstatus')
 rm(list=ls(pattern = "^hivstatus"))
