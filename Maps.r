@@ -240,8 +240,9 @@ rm(list=ls(pattern = "^hivstatus"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 4.14  ------
-# Percentage of BMUs with community referral or treatment adherence support, 2015
+# Figure Box 4.4.1  ------
+# Percentage of basic management units in which there is community engagement in patient referral
+# or provision of treatment adherence support, 2015
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
@@ -264,7 +265,9 @@ comm_data$cat <- cut(comm_data$comm_pct,
 
 # produce the map
 comm_map <- WHOmap.print(comm_data,
-                        paste("Figure 4.14 Percentage of BMUs with community referral or treatment adherence support,", report_year-1),
+                        paste("Figure Box 4.4.1 Percentage of basic management units in which there is community engagement",
+                              "\nor provision of treatment adherence support,",
+                              report_year-1),
                            "Percentage",
                            copyright=FALSE,
                            #colors=c('yellow', 'lightgreen', 'green', 'darkgreen'),
@@ -276,7 +279,7 @@ figsave(comm_map,
                iso3,
                comm_pct,
                cat),
-        "f4_14_pct_BMU_community_map")
+        "f4_box_4_4_1_pct_BMU_community_map")
 
 
 

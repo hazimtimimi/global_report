@@ -13,20 +13,24 @@
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Figure 4.1   ------
-# Global numbers of notified new and relapse TB cases compared with estimated TB incidence, 2000-2015
+# Number of new and relapse TB cases notified compared with estimated number of incident TB cases, 2000-2015,
+# globally and for WHO regions
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 newinc_data <- notification %>%
                 filter(year >= 2000) %>%
-                select(year, c_newinc) %>%
-                group_by(year) %>%
+                select(year, g_whoregion, c_newinc) %>%
+                group_by(year, g_whoregion) %>%
                 summarise_each(funs(sum(.,na.rm = TRUE)),
                                c_newinc) %>%
+
+                # change number to millions
                 mutate(c_newinc = c_newinc / 1e6)
 
 inc_data <- aggregated_estimates_epi_rawvalues %>%
-            filter( year >= 2000 & group_name == 'global') %>%
+            filter( year >= 2000 & group_type == "g_whoregion") %>%
             select(year,
+                   g_whoregion = group_name,
                    e_inc_num,
                    e_inc_num_lo,
                    e_inc_num_hi) %>%
@@ -34,7 +38,41 @@ inc_data <- aggregated_estimates_epi_rawvalues %>%
                    e_inc_num_lo = e_inc_num_lo / 1e6,
                    e_inc_num_hi = e_inc_num_hi / 1e6) %>%
             # Use a right-join so can see the data for the final year even in the absence of estimates
-            right_join(newinc_data)
+            right_join(newinc_data) %>%
+
+            # merge with regional names
+            inner_join(who_region_names, by = "g_whoregion") %>%
+            select(-g_whoregion) %>%
+
+            # get rid of the oh-so-pesky grouping variables within the dataframe
+            ungroup()
+
+
+newinc_global <- newinc_data %>%
+                  group_by(year) %>%
+                  summarise_each(funs(sum(.,na.rm = TRUE)),
+                                 c_newinc) %>%
+                  mutate(entity = 'Global')
+
+inc_global <- aggregated_estimates_epi_rawvalues %>%
+              filter( year >= 2000 & group_type == "global") %>%
+              select(year,
+                     e_inc_num,
+                     e_inc_num_lo,
+                     e_inc_num_hi) %>%
+              mutate(e_inc_num = e_inc_num / 1e6,
+                     e_inc_num_lo = e_inc_num_lo / 1e6,
+                     e_inc_num_hi = e_inc_num_hi / 1e6) %>%
+              # Use a right-join so can see the data for the final year even in the absence of estimates
+              right_join(newinc_global)
+
+# Add global to the regional aggregates
+inc_data <- rbind(inc_data, inc_global)
+
+# Change the order
+inc_data$entity <- factor(inc_data$entity,
+                             levels = c("Africa", "The Americas", "Eastern Mediterranean", "Europe", "South-East Asia", "Western Pacific", "Global"))
+
 
 # Plot as lines
 inc_plot <- inc_data %>%
@@ -47,19 +85,20 @@ inc_plot <- inc_data %>%
                       size=1,
                       colour=I('#00FF33')) +
 
+            facet_wrap( ~ entity, scales="free_y") +
             scale_y_continuous(name = "New and relapse cases per year (millions)") +
             xlab("Year") +
 
-            ggtitle(paste0("Figure 4.1 Global numbers of notified new and relapse TB cases (black) compared with estimated TB incidence (green), 2000 - ",
+            ggtitle(paste0("Figure 4.1 Number of new and relapse TB cases notified (black) compared with estimated number of incident TB cases (green),\n2000 - ",
                          report_year-1,
-                         ".\nShaded areas represent uncertainty bands.")) +
+                         ", globally and for WHO regions. Shaded areas represent uncertainty bands.")) +
 
             theme_glb.rpt() +
             theme(legend.position="top",
                   legend.title=element_blank())
 
 # Save the plot
-figsave(inc_plot, inc_data, "f4_1_inc_plot_global")
+figsave(inc_plot, inc_data, "f4_1_inc_plot_aggregates")
 
 # Clean up (remove any objects with their name containing 'inc_')
 rm(list=ls(pattern = "inc_"))
@@ -494,7 +533,10 @@ newinc_data <- notification %>%
                        iso2,
                        country,
                        c_newinc) %>%
-                mutate(c_newinc = c_newinc / 1e3)
+                mutate(c_newinc = c_newinc / 1e3,
+                       #add markers for Bangladesh and India footnotes
+                       country = ifelse(country == "Bangladesh", "Bangladesh(a)",
+                                        ifelse(country == "India", "India(b)", country)))
 
 inc_data <- estimates_epi_rawvalues %>%
             filter(year >= 2000) %>%
@@ -539,6 +581,17 @@ inc_plot <- inc_data %>%
             theme(legend.position="top",
                   legend.title=element_blank())
 
+# Add Bangladesh and India footnotes
+inc_plot <- arrangeGrob(inc_plot,
+                        bottom = textGrob(paste("(a)",
+                                                 bangladesh_footnote,
+                                                 "\n(b)",
+                                                 india_footnote),
+                                          x = 0.02,
+                                          just = "left",
+                                          gp = gpar(fontsize = 8)))
+
+
 # Save the plot
 figsave(inc_plot, inc_data, "f4_14_inc_plot_hbc")
 
@@ -570,7 +623,10 @@ coverage_30hbc <- report_country %>%
                   select(iso2)
 
 coverage_inc_country <- coverage_inc_country %>%
-                        inner_join(coverage_30hbc)
+                        inner_join(coverage_30hbc) %>%
+                       #add markers for Bangladesh and India footnotes
+                       mutate(entity = ifelse(entity == "Bangladesh", "Bangladesh(a)",
+                                              ifelse(entity == "India", "India(b)", entity)))
 
 
 coverage_country <- notification %>%
@@ -647,16 +703,24 @@ coverage_plot <- coverage_data %>%
                   expand_limits(y=0) +
                   coord_flip()
 
-# If there are countries with no data then add a footnote
+# Add footnotes
+coverage_footnote <- paste("(a)",
+                           bangladesh_footnote,
+                           "\n(b)",
+                           india_footnote)
+# If there are countries with no data then mention it in the footnotes
 if (coverage_nodata_count > 0)
   {
-  coverage_plot <- arrangeGrob(coverage_plot,
-                                bottom = textGrob("* No data",
-                                               x = 0,
-                                               hjust = -0.1,
-                                               vjust=0,
-                                               gp = gpar(fontsize = 10)))
+  coverage_footnote <- paste("* No data\n",
+                             coverage_footnote)
   }
+
+coverage_plot <- arrangeGrob(coverage_plot,
+                             bottom = textGrob(coverage_footnote,
+                                               x = 0.02,
+                                               just = "left",
+                                               gp = gpar(fontsize = 8)))
+
 
 # Save the plot
 figsave(coverage_plot, coverage_data, "f4_15_txcoverage_tb")
@@ -964,10 +1028,10 @@ rm(list=ls(pattern = "^coveragehiv"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 4.15c   ------
-# Percentage coverage of treatment for MDR/RR-TB,
-# (patients enrolled on treatment as % of estimated incidence of MDR/RR-TB)
-# 30 high MDR-TB burden countries, WHO Regions and globally, 2015
+# Figure 4.19   ------
+# Estimated MDR/RR-TB treatment coverage for MDR/RR-TB
+# (patients started on treatment for MDR-TB as a percentage of the estimated number of MDR/RR-TB cases among notified pulmonary TB cases)
+# in 2015, 30 high MDR-TB burden countries, WHO regions and globally
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
@@ -975,9 +1039,9 @@ coveragerr_inc_country <- estimates_drtb_rawvalues %>%
                           filter(year == report_year - 1) %>%
                           select(entity = country,
                                   iso2,
-                                  e_inc_rr_num,
-                                  e_inc_rr_num_lo,
-                                  e_inc_rr_num_hi)  %>%
+                                  e_rr_in_notified_pulm,
+                                  e_rr_in_notified_pulm_lo,
+                                  e_rr_in_notified_pulm_hi)  %>%
                           # shorten long country names
                           .shortnames( col = "entity")
 
@@ -1001,9 +1065,9 @@ coveragerr_country$rrmdr_tx <- sum_of_row(coveragerr_country[c("unconf_rrmdr_tx"
 
 coveragerr_country <- coveragerr_country %>%
                        inner_join(coveragerr_inc_country) %>%
-                       mutate(c_rr_coverage = rrmdr_tx * 100 / e_inc_rr_num,
-                              c_rr_coverage_lo = rrmdr_tx * 100  / e_inc_rr_num_hi,
-                              c_rr_coverage_hi = rrmdr_tx * 100  / e_inc_rr_num_lo,
+                       mutate(c_rr_coverage = rrmdr_tx * 100 / e_rr_in_notified_pulm,
+                              c_rr_coverage_lo = rrmdr_tx * 100  / e_rr_in_notified_pulm_hi,
+                              c_rr_coverage_hi = rrmdr_tx * 100  / e_rr_in_notified_pulm_lo,
                               # highlight countries with no data
                               entity = ifelse(is.na(rrmdr_tx), paste0(entity, "*"), entity )) %>%
                        select(entity,
@@ -1012,13 +1076,18 @@ coveragerr_country <- coveragerr_country %>%
                               c_rr_coverage_hi) %>%
                        arrange(desc(c_rr_coverage))
 
+# Calculate how many countries highlighted as having no data
+coveragerr_nodata_count <- coveragerr_country %>%
+                            filter(grepl("[*]$", entity)) %>%
+                            nrow()
+
 
 coveragerr_inc_region <- aggregated_estimates_drtb_rawvalues %>%
                           filter(year == report_year - 1 & group_type == "g_whoregion") %>%
                           select(g_whoregion = group_name,
-                                  e_inc_rr_num,
-                                  e_inc_rr_num_lo,
-                                  e_inc_rr_num_hi)
+                                  e_rr_in_notified_pulm,
+                                  e_rr_in_notified_pulm_lo,
+                                  e_rr_in_notified_pulm_hi)
 
 coveragerr_region <- notification %>%
                       filter(year == report_year - 1) %>%
@@ -1029,9 +1098,9 @@ coveragerr_region <- notification %>%
 
                       # merge with estimates and calculate treatment coverage
                       inner_join(coveragerr_inc_region) %>%
-                       mutate(c_rr_coverage = rrmdr_tx * 100 / e_inc_rr_num,
-                              c_rr_coverage_lo = rrmdr_tx * 100  / e_inc_rr_num_hi,
-                              c_rr_coverage_hi = rrmdr_tx * 100  / e_inc_rr_num_lo) %>%
+                       mutate(c_rr_coverage = rrmdr_tx * 100 / e_rr_in_notified_pulm,
+                              c_rr_coverage_lo = rrmdr_tx * 100  / e_rr_in_notified_pulm_hi,
+                              c_rr_coverage_hi = rrmdr_tx * 100  / e_rr_in_notified_pulm_lo) %>%
 
                       # merge with regional names and simplify
                       inner_join(who_region_names, by = "g_whoregion") %>%
@@ -1044,9 +1113,9 @@ coveragerr_region <- notification %>%
 
 coveragerr_inc_global <- aggregated_estimates_drtb_rawvalues %>%
                          filter(year == report_year - 1 & group_type == "global") %>%
-                         select(e_inc_rr_num,
-                                e_inc_rr_num_lo,
-                                e_inc_rr_num_hi)%>%
+                         select(e_rr_in_notified_pulm,
+                                e_rr_in_notified_pulm_lo,
+                                e_rr_in_notified_pulm_hi)%>%
                          mutate(entity = "Global")
 
 
@@ -1059,9 +1128,9 @@ coveragerr_global <- notification %>%
 
                       # merge with estimates and calculate treatment coverage
                       inner_join(coveragerr_inc_global) %>%
-                      mutate(c_rr_coverage = rrmdr_tx * 100 / e_inc_rr_num,
-                              c_rr_coverage_lo = rrmdr_tx * 100  / e_inc_rr_num_hi,
-                              c_rr_coverage_hi = rrmdr_tx * 100  / e_inc_rr_num_lo) %>%
+                      mutate(c_rr_coverage = rrmdr_tx * 100 / e_rr_in_notified_pulm,
+                              c_rr_coverage_lo = rrmdr_tx * 100  / e_rr_in_notified_pulm_hi,
+                              c_rr_coverage_hi = rrmdr_tx * 100  / e_rr_in_notified_pulm_lo) %>%
                       select(entity,
                               c_rr_coverage,
                               c_rr_coverage_lo,
@@ -1088,10 +1157,10 @@ coveragerr_plot <- coveragerr_data %>%
                     geom_point() +
                     labs(x="",
                          y="Treatment coverage (%)",
-                         title=paste("Figure 4.15c Estimated percentage coverage of treatment for MDR/RR-TB\n",
-                                     "(patients started on treatment for MDR-TB as % of estimated MDR/RR-TB incidence number)\n",
-                                     "30 high MDR-TB burden countries, WHO Regions and globally,",
-                                     report_year - 1)) +
+                         title=paste0("Figure 4.19 Estimated MDR/RR-TB treatment coverage for MDR/RR-TB\n",
+                                     "(patients started on treatment for MDR-TB as a percentage of the estimated number of MDR/RR-TB cases among notified pulmonary TB cases)\nin ",
+                                     report_year - 1,
+                                     ", 30 high MDR-TB burden countries, WHO Regions and globally")) +
                     geom_pointrange(aes(ymin=c_rr_coverage_lo,
                                         ymax=c_rr_coverage_hi)) +
                     theme_glb.rpt() +
@@ -1099,16 +1168,21 @@ coveragerr_plot <- coveragerr_data %>%
                     expand_limits(y=0) +
                     coord_flip()
 
-coveragerr_plot <- arrangeGrob(coveragerr_plot,
-                              bottom = textGrob("* No data",
-                                             x = 0,
-                                             hjust = -0.1,
-                                             vjust=0,
-                                             gp = gpar(fontsize = 10)))
-# Save the plot
-figsave(coveragerr_plot, coveragerr_data, "f4_15c_txcoverage_drtb")
+# If there are countries with no data then add a footnote
+if (coveragerr_nodata_count > 0)
+  {
+  coveragerr_plot <- arrangeGrob(coveragerr_plot,
+                                bottom = textGrob("* No data",
+                                               x = 0,
+                                               hjust = -0.1,
+                                               vjust=0,
+                                               gp = gpar(fontsize = 10)))
+  }
 
-# Clean up (remove any objects with their name starting with 'coveragehiv')
+# Save the plot
+figsave(coveragerr_plot, coveragerr_data, "f4_19_txcoverage_drtb")
+
+# Clean up (remove any objects with their name starting with 'coveragerr')
 rm(list=ls(pattern = "^coveragerr"))
 
 
@@ -1116,9 +1190,9 @@ rm(list=ls(pattern = "^coveragerr"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 4.19.a   ------
-# Treatment outcomes for new and relapse TB cases,
-# for 30 high TB burden countries, 6 WHO regions and globally, 2014
+# Figure 4.20   ------
+# Treatment outcomes for new and relapse TB cases in 2014,
+# 30 high TB burden countries, WHO regions and globally
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
@@ -1175,6 +1249,12 @@ txout_country <- txout_country %>%
                   select(-iso2,
                          -g_whoregion)
 
+# Check if any of the countries have no data so that we can add a 'No data reported' option
+txout_nodata_count <- txout_country %>%
+                      filter(is.na(newrel_coh)) %>%
+                      nrow()
+
+
 # Create dummy records so can see a horizontal line in the output to separate countries, regions and global parts
 txout_dummy1 <- data.frame(entity = "-----", newrel_coh = NA, newrel_succ = NA, newrel_fail = NA,
                            newrel_died = NA, newrel_lost = NA, c_newrel_neval = NA)
@@ -1202,24 +1282,28 @@ txout <- txout %>%
                                               NA),
                  `Not evaluated` = ifelse(NZ(newrel_coh) > 0,
                                           c_newrel_neval * 100 / newrel_coh,
-                                          NA),
-                 # Add a 'no data' option so non-reporters are highlighted in the output
-                 `No data reported` = ifelse(is.na(newrel_coh) & substring(entity,1,2) != "--" ,100,0)
-                 ) %>%
+                                          NA))
+
+# Add a 'no data' option so non-reporters are highlighted in the output
+# (but only if we have at least one country with no data)
+if (txout_nodata_count > 0 )
+  {
+  txout <- txout %>%
+            mutate(`No data reported` = ifelse(is.na(newrel_coh) & substring(entity,1,2) != "--" ,100,0))
+  }
+
+
+txout <- txout %>%
           # Keep record of current order (in reverse) so plot comes out as we want it
           mutate(entity = factor(entity, levels=rev(entity))) %>%
           # Drop the actual numbers and keep percentages
           select(-contains("newrel"))
-
 
 #tsr_table$area <- factor(tsr_table$area, levels=rev(tsr_table$area))
 
 
 # Flip into long mode for stacked bar plotting
 txout_long <- melt(txout, id=1)
-
-
-
 
 # Plot as stacked bars
 txout_plot <- txout_long %>%
@@ -1237,7 +1321,9 @@ txout_plot <- txout_long %>%
 
                       expand_limits(c(0,0)) +
 
-                      ggtitle(paste0("Figure 4.19.a Treatment outcomes for new and relapse TB cases,\nfor 30 high TB burden countries,\n6 WHO regions and globally, ", report_year - 2))
+                      ggtitle(paste0("Figure 4.20 Treatment outcomes for new and relapse TB cases in ",
+                                     report_year - 2,
+                                     ",\n30 high TB burden countries, WHO regions and globally"))
 
 txout_plot <- arrangeGrob(txout_plot,
                           bottom = textGrob("* Treatment outcomes are for new cases only.",
@@ -1247,15 +1333,15 @@ txout_plot <- arrangeGrob(txout_plot,
                                          gp = gpar(fontsize = 10)))
 
 
-figsave(txout_plot, txout, "f4_19a_outcomes_tb", width=7, height=11) # Designer needs wide data; output portrait mode
+figsave(txout_plot, txout, "f4_20_outcomes_tb", width=7, height=11) # Designer needs wide data; output portrait mode
 
 # Clean up (remove any objects with their name starting with 'txout')
 rm(list=ls(pattern = "^txout"))
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 4.19.b   ------
-# Treatment outcomes for new and relapse TB/HIV cases
-# for 30 high TB/HIV burden countries, 6 WHO regions and globally, 2014
+# Figure 4.21   ------
+# Treatment outcomes for new and relapse TB/HIV cases in 2014,
+# 30 high TB/HIV burden countries, WHO regions and globally
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
@@ -1300,6 +1386,13 @@ txtbhivout_country <- txtbhivout_country %>%
                   select(-iso2,
                          -g_whoregion)
 
+# Check if any of the countries have no data so that we can add a 'No data reported' option
+# (This includes countries reporting a cohort of zero as this would be a data entry error for such countries!)
+txtbhivout_nodata_count <- txtbhivout_country %>%
+                            filter(is.na(tbhiv_coh) | tbhiv_coh == 0) %>%
+                            nrow()
+
+
 # Create dummy records so can see a horizontal line in the output to separate countries, regions and global parts
 txtbhivout_dummy1 <- data.frame(entity = "-----", tbhiv_coh = NA, tbhiv_succ = NA, tbhiv_fail = NA,
                            tbhiv_died = NA, tbhiv_lost = NA, c_tbhiv_neval = NA, c_tbhiv_tsr = NA)
@@ -1327,10 +1420,18 @@ txtbhivout <- txtbhivout %>%
                                               NA),
                  `Not evaluated` = ifelse(NZ(tbhiv_coh) > 0,
                                           c_tbhiv_neval * 100 / tbhiv_coh,
-                                          NA),
-                 # Add a 'no data' option so non-reporters are highlighted in the output
-                 `No data reported` = ifelse(is.na(tbhiv_coh) & substring(entity,1,2) != "--" ,100,0)
-                 ) %>%
+                                          NA))
+
+# Add a 'no data' option so non-reporters are highlighted in the output
+# (but only if we have at least one country with no data)
+if (txtbhivout_nodata_count > 0 )
+  {
+  txtbhivout <- txtbhivout %>%
+                mutate(`No data reported` = ifelse((is.na(tbhiv_coh) | tbhiv_coh == 0) & substring(entity,1,2) != "--" ,100,0))
+  }
+
+
+txtbhivout <- txtbhivout %>%
           # Keep record of current order (in reverse) so plot comes out as we want it
           mutate(entity = factor(entity, levels=rev(entity))) %>%
           # Drop the actual numbers and keep percentages
@@ -1361,10 +1462,12 @@ txtbhivout_plot <- txtbhivout_long %>%
 
                       expand_limits(c(0,0)) +
 
-                      ggtitle(paste0("Figure 4.19.b Treatment outcomes for new and relapse\nTB/HIV cases, for 30 high TB/HIV burden countries,\n6 WHO regions and globally, ", report_year - 2))
+                      ggtitle(paste0("Figure 4.21 Treatment outcomes for new and relapse TB/HIV cases in\n",
+                                     report_year - 2,
+                                     ", 30 high TB/HIV burden countries, WHO regions and globally"))
 
 
-figsave(txtbhivout_plot, txtbhivout, "f4_19b_outcomes_tbhiv", width=7, height=11) # Designer needs wide data; output portrait mode
+figsave(txtbhivout_plot, txtbhivout, "f4_21_outcomes_tbhiv", width=7, height=11) # Designer needs wide data; output portrait mode
 
 # Clean up (remove any objects with their name starting with 'txtbhivout')
 rm(list=ls(pattern = "^txtbhivout"))

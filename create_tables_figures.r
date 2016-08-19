@@ -85,7 +85,9 @@ rm(entity)
 
 
 # Repeated footnotes -----
-bangladesh.est.foot <- "For Bangladesh, a joint reassessment of estimates of TB disease burden will be undertaken following completion of the national TB prevalence survey."
+bangladesh_footnote <- "Estimates of TB incidence for Bangladesh will be reviewed once final results from the 2015/2016 national TB prevalence survey are available. Provisional survey results are consistent with the estimates shown."
+
+india_footnote <- "Estimates of TB incidence for India are interim in nature, pending results from the national TB prevalence survey planned for 2017/2018."
 
 # Load packages ----
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
