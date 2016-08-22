@@ -1472,6 +1472,146 @@ figsave(txtbhivout_plot, txtbhivout, "f4_21_outcomes_tbhiv", width=7, height=11)
 # Clean up (remove any objects with their name starting with 'txtbhivout')
 rm(list=ls(pattern = "^txtbhivout"))
 
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Figure 4.22   ------
+# Treatment outcomes for rifampicin-resistant TB cases in 2013,
+# 30 high MDR-TB burden countries, WHO regions and globally
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+
+txmdrout_country  <- outcomes %>%
+                  filter(year==report_year - 3) %>%
+                  select(country,
+                         iso2,
+                         g_whoregion,
+                         contains("mdr_")) %>%
+                  # drop old cured/completed fields
+                  select(-mdr_cur, -mdr_cmplt) %>%
+                  # shorten long country names
+                  .shortnames() %>%
+                  rename(entity = country ) %>%
+                  arrange(entity)
+
+# Calculate regional aggregates
+txmdrout_region <- txmdrout_country %>%
+                group_by(g_whoregion) %>%
+                summarise_each(funs(sum(., na.rm = TRUE)),
+                               contains("mdr_")) %>%
+
+                  # merge with regional names and simplify to match structure of country table
+                inner_join(who_region_names, by = "g_whoregion") %>%
+                select(-g_whoregion)
+
+
+# Calculate global aggregate
+txmdrout_global <- txmdrout_country %>%
+                summarise_each(funs(sum(., na.rm = TRUE)),
+                               contains("mdr_")) %>%
+
+                # Add dummy variable and simplify to match structure of country table
+                mutate(entity = "Global")
+
+# Filter the country list down to high burden ones
+txmdrout_30hbc <- report_country %>%
+                filter(g_hb_mdr==1) %>%
+                select(iso2)
+
+txmdrout_country <- txmdrout_country %>%
+                  inner_join(txmdrout_30hbc) %>%
+                  #remove the iso2 field to match regional and countries aggregates
+                  select(-iso2,
+                         -g_whoregion)
+
+# Check if any of the countries have no data so that we can add a 'No data reported' option
+# (This includes countries reporting a cohort of zero as this would be a data entry error for such countries!)
+txmdrout_nodata_count <- txmdrout_country %>%
+                            filter(is.na(mdr_coh) | mdr_coh == 0) %>%
+                            nrow()
+
+
+# Create dummy records so can see a horizontal line in the output to separate countries, regions and global parts
+txmdrout_dummy1 <- data.frame(entity = "-----", mdr_coh = NA, mdr_succ = NA, mdr_fail = NA,
+                           mdr_died = NA, mdr_lost = NA, c_mdr_neval = NA, c_mdr_tsr = NA)
+txmdrout_dummy2 <- data.frame(entity = "------", mdr_coh = NA, mdr_succ = NA, mdr_fail = NA,
+                           mdr_died = NA, mdr_lost = NA, c_mdr_neval = NA, c_mdr_tsr = NA)
+
+
+
+# Create combined table in order of countries then regional and global estimates
+txmdrout <- rbind(txmdrout_country, txmdrout_dummy1, txmdrout_region, txmdrout_dummy2, txmdrout_global)
+
+# Calculate outcome proportions for plotting as stacked bars
+txmdrout <- txmdrout %>%
+          mutate(`Treatment success` = ifelse(NZ(mdr_coh) > 0,
+                                              mdr_succ * 100 / mdr_coh,
+                                              NA),
+                 Failure = ifelse(NZ(mdr_coh) > 0,
+                                      mdr_fail * 100 / mdr_coh,
+                                      NA),
+                 Died = ifelse(NZ(mdr_coh) > 0,
+                                  mdr_died * 100 / mdr_coh,
+                                  NA),
+                 `Lost to follow-up` = ifelse(NZ(mdr_coh) > 0,
+                                              mdr_lost * 100 / mdr_coh,
+                                              NA),
+                 `Not evaluated` = ifelse(NZ(mdr_coh) > 0,
+                                          c_mdr_neval * 100 / mdr_coh,
+                                          NA))
+
+# Add a 'no data' option so non-reporters are highlighted in the output
+# (but only if we have at least one country with no data)
+if (txmdrout_nodata_count > 0 )
+  {
+  txmdrout <- txmdrout %>%
+                mutate(`No data reported` = ifelse((is.na(mdr_coh) | mdr_coh == 0) & substring(entity,1,2) != "--" ,100,0))
+  }
+
+
+txmdrout <- txmdrout %>%
+          # Keep record of current order (in reverse) so plot comes out as we want it
+          mutate(entity = factor(entity, levels=rev(entity))) %>%
+          # Drop the actual numbers and keep percentages
+          select(-contains("mdr"))
+
+
+#tsr_table$area <- factor(tsr_table$area, levels=rev(tsr_table$area))
+
+
+# Flip into long mode for stacked bar plotting
+txmdrout_long <- melt(txmdrout, id=1)
+
+
+
+# Plot as stacked bars
+txmdrout_plot <- txmdrout_long %>%
+              ggplot(aes(entity, value, fill=variable)) +
+                      geom_bar(stat="identity",
+                               position="stack") +
+                      coord_flip() +
+
+                      theme_glb.rpt() +
+                      scale_fill_manual("", values = outcomes_palette) +
+                      labs(x="", y="Percentage of cohort (%)") +
+
+                      theme(legend.position="bottom",
+                            panel.grid=element_blank()) +
+
+                      expand_limits(c(0,0)) +
+
+                      ggtitle(paste0("Figure 4.22 Treatment outcomes for rifampicin-resistant TB cases\nstarted on treatment in ",
+                                     report_year - 3,
+                                     ",\n30 high MDR-TB burden countries, WHO regions and globally"))
+
+
+figsave(txmdrout_plot, txmdrout, "f4_22_outcomes_mdr", width=7, height=11) # Designer needs wide data; output portrait mode
+
+# Clean up (remove any objects with their name starting with 'txmdrout')
+rm(list=ls(pattern = "^txmdrout"))
+
+
+
+
 stop("
 
      >>>>>>>>>>
