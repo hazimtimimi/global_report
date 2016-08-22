@@ -13,58 +13,36 @@
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Figure 4.1   ------
-# Number of new and relapse TB cases notified compared with estimated number of incident TB cases, 2000-2015,
+# Case notification rates (new and relapse cases, all forms) compared with estimated TB incidence rates, 2000-2015,
 # globally and for WHO regions
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-newinc_data <- notification %>%
-                filter(year >= 2000) %>%
-                select(year, g_whoregion, c_newinc) %>%
-                group_by(year, g_whoregion) %>%
-                summarise_each(funs(sum(.,na.rm = TRUE)),
-                               c_newinc) %>%
-
-                # change number to millions
-                mutate(c_newinc = c_newinc / 1e6)
 
 inc_data <- aggregated_estimates_epi_rawvalues %>%
             filter( year >= 2000 & group_type == "g_whoregion") %>%
             select(year,
                    g_whoregion = group_name,
-                   e_inc_num,
-                   e_inc_num_lo,
-                   e_inc_num_hi) %>%
-            mutate(e_inc_num = e_inc_num / 1e6,
-                   e_inc_num_lo = e_inc_num_lo / 1e6,
-                   e_inc_num_hi = e_inc_num_hi / 1e6) %>%
-            # Use a right-join so can see the data for the final year even in the absence of estimates
-            right_join(newinc_data) %>%
+                   e_inc_100k,
+                   e_inc_100k_lo,
+                   e_inc_100k_hi,
+                   c_newinc,
+                   e_pop_num) %>%
+            mutate(c_newinc_100k = c_newinc * 1e5 / e_pop_num) %>%
 
             # merge with regional names
             inner_join(who_region_names, by = "g_whoregion") %>%
-            select(-g_whoregion) %>%
+            select(-g_whoregion)
 
-            # get rid of the oh-so-pesky grouping variables within the dataframe
-            ungroup()
-
-
-newinc_global <- newinc_data %>%
-                  group_by(year) %>%
-                  summarise_each(funs(sum(.,na.rm = TRUE)),
-                                 c_newinc) %>%
-                  mutate(entity = 'Global')
 
 inc_global <- aggregated_estimates_epi_rawvalues %>%
               filter( year >= 2000 & group_type == "global") %>%
               select(year,
-                     e_inc_num,
-                     e_inc_num_lo,
-                     e_inc_num_hi) %>%
-              mutate(e_inc_num = e_inc_num / 1e6,
-                     e_inc_num_lo = e_inc_num_lo / 1e6,
-                     e_inc_num_hi = e_inc_num_hi / 1e6) %>%
-              # Use a right-join so can see the data for the final year even in the absence of estimates
-              right_join(newinc_global)
+                     e_inc_100k,
+                     e_inc_100k_lo,
+                     e_inc_100k_hi,
+                     c_newinc,
+                     e_pop_num) %>%
+              mutate(c_newinc_100k = c_newinc * 1e5 / e_pop_num,
+                     entity = "Global")
 
 # Add global to the regional aggregates
 inc_data <- rbind(inc_data, inc_global)
@@ -76,20 +54,20 @@ inc_data$entity <- factor(inc_data$entity,
 
 # Plot as lines
 inc_plot <- inc_data %>%
-            ggplot(aes(x=year, y=c_newinc, ymin=0)) +
+            ggplot(aes(x=year, y=c_newinc_100k, ymin=0)) +
             geom_line(size=1) +
-            geom_ribbon(aes(x=year, ymin=e_inc_num_lo, ymax=e_inc_num_hi),
+            geom_ribbon(aes(x=year, ymin=e_inc_100k_lo, ymax=e_inc_100k_hi),
                         fill=I('#00FF33'),
                         alpha=0.4) +
-            geom_line(aes(year, e_inc_num),
+            geom_line(aes(year, e_inc_100k),
                       size=1,
                       colour=I('#00FF33')) +
 
             facet_wrap( ~ entity, scales="free_y") +
-            scale_y_continuous(name = "New and relapse cases per year (millions)") +
+            scale_y_continuous(name = "Rate per 100 000 population per year") +
             xlab("Year") +
 
-            ggtitle(paste0("Figure 4.1 Number of new and relapse TB cases notified (black) compared with estimated number of incident TB cases (green),\n2000 - ",
+            ggtitle(paste0("Figure 4.1 Case notification rates (new and relapse cases, all forms) (black) compared with estimated TB incidence rates (green),\n2000 - ",
                          report_year-1,
                          ", globally and for WHO regions. Shaded areas represent uncertainty bands.")) +
 
@@ -518,8 +496,8 @@ rm(list=ls(pattern = "^hivstatus"))
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Figure 4.14   ------
-# Number of new and relapse cases notified compared with estimated number of incident TB cases,
-# 2000-2015, 30 high TB burden countries
+# Case notification rates (new and relapse cases, all forms) compared with estimated TB incidence rates, 2000-2015,
+# 30 high TB burden countries
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 newinc_30hbc <- report_country %>%
@@ -533,9 +511,8 @@ newinc_data <- notification %>%
                        iso2,
                        country,
                        c_newinc) %>%
-                mutate(c_newinc = c_newinc / 1e3,
-                       #add markers for Bangladesh and India footnotes
-                       country = ifelse(country == "Bangladesh", "Bangladesh(a)",
+                #add markers for Bangladesh and India footnotes
+                mutate(country = ifelse(country == "Bangladesh", "Bangladesh(a)",
                                         ifelse(country == "India", "India(b)", country)))
 
 inc_data <- estimates_epi_rawvalues %>%
@@ -543,40 +520,41 @@ inc_data <- estimates_epi_rawvalues %>%
             inner_join(newinc_30hbc) %>%
             select(year,
                    iso2,
-                   e_inc_num,
-                   e_inc_num_lo,
-                   e_inc_num_hi) %>%
-            mutate(e_inc_num = e_inc_num / 1e3,
-                   e_inc_num_lo = e_inc_num_lo / 1e3,
-                   e_inc_num_hi = e_inc_num_hi / 1e3) %>%
+                   e_pop_num,
+                   e_inc_100k,
+                   e_inc_100k_lo,
+                   e_inc_100k_hi) %>%
 
             # Use a right-join so can see the data for the final year even in the absence of estimates
             right_join(newinc_data) %>%
+
+            # Calculate case notification rate
+            mutate(c_newinc_100k = c_newinc * 1e5 / e_pop_num) %>%
 
             # shorten long country names
             .shortnames( col = "country")
 
 # Plot as lines
 inc_plot <- inc_data %>%
-            ggplot(aes(x=year, y=c_newinc, ymin=0)) +
+            ggplot(aes(x=year, y=c_newinc_100k, ymin=0)) +
             geom_line(size=1) +
-            geom_ribbon(aes(x=year, ymin=e_inc_num_lo, ymax=e_inc_num_hi),
+            geom_ribbon(aes(x=year, ymin=e_inc_100k_lo, ymax=e_inc_100k_hi),
                         fill=I('#00FF33'),
                         alpha=0.4) +
-            geom_line(aes(year, e_inc_num),
+            geom_line(aes(year, e_inc_100k),
                       size=1,
                       colour=I('#00FF33')) +
 
-            scale_y_continuous(name = "New and relapse cases per year (thousands)") +
+            scale_y_continuous(name = "Rate per 100 000 population per year") +
             xlab("Year") +
 
             facet_wrap( ~ country,
                         scales = "free_y",
                         ncol = 5) +
 
-            ggtitle(paste0("Figure 4.14 Number of new and relapse cases notified (black) compared with estimated number of incident TB cases (green),\n2000 - ",
+            ggtitle(paste0("Figure 4.14 Case notification rates (new and relapse cases, all forms) (black) compared with estimated TB incidence rates  (green),\n2000 - ",
                          report_year-1,
-                         ", 30 high TB burden countries")) +
+                         ", 30 high TB burden countries. Shaded areas represent uncertainty bands.")) +
             theme_glb.rpt() +
             theme(legend.position="top",
                   legend.title=element_blank())
