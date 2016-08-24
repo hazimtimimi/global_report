@@ -6,6 +6,169 @@
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Chapter 3 ------
+# Estimates
+# (Re-did some of Philippe's plots from https://github.com/glaziou/gtb2016/blob/master/report_figs.R to
+# incorporate some change requests while Philippe was on leave)
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Figure 3.3 ----
+# Get the data for the map
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+library(whomap)
+
+estimates_country <- estimates_epi_rawvalues %>%
+                      filter(year == 2015) %>%
+                      select(country, iso3, e_inc_100k)
+
+estimates_country$var <- cut(estimates_country$e_inc_100k, c(0, 25, 100, 200, 300, Inf),
+                             c('0-24.9', '25-99.9', '100-199.9', '200-299', '300+'),
+                             right=FALSE, ordered_result=TRUE)
+
+estimates_map <- whomap(X=estimates_country, Z=scale_fill_brewer("Incidence\nper 100 000", palette="YlGnBu", type="seq",
+                                  labels=c('0-24.9', '25-99.9', '100-199.9', '200-299', '\u2265 300'))) +
+   ggtitle('Figure 3.3 Estimated TB incidence rates, 2015')
+
+figsave(estimates_map, estimates_country, "f3_3_")
+
+rm(list=c("estimates_map", "estimates_country"))
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Figure 3.4 ----
+# Get the data for the map
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+tbhivestimates_country <- estimates_epi_rawvalues %>%
+                          filter(year == 2015) %>%
+                          select(country, iso3, e_tbhiv_prct)
+
+tbhivestimates_country$var <- cut(tbhivestimates_country$e_tbhiv_prct*100, c(0, 5, 10, 20, 50, Inf),
+                                   c('0-5.9', '5-9.9', '10-19', '20-49','50+'),
+                                   right=FALSE, ordered_result=TRUE)
+
+tbhivestimates_map <- whomap(X=tbhivestimates_country, Z=scale_fill_brewer("HIV Prevalence\nin new TB cases\nall ages (%)", palette="YlGnBu", type="seq",
+                                  labels=c('0-5.9', '5-9.9', '10-19', '20-49','\u2265 50'))) +
+  ggtitle('Figure 3.4 Estimated HIV prevalence in new and relapse TB cases, 2015')
+
+figsave(tbhivestimates_map, tbhivestimates_country, "f3_4_")
+
+rm(list=ls(pattern = "^tbhivestimates_"))
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Figure 3.12 ----
+# Get the data for the map (mortality rate)
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+
+mort_country <- estimates_epi_rawvalues %>%
+                filter(year == 2015) %>%
+                select(country, iso3, e_mort_exc_tbhiv_100k)
+
+mort_country$var <- cut(mort_country$e_mort_exc_tbhiv_100k, c(0, 1, 5, 20, 40, Inf),
+                         c('0-0.9', '1-4.9', '5-19.9', '20-39','40+'),
+                         right=FALSE, ordered_result=TRUE)
+
+
+mort_map <- whomap(X=mort_country, Z=scale_fill_brewer("Mortality\nper 100 000", palette="YlGnBu", type="seq",
+       labels=c('0-0.9', '1-4.9', '5-19.9', '20-39','\u2265 40'))) +
+  ggtitle('Figure 3.12 Estimated TB mortality rates excluding TB deaths among HIV-positive people, 2015')
+
+figsave(mort_map, mort_country, "f3_12_")
+
+rm(list=ls(pattern = "^mort_"))
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Fig 3.15 ----
+# Get the data for the map (CFR)
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+
+cfr_country <- estimates_epi_rawvalues %>%
+                filter(year == 2015) %>%
+                select(country, iso3, cfr)
+
+cfr_country$var <- cut(cfr_country$cfr*100, c(0, 5, 10, 20, 25, Inf),
+                       c('0-4.9', '5-9.9', '10-19.9', '20-24.9','25+'),
+                       right=FALSE, ordered_result=TRUE)
+
+cfr_map <- whomap(X=cfr_country, Z=scale_fill_brewer("CFR (%)", palette="YlGnBu", type="seq",
+                                  labels = c('0-4.9', '5-9.9', '10-19.9', '20-24.9','\u2265 25'))) +
+  ggtitle('Figure 3.15 TB Case Fatality Ratio, 2015')
+
+figsave(cfr_map, cfr_country, "f3_15_")
+
+rm(list=ls(pattern = "^cfr_"))
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Fig 3.6-7 Global trends in TB incidence and mortality ----
+# (Not figure 3.5!)
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+estimates_global <- aggregated_estimates_epi_rawvalues %>%
+                    filter(group_type == 'global' & year >= 2000) %>%
+                    mutate(c_newinc_100k = c_newinc * 1e5 / e_pop_num) %>%
+                    select(year,
+                           e_inc_100k,
+                           e_inc_100k_lo,
+                           e_inc_100k_hi,
+                           c_newinc_100k,
+                           e_inc_tbhiv_100k,
+                           e_inc_tbhiv_100k_lo,
+                           e_inc_tbhiv_100k_hi,
+                           e_mort_exc_tbhiv_100k,
+                           e_mort_exc_tbhiv_100k_lo,
+                           e_mort_exc_tbhiv_100k_hi,
+                           e_mort_tbhiv_100k,
+                           e_mort_tbhiv_100k_lo,
+                           e_mort_tbhiv_100k_hi)
+
+
+p1 <- qplot(year, e_inc_100k, data=estimates_global, geom='line', colour=I('blue')) +
+  geom_ribbon(aes(year, ymin=e_inc_100k_lo, ymax=e_inc_100k_hi), fill=I('blue'), alpha=0.4) +
+  geom_line(aes(year, e_inc_tbhiv_100k), colour=I('red')) +
+  geom_point(aes(year, c_newinc_100k), shape=I(4)) +
+  geom_ribbon(aes(year, ymin=e_inc_tbhiv_100k_lo, ymax=e_inc_tbhiv_100k_hi),
+              fill=I('red'), alpha=0.4) +
+  ylab('Rate per 100 000 population per year') + xlab('') +
+  expand_limits(y=0) +
+  theme_bw(base_size=14)
+
+p2 <- qplot(year, e_mort_exc_tbhiv_100k, data=estimates_global, geom='line', colour=I('blue')) +
+  geom_ribbon(aes(year, ymin=e_mort_exc_tbhiv_100k_lo, ymax=e_mort_exc_tbhiv_100k_hi), fill=I('blue'), alpha=0.4) +
+  ylab('Rate per 100 000 population per year') + xlab('')  +
+  geom_line(aes(year, e_mort_tbhiv_100k), colour=I('red')) +
+  geom_ribbon(aes(year, ymin=e_mort_tbhiv_100k_lo, ymax=e_mort_tbhiv_100k_hi),
+              fill=I('red'), alpha=0.4) +
+
+  expand_limits(y=0) +
+  theme_bw(base_size=14) + theme(legend.position='none')
+
+# multiplot(p1, p2, cols=2)
+# dev.off()
+
+title.grob <- textGrob(
+  label = '\nFigure 3.7 Global trends in TB incidence  and mortality rates. Left panel, total TB incidence in blue, HIV-positive TB incidence in red,
+  X symbols denote case notification rates. Right panel, mortality (excluding TB mortality in HIV-infected individuals).
+  Shaded areas represent uncertainty bands.',
+  x = unit(1, "lines"),
+  y = unit(1, "lines"),
+  hjust = 0, vjust = 0,
+  gp = gpar(fontsize = 10))
+
+p12 <- arrangeGrob(p1, p2, ncol=2, heights=c(5/6,1/6), main = title.grob)
+
+figsave(p12, estimates_global, "f3_7_test")
+
+rm(list=c("p1", "p2", "p12", "estimates_global"))
+
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Chapter 4 ------
 # Diagnosis and treatment of TB, HIV-associated TB and drug-resistant TB
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
