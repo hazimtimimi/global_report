@@ -1299,7 +1299,7 @@ coveragerr_plot <- coveragerr_data %>%
                     labs(x="",
                          y="Treatment coverage (%)",
                          title=paste0("Figure 4.19 Estimated MDR/RR-TB treatment coverage for MDR/RR-TB\n",
-                                     "(patients started on treatment for MDR-TB as a percentage of the estimated number of MDR/RR-TB cases among notified pulmonary TB cases)\nin ",
+                                     "(patients started on treatment for MDR-TB as a percentage of the estimated number of MDR/RR-TB cases\namong notified pulmonary TB cases) in ",
                                      report_year - 1,
                                      ", 30 high MDR-TB burden countries, WHO Regions and globally")) +
                     geom_pointrange(aes(ymin=c_rr_coverage_lo,
@@ -1479,8 +1479,158 @@ figsave(txout_plot, txout, "f4_20_outcomes_tb", width=7, height=11) # Designer n
 # Clean up (remove any objects with their name starting with 'txout')
 rm(list=ls(pattern = "^txout"))
 
+
+
+
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 4.21   ------
+# Figure 4.21  ------
+# Treatment outcomes for new and relapse TB cases (absolute numbers), 2000 - 2014,
+# globally and for WHO regions
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+
+txoutnum_regional <- outcomes %>%
+                      filter(year >= 2000 & year <= report_year - 2) %>%
+                      select(year,
+                             g_whoregion,
+                             new_sp_coh,
+                             new_sp_cur,
+                             new_sp_cmplt,
+                             c_new_sp_neval,
+                             new_snep_coh,
+                             new_snep_cmplt,
+                             c_new_snep_neval,
+                             newrel_coh,
+                             newrel_succ,
+                             c_newrel_neval)%>%
+                      group_by(year, g_whoregion) %>%
+                      summarise_each(funs(sum(.,na.rm = TRUE)),
+                                     new_sp_coh:c_newrel_neval)  %>%
+
+                      # merge with regional names
+                      inner_join(who_region_names, by = "g_whoregion") %>%
+                      select(-g_whoregion) %>%
+                      ungroup()
+
+txoutnum_global <- outcomes %>%
+                    filter(year >= 2000 & year <= report_year - 2) %>%
+                    select(year,
+                           g_whoregion,
+                           new_sp_coh,
+                           new_sp_cur,
+                           new_sp_cmplt,
+                           c_new_sp_neval,
+                           new_snep_coh,
+                           new_snep_cmplt,
+                           c_new_snep_neval,
+                           newrel_coh,
+                           newrel_succ,
+                           c_newrel_neval)%>%
+                    group_by(year) %>%
+                    summarise_each(funs(sum(.,na.rm = TRUE)),
+                                   new_sp_coh:c_newrel_neval)  %>%
+                    mutate(entity = "Global") %>%
+                    ungroup()
+
+#Combine regional and global data and reorganise
+txoutnum_data <- rbind(txoutnum_regional, txoutnum_global)
+
+txoutnum_data$entity <- factor(txoutnum_data$entity,
+                            levels = c("Africa", "The Americas", "Eastern Mediterranean", "Europe", "South-East Asia", "Western Pacific", "Global"))
+
+
+# Simplify the data for plotting
+
+txoutnum_data <- txoutnum_data %>%
+                  mutate(success = (new_sp_cur + new_sp_cmplt + new_snep_cmplt + newrel_succ) / 1e6,
+                         neval = (c_new_sp_neval + c_new_snep_neval + c_newrel_neval) / 1e6,
+                         coh = (new_sp_coh + new_snep_coh + newrel_coh) / 1e6) %>%
+                  mutate(fail_other = coh - success - neval) %>%
+                  select(entity,
+                         year,
+                         `Treatment success` = success,
+                         `Failure/Died/Lost to follow-up` = fail_other,
+                         `Not evaluated` = neval)
+
+
+# Flip into long mode for stacked bar plotting
+# (see http://stackoverflow.com/a/35500964 for why I had to use as.data.frame() )
+txoutnum_long <- melt(as.data.frame(txoutnum_data), id=c("entity","year"))
+
+# Alternative palette for treatment outcomes
+# (adapted from colourblind-friendly palettes at http://www.cookbook-r.com/Graphs/Colors_(ggplot2)/)
+
+txoutnum_palette <- c("#009E73",   # Success (green)
+                      "#D55E00",   # Failure or others (red)
+                      "#999999"   # Not evaluated (gray)
+                      )
+
+
+# Plot as stacked bars, with global separate from regions so can use different scales
+# otherwise AMR, EMR and EUR are hard to see
+
+txoutnum_plot_reg <- txoutnum_long %>%
+                  filter(entity!="Global") %>%
+                  ggplot(aes(year, value, fill=variable)) +
+                  geom_bar(stat="identity",
+                           position="stack") +
+
+                  facet_wrap( ~ entity) +
+
+                  theme_glb.rpt() +
+                  scale_fill_manual("", values = txoutnum_palette) +
+                  labs(x="", y="Number of cases (millions)") +
+
+                  theme(legend.position="bottom",
+                        panel.grid=element_blank()) +
+                  expand_limits(c(0,0))
+
+txoutnum_plot_glob <- txoutnum_long %>%
+                  filter(entity=="Global") %>%
+                  ggplot(aes(year, value, fill=variable)) +
+                  geom_bar(stat="identity",
+                           position="stack") +
+
+                  facet_wrap( ~ entity) +
+
+                  theme_glb.rpt() +
+                  scale_fill_manual("", values = txoutnum_palette) +
+                  labs(x="", y="Number of cases (millions)") +
+
+                  theme(legend.position="bottom",
+                        panel.grid=element_blank()) +
+
+                  expand_limits(c(0,0))
+
+
+txoutnum_plot <- arrangeGrob(txoutnum_plot_glob,
+                             txoutnum_plot_reg,
+                             ncol = 2,
+                             top = textGrob(label = paste0("Figure 4.21 Treatment outcomes for new and relapse TB cases(a) (absolute numbers), 2000 - ",
+                           report_year-2,
+                           ", globally and for WHO regions."),
+                                             x = 0.02,
+                                             just = "left",
+                                             gp = gpar(fontsize = 10)),
+
+                           bottom = textGrob("(a) Cohorts before 2012 included new cases only.",
+                                             x = 0.02,
+                                             just = "left",
+                                             gp = gpar(fontsize = 10)))
+
+
+# Save the plot
+figsave(txoutnum_plot, txoutnum_data, "f4_21_outcomes_absolute")
+
+# Clean up (remove any objects with their name starting 'txout')
+rm(list=ls(pattern = "^txoutnum"))
+
+
+
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Figure 4.22   ------
 # Treatment outcomes for new and relapse TB/HIV cases in 2014,
 # 30 high TB/HIV burden countries, WHO regions and globally
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1608,14 +1758,14 @@ txtbhivout_plot <- txtbhivout_long %>%
                                      ", 30 high TB/HIV burden countries, WHO regions and globally"))
 
 
-figsave(txtbhivout_plot, txtbhivout, "f4_21_outcomes_tbhiv", width=7, height=11) # Designer needs wide data; output portrait mode
+figsave(txtbhivout_plot, txtbhivout, "f4_22_outcomes_tbhiv", width=7, height=11) # Designer needs wide data; output portrait mode
 
 # Clean up (remove any objects with their name starting with 'txtbhivout')
 rm(list=ls(pattern = "^txtbhivout"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 4.22   ------
+# Figure 4.23   ------
 # Treatment outcomes for rifampicin-resistant TB cases in 2013,
 # 30 high MDR-TB burden countries, WHO regions and globally
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1745,7 +1895,7 @@ txmdrout_plot <- txmdrout_long %>%
                                      ",\n30 high MDR-TB burden countries, WHO regions and globally"))
 
 
-figsave(txmdrout_plot, txmdrout, "f4_22_outcomes_mdr", width=7, height=11) # Designer needs wide data; output portrait mode
+figsave(txmdrout_plot, txmdrout, "f4_23_outcomes_mdr", width=7, height=11) # Designer needs wide data; output portrait mode
 
 # Clean up (remove any objects with their name starting with 'txmdrout')
 rm(list=ls(pattern = "^txmdrout"))
@@ -1811,126 +1961,6 @@ figsave(txout_plot, txout_data, "f4_xx_txsuccess_global")
 # Clean up (remove any objects with their name starting 'txout')
 rm(list=ls(pattern = "^txout"))
 
-
-
-
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 4.x2 (test2 with absoluet numbers)   ------
-# Treatment outcomes for all new and relapse cases, 2000 - 2014,
-# globally and for WHO regions
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-
-txoutnum_regional <- outcomes %>%
-                      filter(year >= 2000 & year <= report_year - 2) %>%
-                      select(year,
-                             g_whoregion,
-                             new_sp_coh,
-                             new_sp_cur,
-                             new_sp_cmplt,
-                             c_new_sp_neval,
-                             new_snep_coh,
-                             new_snep_cmplt,
-                             c_new_snep_neval,
-                             newrel_coh,
-                             newrel_succ,
-                             c_newrel_neval)%>%
-                      group_by(year, g_whoregion) %>%
-                      summarise_each(funs(sum(.,na.rm = TRUE)),
-                                     new_sp_coh:c_newrel_neval)  %>%
-
-                      # merge with regional names
-                      inner_join(who_region_names, by = "g_whoregion") %>%
-                      select(-g_whoregion) %>%
-                      ungroup()
-
-txoutnum_global <- outcomes %>%
-                    filter(year >= 2000 & year <= report_year - 2) %>%
-                    select(year,
-                           g_whoregion,
-                           new_sp_coh,
-                           new_sp_cur,
-                           new_sp_cmplt,
-                           c_new_sp_neval,
-                           new_snep_coh,
-                           new_snep_cmplt,
-                           c_new_snep_neval,
-                           newrel_coh,
-                           newrel_succ,
-                           c_newrel_neval)%>%
-                    group_by(year) %>%
-                    summarise_each(funs(sum(.,na.rm = TRUE)),
-                                   new_sp_coh:c_newrel_neval)  %>%
-                    mutate(entity = "Global") %>%
-                    ungroup()
-
-#Combine regional and global data and reorganise
-txoutnum_data <- rbind(txoutnum_regional, txoutnum_global)
-
-txoutnum_data$entity <- factor(txoutnum_data$entity,
-                            levels = c("Africa", "The Americas", "Eastern Mediterranean", "Europe", "South-East Asia", "Western Pacific", "Global"))
-
-
-# Simplify the data for plotting
-
-txoutnum_data <- txoutnum_data %>%
-                  mutate(Success = (new_sp_cur + new_sp_cmplt + new_snep_cmplt + newrel_succ) / 1e6,
-                         Not_evaluated = (c_new_sp_neval + c_new_snep_neval + c_newrel_neval) / 1e6,
-                         coh = (new_sp_coh + new_snep_coh + newrel_coh) / 1e6) %>%
-                  mutate(Fail_other = coh - Success - Not_evaluated) %>%
-                  select(entity,
-                         year,
-                         Success,
-                         Fail_other,
-                         Not_evaluated)
-
-
-# Flip into long mode for stacked bar plotting
-# (see http://stackoverflow.com/a/35500964 for why I had to use as.data.frame() )
-txoutnum_long <- melt(as.data.frame(txoutnum_data), id=c("entity","year"))
-
-# Alternative palette for treatment outcomes
-# (adapted from colourblind-friendly palettes at http://www.cookbook-r.com/Graphs/Colors_(ggplot2)/)
-
-txoutnum_palette <- c("#009E73",   # Success (green)
-                      "#D55E00",   # Failure or others (red)
-                      "#999999"   # Not evaluated (gray)
-                      )
-
-
-# Plot as stacked bars
-txoutnum_plot <- txoutnum_long %>%
-                  ggplot(aes(year, value, fill=variable)) +
-                  geom_bar(stat="identity",
-                           position="stack") +
-
-                  facet_wrap( ~ entity) +
-
-                  theme_glb.rpt() +
-                  scale_fill_manual("", values = txoutnum_palette) +
-                  labs(x="", y="Number of cases (millions)") +
-
-                  theme(legend.position="bottom",
-                        panel.grid=element_blank()) +
-
-                  expand_limits(c(0,0)) +
-
-                  ggtitle(paste0("Figure 4.xx2 Figure 4.xx Treatment outcomes for all new and relapse(a) cases, 2000 - ",
-                           report_year-2,
-                           ", globally and for WHO regions."))
-
-txoutnum_plot <- arrangeGrob(txoutnum_plot,
-                              bottom = textGrob("(a) Cohorts before 2012 incuded new cases only.",
-                                             x = 0.02,
-                                             just = "left",
-                                             gp = gpar(fontsize = 10)))
-
-
-# Save the plot
-figsave(txoutnum_plot, txoutnum_data, "f4_xx2_txoutcomes")
-
-# Clean up (remove any objects with their name starting 'txout')
-rm(list=ls(pattern = "^txoutnum"))
 
 
 
