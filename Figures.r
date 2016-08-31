@@ -6,6 +6,124 @@
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Profiles for 30 HBCs and 6 regions --------
+# Incidence (and notifications) and mortality graphs
+# For graphic designer to use in the printed report
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# 1. Countries incidence
+# Get HBCs case notification and merge with their estimates (similar to fig 4.14 below)
+
+profile30hbc <- report_country %>%
+                filter(g_hb_tb==1) %>%
+                select(iso2)
+
+newinc_data <- notification %>%
+                filter(year >= 2000) %>%
+                inner_join(profile30hbc) %>%
+                select(year,
+                       iso2,
+                       country,
+                       c_newinc)
+
+inc_data <- estimates_epi_rawvalues %>%
+            filter(year >= 2000) %>%
+            inner_join(profile30hbc) %>%
+            select(year,
+                   iso2,
+                   e_pop_num,
+                   e_inc_100k,
+                   e_inc_100k_lo,
+                   e_inc_100k_hi,
+                   e_inc_tbhiv_100k,
+                   e_inc_tbhiv_100k_lo,
+                   e_inc_tbhiv_100k_hi) %>%
+
+            # Use a right-join so can see the data for the final year even in the absence of estimates
+            right_join(newinc_data) %>%
+
+            # Calculate case notification rate
+            mutate(c_newinc_100k = c_newinc * 1e5 / e_pop_num)
+
+
+# Plot
+inc_plot <- inc_data %>%
+            ggplot(aes(x=year, y=c_newinc_100k, ymin=0)) +
+            geom_line(size=1) +
+            geom_ribbon(aes(x=year, ymin=e_inc_100k_lo, ymax=e_inc_100k_hi),
+                        fill=I('#00FF33'),
+                        alpha=0.4) +
+            geom_line(aes(year, e_inc_100k),
+                      size=1,
+                      colour=I('#00FF33')) +
+            geom_ribbon(aes(x=year, ymin=e_inc_tbhiv_100k_lo, ymax=e_inc_tbhiv_100k_hi),
+                        fill=I('#CC6666'),
+                        alpha=0.4) +
+            geom_line(aes(year,e_inc_tbhiv_100k),
+                      size=1,
+                      colour=I('#CC6666')) +
+
+            scale_y_continuous(name = "Incidence (Rate per 100 000 population per year)") +
+            xlab("Year") +
+
+            facet_wrap( ~ country,
+                        scales = "free_y",
+                        ncol = 5) +
+
+            ggtitle("Incidence graphs for the 30 high burden country profiles") +
+            theme_glb.rpt() +
+            theme(legend.position="top",
+                  legend.title=element_blank())
+
+# Save the graph
+ggsave(paste0(figures_folder, "/CPFigs/", "hbc_cp_inc", Sys.Date(), ".pdf"), inc_plot, width=14, height=9.5)
+
+# Clean up (remove any objects with their name containing 'inc_')
+rm(list=ls(pattern = "inc_"))
+
+
+# 2. Countries mortality
+mort_data <- estimates_epi_rawvalues %>%
+            filter(year >= 2000) %>%
+            inner_join(profile30hbc) %>%
+            select(year,
+                   country,
+                   iso2,
+                   e_mort_exc_tbhiv_100k,
+                   e_mort_exc_tbhiv_100k_lo,
+                   e_mort_exc_tbhiv_100k_hi)
+
+# Plot
+mort_plot <- mort_data %>%
+            ggplot(aes(x=year, y=e_mort_exc_tbhiv_100k, ymin=0)) +
+            geom_line(size=1,
+						colour=I('#ee82ee')) +
+            geom_ribbon(aes(x=year, ymin=e_mort_exc_tbhiv_100k_lo, ymax=e_mort_exc_tbhiv_100k_hi),
+                        fill=I('#ee82ee'),
+                        alpha=0.4) +
+
+
+            scale_y_continuous(name = "Mortality (excludes HIV+TB) (Rate per 100 000 population per year)") +
+            xlab("Year") +
+
+            facet_wrap( ~ country,
+                        scales = "free_y",
+                        ncol = 5) +
+
+            ggtitle("Mortality graphs for the 30 high burden country profiles") +
+            theme_glb.rpt() +
+            theme(legend.position="top",
+                  legend.title=element_blank())
+
+# Save the graph
+ggsave(paste0(figures_folder, "/CPFigs/", "hbc_cp_mort", Sys.Date(), ".pdf"), mort_plot, width=14, height=9.5)
+
+# Clean up (remove any objects with their name starting 'mort_')
+rm(list=ls(pattern = "^mort_"))
+
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Chapter 3 ------
 # Estimates
 # (Re-did some of Philippe's plots from https://github.com/glaziou/gtb2016/blob/master/report_figs.R to
