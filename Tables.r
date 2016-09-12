@@ -166,7 +166,10 @@ rdxpolicy_country <- strategy %>%
                             xpert_in_guide_children,
                             xpert_in_guide_eptb) %>%
                       # shorten long country names
-                      .shortnames( col = "entity")
+                      .shortnames( col = "entity") %>%
+                      # order by country name
+                      arrange(entity)
+
 
 
 # - - - - - - - - - - - - - - - - - - - - - - -
