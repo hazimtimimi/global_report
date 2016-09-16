@@ -7,6 +7,120 @@
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Chapter 3 ------
+# The burden of disease caused by TB
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# 3_2_burden_num ----------------------------------------------
+
+est_30hbc <- report_country %>%
+              filter(g_hb_tb==1) %>%
+              select(iso2)
+
+
+est_cntry <- estimates_epi_rawvalues %>%
+             filter(year == report_year - 1) %>%
+             inner_join(est_30hbc) %>%
+             select(country,
+                   e_pop_num,
+                   e_mort_exc_tbhiv_100k,
+                   e_mort_exc_tbhiv_100k_lo,
+                   e_mort_exc_tbhiv_100k_hi,
+                   e_mort_tbhiv_100k,
+                   e_mort_tbhiv_100k_lo,
+                   e_mort_tbhiv_100k_hi,
+                   e_inc_num,
+                   e_inc_num_lo,
+                   e_inc_num_hi,
+                   e_inc_tbhiv_num,
+                   e_inc_tbhiv_num_lo,
+                   e_inc_tbhiv_num_hi) %>%
+            mutate(e_pop_num_thou = rounder(e_pop_num / 1e3),
+                   e_mort_exc_tbhiv_num = frmt(e_mort_exc_tbhiv_100k * e_pop_num / 1e8, thou=TRUE),
+                   e_mort_exc_tbhiv_num_range = paste0(frmt(e_mort_exc_tbhiv_100k_lo * e_pop_num / 1e8, thou=TRUE),
+                                                       "\u2013",
+                                                       frmt(e_mort_exc_tbhiv_100k_hi * e_pop_num / 1e8, thou=TRUE)),
+
+                   e_mort_tbhiv_num = frmt(e_mort_tbhiv_100k  * e_pop_num / 1e8, thou=TRUE),
+                   e_mort_tbhiv_num_range = paste0(frmt(e_mort_tbhiv_100k_lo  * e_pop_num / 1e8, thou=TRUE),
+                                                   "\u2013",
+                                                   frmt(e_mort_tbhiv_100k_hi  * e_pop_num / 1e8, thou=TRUE)),
+
+                   e_inc_num = frmt(e_inc_num / 1e3, thou=TRUE),
+                   e_inc_num_range = paste0(frmt(e_inc_num_lo / 1e3, thou=TRUE),
+                                           "\u2013",
+                                           frmt(e_inc_num_hi  / 1e3, thou=TRUE)),
+
+                   e_inc_tbhiv_num = frmt(e_inc_tbhiv_num / 1e3, thou=TRUE),
+                   e_inc_tbhiv_num_range = paste0(frmt(e_inc_tbhiv_num_lo  / 1e3, thou=TRUE),
+                                                 "\u2013",
+                                                 frmt(e_inc_tbhiv_num_hi / 1e3, thou=TRUE))
+                   ) %>%
+
+            select(country,
+                   e_pop_num = e_pop_num_thou,
+                   e_mort_exc_tbhiv_num,
+                   e_mort_exc_tbhiv_num_range,
+                   e_mort_tbhiv_num,
+                   e_mort_tbhiv_num_range,
+                   e_inc_num,
+                   e_inc_num_range,
+                   e_inc_tbhiv_num,
+                   e_inc_tbhiv_num_range) %>%
+
+            arrange(country)
+
+write.csv(est_cntry, file=paste(figures_folder, "/Tables/", "table_3_2_", Sys.Date(), ".csv", sep=""), row.names=FALSE, na="")
+
+
+rm(list=ls(pattern = "^est_"))
+
+
+
+est_aggs <- aggregated_estimates_epi_rawvalues %>%
+            filter(year == report_year - 1) %>%
+            mutate(e_pop_num_thou = rounder(e_pop_num / 1e3),
+                   e_mort_exc_tbhiv_num = frmt(e_mort_exc_tbhiv_num / 1e3, thou=TRUE),
+                   e_mort_exc_tbhiv_num_range = paste0(frmt(e_mort_exc_tbhiv_num_lo / 1e3, thou=TRUE),
+                                                       "\u2013",
+                                                       frmt(e_mort_exc_tbhiv_num_hi / 1e3, thou=TRUE)),
+
+                   e_mort_tbhiv_num = frmt(e_mort_tbhiv_num / 1e3, thou=TRUE),
+                   e_mort_tbhiv_num_range = paste0(frmt(e_mort_tbhiv_num_lo / 1e3, thou=TRUE),
+                                                   "\u2013",
+                                                   frmt(e_mort_tbhiv_num_hi  / 1e3, thou=TRUE)),
+
+                   e_inc_num = frmt(e_inc_num / 1e3, thou=TRUE),
+                   e_inc_num_range = paste0(frmt(e_inc_num_lo / 1e3, thou=TRUE),
+                                           "\u2013",
+                                           frmt(e_inc_num_hi  / 1e3, thou=TRUE)),
+
+                   e_inc_tbhiv_num = frmt(e_inc_tbhiv_num / 1e3, thou=TRUE),
+                   e_inc_tbhiv_num_range = paste0(frmt(e_inc_tbhiv_num_lo  / 1e3, thou=TRUE),
+                                                 "\u2013",
+                                                 frmt(e_inc_tbhiv_num_hi / 1e3, thou=TRUE))
+                   )  %>%
+
+            arrange(group_type, group_name) %>%
+
+            select(group_description,
+                   e_pop_num = e_pop_num_thou,
+                   e_mort_exc_tbhiv_num,
+                   e_mort_exc_tbhiv_num_range,
+                   e_mort_tbhiv_num,
+                   e_mort_tbhiv_num_range,
+                   e_inc_num,
+                   e_inc_num_range,
+                   e_inc_tbhiv_num,
+                   e_inc_tbhiv_num_range)
+
+
+write.csv(est_aggs, file=paste(figures_folder, "/Tables/", "table_3_2_aggs_", Sys.Date(), ".csv", sep=""), row.names=FALSE, na="")
+
+
+rm(list=ls(pattern = "^est_"))
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Chapter 4 ------
 # Diagnosis and treatment of TB, HIV-associated TB and drug-resistant TB
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
