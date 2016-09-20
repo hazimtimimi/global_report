@@ -1,7 +1,7 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Script to produce annex 4 tables for the global TB report.
 #
-# Hazim Timimi, September 2015
+# Hazim Timimi
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
@@ -22,7 +22,7 @@ rm(list=ls())
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # Establish the report year
-report_year <- 2015
+report_year <- 2016
 
 # The following are convenience variables since notification and most other data sets will run up to the
 # year before the reporting year and outcomes will run up to two years before the reporting year
@@ -50,31 +50,6 @@ options(stringsAsFactors=FALSE)
 # rdata_name:     Name of a .RData file containing copy of database views
 # use_live_db:    Flag -- if TRUE then data loaded durectly from the global TB database
 #                 if FALSE then data loaded from the .RData file
-#
-# and, from the global TB database,
-#
-# n:     dataframe copy of view_TME_master_notification
-# nk:    dataframe copy of view_TME_master_notification_exceptions
-# tbhiv: dataframe copy of view_TME_master_TBHIV_for_aggregates
-# e:     dataframe copy of view_TME_estimates_epi
-# eraw:  dataframe copy of view_TME_estimates_epi_rawvalues
-# f:     dataframe copy of view_TME_master_finance
-# be:    dataframe copy of view_TME_master_budget_expenditure
-# p:     dataframe copy of view_TME_estimates_population
-# o:     dataframe copy of view_TME_master_outcomes
-# s:     dataframe copy of view_TME_master_strategy
-# i:     dataframe copy of view_TME_master_data_collection
-# a:     dataframe copy of view_TME_aggregated_estimates_epi
-# araw:  dataframe copy of view_TME_aggregated_estimates_epi_rawvalues
-# d:     dataframe copy of view_TME_master_dr_surveillance
-# dsvy:  dataframe copy of view_TME_master_drs
-# dictionary:  dataframe copy of view_TME_data_dictionary
-# datacodes:   dataframe copy of view_TME_data_codes
-# emdr:  dataframe copy of view_TME_estimates_mdr
-# emdrn: dataframe copy of view_TME_estimates_mdr_in_notified
-# emdra: dataframe copy of view_TME_aggregated_estimates_mdr_in_notified
-#
-# data.date: When the source datasets were created
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 scripts_folder <- getSrcDirectory(function(x) {x})  # See http://stackoverflow.com/a/30306616
@@ -96,7 +71,7 @@ if (use_live_db==TRUE){
 
 
 # Create output folder (only if it doesn't yet exist), and move to it
-dir.create(file.path(annex4_folder, recursive = TRUE, "linked_CSVs"), showWarnings = FALSE)
+dir.create(file.path(annex4_folder, "linked_CSVs"), recursive = TRUE, showWarnings = FALSE)
 setwd(file.path(annex4_folder, "linked_CSVs"))
 
 # B: OK, NOW GO FOR IT ----
@@ -207,68 +182,90 @@ cap_frmt_pct <- function(numerator, denominator) {
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
+stop("
+
+     >>>>>>>>>>
+     Stopping here so can do the rest manually!
+     <<<<<<<<<<<<")
+
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#   inc_cdr (Table A4.1)  ----
-#   Incidence, notification and case detection rates, all forms
+#   inc_table (Table A4.1)  ----
+#   Incidence of TB (all forms), TB/HIV and MDR/RR-TB, report_year - 1
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # Get country estimates
-inc_cdr_country <- filter(e, year == notification_maxyear) %>%
-                    arrange(country) %>%
-                    select(country, year, e_pop_num,
-                           e_inc_num, e_inc_num_lo, e_inc_num_hi,
-                           e_inc_100k, e_inc_100k_lo, e_inc_100k_hi,
-                           e_inc_tbhiv_num, e_inc_tbhiv_num_lo, e_inc_tbhiv_num_hi,
-                           e_inc_tbhiv_100k, e_inc_tbhiv_100k_lo, e_inc_tbhiv_100k_hi,
-                           c_cdr, c_cdr_lo, c_cdr_hi) %>%
-                    rename(entity = country )
+inc_country <-  estimates_epi %>%
+                filter(year == notification_maxyear) %>%
+                select(entity = country,
+                       e_pop_num,
+                       e_inc_num, e_inc_num_lo, e_inc_num_hi,
+                       e_inc_100k, e_inc_100k_lo, e_inc_100k_hi,
+                       e_inc_tbhiv_num, e_inc_tbhiv_num_lo, e_inc_tbhiv_num_hi,
+                       e_inc_tbhiv_100k, e_inc_tbhiv_100k_lo, e_inc_tbhiv_100k_hi)
 
-# get notifications and add them to the estimates
-inc_cdr_country <- filter(n, year  == notification_maxyear) %>%
-                    select(country, c_newinc) %>%
-                    rename(entity = country ) %>%
-                    inner_join(inc_cdr_country, by = "entity") %>%
-                    arrange(entity)
+# Add DR-TB incidence estimates
+inc_country <- estimates_drtb_rawvalues %>%
+                filter(year  == notification_maxyear) %>%
+                select(entity = country,
+                       e_inc_rr_num,
+                       e_inc_rr_num_lo,
+                       e_inc_rr_num_hi) %>%
+                inner_join(inc_country, by = "entity") %>%
+                arrange(entity)
 
-# Get regional estimates (this view already includes c_newinc)
-inc_cdr_region <- filter(a, year == notification_maxyear & group_type == "g_whoregion") %>%
-                    arrange(group_name) %>%
-                    select(group_description, year, e_pop_num,
-                           e_inc_num, e_inc_num_lo, e_inc_num_hi,
-                           e_inc_100k, e_inc_100k_lo, e_inc_100k_hi,
-                           e_inc_tbhiv_num, e_inc_tbhiv_num_lo, e_inc_tbhiv_num_hi,
-                           e_inc_tbhiv_100k, e_inc_tbhiv_100k_lo, e_inc_tbhiv_100k_hi,
-                           c_cdr, c_cdr_lo, c_cdr_hi,
-                           c_newinc) %>%
-                    rename(entity = group_description )
+# Get regional estimates
+inc_region <- aggregated_estimates_epi %>%
+              filter(year == notification_maxyear & group_type == "g_whoregion") %>%
+              select(entity = group_description,
+                     group_name,
+                     e_pop_num,
+                     e_inc_num, e_inc_num_lo, e_inc_num_hi,
+                     e_inc_100k, e_inc_100k_lo, e_inc_100k_hi,
+                     e_inc_tbhiv_num, e_inc_tbhiv_num_lo, e_inc_tbhiv_num_hi,
+                     e_inc_tbhiv_100k, e_inc_tbhiv_100k_lo, e_inc_tbhiv_100k_hi)
+
+inc_region <- aggregated_estimates_drtb_rawvalues %>%
+              select(group_name,
+                     e_inc_rr_num,
+                     e_inc_rr_num_lo,
+                     e_inc_rr_num_hi) %>%
+              inner_join(inc_region, by = "group_name") %>%
+              arrange(group_name) %>%
+              select(-group_name)
 
 
-# Got global estimates (this view already includes c_newinc)
-inc_cdr_global <- filter(a, year == notification_maxyear & group_type == "global") %>%
-                    select(group_description, year, e_pop_num,
-                           e_inc_num, e_inc_num_lo, e_inc_num_hi,
-                           e_inc_100k, e_inc_100k_lo, e_inc_100k_hi,
-                           e_inc_tbhiv_num, e_inc_tbhiv_num_lo, e_inc_tbhiv_num_hi,
-                           e_inc_tbhiv_100k, e_inc_tbhiv_100k_lo, e_inc_tbhiv_100k_hi,
-                           c_cdr, c_cdr_lo, c_cdr_hi,
-                           c_newinc) %>%
-                    rename(entity = group_description )
+
+# Got global estimates
+inc_global <- aggregated_estimates_epi %>%
+              filter(year == notification_maxyear & group_type == "global") %>%
+              select(entity = group_description,
+                     group_name,
+                     e_pop_num,
+                     e_inc_num, e_inc_num_lo, e_inc_num_hi,
+                     e_inc_100k, e_inc_100k_lo, e_inc_100k_hi,
+                     e_inc_tbhiv_num, e_inc_tbhiv_num_lo, e_inc_tbhiv_num_hi,
+                     e_inc_tbhiv_100k, e_inc_tbhiv_100k_lo, e_inc_tbhiv_100k_hi)
+
+inc_global <- aggregated_estimates_drtb_rawvalues %>%
+              select(group_name,
+                     e_inc_rr_num,
+                     e_inc_rr_num_lo,
+                     e_inc_rr_num_hi) %>%
+              inner_join(inc_global, by = "group_name") %>%
+              select(-group_name)
+
+
 
 # Create combined table in order of countries then regional and global estimates
-inc_cdr <- combine_tables(inc_cdr_country, inc_cdr_region, inc_cdr_global)
-rm(list=c("inc_cdr_country", "inc_cdr_region", "inc_cdr_global"))
-
+inc_table <- combine_tables(inc_country, inc_region, inc_global)
 
 # Format variables for output
-inc_cdr <- within(inc_cdr, {
-
-  # Calculate and format case notification rate
-  newrel_100k <- frmt(c_newinc * 100000 / e_pop_num , rates=TRUE)
+inc_table <- within(inc_table, {
 
   # round population to millions
-  e_pop_num <- ifelse(e_pop_num / 1000000 < 1, "< 1", rounder(e_pop_num / 1000000))
+  pop_num <- ifelse(e_pop_num / 1000000 < 1, "< 1", rounder(e_pop_num / 1000000))
 
   # incidence (convert numbers to thousands)
   inc_num <- frmt(e_inc_num / 1000, thou=TRUE)
@@ -292,14 +289,18 @@ inc_cdr <- within(inc_cdr, {
                                          e_inc_tbhiv_100k_lo,
                                          e_inc_tbhiv_100k_hi, rates=TRUE)
 
-  # format c_newinc
-  c_newinc <- rounder(c_newinc)
+  # MDR/RR-TB incidence (convert numbers to thousands)
+  inc_rr_num <- frmt(e_inc_rr_num / 1000, thou=TRUE, thouEst=TRUE)
+  inc_rr_num_lo_hi <- frmt_intervals(e_inc_rr_num / 1000,
+                                        e_inc_rr_num_lo / 1000,
+                                        e_inc_rr_num_hi / 1000, thou=TRUE, thouEst=TRUE)
 
-  # Case detection rate
-  c_cdr <- frmt(c_cdr)
-  c_cdr_lo_hi <- ifelse(is.na(c_cdr) | c_cdr==0,
-                        NA,
-                        paste0("(", frmt(c_cdr_lo), "–", frmt(c_cdr_hi), ")"))
+
+  # Need to calculate MDR/RR-TB incidence rates
+  inc_rr_rate <- frmt( (e_inc_rr_num * 1e5 / e_pop_num), rates=TRUE)
+  inc_rr_rate_lo_hi <- frmt_intervals((e_inc_rr_num * 1e5 / e_pop_num),
+                                       (e_inc_rr_num_lo * 1e5 / e_pop_num),
+                                       (e_inc_rr_num_hi * 1e5 / e_pop_num), rates=TRUE)
 
   # Add for blank columns
   blank <- ""
@@ -309,19 +310,21 @@ inc_cdr <- within(inc_cdr, {
 # dplyr's select statement won't repeat the blanks, hence use subset() from base r instead
 
 
-subset(inc_cdr,
-       select=c("entity", "e_pop_num", "blank", "blank",
+subset(inc_table,
+       select=c("entity", "pop_num", "blank", "blank",
                 "inc_num", "inc_num_lo_hi",
                 "inc_rate", "inc_rate_lo_hi", "blank",
                 "inc_tbhiv_num", "inc_tbhiv_num_lo_hi",
                 "inc_tbhiv_rate", "inc_tbhiv_rate_lo_hi", "blank",
-                "c_newinc", "blank", "newrel_100k", "blank",
-                "c_cdr", "c_cdr_lo_hi")) %>%
-  write.csv(file="inc_cdr.csv", row.names=FALSE, na="")
+                "inc_rr_num", "inc_rr_num_lo_hi",
+                "inc_rr_rate", "inc_rr_rate_lo_hi"
+                )) %>%
+  write.csv(file="inc_table.csv", row.names=FALSE, na="")
 
 
-# Don't leave any mess behind!
-rm(inc_cdr)
+# Clean up (remove any objects with their name starting with 'inc_')
+rm(list=ls(pattern = "^inc_"))
+
 
 
 
