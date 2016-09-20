@@ -32,10 +32,14 @@ outcome_maxyear      <- (report_year - 2)
 
 # Apply the Russian fudge ------
 # flag for whether to suppress calculation of %
-# of notified TB patients who knew their HIV status (applies to table 6)
+# of notified TB patients who knew their HIV status (applies to table A4.4)
 
 russianfudge <- TRUE
 
+# Apply the Malawi fudge ------
+# flag for whether to calculate % of patients who knew their HIV status using c_notified as the denominator
+
+malawifudge <- TRUE
 
 # Kill any attempt at using factors, unless we explicitly want them!
 options(stringsAsFactors=FALSE)
@@ -329,7 +333,7 @@ rm(list=ls(pattern = "^inc_"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#   mort (Table A4.2) -----
+#   mort_table (Table A4.2) -----
 #   Estimates of TB mortality
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -507,66 +511,192 @@ rm(mdr_measured)
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#   notif (Table A4.3) ----
-#   Case notifications
+#   notif_table (Table A4.4) ----
+#   Case notifications (Was table A4.3 in 2015 report)
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # Get country data
+notif_country <-  notification %>%
+                  filter(year == notification_maxyear) %>%
+                  select(entity = country,
+                         g_whoregion,
+                         c_notified,
+                         c_newinc,
+                         rdx_data_available,
+                         newinc_rdx,
+                         rdxsurvey_newinc_rdx,
+                         rdxsurvey_newinc,
+                         newrel_hivtest,
+                         new_labconf,
+                         new_clindx,
+                         ret_rel_labconf,
+                         ret_rel_clindx) %>%
 
-notif_country <- filter(n, year == notification_maxyear) %>%
-                  arrange(country) %>%
-                  select(country, g_whoregion,
-                         c_newinc, new_labconf, new_clindx, new_ep,
-                         ret_rel_labconf, ret_rel_clindx, ret_rel_ep, ret_nrel) %>%
-                  rename(entity = country )
+                  # calculate % with rapid daignostics (only done at country level)
+                  mutate(pct_rdx = ifelse(c_newinc > 0,
+                                          ifelse(rdx_data_available == 60,
+                                                rounder(newinc_rdx * 100 / c_newinc),
+                                                ifelse(rdx_data_available == 61,
+                                                       rounder(rdxsurvey_newinc_rdx * 100 / rdxsurvey_newinc),
+                                                       NA)),
+                                          NA)) %>%
+
+                  # calculate % with known HIV status (use different variables for aggregates)
+                  mutate(pct_hivtest = ifelse(c_newinc > 0,
+                                              rounder(newrel_hivtest * 100 / c_newinc),
+                                              NA))
+
+# TEMPORARY POLITICAL SOLUTION FOR RUSSIAN FEDERATION 2010 onwards:
+# DO NOT CALCULATE % tb PATIENTS WITH KNOWN HIV STATUS
+# Enable or disable using flag in section A right at the top of the script.
+
+if (isTRUE(russianfudge)) {
+  notif_country$pct_hivtest <- ifelse(notif_country$entity == "Russian Federation",
+                                      NA,
+                                      notif_country$pct_hivtest)
+}
+
+# TEMPORARY POLITICAL SOLUTION FOR Malawi 2016:
+# Use c_notified instead of c_newin to calculate % with known HIV status# Enable or disable using flag in section A right at the top of the script.
+
+if (isTRUE(malawifudge)) {
+  notif_country$pct_hivtest <- ifelse(notif_country$entity == "Malawi",
+                                      rounder(notif_country$newrel_hivtest * 100 / notif_country$c_notified),
+                                      notif_country$pct_hivtest)
+}
+
+# calculate sum of pulmonary among new and relapse, and sum pulmonary bacteriologically confirmed
+notif_country$pulmonary <- notif_country %>%
+                            select(new_labconf, new_clindx, ret_rel_labconf, ret_rel_clindx) %>%
+                            sum_of_row()
+
+notif_country$pulmonary_bact_conf <- notif_country %>%
+                                    select(new_labconf, ret_rel_labconf) %>%
+                                    sum_of_row()
+
+# drop unneeded fields now that we have calculated stuff
+notif_country <- notif_country %>%
+                  select(entity,
+                         g_whoregion,
+                         c_notified,
+                         c_newinc,
+                         pct_rdx,
+                         pct_hivtest,
+                         pulmonary,
+                         pulmonary_bact_conf) %>%
+
+                  # sort by country name
+                  arrange(entity)
+
+
 
 
 # Calculate regional aggregates
-
 notif_region <- notif_country %>%
                 group_by(g_whoregion) %>%
-                summarise_each(funs(sum(., na.rm = TRUE)), c_newinc, new_labconf, new_clindx, new_ep,
-                               ret_rel_labconf, ret_rel_clindx, ret_rel_ep, ret_nrel)
+                summarise_each(funs(sum(., na.rm = TRUE)),
+                               c_notified,
+                               c_newinc,
+                               pulmonary,
+                               pulmonary_bact_conf) %>%
+                # get rid of pesky grouping
+                ungroup()
+
+# Get tb/hiv numerator and denominator (for funny rules...)
+notif_region <-  TBHIV_for_aggregates %>%
+                  filter(year == notification_maxyear) %>%
+                  group_by(g_whoregion) %>%
+                  summarise_each(funs(sum(., na.rm = TRUE)),
+                                 hivtest_pct_numerator,
+                                 hivtest_pct_denominator) %>%
+                  # get rid of pesky grouping
+                  ungroup() %>%
+                  inner_join(notif_region, by = "g_whoregion")
 
 # merge with regional names
-notif_region <- filter(a, year == notification_maxyear & group_type == "g_whoregion") %>%
-                select(group_name, group_description) %>%
-                rename(g_whoregion = group_name) %>%
+notif_region <- aggregated_estimates_epi %>%
+                filter(year == notification_maxyear & group_type == "g_whoregion") %>%
+                select(g_whoregion = group_name,
+                       entity = group_description) %>%
                 inner_join(notif_region, by = "g_whoregion") %>%
-                rename(entity = group_description) %>%
-                arrange(g_whoregion)
+                arrange(g_whoregion) %>%
+
+                # Add/remove extra variables to match structure of the country data frame
+                mutate(pct_rdx = NA,
+
+                       # calculate % with known HIV status
+                       pct_hivtest = rounder(hivtest_pct_numerator * 100 / hivtest_pct_denominator)) %>%
+
+                select(-g_whoregion,
+                       -hivtest_pct_numerator,
+                       -hivtest_pct_denominator)
 
 # Calculate global aggregate
 notif_global <- notif_country %>%
-                summarise_each(funs(sum(., na.rm = TRUE)), c_newinc, new_labconf, new_clindx, new_ep,
-                               ret_rel_labconf, ret_rel_clindx, ret_rel_ep, ret_nrel) %>%
-                mutate(entity = "Global") %>%
-                mutate(g_whoregion = "")  # dummy variable to match structure of the other two tables
+                summarise_each(funs(sum(., na.rm = TRUE)),
+                               c_notified,
+                               c_newinc,
+                               pulmonary,
+                               pulmonary_bact_conf) %>%
+                mutate(entity = "Global")
 
+# Get tb/hiv numerator and denominator (for funny rules...)
+notif_global <-  TBHIV_for_aggregates %>%
+                  filter(year == notification_maxyear) %>%
+                  summarise_each(funs(sum(., na.rm = TRUE)),
+                                 hivtest_pct_numerator,
+                                 hivtest_pct_denominator)  %>%
+                  mutate(entity = "Global")%>%
+                  inner_join(notif_global, by = "entity") %>%
+
+                  # Add/remove extra variables to match structure of the country data frame
+                  mutate(pct_rdx = NA,
+
+                         # calculate % with known HIV status
+                         pct_hivtest = rounder(hivtest_pct_numerator * 100 / hivtest_pct_denominator)) %>%
+
+                  select(-hivtest_pct_numerator,
+                         -hivtest_pct_denominator)
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 #   Handle Kosovo
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-# Create a Kosovo only dataset from the nk view
-notif_kosovo <- filter(nk, year == notification_maxyear) %>%
-                select(country,
+# Create a Kosovo only dataset
+notif_kosovo <- notification_exceptions %>%
+                filter(year == notification_maxyear) %>%
+                select(entity = country,
                        new_labconf, new_clindx, new_ep,
-                       ret_rel_labconf, ret_rel_clindx, ret_rel_ep, ret_nrel) %>%
-                mutate(g_whoregion = "EUR") %>%
-                rename(entity = country )
+                       ret_rel_labconf, ret_rel_clindx, ret_rel_ep, ret_nrel)
 
-# calculate c_newinc
-notif_kosovo$c_newinc <- select(notif_kosovo, new_labconf, new_clindx, new_ep,
+
+# calculate c_newinc and c_notified
+notif_kosovo$c_newinc <- notif_kosovo %>%
+                          select(new_labconf, new_clindx, new_ep,
                                 ret_rel_labconf, ret_rel_clindx, ret_rel_ep) %>%
                           sum_of_row()
 
+notif_kosovo$c_notified <- notif_kosovo %>%
+                            select(new_labconf, new_clindx, new_ep,
+                                  ret_rel_labconf, ret_rel_clindx, ret_rel_ep, ret_nrel) %>%
+                            sum_of_row()
+
+# Add/remove variables so as to match the country table
+notif_kosovo <- notif_kosovo %>%
+                select(entity,
+                       c_notified,
+                       c_newinc) %>%
+                mutate(g_whoregion = "EUR",
+                       pct_rdx = NA,
+                       pct_hivtest = NA,
+                       pulmonary = NA,
+                       pulmonary_bact_conf = NA)
 
 # Create a Serbia (without Kosovo) dataset
 notif_serbia <- filter(notif_country, entity=="Serbia")
-notif_serbia_minus_kosovo <- notif_serbia
+notif_serbia_minus_kosovo <- notif_kosovo
 
-notif_vars <- c("c_newinc", "new_labconf", "new_clindx", "new_ep", "ret_rel_labconf", "ret_rel_clindx", "ret_rel_ep", "ret_nrel")
+notif_vars <- c("c_newinc", "c_notified")
 
 notif_serbia_minus_kosovo[notif_vars] <- notif_serbia[notif_vars] - notif_kosovo[notif_vars]
 notif_serbia_minus_kosovo$entity <- "Serbia (without Kosovo)"
@@ -581,46 +711,51 @@ notif_country <- rbind(notif_country[1:insertpoint, ],
                        notif_kosovo,
                        notif_country[(insertpoint+1):endpoint, ] )
 
-# clean up
-rm(list=c("notif_kosovo", "notif_serbia", "notif_serbia_minus_kosovo"))
-
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # End of handling Kosovo section
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # Create combined table in order of countries then regional and global estimates
-notif <- combine_tables(notif_country, notif_region, notif_global)
-rm(list=c("notif_country", "notif_region", "notif_global"))
 
+notif_country <- notif_country %>%
+                  #drop g_whoregion so as to match aggregates
+                  select(-g_whoregion)
 
+notif_table <- combine_tables(notif_country, notif_region, notif_global)
 
-# Format variables for output
-# could do series of rounder() statements, variable by variable, e.g.
+# Calculate % pulmonary in new and relapse, and % bact confirmed among pulmonary (the same for all records)
 
-#          notif$c_newinc <- rounder(notif$c_newinc)
+notif_table <- notif_table %>%
+                mutate(pct_pulm = ifelse(c_newinc > 0,
+                                         rounder(pulmonary * 100 / c_newinc),
+                                         NA),
+                       pct_pulm_bact_conf = ifelse(pulmonary > 0,
+                                                   rounder(pulmonary_bact_conf * 100 / pulmonary),
+                                                   NA),
 
-# or do with an sapply() statement for the specific columns:
+                       # and format abosulte numbers for publication
+                       c_notified = rounder(c_notified),
+                       c_newinc = rounder(c_newinc),
 
-notif[ , notif_vars] <- sapply(notif[,notif_vars], rounder)
+                       # and variable for blank columns
+                       blank = "")
 
-
-# Add for blank columns
-notif$blank <- ""
 
 # Insert "blank" placeholders for use in the output spreadsheet before writing out to CSV
 # dplyr's select statement won't repeat the blanks, hence use subset() from base r instead
 
 
-subset(notif,
+subset(notif_table,
        select=c("entity", "blank",
+                "c_notified", "blank",
                 "c_newinc", "blank",
-                "new_labconf", "blank", "new_clindx", "blank", "new_ep", "blank",
-                "ret_rel_labconf", "blank", "ret_rel_clindx", "blank", "ret_rel_ep", "blank",
-                "ret_nrel")) %>%
-        write.csv(file="notif.csv", row.names=FALSE, na="")
+                "pct_rdx", "pct_hivtest", "pct_pulm", "pct_pulm_bact_conf")) %>%
+        write.csv(file="notif_table.csv", row.names=FALSE, na="")
 
 # Don't leave any mess behind!
-rm(notif)
+# Clean up (remove any objects with their name starting with 'notif_')
+rm(list=ls(pattern = "^notif_"))
+
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
