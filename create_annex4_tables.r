@@ -334,48 +334,48 @@ rm(list=ls(pattern = "^inc_"))
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # Get country estimates
-mort_country <- filter(e, year == notification_maxyear) %>%
+mort_country <- estimates_epi %>%
+                filter(year == notification_maxyear) %>%
                 arrange(country) %>%
-                select(country, year, e_pop_num,
-                      e_mort_exc_tbhiv_num, e_mort_exc_tbhiv_num_lo, e_mort_exc_tbhiv_num_hi,
-                      e_mort_exc_tbhiv_100k, e_mort_exc_tbhiv_100k_lo, e_mort_exc_tbhiv_100k_hi,
-                      e_mort_tbhiv_num, e_mort_tbhiv_num_lo, e_mort_tbhiv_num_hi,
-                      e_mort_tbhiv_100k, e_mort_tbhiv_100k_lo, e_mort_tbhiv_100k_hi,
-                      e_mort_num, e_mort_num_lo, e_mort_num_hi,
-                      e_mort_100k, e_mort_100k_lo, e_mort_100k_hi) %>%
-                rename(entity = country )
+                select(entity = country,
+                        e_pop_num,
+                        e_mort_exc_tbhiv_num, e_mort_exc_tbhiv_num_lo, e_mort_exc_tbhiv_num_hi,
+                        e_mort_exc_tbhiv_100k, e_mort_exc_tbhiv_100k_lo, e_mort_exc_tbhiv_100k_hi,
+                        e_mort_tbhiv_num, e_mort_tbhiv_num_lo, e_mort_tbhiv_num_hi,
+                        e_mort_tbhiv_100k, e_mort_tbhiv_100k_lo, e_mort_tbhiv_100k_hi,
+                        e_mort_num, e_mort_num_lo, e_mort_num_hi,
+                        e_mort_100k, e_mort_100k_lo, e_mort_100k_hi)
 
 # Get regional estimates
-mort_region <- filter(a, year == notification_maxyear & group_type == "g_whoregion") %>%
-                    arrange(group_name) %>%
-                    select(group_description, year, e_pop_num,
-                         e_mort_exc_tbhiv_num, e_mort_exc_tbhiv_num_lo, e_mort_exc_tbhiv_num_hi,
-                         e_mort_exc_tbhiv_100k, e_mort_exc_tbhiv_100k_lo, e_mort_exc_tbhiv_100k_hi,
-                         e_mort_tbhiv_num, e_mort_tbhiv_num_lo, e_mort_tbhiv_num_hi,
-                         e_mort_tbhiv_100k, e_mort_tbhiv_100k_lo, e_mort_tbhiv_100k_hi,
-                         e_mort_num, e_mort_num_lo, e_mort_num_hi,
-                         e_mort_100k, e_mort_100k_lo, e_mort_100k_hi) %>%
-                    rename(entity = group_description )
+mort_region <-  aggregated_estimates_epi %>%
+                filter(year == notification_maxyear & group_type == "g_whoregion") %>%
+                arrange(group_name) %>%
+                select(entity = group_description,
+                        e_pop_num,
+                        e_mort_exc_tbhiv_num, e_mort_exc_tbhiv_num_lo, e_mort_exc_tbhiv_num_hi,
+                        e_mort_exc_tbhiv_100k, e_mort_exc_tbhiv_100k_lo, e_mort_exc_tbhiv_100k_hi,
+                        e_mort_tbhiv_num, e_mort_tbhiv_num_lo, e_mort_tbhiv_num_hi,
+                        e_mort_tbhiv_100k, e_mort_tbhiv_100k_lo, e_mort_tbhiv_100k_hi,
+                        e_mort_num, e_mort_num_lo, e_mort_num_hi,
+                        e_mort_100k, e_mort_100k_lo, e_mort_100k_hi)
 
 # Got global estimates
-mort_global <- filter(a, year == notification_maxyear & group_type == "global") %>%
-                    select(group_description, year, e_pop_num,
-                           e_mort_exc_tbhiv_num, e_mort_exc_tbhiv_num_lo, e_mort_exc_tbhiv_num_hi,
-                           e_mort_exc_tbhiv_100k, e_mort_exc_tbhiv_100k_lo, e_mort_exc_tbhiv_100k_hi,
-                           e_mort_tbhiv_num, e_mort_tbhiv_num_lo, e_mort_tbhiv_num_hi,
-                           e_mort_tbhiv_100k, e_mort_tbhiv_100k_lo, e_mort_tbhiv_100k_hi,
-                           e_mort_num, e_mort_num_lo, e_mort_num_hi,
-                           e_mort_100k, e_mort_100k_lo, e_mort_100k_hi) %>%
-                    rename(entity = group_description )
+mort_global <-  aggregated_estimates_epi %>%
+                filter(year == notification_maxyear & group_type == "global") %>%
+                select(entity = group_description,
+                       e_pop_num,
+                       e_mort_exc_tbhiv_num, e_mort_exc_tbhiv_num_lo, e_mort_exc_tbhiv_num_hi,
+                       e_mort_exc_tbhiv_100k, e_mort_exc_tbhiv_100k_lo, e_mort_exc_tbhiv_100k_hi,
+                       e_mort_tbhiv_num, e_mort_tbhiv_num_lo, e_mort_tbhiv_num_hi,
+                       e_mort_tbhiv_100k, e_mort_tbhiv_100k_lo, e_mort_tbhiv_100k_hi,
+                       e_mort_num, e_mort_num_lo, e_mort_num_hi,
+                       e_mort_100k, e_mort_100k_lo, e_mort_100k_hi)
 
 # Create combined table in order of countries then regional and global estimates
-mort <- combine_tables(mort_country, mort_region, mort_global)
-rm(list=c("mort_country", "mort_region", "mort_global"))
-
-
+mort_table <- combine_tables(mort_country, mort_region, mort_global)
 
 # Format variables for output
-mort <- within(mort, {
+mort_table <- within(mort_table, {
 
   # round population to millions
   e_pop_num <- ifelse(e_pop_num / 1000000 < 1, "< 1", rounder(e_pop_num / 1000000))
@@ -421,18 +421,20 @@ mort <- within(mort, {
 # Insert "blank" placeholders for use in the output spreadsheet before writing out to CSV
 # dplyr's select statement won't repeat the blanks, hence use subset() from base r instead
 
-subset(mort,
+subset(mort_table,
        select=c("entity", "e_pop_num", "blank", "blank",
                 "mort_exc_tbhiv_num", "mort_exc_tbhiv_num_lo_hi",
                 "mort_exc_tbhiv_rate", "mort_exc_tbhiv_rate_lo_hi", "blank",
                 "mort_tbhiv_num", "mort_tbhiv_num_lo_hi",
                 "mort_tbhiv_rate", "mort_tbhiv_rate_lo_hi", "blank",
                 "mort_num", "mort_num_lo_hi", "mort_rate", "mort_rate_lo_hi")) %>%
-  write.csv(file="mort.csv", row.names=FALSE, na="")
+  write.csv(file="mort_table.csv", row.names=FALSE, na="")
 
 
 # Don't leave any mess behind!
-rm(mort)
+# Clean up (remove any objects with their name starting with 'mort_')
+rm(list=ls(pattern = "^mort_"))
+
 
 
 
