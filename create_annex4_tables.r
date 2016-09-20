@@ -759,6 +759,124 @@ rm(list=ls(pattern = "^notif_"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+#   outcome_table (Table A4.5) ----
+#   Treatment outcomes, all types
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# Get country data
+# A. Standard cohorts
+outcome_country <-  outcomes %>%
+                    filter(year == outcome_maxyear) %>%
+                    select(country,
+                           g_whoregion,
+                           rel_with_new_flg,
+                           newrel_coh, newrel_succ,
+                           ret_nrel_coh, ret_nrel_succ,
+                           tbhiv_coh, tbhiv_succ)
+
+
+# B. Combine with MDR and XDR cohorts one year older than standard
+outcome_dr_country <-  outcomes %>%
+                      filter(year == (outcome_maxyear - 1)) %>%
+                      select(country,
+                             mdr_coh, mdr_succ,
+                             xdr_coh, xdr_succ)
+
+outcome_country <-  outcome_dr_country %>%
+                    inner_join(outcome_country, by = "country") %>%
+                    rename(entity = country ) %>%
+                    arrange(entity)
+
+
+# Calculate regional aggregates
+outcome_region <- outcome_country %>%
+                    group_by(g_whoregion) %>%
+                    summarise_each(funs(sum(., na.rm = TRUE)),
+                                   ends_with("_coh"),
+                                   ends_with("_succ")) %>%
+                    # add dummy variable to match structure of country table
+                    mutate(rel_with_new_flg = NA)
+
+# merge with regional names
+outcome_region <-   aggregated_estimates_drtb_rawvalues %>%
+                    filter(year == notification_maxyear & group_type == "g_whoregion") %>%
+                    select(g_whoregion = group_name,
+                           entity = group_description) %>%
+                    inner_join(outcome_region, by = "g_whoregion") %>%
+                    arrange(g_whoregion)
+
+
+# Calculate global aggregate
+outcome_global <- outcome_country %>%
+                  summarise_each(funs(sum(., na.rm = TRUE)),
+                                 ends_with("_coh"),
+                                 ends_with("_succ")) %>%
+                  # add dummy variables to match structure of country table
+                  mutate(entity = "Global",
+                         rel_with_new_flg = NA,
+                         g_whoregion = "")
+
+
+# Create combined table in order of countries then regional and global estimates
+outcome_table <- combine_tables(outcome_country, outcome_region, outcome_global)
+
+
+
+# Calculate treatment success rates and format variables for output
+outcome_table <- within(outcome_table, {
+
+  # New or new+relapse
+  c_newrel_tsr <- ifelse( is.na(newrel_coh), NA, rounder( newrel_succ * 100 /newrel_coh ))
+
+  # Retreatment or retreatment excluding relapse
+  c_ret_tsr <- ifelse( is.na(ret_nrel_coh), NA, rounder( ret_nrel_succ * 100 / ret_nrel_coh ))
+
+  # HIV-positive, all cases
+  c_tbhiv_tsr <- ifelse( is.na(tbhiv_coh), NA, rounder( tbhiv_succ * 100 / tbhiv_coh ))
+
+  # MDR
+  c_mdr_tsr <- ifelse( is.na(mdr_coh), NA, rounder( mdr_succ * 100 / mdr_coh))
+
+  # XDR
+  c_xdr_tsr <- ifelse( is.na(xdr_coh), NA, rounder( xdr_succ * 100 / xdr_coh))
+
+  # Format the cohort sizes
+  newrel_coh <- rounder(newrel_coh)
+  ret_nrel_coh <- rounder(ret_nrel_coh)
+  tbhiv_coh <- rounder(tbhiv_coh)
+  mdr_coh <- rounder(mdr_coh)
+  xdr_coh <- rounder(xdr_coh)
+
+  # Flag country name if relapses were not included with new cases
+  entity <- ifelse(!is.na(rel_with_new_flg) & rel_with_new_flg==0, paste0(entity,"*"),entity)
+
+  # Add for blank columns
+  blank <- ""
+
+})
+
+# Insert "blank" placeholders for use in the output spreadsheet before writing out to CSV
+# dplyr's select statement won't repeat the blanks, hence use subset() from base r instead
+
+subset(outcome_table,
+       select = c("entity",
+                  "newrel_coh", "c_newrel_tsr", "blank",
+                  "ret_nrel_coh", "c_ret_tsr", "blank",
+                  "tbhiv_coh", "c_tbhiv_tsr", "blank",
+                  "mdr_coh", "c_mdr_tsr", "blank",
+                  "xdr_coh", "c_xdr_tsr"))  %>%
+  write.csv(file="outcome_table.csv", row.names=FALSE, na="")
+
+# Don't leave any mess behind!
+# Clean up (remove any objects with their name starting with 'outcome_')
+rm(list=ls(pattern = "^outcome_"))
+
+
+
+
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 #   agesex  (Table A4.4) -----
 #   New and relapse case notification rates per 100 000 population by age and sex
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -979,121 +1097,6 @@ subset(agesex,
 
 # Don't leave any mess behind!
 rm(agesex)
-
-
-
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#   outcome (Table A4.5) ----
-#   Treatment outcomes, all types
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-# Get country data
-# A. Standard chorts
-outcome_country <- filter(o, year == outcome_maxyear) %>%
-                    select(country, g_whoregion,
-                           rel_with_new_flg,
-                           newrel_coh, newrel_succ, newrel_fail,
-                           newrel_died, newrel_lost, c_newrel_neval,
-                           ret_nrel_coh, ret_nrel_succ,
-                           tbhiv_coh, tbhiv_succ)
-
-# B. Combine with MDR cohorts one year older than standard
-outcome_country <- filter(o, year == (outcome_maxyear - 1)) %>%
-                    select(country,
-                           mdr_coh, mdr_succ) %>%
-                    inner_join(outcome_country, by = "country") %>%
-                    rename(entity = country ) %>%
-                    arrange(entity)
-
-# Calculate regional aggregates
-
-outcome_region <- outcome_country %>%
-                    group_by(g_whoregion) %>%
-                    summarise_each(funs(sum(., na.rm = TRUE)),
-                                   contains("newrel_"),
-                                   starts_with("ret_nrel_"),
-                                   starts_with("tbhiv_"),
-                                   starts_with("mdr_")) %>%
-                    mutate(rel_with_new_flg = NA) # dummy variable to match structure of country table
-
-# merge with regional names
-outcome_region <- filter(a, year == notification_maxyear & group_type == "g_whoregion") %>%
-                    select(group_name, group_description) %>%
-                    rename(g_whoregion = group_name) %>%
-                    inner_join(outcome_region, by = "g_whoregion") %>%
-                    rename(entity = group_description) %>%
-                    arrange(g_whoregion)
-
-
-# Calculate global aggregate
-outcome_global <- outcome_country %>%
-                    summarise_each(funs(sum(., na.rm = TRUE)),
-                                   contains("newrel_"),
-                                   starts_with("ret_nrel_"),
-                                   starts_with("tbhiv_"),
-                                   starts_with("mdr_")) %>%
-                    mutate(entity = "Global") %>%
-                    mutate(rel_with_new_flg = NA) %>% # dummy variable to match structure of the other two tables
-                    mutate(g_whoregion = "")  # dummy variable to match structure of the other two tables
-
-
-
-# Create combined table in order of countries then regional and global estimates
-outcome <- combine_tables(outcome_country, outcome_region, outcome_global)
-rm(list=c("outcome_country", "outcome_region", "outcome_global"))
-
-
-# Calculate treatment success rates and format variables for output
-outcome <- within(outcome, {
-
-  # New or new+relapse
-  c_newrel_tsr <- ifelse( is.na(newrel_coh), NA, rounder( newrel_succ * 100 /newrel_coh ))
-
-  # % of other outcomes for new+relapse
-  c_newrel_failr <- ifelse( is.na(newrel_coh), NA, rounder( newrel_fail * 100 /newrel_coh ))
-  c_newrel_diedr <- ifelse( is.na(newrel_coh), NA, rounder( newrel_died * 100 /newrel_coh ))
-  c_newrel_lostr <- ifelse( is.na(newrel_coh), NA, rounder( newrel_lost * 100 /newrel_coh ))
-  c_newrel_nevalr <- ifelse( is.na(newrel_coh), NA, rounder( c_newrel_neval * 100 /newrel_coh ))
-
-  # Retreatment or retreatment excluding relapse
-  c_ret_tsr <- ifelse( is.na(ret_nrel_coh), NA, rounder( ret_nrel_succ * 100 / ret_nrel_coh ))
-
-  # HIV-positive, all cases
-  c_tbhiv_tsr <- ifelse( is.na(tbhiv_coh), NA, rounder( tbhiv_succ * 100 / tbhiv_coh ))
-
-  # MDR
-  c_mdr_tsr <- ifelse( is.na(mdr_coh), NA, rounder( mdr_succ * 100 / mdr_coh))
-
-  # Format the cohort sizes
-  newrel_coh <- rounder(newrel_coh)
-  ret_nrel_coh <- rounder(ret_nrel_coh)
-  tbhiv_coh <- rounder(tbhiv_coh)
-  mdr_coh <- rounder(mdr_coh)
-
-  # Flag country name if relapses were not included with new cases
-  entity <- ifelse(!is.na(rel_with_new_flg) & rel_with_new_flg==0, paste0(entity,"*"),entity)
-
-  # Add for blank columns
-  blank <- ""
-
-})
-
-# Insert "blank" placeholders for use in the output spreadsheet before writing out to CSV
-# dplyr's select statement won't repeat the blanks, hence use subset() from base r instead
-
-subset(outcome,
-       select = c("entity",
-                  "newrel_coh", "blank", "c_newrel_tsr", "blank",
-                  "c_newrel_failr", "blank", "c_newrel_diedr", "blank",  "c_newrel_lostr", "blank", "c_newrel_nevalr", "blank",
-                  "ret_nrel_coh", "blank", "c_ret_tsr", "blank",
-                  "tbhiv_coh", "blank", "c_tbhiv_tsr", "blank",
-                  "mdr_coh", "blank", "c_mdr_tsr", "blank"))  %>%
-  write.csv(file="outcome.csv", row.names=FALSE, na="")
-
-# Don't leave any mess behind!
-rm(outcome)
-
-
 
 
 
