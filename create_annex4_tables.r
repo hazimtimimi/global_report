@@ -437,6 +437,72 @@ rm(list=ls(pattern = "^mort_"))
 
 
 
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# mdr_rr_measured (Table A4.3) -----
+# Measured percentage of TB cases with MDR/RR-TB
+# Shows source of DR-TB measurements for those countries with usable survey or surveillance data
+# No aggregates used
+# (Was table A4.6 in 2015 report)
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# Get country data
+
+mdr_measured <- estimates_drtb %>%
+                filter(year == notification_maxyear) %>%
+                select(country,
+                       source_new,
+                       source_drs_year_new,
+                       source_drs_coverage_new,
+                       e_rr_pct_new, e_rr_pct_new_lo, e_rr_pct_new_hi,
+                       source_ret,
+                       source_drs_year_ret,
+                       source_drs_coverage_ret,
+                       e_rr_pct_ret, e_rr_pct_ret_lo, e_rr_pct_ret_hi)  %>%
+                arrange(country)
+
+
+# blank out source, estimates etc if source is not survey or surveillance
+mdr_measured[mdr_measured$source_new == "Model",
+             c("source_new", "source_drs_year_new", "source_drs_coverage_new",
+               "e_rr_pct_new", "e_rr_pct_new_lo", "e_rr_pct_new_hi")] <- NA
+
+mdr_measured[mdr_measured$source_ret == "Model",
+             c("source_ret", "source_drs_year_ret", "source_drs_coverage_ret",
+               "e_rr_pct_ret", "e_rr_pct_ret_lo", "e_rr_pct_ret_hi")] <- NA
+
+# Format variables for output
+mdr_measured <- within(mdr_measured, {
+
+  # concatenate confidence interval variables into bracketed strings
+  e_rr_pct_new_lo_hi <- frmt_intervals(e_rr_pct_new,
+                                       e_rr_pct_new_lo,
+                                       e_rr_pct_new_hi, rates=TRUE)
+
+  e_rr_pct_ret_lo_hi <- frmt_intervals(e_rr_pct_ret,
+                                       e_rr_pct_ret_lo,
+                                       e_rr_pct_ret_hi, rates=TRUE)
+
+  # Add for blank columns
+  blank <- ""
+
+})
+
+
+# Insert "blank" placeholders for use in the output spreadsheet before writing out to CSV
+# dplyr's select statement won't repeat the blanks, hence use subset() from base r instead
+
+subset(mdr_measured,
+       select=c("country", "blank",
+                "source_drs_year_new", "blank", "source_new", "blank", "source_drs_coverage_new", "blank",
+                "e_rr_pct_new", "blank", "e_rr_pct_new_lo_hi", "blank",
+                "source_drs_year_ret", "blank", "source_ret", "blank", "source_drs_coverage_ret", "blank",
+                "e_rr_pct_ret", "blank", "e_rr_pct_ret_lo_hi")) %>%
+  write.csv(file="mdr_measured.csv", row.names=FALSE, na="")
+
+# Don't leave any mess behind!
+rm(mdr_measured)
+
+
 
 
 
@@ -892,66 +958,6 @@ subset(outcome,
 # Don't leave any mess behind!
 rm(outcome)
 
-
-
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# mdr_measured (Table A4.6) -----
-# Measured percentage of TB cases with MDR-TB
-# Shows source of MDR-TB measurements for those countries with usable survey or surveillance data
-# No aggregates used
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-# Get country data
-
-mdr_measured <- filter(emdr, year == notification_maxyear) %>%
-                  select(country,
-                         source_mdr_new, source_drs_year_new, source_drs_coverage_new,
-                         e_new_mdr_pcnt,e_new_mdr_pcnt_lo, e_new_mdr_pcnt_hi,
-                         source_mdr_ret, source_drs_year_ret, source_drs_coverage_ret,
-                         e_ret_mdr_pcnt, e_ret_mdr_pcnt_lo, e_ret_mdr_pcnt_hi)  %>%
-                  arrange(country)
-
-
-# blank out source, estimates etc if source is not survey or surveillance
-mdr_measured[mdr_measured$source_mdr_new == "Model",
-             c("source_mdr_new", "source_drs_year_new", "source_drs_coverage_new",
-               "e_new_mdr_pcnt", "e_new_mdr_pcnt_lo", "e_new_mdr_pcnt_hi")] <- NA
-
-mdr_measured[mdr_measured$source_mdr_ret == "Model",
-             c("source_mdr_ret", "source_drs_year_ret", "source_drs_coverage_ret",
-               "e_ret_mdr_pcnt", "e_ret_mdr_pcnt_lo", "e_ret_mdr_pcnt_hi")] <- NA
-
-# Format variables for output
-mdr_measured <- within(mdr_measured, {
-
-  # concatenate confidence interval variables into bracketed strings
-  e_new_mdr_pcnt_lo_hi <- frmt_intervals(e_new_mdr_pcnt,
-                                         e_new_mdr_pcnt_lo,
-                                         e_new_mdr_pcnt_hi, rates=TRUE)
-
-  e_ret_mdr_pcnt_lo_hi <- frmt_intervals(e_ret_mdr_pcnt,
-                                         e_ret_mdr_pcnt_lo,
-                                         e_ret_mdr_pcnt_hi, rates=TRUE)
-
-  # Add for blank columns
-  blank <- ""
-
-})
-
-
-# Insert "blank" placeholders for use in the output spreadsheet before writing out to CSV
-# dplyr's select statement won't repeat the blanks, hence use subset() from base r instead
-
-subset(mdr_measured,
-       select=c("country", "blank",
-                "source_drs_year_new", "blank", "source_mdr_new", "blank", "source_drs_coverage_new", "blank",
-                "e_new_mdr_pcnt", "blank", "e_new_mdr_pcnt_lo_hi", "blank",
-                "source_drs_year_ret", "blank", "source_mdr_ret", "blank", "source_drs_coverage_ret", "blank",
-                "e_ret_mdr_pcnt", "blank", "e_ret_mdr_pcnt_lo_hi")) %>%
-  write.csv(file="mdr_measured.csv", row.names=FALSE, na="")
-
-# Don't leave any mess behind!
-rm(mdr_measured)
 
 
 
