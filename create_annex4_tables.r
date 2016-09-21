@@ -451,7 +451,7 @@ rm(list=ls(pattern = "^mort_"))
 
 # Get country data
 
-mdr_measured <- estimates_drtb %>%
+mdr_rr_measured <- estimates_drtb %>%
                 filter(year == notification_maxyear) %>%
                 select(country,
                        source_new,
@@ -466,16 +466,16 @@ mdr_measured <- estimates_drtb %>%
 
 
 # blank out source, estimates etc if source is not survey or surveillance
-mdr_measured[mdr_measured$source_new == "Model",
+mdr_rr_measured[mdr_rr_measured$source_new == "Model",
              c("source_new", "source_drs_year_new", "source_drs_coverage_new",
                "e_rr_pct_new", "e_rr_pct_new_lo", "e_rr_pct_new_hi")] <- NA
 
-mdr_measured[mdr_measured$source_ret == "Model",
+mdr_rr_measured[mdr_rr_measured$source_ret == "Model",
              c("source_ret", "source_drs_year_ret", "source_drs_coverage_ret",
                "e_rr_pct_ret", "e_rr_pct_ret_lo", "e_rr_pct_ret_hi")] <- NA
 
 # Format variables for output
-mdr_measured <- within(mdr_measured, {
+mdr_rr_measured <- within(mdr_rr_measured, {
 
   # concatenate confidence interval variables into bracketed strings
   e_rr_pct_new_lo_hi <- frmt_intervals(e_rr_pct_new,
@@ -495,16 +495,16 @@ mdr_measured <- within(mdr_measured, {
 # Insert "blank" placeholders for use in the output spreadsheet before writing out to CSV
 # dplyr's select statement won't repeat the blanks, hence use subset() from base r instead
 
-subset(mdr_measured,
+subset(mdr_rr_measured,
        select=c("country", "blank",
                 "source_drs_year_new", "blank", "source_new", "blank", "source_drs_coverage_new", "blank",
                 "e_rr_pct_new", "blank", "e_rr_pct_new_lo_hi", "blank",
                 "source_drs_year_ret", "blank", "source_ret", "blank", "source_drs_coverage_ret", "blank",
                 "e_rr_pct_ret", "blank", "e_rr_pct_ret_lo_hi")) %>%
-  write.csv(file="mdr_measured.csv", row.names=FALSE, na="")
+  write.csv(file="mdr_rr_measured.csv", row.names=FALSE, na="")
 
 # Don't leave any mess behind!
-rm(mdr_measured)
+rm(mdr_rr_measured)
 
 
 
@@ -860,11 +860,11 @@ outcome_table <- within(outcome_table, {
 
 subset(outcome_table,
        select = c("entity",
-                  "newrel_coh", "c_newrel_tsr", "blank",
-                  "ret_nrel_coh", "c_ret_tsr", "blank",
-                  "tbhiv_coh", "c_tbhiv_tsr", "blank",
-                  "mdr_coh", "c_mdr_tsr", "blank",
-                  "xdr_coh", "c_xdr_tsr"))  %>%
+                  "newrel_coh", "blank", "c_newrel_tsr", "blank",
+                  "ret_nrel_coh", "blank", "c_ret_tsr", "blank",
+                  "tbhiv_coh", "blank", "c_tbhiv_tsr", "blank",
+                  "mdr_coh", "blank", "c_mdr_tsr", "blank",
+                  "xdr_coh", "blank", "c_xdr_tsr"))  %>%
   write.csv(file="outcome_table.csv", row.names=FALSE, na="")
 
 # Don't leave any mess behind!
