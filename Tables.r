@@ -46,15 +46,15 @@ est_cntry <- estimates_epi_rawvalues %>%
                                                    "\u2013",
                                                    frmt(e_mort_tbhiv_100k_hi  * e_pop_num / 1e8, thou=TRUE)),
 
-                   e_inc_num = frmt(e_inc_num / 1e3, thou=TRUE),
-                   e_inc_num_range = paste0(frmt(e_inc_num_lo / 1e3, thou=TRUE),
+                   e_inc_num = frmt(e_inc_num / 1e3, rates=TRUE, thou=TRUE),
+                   e_inc_num_range = paste0(frmt(e_inc_num_lo / 1e3, rates=TRUE, thou=TRUE),
                                            "\u2013",
-                                           frmt(e_inc_num_hi  / 1e3, thou=TRUE)),
+                                           frmt(e_inc_num_hi  / 1e3, rates=TRUE, thou=TRUE)),
 
-                   e_inc_tbhiv_num = frmt(e_inc_tbhiv_num / 1e3, thou=TRUE),
-                   e_inc_tbhiv_num_range = paste0(frmt(e_inc_tbhiv_num_lo  / 1e3, thou=TRUE),
+                   e_inc_tbhiv_num = frmt(e_inc_tbhiv_num / 1e3, rates=TRUE, thou=TRUE),
+                   e_inc_tbhiv_num_range = paste0(frmt(e_inc_tbhiv_num_lo  / 1e3, rates=TRUE, thou=TRUE),
                                                  "\u2013",
-                                                 frmt(e_inc_tbhiv_num_hi / 1e3, thou=TRUE))
+                                                 frmt(e_inc_tbhiv_num_hi / 1e3, rates=TRUE, thou=TRUE))
                    ) %>%
 
             select(country,
@@ -90,15 +90,15 @@ est_aggs <- aggregated_estimates_epi_rawvalues %>%
                                                    "\u2013",
                                                    frmt(e_mort_tbhiv_num_hi  / 1e3, thou=TRUE)),
 
-                   e_inc_num = frmt(e_inc_num / 1e3, thou=TRUE),
-                   e_inc_num_range = paste0(frmt(e_inc_num_lo / 1e3, thou=TRUE),
+                   e_inc_num = frmt(e_inc_num / 1e3, rates=TRUE, thou=TRUE),
+                   e_inc_num_range = paste0(frmt(e_inc_num_lo / 1e3, rates=TRUE, thou=TRUE),
                                            "\u2013",
-                                           frmt(e_inc_num_hi  / 1e3, thou=TRUE)),
+                                           frmt(e_inc_num_hi  / 1e3, rates=TRUE, thou=TRUE)),
 
-                   e_inc_tbhiv_num = frmt(e_inc_tbhiv_num / 1e3, thou=TRUE),
-                   e_inc_tbhiv_num_range = paste0(frmt(e_inc_tbhiv_num_lo  / 1e3, thou=TRUE),
+                   e_inc_tbhiv_num = frmt(e_inc_tbhiv_num / 1e3, rates=TRUE, thou=TRUE),
+                   e_inc_tbhiv_num_range = paste0(frmt(e_inc_tbhiv_num_lo  / 1e3, rates=TRUE, thou=TRUE),
                                                  "\u2013",
-                                                 frmt(e_inc_tbhiv_num_hi / 1e3, thou=TRUE))
+                                                 frmt(e_inc_tbhiv_num_hi / 1e3, rates=TRUE, thou=TRUE))
                    )  %>%
 
             arrange(group_type, group_name) %>%

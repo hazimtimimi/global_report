@@ -272,10 +272,10 @@ inc_table <- within(inc_table, {
   pop_num <- ifelse(e_pop_num / 1000000 < 1, "< 1", rounder(e_pop_num / 1000000))
 
   # incidence (convert numbers to thousands)
-  inc_num <- frmt(e_inc_num / 1000, thou=TRUE)
+  inc_num <- frmt(e_inc_num / 1000, rates=TRUE, thou=TRUE)
   inc_num_lo_hi <- frmt_intervals(e_inc_num / 1000,
                                   e_inc_num_lo / 1000,
-                                  e_inc_num_hi / 1000, thou=TRUE)
+                                  e_inc_num_hi / 1000, rates=TRUE, thou=TRUE)
 
   inc_rate <- frmt(e_inc_100k, rates=TRUE)
   inc_rate_lo_hi <- frmt_intervals(e_inc_100k,
@@ -283,10 +283,10 @@ inc_table <- within(inc_table, {
                                    e_inc_100k_hi, rates=TRUE)
 
   # TB/HIV incidence (convert numbers to thousands)
-  inc_tbhiv_num <- frmt(e_inc_tbhiv_num / 1000, thou=TRUE, thouEst=TRUE)
+  inc_tbhiv_num <- frmt(e_inc_tbhiv_num / 1000, rates=TRUE, thou=TRUE, thouEst=TRUE)
   inc_tbhiv_num_lo_hi <- frmt_intervals(e_inc_tbhiv_num / 1000,
                                         e_inc_tbhiv_num_lo / 1000,
-                                        e_inc_tbhiv_num_hi / 1000, thou=TRUE, thouEst=TRUE)
+                                        e_inc_tbhiv_num_hi / 1000, rates=TRUE, thou=TRUE, thouEst=TRUE)
 
   inc_tbhiv_rate <- frmt(e_inc_tbhiv_100k, rates=TRUE)
   inc_tbhiv_rate_lo_hi <- frmt_intervals(e_inc_tbhiv_100k,
