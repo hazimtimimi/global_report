@@ -1,15 +1,8 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Script to produce CSV files to be imported into the WHO Global Health Observatory
 #
-# Hazim Timimi, October 2015 (dplyr'ed version of script written last year!)
+# Hazim Timimi, November 2016
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-#  !!!! Change in 2016 so only data for WHO-member states are included in the file sent to GHO   !!!!!!!
-
-
-
-
-
 
 
 # Clear the decks ----
@@ -21,7 +14,7 @@ rm(list=ls())
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # Establish the report year
-report_year <- 2015
+report_year <- 2016
 
 # The following are convenience variables since notification and most other data sets will run up to the
 # year before the reporting year and outcomes will run up to two years before the reporting year
@@ -35,7 +28,10 @@ outcome_maxyear      <- (report_year - 2)
 
 russianfudge <- TRUE
 
+# Apply the Malawi fudge ------
+# flag for whether to calculate % of patients who knew their HIV status using c_notified as the denominator
 
+malawifudge <- TRUE
 
 # This is needed to avoid scientific notation output. No idea what it actally means -- it must get the prize for the most confusing documentation. Ever.
 
@@ -54,32 +50,8 @@ options(stringsAsFactors=FALSE)
 # rdata_name:     Name of a .RData file containing copy of database views
 # use_live_db:    Flag -- if TRUE then data loaded durectly from the global TB database
 #                 if FALSE then data loaded from the .RData file
-#
-# and, from the global TB database,
-#
-# n:     dataframe copy of view_TME_master_notification
-# nk:    dataframe copy of view_TME_master_notification_exceptions
-# tbhiv: dataframe copy of view_TME_master_TBHIV_for_aggregates
-# e:     dataframe copy of view_TME_estimates_epi
-# eraw:  dataframe copy of view_TME_estimates_epi_rawvalues
-# f:     dataframe copy of view_TME_master_finance
-# be:    dataframe copy of view_TME_master_budget_expenditure
-# p:     dataframe copy of view_TME_estimates_population
-# o:     dataframe copy of view_TME_master_outcomes
-# s:     dataframe copy of view_TME_master_strategy
-# i:     dataframe copy of view_TME_master_data_collection
-# a:     dataframe copy of view_TME_aggregated_estimates_epi
-# araw:  dataframe copy of view_TME_aggregated_estimates_epi_rawvalues
-# d:     dataframe copy of view_TME_master_dr_surveillance
-# dsvy:  dataframe copy of view_TME_master_drs
-# dictionary:  dataframe copy of view_TME_data_dictionary
-# datacodes:   dataframe copy of view_TME_data_codes
-# emdr:  dataframe copy of view_TME_estimates_mdr
-# emdrn: dataframe copy of view_TME_estimates_mdr_in_notified
-# emdra: dataframe copy of view_TME_aggregated_estimates_mdr_in_notified
-#
-# data.date: When the source datasets were created
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
 
 scripts_folder <- getSrcDirectory(function(x) {x})  # See http://stackoverflow.com/a/30306616
 
@@ -142,15 +114,17 @@ library("tidyr")
 
 frmt <- function(x, rates=FALSE, thou=FALSE, thouEst=FALSE) {
   ifelse(x==0, "0",
-         ifelse(x < 0.01 & thou==TRUE, "<0.01",
-                ifelse(x < 0.1 & thou==FALSE, "<0.1",
-                       ifelse(signif(x, 2) < 1 & thou==TRUE & thouEst==FALSE, formatC(signif(x,3), format="f", digits=3),
-                              ifelse(signif(x, 3) < 0.1 & thou==TRUE & thouEst==TRUE, formatC(signif(x,3), format="f", digits=3),
-                                     ifelse(signif(x, 2) < 1, formatC(signif(x,2), format="f", digits=2),
-                                            ifelse(signif(x, 2) < 10, formatC(signif(x,2), format="f", digits=1),
-                                                   ifelse(x > 1 & rates==FALSE, formatC(signif(x, 2), big.mark=" ", format="d"),
-                                                          ifelse(signif(x, 3) < 100, formatC(signif(x, 2), big.mark=" ", format="d"), formatC(signif(x, 3), big.mark=" ", format="d"))))))))))
+  ifelse(x < 0.01 & thou==TRUE, "<0.01",
+  ifelse(x < 0.1 & thou==FALSE, "<0.1",
+  ifelse(signif(x, 2) < 1 & thou==TRUE & thouEst==FALSE, formatC(signif(x,3), format="f", digits=3),
+  ifelse(signif(x, 3) < 0.1 & thou==TRUE & thouEst==TRUE, formatC(signif(x,3), format="f", digits=3),
+  ifelse(signif(x, 2) < 1, formatC(signif(x,2), format="f", digits=2),
+  ifelse(signif(x, 2) < 10, formatC(signif(x,2), format="f", digits=1),
+  ifelse(x > 1 & rates==FALSE, formatC(signif(x, 2), big.mark=" ", format="d"),
+  ifelse(signif(x, 3) < 100, formatC(signif(x, 2), big.mark=" ", format="d"), formatC(signif(x, 3), big.mark=" ", format="d"))))))))))
 }
+
+
 
 # Better row sum ----
 # This function sums rows ignoring NAs unless all are NA
@@ -188,22 +162,28 @@ cap_frmt_pct <- function(numerator, denominator) {
 # stop("OK, see what we have!")
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+stop("
+
+     >>>>>>>>>>
+     Stopping here so can do the rest manually!
+     <<<<<<<<<<<<")
+
+
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 #   Estimates (country-level and aggregates) -----
-#   Estimates of TB mortality, prevalence and incidence, and MDR among notified
+#   Estimates of TB mortality and incidence, and MDR/RR among notified
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # Combine country-level and aggregate epi estimates because subsequent operations
 # are identical
 
-est_country <- filter(e, year >= 1990) %>%
+est_country <- estimates_epi %>%
+                filter(year >= 2000) %>%
                 select(iso3, year,
                        e_mort_exc_tbhiv_num, e_mort_exc_tbhiv_num_lo, e_mort_exc_tbhiv_num_hi,
                        e_mort_exc_tbhiv_100k, e_mort_exc_tbhiv_100k_lo, e_mort_exc_tbhiv_100k_hi,
-                       e_prev_num, e_prev_num_lo, e_prev_num_hi,
-                       e_prev_100k, e_prev_100k_lo, e_prev_100k_hi,
                        e_inc_num, e_inc_num_lo, e_inc_num_hi,
                        e_inc_100k, e_inc_100k_lo, e_inc_100k_hi,
                        e_inc_tbhiv_100k, e_inc_tbhiv_100k_lo, e_inc_tbhiv_100k_hi,
@@ -211,12 +191,11 @@ est_country <- filter(e, year >= 1990) %>%
                        c_cdr, c_cdr_lo, c_cdr_hi) %>%
                 rename(location_code = iso3)
 
-est_agg <- filter(a, year >= 1990 & group_type %in% c("global", "g_whoregion", "g_income")) %>%
+est_agg <-  aggregated_estimates_epi %>%
+            filter(year >= 2000 & group_type %in% c("global", "g_whoregion", "g_income")) %>%
             select(group_name, year,
                    e_mort_exc_tbhiv_num, e_mort_exc_tbhiv_num_lo, e_mort_exc_tbhiv_num_hi,
                    e_mort_exc_tbhiv_100k, e_mort_exc_tbhiv_100k_lo, e_mort_exc_tbhiv_100k_hi,
-                   e_prev_num, e_prev_num_lo, e_prev_num_hi,
-                   e_prev_100k, e_prev_100k_lo, e_prev_100k_hi,
                    e_inc_num, e_inc_num_lo, e_inc_num_hi,
                    e_inc_100k, e_inc_100k_lo, e_inc_100k_hi,
                    e_inc_tbhiv_100k, e_inc_tbhiv_100k_lo, e_inc_tbhiv_100k_hi,
@@ -231,125 +210,132 @@ est_agg <- filter(a, year >= 1990 & group_type %in% c("global", "g_whoregion", "
 est <- rbind(est_country, est_agg)
 rm(est_country, est_agg)
 
-# Combine country-level and aggregate MDR in notified estimates because subsequent operations
+# Combine country-level and aggregate MDR/RR in notified estimates because subsequent operations
 # are identical
 
-est_mdr_country <- filter(emdrn, year == notification_maxyear) %>%
+est_rr_country <- estimates_drtb %>%
+                  filter(year == notification_maxyear) %>%
                     select(iso3, year,
-                           e_mdr_num, e_mdr_num_lo, e_mdr_num_hi) %>%
+                           e_rr_in_notified_pulm, e_rr_in_notified_pulm_lo, e_rr_in_notified_pulm_hi) %>%
                     rename(location_code = iso3)
 
-est_mdr_agg <- filter(emdra, year == notification_maxyear) %>%
+est_rr_agg <-  aggregated_estimates_drtb %>%
+                filter(year == notification_maxyear) %>%
                 select(group_name, year,
-                       e_mdr_num, e_mdr_num_lo, e_mdr_num_hi) %>%
+                       e_rr_in_notified_pulm, e_rr_in_notified_pulm_lo, e_rr_in_notified_pulm_hi) %>%
                 # convert to GHO group codes
                 inner_join(gho_group_codes, by = "group_name") %>%
                 # drop the group_name variable
                 select(-group_name)
 
 # Combine the two estimates tables
-est_mdr <- rbind(est_mdr_country, est_mdr_agg)
-rm(est_mdr_country, est_mdr_agg)
+est_rr <- rbind(est_rr_country, est_rr_agg)
+rm(est_rr_country, est_rr_agg)
 
 
 # Begin the processing now on the combined country and aggregate estimates
 
 # Get best estimates
-est_c_best <- select(est,
-                     location_code, year,
+est_c_best <- est %>%
+              select(location_code, year,
                      e_mort_exc_tbhiv_num, e_mort_exc_tbhiv_100k,
-                     e_prev_num, e_prev_100k,
                      e_inc_num, e_inc_100k,
                      e_inc_tbhiv_100k, e_inc_tbhiv_num,
                      c_cdr)
 
-est_c_best <- select(est_mdr, location_code, year,e_mdr_num) %>%
+est_c_best <- est_rr %>%
+              select(location_code, year, e_rr_in_notified_pulm) %>%
               right_join(est_c_best, by = c("location_code", "year"))
 
 
 # rename variables to GHO versions
-est_c_best <- rename(est_c_best,
-                     time_period = year,
+est_c_best <- est_c_best %>%
+              rename(time_period = year,
                      MDG_0000000020 = e_inc_100k,
                      TB_e_inc_num = e_inc_num,
                      MDG_0000000017 = e_mort_exc_tbhiv_100k,
                      TB_e_mort_exc_tbhiv_num = e_mort_exc_tbhiv_num,
-                     MDG_0000000023 = e_prev_100k,
-                     TB_e_prev_num = e_prev_num,
                      TB_e_inc_tbhiv_100k = e_inc_tbhiv_100k,
                      TB_e_inc_tbhiv_num = e_inc_tbhiv_num,
                      TB_1 = c_cdr,
-                     TB_e_mdr_num = e_mdr_num)
+                     TB_e_rr_in_notified_pulm = e_rr_in_notified_pulm)
 
 # melt into long table needed by GHO.
 # The key/value fields are called "indicator_code" and "value". Exclude location_code and time_period from the melting, so they appear in the final output to provide the reference key (syntax is a little bit confusing ....)
 
-est_c_best <- gather(est_c_best, key="indicator_code", value="value", -location_code, -time_period)
+est_c_best <- est_c_best %>%
+              gather(key="indicator_code",
+                     value="value",
+                     -location_code,
+                     -time_period)
 
 
 # Now need to add the uncertainty intervals, have to process each one separately
 
-est_c_lo <- select(est,
-                   location_code, year,
+est_c_lo <- est %>%
+            select(location_code, year,
                    e_mort_exc_tbhiv_num_lo, e_mort_exc_tbhiv_100k_lo,
-                   e_prev_num_lo, e_prev_100k_lo,
                    e_inc_num_lo, e_inc_100k_lo,
                    e_inc_tbhiv_100k_lo, e_inc_tbhiv_num_lo,
                    c_cdr_lo)
 
-est_c_lo <- select(est_mdr,
-                   location_code, year,e_mdr_num_lo) %>%
+est_c_lo <- est_rr %>%
+            select(location_code, year, e_rr_in_notified_pulm_lo) %>%
             right_join(est_c_lo, by = c("location_code", "year"))
 
 
 # rename variables to GHO versions
-est_c_lo <- rename(est_c_lo,
-                     time_period = year,
-                     MDG_0000000020 = e_inc_100k_lo,
-                     TB_e_inc_num = e_inc_num_lo,
-                     MDG_0000000017 = e_mort_exc_tbhiv_100k_lo,
-                     TB_e_mort_exc_tbhiv_num = e_mort_exc_tbhiv_num_lo,
-                     MDG_0000000023 = e_prev_100k_lo,
-                     TB_e_prev_num = e_prev_num_lo,
-                     TB_e_inc_tbhiv_100k = e_inc_tbhiv_100k_lo,
-                     TB_e_inc_tbhiv_num = e_inc_tbhiv_num_lo,
-                     TB_1 = c_cdr_lo,
-                     TB_e_mdr_num = e_mdr_num_lo)
+est_c_lo <- est_c_lo %>%
+            rename(time_period = year,
+                   MDG_0000000020 = e_inc_100k_lo,
+                   TB_e_inc_num = e_inc_num_lo,
+                   MDG_0000000017 = e_mort_exc_tbhiv_100k_lo,
+                   TB_e_mort_exc_tbhiv_num = e_mort_exc_tbhiv_num_lo,
+                   TB_e_inc_tbhiv_100k = e_inc_tbhiv_100k_lo,
+                   TB_e_inc_tbhiv_num = e_inc_tbhiv_num_lo,
+                   TB_1 = c_cdr_lo,
+                   TB_e_rr_in_notified_pulm = e_rr_in_notified_pulm_lo)
 
 
 # melt into long table needed by GHO.
-est_c_lo <- gather(est_c_lo, key="indicator_code", value="low", -location_code, -time_period)
+est_c_lo <- est_c_lo %>%
+            gather(key="indicator_code",
+                   value="low",
+                   -location_code,
+                   -time_period)
 
 
-est_c_hi <- select(est,
-                   location_code, year,
+est_c_hi <- est %>%
+            select(location_code, year,
                    e_mort_exc_tbhiv_num_hi, e_mort_exc_tbhiv_100k_hi,
-                   e_prev_num_hi, e_prev_100k_hi,
                    e_inc_num_hi, e_inc_100k_hi,
                    e_inc_tbhiv_100k_hi, e_inc_tbhiv_num_hi,
                    c_cdr_hi)
 
-est_c_hi <- select(est_mdr, location_code, year,e_mdr_num_hi) %>%
+est_c_hi <- est_rr %>%
+            select(location_code, year, e_rr_in_notified_pulm_hi) %>%
             right_join(est_c_hi, by = c("location_code", "year"))
 
 
 # rename variables to GHO versions
-est_c_hi <- rename(est_c_hi,
-                   time_period = year,
+est_c_hi <- est_c_hi %>%
+            rename(time_period = year,
                    MDG_0000000020 = e_inc_100k_hi,
                    TB_e_inc_num = e_inc_num_hi,
                    MDG_0000000017 = e_mort_exc_tbhiv_100k_hi,
                    TB_e_mort_exc_tbhiv_num = e_mort_exc_tbhiv_num_hi,
-                   MDG_0000000023 = e_prev_100k_hi,
-                   TB_e_prev_num = e_prev_num_hi,
                    TB_e_inc_tbhiv_100k = e_inc_tbhiv_100k_hi,
                    TB_e_inc_tbhiv_num = e_inc_tbhiv_num_hi,
                    TB_1 = c_cdr_hi,
-                   TB_e_mdr_num = e_mdr_num_hi)
+                   TB_e_rr_in_notified_pulm = e_rr_in_notified_pulm_hi)
 
 
 # melt into long table needed by GHO.
-est_c_hi <- gather(est_c_hi, key="indicator_code", value="high", -location_code, -time_period)
+est_c_hi <- est_c_hi %>%
+            gather(key="indicator_code",
+                   value="high",
+                   -location_code,
+                   -time_period)
 
 
 # Join the three data sets into GHO format  and use as a starter for a GHO mega dataframe
@@ -360,7 +346,7 @@ gho <- full_join(est_c_best, est_c_lo, by = c("location_code", "time_period", "i
           full_join(est_c_hi, by = c("location_code", "time_period", "indicator_code"))
 
 #clean up
-rm(list=c("est_c_best",  "est_c_lo", "est_c_hi", "est", "est_mdr"))
+rm(list=c("est_c_best",  "est_c_lo", "est_c_hi", "est", "est_rr"))
 
 
 
@@ -371,7 +357,8 @@ rm(list=c("est_c_best",  "est_c_lo", "est_c_hi", "est", "est_mdr"))
 
 
 # Get data
-notif <- filter(n, year >= 1990) %>%
+notif <-  notification %>%
+          filter(year >= 2000) %>%
           select(iso3, year, g_whoregion, g_income,
                  c_newinc,
                  new_labconf, new_sp, new_clindx, new_sn, new_su, new_ep, new_oth,
@@ -401,9 +388,9 @@ notif <- within(notif, {
 })
 
 # Drop the uneeded variables
-notif <- select(notif,
-                -new_sn, -new_su, -new_oth,
-                -ret_taf, -ret_tad, -ret_oth)
+notif <- notif %>%
+        select(-new_sn, -new_su, -new_oth,
+               -ret_taf, -ret_tad, -ret_oth)
 
 
 # Calculate aggregates
@@ -443,16 +430,16 @@ rm(list=c("notif_agg_r",  "notif_agg_i", "notif_agg_g"))
 notif_agg[3:14] <- sapply(notif_agg[3:14], function(x){ ifelse(x==0,NA,x)})
 
 # convert to GHO group codes
-notif_agg <- inner_join(notif_agg, gho_group_codes, by = "group_name") %>%
+notif_agg <-  notif_agg %>%
+              inner_join(gho_group_codes, by = "group_name") %>%
               # drop the group_name variable
               select(-group_name)
 
 # get rid of g_whoregion and g_income from notif
-notif <- select(notif, -g_whoregion, -g_income)
-
-# rename variables to GHO versions
-notif <- rename(notif,
-                location_code = iso3)
+notif <- notif %>%
+        select(-g_whoregion, -g_income) %>%
+        # rename variables to GHO versions
+        rename(location_code = iso3)
 
 # combine country and aggregates
 notif <- rbind(notif_agg, notif)
@@ -461,13 +448,17 @@ notif <- rbind(notif_agg, notif)
 names(notif) <- paste("TB_", names(notif), sep="")
 
 # Then undo renaming of the two index fields
-notif <- rename(notif,
-                location_code = TB_location_code,
+notif <- notif %>%
+         rename(location_code = TB_location_code,
                 time_period = TB_year)
 
 
 # melt into long table needed by GHO
-notif <- gather(notif, key="indicator_code", value="value", -location_code, -time_period)
+notif <- notif %>%
+         gather(key="indicator_code",
+                value="value",
+                -location_code,
+                -time_period)
 
 
 # add empty columns for low and high
@@ -481,52 +472,18 @@ gho <- rbind(gho, notif )
 rm(list=c("notif", "notif_agg"))
 
 
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#   Laboratories -----
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-labs <- s %>%
-        select(iso3, year, c_lab_sm_100k, c_lab_cul_5m, c_lab_dst_5m,sldst_avail) %>%
-        filter(year >= 1990)
-
-# decode dst availability field
-labs <- datacodes %>%
-        select(option_id, optiontext_EN) %>%
-        right_join(labs, datacodes, by = c("option_id" = "sldst_avail")) %>%
-        select(-option_id)
-
-# Add TB_ to the start of all column names (easy way to get the GHO variable names)
-names(labs) <- paste("TB_", names(labs), sep="")
-
-# rename variables to GHO versions
-labs <- rename(labs,
-               location_code = TB_iso3,
-               time_period = TB_year,
-               TB_sldst_avail = TB_optiontext_EN)
-
-# melt into long table needed by GHO
-labs <- gather(labs, key="indicator_code", value="value", -location_code, -time_period)
-
-# add empty columns for low and high
-labs$low <- NA
-labs$high <- NA
-
-#combine into the mega GHO dataframe
-gho <- rbind(gho, labs)
-
-#clean up
-rm(labs)
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 #   hiv_test  -----
-#   HIV testing and provision of CPT, ART and IPT
-#  Note that dataset tbhiv already has rules built in for combining _p and _f
+#   HIV testing and provision of ART
+#  Note that dataset TBHIV_for_aggregates already has rules built in for combining _p and _f
 #	(final and provisional) numbers, plus adjusted variables for calculating aggregates.
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # Get country data
-hiv_test <- tbhiv %>%
-            select(year, g_whoregion, g_income, c_notified, iso3, starts_with("hiv")) %>%
+hiv_test <- TBHIV_for_aggregates %>%
+            select(year, g_whoregion, g_income, iso3, starts_with("hiv"), newrel_hivtest, c_notified) %>%
             filter(year >= 2003)
 
 
@@ -535,7 +492,7 @@ hiv_test <- tbhiv %>%
 hiv_test_agg_r <- hiv_test %>%
                   group_by(g_whoregion, year) %>%
                   summarise_each(funs(sum(., na.rm = TRUE)),
-                                 contains("_pct_"), c_notified) %>%
+                                 contains("_pct_")) %>%
                   ungroup() %>%
                   rename(group_name = g_whoregion )
 
@@ -543,7 +500,7 @@ hiv_test_agg_r <- hiv_test %>%
 hiv_test_agg_i <- hiv_test %>%
                   group_by(g_income, year) %>%
                   summarise_each(funs(sum(., na.rm = TRUE)),
-                                 contains("_pct_"), c_notified) %>%
+                                 contains("_pct_")) %>%
                   ungroup() %>%
                   rename(group_name = g_income )
 
@@ -551,7 +508,7 @@ hiv_test_agg_i <- hiv_test %>%
 hiv_test_agg_g <- hiv_test %>%
                   group_by(year) %>%
                   summarise_each(funs(sum(., na.rm = TRUE)),
-                                 contains("_pct_"), c_notified) %>%
+                                 contains("_pct_")) %>%
                   ungroup() %>%
                   mutate(group_name = "global" )
 
@@ -565,7 +522,7 @@ rm(list=c("hiv_test_agg_r",  "hiv_test_agg_i", "hiv_test_agg_g"))
 # because with na.rm=TRUE I get a 0 for the sum. However I think all aggregates should be > 0 therefore easiest
 # thing to do is to assume all zeros in the resulting aggregates should be NA
 
-hiv_test_agg[3:11] <- sapply(hiv_test_agg[3:11], function(x){ ifelse(x==0,NA,x)})
+hiv_test_agg[3:10] <- sapply(hiv_test_agg[3:10], function(x){ ifelse(x==0,NA,x)})
 
 # convert to GHO group codes
 hiv_test_agg <- inner_join(hiv_test_agg, gho_group_codes, by = "group_name") %>%
@@ -577,7 +534,6 @@ hiv_test_agg <- inner_join(hiv_test_agg, gho_group_codes, by = "group_name") %>%
 hiv_test_agg <- within(hiv_test_agg, {
   hivtest_pct <- frmt(hivtest_pct_numerator * 100 / hivtest_pct_denominator )
   hivtest_pos_pct <- frmt(hivtest_pos_pct_numerator * 100/ hivtest_pos_pct_denominator )
-  hiv_cpt_pct <- frmt(hiv_cpt_pct_numerator * 100/ hiv_cpt_pct_denominator )
   hiv_art_pct <- frmt(hiv_art_pct_numerator * 100/ hiv_art_pct_denominator )
 })
 
@@ -585,25 +541,53 @@ hiv_test_agg <- within(hiv_test_agg, {
 # Restrict to the variables needed
 hiv_test_agg <- hiv_test_agg  %>%
                 rename(time_period = year) %>%
-                select(time_period, location_code, c_notified, hivtest_pct, hivtest_pos_pct, hiv_cpt_pct, hiv_art_pct)
-
+                select(time_period,
+                       location_code,
+                       hivtest_pct,
+                       hivtest_pos_pct,
+                       hiv_art_pct)
 
 
 # Calculate and format the output variables for countries
 hiv_test <- within(hiv_test, {
-  hivtest_pct <- ifelse(c_notified==0,NA,frmt(hivtest * 100 / c_notified ))
-  hivtest_pos_pct <- ifelse(hivtest==0,NA,frmt(hivtest_pos * 100/ hivtest ))
-  hiv_cpt_pct <- ifelse(hivtest_pos==0,NA,frmt(hiv_cpt * 100/ hivtest_pos ))
-  hiv_art_pct <- ifelse(hivtest_pos==0,NA,frmt(hiv_art * 100/ hivtest_pos ))
+  hivtest_pct <- ifelse(hivtest_pct_denominator==0,
+                        NA,
+                        frmt(hivtest_pct_numerator * 100 / hivtest_pct_denominator ))
+
+  hivtest_pos_pct <- ifelse(hivtest_pos_pct_denominator==0,
+                            NA,
+                            frmt(hivtest_pos_pct_numerator * 100/ hivtest_pos_pct_denominator ))
+
+  hiv_art_pct <- ifelse(hivtest_pos_pct_numerator==0,
+                        NA,
+                        frmt(hiv_art_pct_numerator * 100/ hiv_art_pct_denominator ))
 
   # TEMPORARY POLITICAL SOLUTION FOR RUSSIAN FEDERATION 2010 onwards:
   # DO NOT CALCULATE % tb PATIENTS WITH KNOWN HIV STATUS
   # Enable or disable using flag in section A right at the top of the script.
 
   if (isTRUE(russianfudge)) {
-    hivtest_pct <- ifelse(iso3=="RUS" & year>2009,NA,hivtest_pct)
-    hivtest_pos_pct <- ifelse(iso3=="RUS" & year>2009,NA,hivtest_pos_pct)
+    hivtest_pct <- ifelse(iso3=="RUS" & year>2009,
+                          NA,
+                          hivtest_pct)
+
+    hivtest_pos_pct <- ifelse(iso3=="RUS" & year>2009,
+                              NA,
+                              hivtest_pos_pct)
   }
+
+  # TEMPORARY POLITICAL SOLUTION FOR Malawi 2016:
+  # Use c_notified instead of c_newinc to calculate % with known HIV status
+  # Enable or disable using flag in section A right at the top of the script.
+
+  if (isTRUE(malawifudge)) {
+
+    hivtest_pct <- ifelse(iso3=="MWI" & year == 2015,
+                          frmt(newrel_hivtest * 100 / c_notified ),
+                          hivtest_pct)
+
+  }
+
 })
 
 # rename variables to GHO versions
@@ -611,7 +595,11 @@ hiv_test <- hiv_test  %>%
             rename(location_code = iso3,
                    time_period = year) %>%
             #restrict to variables needed
-            select(time_period, location_code, c_notified, hivtest_pct, hivtest_pos_pct, hiv_cpt_pct, hiv_art_pct)
+            select(time_period,
+                   location_code,
+                   hivtest_pct,
+                   hivtest_pos_pct,
+                   hiv_art_pct)
 
 # combine country and aggregates
 hiv_test <- rbind(hiv_test_agg, hiv_test)
@@ -619,14 +607,16 @@ rm(hiv_test_agg)
 
 # Change variable names to GHO versions
 hiv_test <- hiv_test  %>%
-            rename(TB_c_notified = c_notified,
-                   TB_hivtest_pct = hivtest_pct,
+            rename(TB_hivtest_pct = hivtest_pct,
                    TB_hivtest_pos_pct = hivtest_pos_pct,
-                   TB_hiv_cpt_pct = hiv_cpt_pct,
                    TB_hiv_art_pct = hiv_art_pct)
 
 # melt into long table needed by GHO
-hiv_test <- gather(hiv_test, key="indicator_code", value="value", -location_code, -time_period)
+hiv_test <- gather(hiv_test,
+                   key="indicator_code",
+                   value="value",
+                   -location_code,
+                   -time_period)
 
 # add empty columns for low and high
 hiv_test$low <- NA
@@ -640,31 +630,36 @@ gho <- rbind(hiv_test, gho )
 rm(hiv_test)
 
 
+
+
+
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 #   rrmdr -----
-#   Testing for MDR-TB and number of confirmed cases of MDR-TB
+#   Testing for MDR/RR-TB and number of confirmed cases of MDR/RR-TB
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
 # Get country data
 # A. Notifications
-dst_rrmdr_country <- n %>%
+dst_rrmdr_country <- notification %>%
                     select(iso3, year, g_whoregion, g_income,
                            c_rrmdr,
-                           rdst_new, new_labconf, new_sp, new_bc,
+                           rdst_new, new_labconf, new_sp, new_bc, c_newunk,
                            rdst_ret, c_ret,
                            conf_mdr_tx, unconf_mdr_tx, conf_rrmdr_tx, unconf_rrmdr_tx) %>%
                     filter( year >= 2005)
 
 # B. Combine with routine surveillance
-dst_rrmdr_country <- d %>%
+dst_rrmdr_country <- dr_surveillance %>%
                       select(iso3, year,
                              dst_rlt_new, xpert_new,
                              dst_rlt_ret, xpert_ret) %>%
                       inner_join(dst_rrmdr_country, by = c("iso3", "year"))
 
 
-# Calculate new pulmonary bacteriologically-confirmed patients, total number tested and total number started on treatment
+# Calculate new pulmonary bacteriologically-confirmed patients, total number tested and total number started on treatment for years before 2015
+# For 2015 onwards calculate % testing out of all notified patients
+
 dst_rrmdr_country <- within(dst_rrmdr_country, {
 
   # Number of new pulmonary bacteriologically-confirmed patients
@@ -674,10 +669,17 @@ dst_rrmdr_country <- within(dst_rrmdr_country, {
 
   new_pulm_bac_conf <- ifelse( (!is.na(new_pulm_bac_conf) & !is.na(new_sp) & new_pulm_bac_conf < new_sp) |
                                  (is.na(new_pulm_bac_conf) & !is.na(new_sp)),
-                          new_sp,
-                          new_pulm_bac_conf) # for countries pre-2013
+                              new_sp,
+                              new_pulm_bac_conf) # for countries pre-2013
 
-  new_pulm_bac_conf <- ifelse(!is.na(new_bc), new_bc, new_pulm_bac_conf)   # for EUR contries pre-2013
+  new_pulm_bac_conf <- ifelse(!is.na(new_bc),
+                              new_bc,
+                              new_pulm_bac_conf)   # for EUR contries pre-2013
+
+  # And here comes the change for 2015 -- use all new notified cases as the denominator
+  new_pulm_bac_conf <- ifelse(year >= 2015,
+                              c_newunk,
+                              new_pulm_bac_conf)
 
 
   # New cases tested for RR/MDR, including molecular diagnostics
@@ -688,6 +690,13 @@ dst_rrmdr_country <- within(dst_rrmdr_country, {
                            sum_of_row(dst_rrmdr_country[c("dst_rlt_new","xpert_new")]))
   )
 
+  # And here comes the change for 2015 -- much simpler approach
+  dst_new <- ifelse(year >= 2015,
+                    rdst_new,
+                    dst_new)
+
+
+
   # previously treated cases tested for RR/MDR, including molecular diagnostics
   dst_ret <- ifelse(is.na(rdst_ret) & is.na(dst_rlt_ret) & is.na(xpert_ret),
                     NA,
@@ -695,6 +704,12 @@ dst_rrmdr_country <- within(dst_rrmdr_country, {
                            rdst_ret,
                            sum_of_row(dst_rrmdr_country[c("dst_rlt_ret","xpert_ret")]))
   )
+
+  # And here comes the change for 2015 -- much simpler approach
+  dst_ret <- ifelse(year >= 2015,
+                    rdst_ret,
+                    dst_ret)
+
 
   # Number started on treatment (confirmed or unconfirmed) -- note that variables changed in 2015 data collection year
   # but old ones dropped so they are mutually exclusive and can add them all up
@@ -802,12 +817,13 @@ gho <- rbind(dst_rrmdr, gho)
 rm(dst_rrmdr)
 
 
+
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 #   Treatment outcomes -----
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # Get country data
-outcome_country <- o %>%
+outcome_country <-  outcomes %>%
                     select(iso3, year, g_whoregion, g_income,
                            new_sp_coh, new_sp_cur, new_sp_cmplt,
                            new_snep_coh, new_snep_cmplt,
@@ -934,5 +950,20 @@ gho <- rbind(outcome, gho)
 rm(outcome)
 
 
-# Export the GHO mega df to CSV
-write.csv(gho, file=paste("GHO_TB_update_",Sys.Date(),".csv",sep="") , row.names=FALSE, na="")
+# Change request for 2016 to restrict country data to WHO member states !!!!!!!
+# Will not change aggregate data so as to remain consistent with global report
+
+entities_to_exclude <- report_country %>%
+                       filter(g_whostatus != "M" | is.na(g_whostatus)) %>%
+                       select(location_code = iso3) %>%
+                       mutate(exclude = 1)
+
+
+
+# Export the GHO mega df to CSV, excluding countries/territories that are not WHO member states
+
+gho %>%
+  left_join(entities_to_exclude) %>%
+  filter(is.na(exclude)) %>%
+  select(-exclude) %>%
+  write.csv(file=paste("GHO_TB_update_",Sys.Date(),".csv",sep="") , row.names=FALSE, na="")
