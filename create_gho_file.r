@@ -23,15 +23,21 @@ outcome_maxyear      <- (report_year - 2)
 
 
 # Apply the Russian fudge ------
-# flag for whether to suppress calculation of %
+# Flag for whether to suppress calculation of %
 # of notified TB patients who knew their HIV status (applies to table 6)
 
 russianfudge <- TRUE
 
 # Apply the Malawi fudge ------
-# flag for whether to calculate % of patients who knew their HIV status using c_notified as the denominator
+# Flag for whether to calculate % of patients who knew their HIV status using c_notified as the denominator
 
 malawifudge <- TRUE
+
+# Apply the Swiss fudge ------
+# Flag for whether to adjust denominator to calculate % of new cases tested for rifampicin resistance
+# because of large number with unknown treatment history
+
+swissfudge <- TRUE
 
 # This is needed to avoid scientific notation output. No idea what it actally means -- it must get the prize for the most confusing documentation. Ever.
 
@@ -576,7 +582,7 @@ hiv_test <- within(hiv_test, {
                               hivtest_pos_pct)
   }
 
-  # TEMPORARY POLITICAL SOLUTION FOR Malawi 2016:
+  # TEMPORARY SOLUTION FOR Malawi 2016:
   # Use c_notified instead of c_newinc to calculate % with known HIV status
   # Enable or disable using flag in section A right at the top of the script.
 
@@ -680,6 +686,26 @@ dst_rrmdr_country <- within(dst_rrmdr_country, {
   new_pulm_bac_conf <- ifelse(year >= 2015,
                               c_newunk,
                               new_pulm_bac_conf)
+
+
+# Flag for whether to adjust denominator to calculate % of new cases tested for rifampicin resistance
+# because of large number with unknown treatment history
+
+swissfudge <- TRUE
+
+  # TEMPORARY SOLUTION FOR Switzerland 2016:
+	# Switzerland informed us that out of the 531 'new or treatment history unknown' cases
+	# 162 had unknown previous treatment history, therefore denominator for the calculation
+	# should be 531 - 162
+  # Enable or disable using flag in section A right at the top of the script.
+
+  if (isTRUE(swissfudge)) {
+
+    new_pulm_bac_conf <- ifelse(iso3=="CHE" & year == 2015,
+                                c_newunk - 162,
+                                new_pulm_bac_conf)
+
+  }
 
 
   # New cases tested for RR/MDR, including molecular diagnostics
