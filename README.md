@@ -3,7 +3,7 @@
 
 ## Use
 
-Make sure you have your version of `set_environment.r` set up (see notes further below).
+Make sure you have your version of `set_environment.r` set up and saved in the project root folder (see notes further below).
 
 **To create an .RData file from the database, do in R:**
 ```
@@ -36,7 +36,7 @@ This will create a series of folders (or add to them if they are already created
 
 ## The set_environment.r file
 
-You need to create this to match your local computing environment. It sets up the paths to input and output folders and the connection string to the database (if available).
+You need to create this in your root folder to match your local computing environment. It sets up the paths to input and output folders and the connection string to the database (if available).
 
 Here is a template to use:
 
@@ -44,6 +44,8 @@ Here is a template to use:
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Set up the running environment for creating the tables and figures
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+scripts_folder <- getwd()    # when running in an RStudio project this will be the root folder of the project.
 
 # Decide whether to take data directly from the database instead of from a .RData file
 

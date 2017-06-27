@@ -30,6 +30,11 @@ save (aggregated_estimates_epi,
       aggregated_estimates_drtb,
       aggregated_estimates_drtb_rawvalues,
       budget_expenditure,
+
+      country_group_membership,
+      country_group_types,
+      country_groups,
+
       data_codes,
       data_collection,
       data_dictionary,
@@ -46,7 +51,11 @@ save (aggregated_estimates_epi,
       notification,
       notification_exceptions,
       outcomes,
+
       prevalence_survey,
+      prevalence_survey_cases,
+      prevalence_survey_estimates,
+
       report_country,
       strategy,
       TBHIV_for_aggregates,

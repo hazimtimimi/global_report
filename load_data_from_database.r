@@ -40,6 +40,11 @@ aggregated_estimates_mdr_in_notified <- sqlFetch(ch, "view_TME_aggregated_estima
 aggregated_estimates_drtb  <- sqlFetch(ch, "view_TME_aggregated_estimates_drtb")
 aggregated_estimates_drtb_rawvalues <- sqlFetch(ch, "view_TME_aggregated_estimates_drtb_rawvalues")
 budget_expenditure         <- .fixnamibia(sqlFetch(ch, "view_TME_master_budget_expenditure"))
+
+country_group_membership   <- .fixnamibia(sqlFetch(ch, "view_country_group_membership"))
+country_group_types        <- sqlFetch(ch, "view_country_group_types")
+country_groups             <- sqlFetch(ch, "view_country_groups")
+
 data_codes                 <- sqlFetch(ch, "view_TME_data_codes")
 data_collection            <- .fixnamibia(sqlFetch(ch, "view_TME_master_data_collection"))
 data_dictionary            <- sqlFetch(ch, "view_TME_data_dictionary")
@@ -56,7 +61,11 @@ finance                    <- .fixnamibia(sqlFetch(ch, "view_TME_master_finance"
 notification               <- .fixnamibia(sqlFetch(ch, "view_TME_master_notification"))
 notification_exceptions    <- sqlFetch(ch, "view_TME_master_notification_exceptions")
 outcomes                   <- .fixnamibia(sqlFetch(ch, "view_TME_master_outcomes"))
-prevalence_survey          <- sqlFetch(ch, "view_TME_prevalence_survey")
+
+prevalence_survey          <- .fixnamibia(sqlFetch(ch, "survey.view_prevalence_survey"))
+prevalence_survey_cases    <- .fixnamibia(sqlFetch(ch, "survey.view_prevalence_survey_cases"))
+prevalence_survey_estimates<- .fixnamibia(sqlFetch(ch, "survey.view_prevalence_survey_estimates"))
+
 report_country             <- .fixnamibia(sqlFetch(ch, "view_TME_master_report_country"))
 strategy                   <- .fixnamibia(sqlFetch(ch, "view_TME_master_strategy"))
 TBHIV_for_aggregates       <- .fixnamibia(sqlFetch(ch, "view_TME_master_TBHIV_for_aggregates"))
