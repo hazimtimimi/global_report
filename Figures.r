@@ -1242,7 +1242,7 @@ inc_data <- estimates_epi_rawvalues %>%
             mutate(c_newinc_100k = c_newinc * 1e5 / e_pop_num) %>%
 
             # shorten long country names
-            .shortnames( col = "country")
+            get_names_for_tables( col = "country")
 
 # Plot as lines
 inc_plot <- inc_data %>%
@@ -1303,7 +1303,7 @@ coverage_inc_country <- estimates_epi_rawvalues %>%
                                 e_inc_num_lo,
                                 e_inc_num_hi) %>%
                          # shorten long country names
-                         .shortnames( col = "entity")
+                         get_names_for_tables( col = "entity")
 
 # Filter the country list down to high burden ones
 coverage_30hbc <- report_country %>%
@@ -1431,7 +1431,7 @@ rm(list=ls(pattern = "^coverage"))
 #                       e_inc_num,
 #                       e_inc_num_lo,
 #                       e_inc_num_hi) %>%
-#                 .shortnames()
+#                 get_names_for_tables()
 #
 # missing_data <- notification %>%
 #                  filter(year == report_year - 1) %>%
@@ -1520,7 +1520,7 @@ inctbhiv_data <- estimates_epi_rawvalues %>%
                   right_join(tbhiv_data) %>%
 
                   # change to shortened country names
-                  .shortnames()
+                  get_names_for_tables()
 
 
 # Plot as lines
@@ -1580,7 +1580,7 @@ coveragehiv_inc_country <- estimates_epi_rawvalues %>%
                                   e_inc_tbhiv_num_lo,
                                   e_inc_tbhiv_num_hi)  %>%
                            # shorten long country names
-                           .shortnames( col = "entity")
+                           get_names_for_tables( col = "entity")
 
 # Filter the country list down to high burden ones
 coveragehiv_30hbc <- report_country %>%
@@ -1731,7 +1731,7 @@ coveragerr_inc_country <- estimates_drtb_rawvalues %>%
                                   e_rr_in_notified_pulm_lo,
                                   e_rr_in_notified_pulm_hi)  %>%
                           # shorten long country names
-                          .shortnames( col = "entity")
+                          get_names_for_tables( col = "entity")
 
 # Filter the country list down to high burden ones
 coveragerr_30hbc <- report_country %>%
@@ -1892,7 +1892,7 @@ txout_country  <- outcomes %>%
                          rel_with_new_flg,
                          contains("newrel_"))  %>%
                   # shorten long country names
-                  .shortnames() %>%
+                  get_names_for_tables() %>%
                   rename(entity = country ) %>%
 
                   # Add an asterisk to the name if country did not include
@@ -2190,7 +2190,7 @@ txtbhivout_country  <- outcomes %>%
                          g_whoregion,
                          contains("tbhiv_")) %>%
                   # shorten long country names
-                  .shortnames() %>%
+                  get_names_for_tables() %>%
                   rename(entity = country ) %>%
                   arrange(entity)
 
@@ -2327,7 +2327,7 @@ txmdrout_country  <- outcomes %>%
                   # drop old cured/completed fields
                   select(-mdr_cur, -mdr_cmplt) %>%
                   # shorten long country names
-                  .shortnames() %>%
+                  get_names_for_tables() %>%
                   rename(entity = country ) %>%
                   arrange(entity)
 
