@@ -2,123 +2,9 @@
 # Tables in the global report
 # Called from create_tables_figures.r which sets up the necessary dependencies
 # Tom Hiatt
-# 6 July 2012, updated July 2016
+# 6 July 2012, updated July 2017
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Chapter 3 ------
-# The burden of disease caused by TB
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-# 3_2_burden_num ----------------------------------------------
-
-est_30hbc <- report_country %>%
-              filter(g_hb_tb==1) %>%
-              select(iso2)
-
-
-est_cntry <- estimates_epi_rawvalues %>%
-             filter(year == report_year - 1) %>%
-             inner_join(est_30hbc) %>%
-             select(country,
-                   e_pop_num,
-                   e_mort_exc_tbhiv_100k,
-                   e_mort_exc_tbhiv_100k_lo,
-                   e_mort_exc_tbhiv_100k_hi,
-                   e_mort_tbhiv_100k,
-                   e_mort_tbhiv_100k_lo,
-                   e_mort_tbhiv_100k_hi,
-                   e_inc_num,
-                   e_inc_num_lo,
-                   e_inc_num_hi,
-                   e_inc_tbhiv_num,
-                   e_inc_tbhiv_num_lo,
-                   e_inc_tbhiv_num_hi) %>%
-            mutate(e_pop_num_thou = rounder(e_pop_num / 1e3),
-                   e_mort_exc_tbhiv_num = frmt(e_mort_exc_tbhiv_100k * e_pop_num / 1e8, thou=TRUE),
-                   e_mort_exc_tbhiv_num_range = paste0(frmt(e_mort_exc_tbhiv_100k_lo * e_pop_num / 1e8, thou=TRUE),
-                                                       "\u2013",
-                                                       frmt(e_mort_exc_tbhiv_100k_hi * e_pop_num / 1e8, thou=TRUE)),
-
-                   e_mort_tbhiv_num = frmt(e_mort_tbhiv_100k  * e_pop_num / 1e8, thou=TRUE),
-                   e_mort_tbhiv_num_range = paste0(frmt(e_mort_tbhiv_100k_lo  * e_pop_num / 1e8, thou=TRUE),
-                                                   "\u2013",
-                                                   frmt(e_mort_tbhiv_100k_hi  * e_pop_num / 1e8, thou=TRUE)),
-
-                   e_inc_num = frmt(e_inc_num / 1e3, rates=TRUE, thou=TRUE),
-                   e_inc_num_range = paste0(frmt(e_inc_num_lo / 1e3, rates=TRUE, thou=TRUE),
-                                           "\u2013",
-                                           frmt(e_inc_num_hi  / 1e3, rates=TRUE, thou=TRUE)),
-
-                   e_inc_tbhiv_num = frmt(e_inc_tbhiv_num / 1e3, rates=TRUE, thou=TRUE),
-                   e_inc_tbhiv_num_range = paste0(frmt(e_inc_tbhiv_num_lo  / 1e3, rates=TRUE, thou=TRUE),
-                                                 "\u2013",
-                                                 frmt(e_inc_tbhiv_num_hi / 1e3, rates=TRUE, thou=TRUE))
-                   ) %>%
-
-            select(country,
-                   e_pop_num = e_pop_num_thou,
-                   e_mort_exc_tbhiv_num,
-                   e_mort_exc_tbhiv_num_range,
-                   e_mort_tbhiv_num,
-                   e_mort_tbhiv_num_range,
-                   e_inc_num,
-                   e_inc_num_range,
-                   e_inc_tbhiv_num,
-                   e_inc_tbhiv_num_range) %>%
-
-            arrange(country)
-
-write.csv(est_cntry, file=paste(figures_folder, "/Tables/", "table_3_2_", Sys.Date(), ".csv", sep=""), row.names=FALSE, na="")
-
-
-rm(list=ls(pattern = "^est_"))
-
-
-
-est_aggs <- aggregated_estimates_epi_rawvalues %>%
-            filter(year == report_year - 1) %>%
-            mutate(e_pop_num_thou = rounder(e_pop_num / 1e3),
-                   e_mort_exc_tbhiv_num = frmt(e_mort_exc_tbhiv_num / 1e3, thou=TRUE),
-                   e_mort_exc_tbhiv_num_range = paste0(frmt(e_mort_exc_tbhiv_num_lo / 1e3, thou=TRUE),
-                                                       "\u2013",
-                                                       frmt(e_mort_exc_tbhiv_num_hi / 1e3, thou=TRUE)),
-
-                   e_mort_tbhiv_num = frmt(e_mort_tbhiv_num / 1e3, thou=TRUE),
-                   e_mort_tbhiv_num_range = paste0(frmt(e_mort_tbhiv_num_lo / 1e3, thou=TRUE),
-                                                   "\u2013",
-                                                   frmt(e_mort_tbhiv_num_hi  / 1e3, thou=TRUE)),
-
-                   e_inc_num = frmt(e_inc_num / 1e3, rates=TRUE, thou=TRUE),
-                   e_inc_num_range = paste0(frmt(e_inc_num_lo / 1e3, rates=TRUE, thou=TRUE),
-                                           "\u2013",
-                                           frmt(e_inc_num_hi  / 1e3, rates=TRUE, thou=TRUE)),
-
-                   e_inc_tbhiv_num = frmt(e_inc_tbhiv_num / 1e3, rates=TRUE, thou=TRUE),
-                   e_inc_tbhiv_num_range = paste0(frmt(e_inc_tbhiv_num_lo  / 1e3, rates=TRUE, thou=TRUE),
-                                                 "\u2013",
-                                                 frmt(e_inc_tbhiv_num_hi / 1e3, rates=TRUE, thou=TRUE))
-                   )  %>%
-
-            arrange(group_type, group_name) %>%
-
-            select(group_description,
-                   e_pop_num = e_pop_num_thou,
-                   e_mort_exc_tbhiv_num,
-                   e_mort_exc_tbhiv_num_range,
-                   e_mort_tbhiv_num,
-                   e_mort_tbhiv_num_range,
-                   e_inc_num,
-                   e_inc_num_range,
-                   e_inc_tbhiv_num,
-                   e_inc_tbhiv_num_range)
-
-
-write.csv(est_aggs, file=paste(figures_folder, "/Tables/", "table_3_2_aggs_", Sys.Date(), ".csv", sep=""), row.names=FALSE, na="")
-
-
-rm(list=ls(pattern = "^est_"))
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Chapter 4 ------
@@ -127,7 +13,7 @@ rm(list=ls(pattern = "^est_"))
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Table 4.1  ------
-# Notifications of TB, TB/HIV and MDR/RR-TB cases, globally and for WHO regions, 2015
+# Notifications of TB, TB/HIV and MDR/RR-TB cases, globally and for WHO regions, 2016
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
@@ -249,9 +135,17 @@ rm(list=c("notifs_global", "notifs_summary", "notif_table_html", "notif_table_fi
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Table 4.3  ------
-# National guidance in place on use of Xpert MTB/RIF in high burden countries, 2015
+# Table 4.4  ------
+# National policies and their implementation to increase access to rapid TB testing and universal DST, 2016
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+
+#
+# TABLE HEADINGS AND VARIABLES USED NEED CHANGING   !!!!!!!!
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+
+
 
 rdxpolicy_hbccodes <- report_country %>%
                       select(iso2,
@@ -370,9 +264,9 @@ rdxpolicy_hbcs <- rdxpolicy_country %>%
 # Create HTML output
 rdxpolicy_table_html <- xtable(rdxpolicy_hbcs)
 
-rdxpolicy_table_filename <- paste0("Tables/t4_3_xpert_policy", Sys.Date(), ".htm")
+rdxpolicy_table_filename <- paste0("Tables/t4_4_xpert_policy", Sys.Date(), ".htm")
 
-cat(paste("<h3>Table 4.3 National guidance in place on use of Xpert MTB/RIF in high burden countries<sup>a</sup>, ",
+cat(paste("<h3>Table 4.4 National policies and their implementation to increase access to rapid TB testing and universal DST <sup>a</sup>, ",
           report_year-1,
           "</h3>
           <style>
@@ -410,7 +304,7 @@ print(rdxpolicy_table_html,
                       )
       )
 
-tablecopy("t4_3_xpert_policy")
+tablecopy("t4_4_xpert_policy")
 
 # Clean up (remove any objects with their name beginning with 'rdxpolicy')
 rm(list=ls(pattern = "^rdxpolicy"))

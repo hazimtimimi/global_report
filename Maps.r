@@ -3,7 +3,7 @@
 # Called from create_tables_figures.r which sets up the necessary dependencies
 # Tom Hiatt
 # 6 July 2012,
-# Last updated Hazim Timimi, July 2016
+# Last updated Hazim Timimi, July 2017
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # This script does not use Philippe's who mapping package (see https://github.com/glaziou/whomap)
@@ -23,7 +23,7 @@ con.col <- c('red', 'blue', 'orange', 'green', 'purple', 'violet', 'sienna', 'da
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Figure 4.3  ------
-# Percentage new and relapse TB cases that were children (aged < 15), 2015
+# Percentage new and relapse TB cases that were children (aged < 15), 2016
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
@@ -105,7 +105,7 @@ rm(list=ls(pattern = "^kids"))
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Figure 4.5  ------
-# Percentage of new and relapse pulmonary TB cases with bacteriological confirmation, 2015
+# Percentage of new and relapse pulmonary TB cases with bacteriological confirmation, 2016
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 bacconf_data <- notification %>%
@@ -168,7 +168,7 @@ bacconf_foot <- paste("(a)",
                       report_year - 2,
                       "data were used for ",
                       nrow(bacconf_prev_year_data),
-                      "countries")
+                      "countries.")
 
 
 bacconf_map <- arrangeGrob(bacconf_map, bottom = textGrob(bacconf_foot, x = 0, hjust = -0.1, vjust=0.1, gp = gpar(fontsize = 10)))
@@ -187,8 +187,30 @@ rm(list=ls(pattern = "^bacconf"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 4.8  ------
-# Percentage of new and relapse TB cases with documented HIV status, 2015
+# Figure 4.6  (NEW MAP FOR 2017 REPORT) ------
+# Percentage of new and relapse TB cases tested using a WHO-recommended
+# rapid diagnostic as the initial diagnostic test, 2016
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+#  !!!!!!  TO BE DONE !!!!!!!
+
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Figure 4.7  (NEW MAP FOR 2017 REPORT) ------
+# Percentage of extrapulmonary cases among new and relapse TB cases, 2016
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+#  !!!!!!  TO BE DONE !!!!!!!
+
+
+
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Figure 4.9  ------
+# Percentage of new and relapse TB cases with documented HIV status, 2016
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
@@ -212,7 +234,7 @@ hivstatus_data$cat <- cut(hivstatus_data$hivstatus_pct,
 
 # produce the map
 hivstatus_map <- WHOmap.print(hivstatus_data,
-                        paste("Figure 4.8 Percentage of new and relapse TB cases with documented HIV status(a),", report_year-1),
+                        paste("Figure 4.9 Percentage of new and relapse TB cases with documented HIV status(a),", report_year-1),
                            "Percentage",
                            copyright=FALSE,
                            #colors=c('yellow', 'lightgreen', 'green', 'darkgreen'),
@@ -233,16 +255,75 @@ figsave(hivstatus_map,
                          iso3,
                          hivstatus_pct,
                          cat),
-        "f4_8_pct_HIV_status_map")
+        "f4_9_pct_HIV_status_map")
 
 # Clean up (remove any objects with their name beginning with 'hivstatus')
 rm(list=ls(pattern = "^hivstatus"))
 
 
+
+
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure Box 4.4.1  ------
-# Percentage of basic management units in which there is community engagement in patient referral
-# or provision of treatment adherence support, 2015
+# Figure 4.12  (TRANSFERRED OVER FROM DENNIS FOR THE 2017 REPORT) ------
+# Percentage of bacteriologically confirmed TB cases tested for RR-TB, 2016
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+#  !!!!!!  TO BE DONE !!!!!!!
+
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Figure 4.15  (NEW MAP FOR 2017 REPORT) ------
+# Percentage of MDR/RR-TB cases tested for susceptibility to second-line drugs, 2016
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+#  !!!!!!  TO BE DONE !!!!!!!
+
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Figure 4.16  (TRANSFERRED OVER FROM DENNIS FOR THE 2017 REPORT) ------
+# Number of patients with laboratory-confirmed XDR–TB started on treatment, 2016
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+#  !!!!!!  TO BE DONE !!!!!!!
+
+
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Figure 4.27  (TRANSFERRED OVER FROM DENNIS FOR THE 2017 REPORT) ------
+# Countries that had used shorter MDR–TB treatment regimens by the end of 2016
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+#  !!!!!!  TO BE DONE !!!!!!!
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Figure 4.28  (TRANSFERRED OVER FROM DENNIS FOR THE 2017 REPORT) ------
+# Countries that had used bedaquiline for the treatment of M/XDR–TB as part of expanded access,
+# compassionate use or under normal programmatic conditions by the end of 2016
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+#  !!!!!!  TO BE DONE !!!!!!!
+
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Figure 4.29  (TRANSFERRED OVER FROM DENNIS FOR THE 2017 REPORT) ------
+# Countries that had used delamanid for the treatment of M/XDR–TB as part of expanded access,
+# compassionate use or under normal programmatic conditions by the end of 2016
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+#  !!!!!!  TO BE DONE !!!!!!!
+
+
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Figure Box 4.3.1  ------
+# Percentage of basic management units in which there is community engagement
+# or provision of treatment adherence support, 2016
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
@@ -265,7 +346,7 @@ comm_data$cat <- cut(comm_data$comm_pct,
 
 # produce the map
 comm_map <- WHOmap.print(comm_data,
-                        paste("Figure Box 4.4.1 Percentage of basic management units in which there is community engagement",
+                        paste("Figure Box 4.3.1 Percentage of basic management units in which there is community engagement",
                               "\nor provision of treatment adherence support,",
                               report_year-1),
                            "Percentage",
@@ -279,7 +360,7 @@ figsave(comm_map,
                iso3,
                comm_pct,
                cat),
-        "f4_box_4_4_1_pct_BMU_community_map")
+        "f4_box_4_3_1_pct_BMU_community_map")
 
 
 
@@ -295,8 +376,8 @@ rm(list=ls(pattern = "^comm"))
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Figure 5.1 -------
 # Availability of data on the number of children aged <5 years who were
-# household contacts of bacteriologically confirmed TB cases and were started on
-# TB preventive treatment, 2015
+# household contacts of bacteriologically confirmed pulmonary TB cases and were started on
+# TB preventive treatment, 2016
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
@@ -319,7 +400,7 @@ kids_data <- within(kids_data, {
 # produce the map
 kids_map <- WHOmap.print(kids_data,
                         paste("Figure 5.1 Availability of data on the number number of children aged <5 years who were,",
-                              "\nhousehold contacts of bacteriologically confirmed TB cases and were started on",
+                              "\nhousehold contacts of bacteriologically confirmed pulmonary TB cases and were started on",
                               "\nTB preventive treatment,",
                               report_year-1),
                            legend.title = "Country response",
@@ -338,8 +419,8 @@ rm(list=ls(pattern = "^kids"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 5.2 ---------
-# Notification rate ratio of TB among healthcare workers compared with the general population, 2015
+# Figure 5.3 ---------
+# Notification rate ratio of TB among healthcare workers compared with the general population, 2016
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 hcw_notif_hcw <-  strategy %>%
@@ -388,7 +469,7 @@ hcw_data$cat <- cut(hcw_data$nrr,
 
 # produce the map
 hcw_map <- WHOmap.print(hcw_data,
-                        paste("Figure 5.2 Notification rate ratio of TB among healthcare workers\ncompared with the general adult population,", report_year-1),
+                        paste("Figure 5.3 Notification rate ratio of TB among healthcare workers\ncompared with the general adult population,", report_year-1),
                            "Notification rate ratio",
                            copyright=FALSE,
                            #colors=c('yellow', 'lightgreen', 'green', 'darkgreen'),
@@ -397,7 +478,7 @@ hcw_map <- WHOmap.print(hcw_data,
 
 figsave(hcw_map,
         hcw_data,
-        "f5_2_hcw_notf_rate_ratio")
+        "f5_3_hcw_notf_rate_ratio")
 
 # Clean up (remove any objects with their name beginning with 'hcw')
 rm(list=ls(pattern = "^hcw"))
@@ -405,13 +486,14 @@ rm(list=ls(pattern = "^hcw"))
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Chapter 6 ------
-# Universal health coverage, social protection and social determinants
+# Universal health coverage, social protection and
+# and addressing social determinants: Implications for TB
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 6.1 ---------
-# Government spending on health, as a percentage of gross domestic product (GDP), 2014
+# Figure 6.2 ---------
+# Government spending on health, as a percentage of gross domestic product (GDP), 2015
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # Get data from external spreadsheet supplied by Ines
@@ -430,7 +512,7 @@ govspend_data$cat <- cut(govspend_data$prop,
 
 # produce the map
 govspend_map <- WHOmap.print(govspend_data,
-                        paste("Figure 6.1 Government spending on health, as a percentage of gross domestic product (GDP),", report_year-2),
+                        paste("Figure 6.2 Government spending on health, as a percentage of gross domestic product (GDP),", report_year-2),
                            "Percentage\nof GDP",
                            copyright=FALSE,
                            colors=c('#edf8e9', '#bae4b3', '#74c476', '#238b45'),
@@ -441,14 +523,14 @@ figsave(govspend_map,
                iso3,
                prop,
                cat),
-        "f6_1_pct_gov_health_spend_map")
+        "f6_2_pct_gov_health_spend_map")
 
 # Clean up (remove any objects with their name beginning with 'govspend')
 rm(list=ls(pattern = "^govspend"))
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Figure 6.3 ---------
-# Out-of-pocket expenditures as a percentage of total health expenditures, 2014
+# Out-of-pocket expenditures as a percentage of total health expenditures, 2015
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # Get data from external spreadsheet supplied by Ines
