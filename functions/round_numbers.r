@@ -35,7 +35,7 @@ frmt <- function(x, rates=FALSE, thou=FALSE, thouEst=FALSE) {
 
   # A few exceptions to the standard rules
   # Use 3 decimal places for numbers representing "thousands" that are less than 1
-  if (thou=TRUE) {
+  if (thou==TRUE) {
 
     fstring <-  ifelse(x < 0.01, "<0.01",
                 ifelse(signif(x, 2) < 1, formatC(signif(x,3), format="f", digits=3),
