@@ -8,10 +8,8 @@
 
 # This script does not use Philippe's who mapping package (see https://github.com/glaziou/whomap)
 # instead it uses Tom's original version which allows us to add 'Not applicable' and 'No estimate'
-# options to the legends, etc.
-# Have therefore not switched to the simpler whomap package (yet)
-
-source(file.path(scripts_folder, "WHO_map_functions.r"))
+# options to the legends, etc. These are in script ~/functions/make_who_maps.r
+# Have therefore not switched to the simpler whomap package
 
 # Contrasting colors for easier re-layout
 con.col <- c('red', 'blue', 'orange', 'green', 'purple', 'violet', 'sienna', 'dark orange')
@@ -300,7 +298,7 @@ rm(list=ls(pattern = "^hivstatus"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 4.28  (TRANSFERRED OVER FROM DENNIS FOR THE 2017 REPORT) ------
+# Figure 4.28a  (TRANSFERRED OVER FROM DENNIS FOR THE 2017 REPORT) ------
 # Countries that had used bedaquiline for the treatment of M/XDR–TB as part of expanded access,
 # compassionate use or under normal programmatic conditions by the end of 2016
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -310,7 +308,7 @@ rm(list=ls(pattern = "^hivstatus"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 4.29  (TRANSFERRED OVER FROM DENNIS FOR THE 2017 REPORT) ------
+# Figure 4.28b  (TRANSFERRED OVER FROM DENNIS FOR THE 2017 REPORT) ------
 # Countries that had used delamanid for the treatment of M/XDR–TB as part of expanded access,
 # compassionate use or under normal programmatic conditions by the end of 2016
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
