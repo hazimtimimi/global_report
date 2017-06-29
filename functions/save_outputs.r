@@ -14,18 +14,47 @@
 
 
 
-
-
 figsave <- function(obj, data, name, width=11, height=7){
-  #   save PDF for designer
-  ggsave(paste0(figures_folder, "/Figs/", name, Sys.Date(), ".pdf"), obj, width=width, height=height)
-  #   save PNG for reviewer
-  ggsave(paste0(figures_folder, "/Review/", name, ".png"), obj, width=width, height=height)
-  #   save data for designer
-  write.csv(data, file=paste(figures_folder, "/FigData/", name, Sys.Date(), ".csv", sep=""), row.names=FALSE, na="")
-  #   save data for reviewer
+
+  # save PDF for designer
+  ggsave(filename=paste0(figures_folder, "/Figs/", name, Sys.Date(), ".pdf"),
+         plot=obj,
+         width=width,
+         height=height)
+
+  # save PDF in CMYK colour mode for designer
+  ggsave(filename=paste0(figures_folder, "/Figs/", name, Sys.Date(), "_cmyk.pdf"),
+         plot=obj,
+         width=width,
+         height=height,
+         colormodel="cmyk")
+
+  # save EPS in CMYK colour mode for designer (testing)
+  ggsave(filename=paste0(figures_folder, "/Figs/", name, Sys.Date(), "_cmyk.eps"),
+         plot=obj,
+         device="eps",
+         width=width,
+         height=height,
+         colormodel="cmyk")
+
+  # save PNG for reviewer
+  ggsave(filename=paste0(figures_folder, "/Review/", name, ".png"),
+         plot=obj,
+         width=width,
+         height=height)
+
+  # save data for designer
+  write.csv(data,
+            file=paste(figures_folder, "/FigData/", name, Sys.Date(), ".csv", sep=""),
+            row.names=FALSE,
+            na="")
+
+  # save data for reviewer
   out <- xtable(data)
-  print(out, file=paste(figures_folder, "/Review/", name, ".htm", sep=""), type="html")
+  print(out,
+        file=paste(figures_folder, "/Review/", name, ".htm", sep=""),
+        type="html")
+
 }
 
 # For saving tables ----
