@@ -21,12 +21,6 @@ rm(list=ls())
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 report_year <- 2017
 
-# Include estimates tables and figures? ----
-# Decide whether or not to produce the tables and figures relying upon burden estimates
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-flg_show_estimates <- FALSE
-flg_forecast_estimates_ready <- FALSE
-
 # Kill any attempt at using factors, unless we explicitly want them!
 options(stringsAsFactors=FALSE)
 
@@ -72,6 +66,7 @@ library("dplyr")
 library("tidyr")
 library("gridExtra")
 library("XLConnect")
+library("RColorBrewer")
 
 
 # Load functions ----

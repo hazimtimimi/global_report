@@ -16,26 +16,21 @@
 
 figsave <- function(obj, data, name, width=11, height=7){
 
-  # save PDF for designer
+
+  # save PDF in CMYK colour mode for designer
   ggsave(filename=paste0(figures_folder, "/Figs/", name, Sys.Date(), ".pdf"),
          plot=obj,
          width=width,
-         height=height)
-
-  # save PDF in CMYK colour mode for designer
-  ggsave(filename=paste0(figures_folder, "/Figs/", name, Sys.Date(), "_cmyk.pdf"),
-         plot=obj,
-         width=width,
          height=height,
          colormodel="cmyk")
 
-  # save EPS in CMYK colour mode for designer (testing)
-  ggsave(filename=paste0(figures_folder, "/Figs/", name, Sys.Date(), "_cmyk.eps"),
-         plot=obj,
-         device="eps",
-         width=width,
-         height=height,
-         colormodel="cmyk")
+  # # save EPS in CMYK colour mode for designer (testing)
+  # ggsave(filename=paste0(figures_folder, "/Figs/", name, Sys.Date(), "_cmyk.eps"),
+  #        plot=obj,
+  #        device="eps",
+  #        width=width,
+  #        height=height,
+  #        colormodel="cmyk")
 
   # save PNG for reviewer
   ggsave(filename=paste0(figures_folder, "/Review/", name, ".png"),

@@ -604,17 +604,17 @@ inc_plot <- inc_data %>%
             ggplot(aes(x=year, y=c_newinc_100k, ymin=0)) +
             geom_line(size=1) +
             geom_ribbon(aes(x=year, ymin=e_inc_100k_lo, ymax=e_inc_100k_hi),
-                        fill=I('#00FF33'),
+                        fill=incidence_colour,
                         alpha=0.4) +
             geom_line(aes(year, e_inc_100k),
                       size=1,
-                      colour=I('#00FF33')) +
+                      colour=incidence_colour) +
 
-            facet_wrap( ~ entity, scales="free_y") +
+            facet_wrap( ~ entity, ncol = 4, scales="free_y") +
             scale_y_continuous(name = "Rate per 100 000 population per year") +
             xlab("Year") +
 
-            ggtitle(paste0("Figure 4.1 Case notification rates (new and relapse cases, all forms) (black) compared with estimated TB incidence rates (green),\n2000 - ",
+            ggtitle(paste0("Figure 4.1\nCase notification rates (new and relapse cases, all forms) (black) compared with estimated TB incidence rates (green),\n2000 - ",
                          report_year-1,
                          ", globally and for WHO regions. Shaded areas represent uncertainty bands.")) +
 
@@ -733,6 +733,7 @@ agesex_plot <- agesex_agg_long %>%
                          size=.3,
                          colour="black",
                          position="identity") +
+                scale_fill_manual(values=agesex_palette()) +
                 scale_y_continuous(name = "TB case notification rate per 100 000 population per year",
                                    #Set labels manually to avoid showing negative numbers!
                                    breaks=c(-200,-100,0,100,200,300),
@@ -741,7 +742,7 @@ agesex_plot <- agesex_agg_long %>%
                                  labels=levels(agesex_agg_long$agegroup)) +
                 coord_flip() +
                 facet_wrap( ~ entity, ncol = 4) +
-                ggtitle(paste0("Figure 4.2 New and relapse TB case notification rates by age and sex(a) in ",
+                ggtitle(paste0("Figure 4.2\nNew and relapse TB case notification rates by age and sex(a) in ",
                                 report_year - 1,
                                 ", globally and for WHO regions")) +
                 theme_glb.rpt() +
@@ -862,11 +863,10 @@ bacconf_plot <- bacconf_data %>%
                   scale_y_continuous(name = "% bacteriologically confirmed") +
                   expand_limits(y=c(20,80)) +
                   xlab("Year") +
-                  #scale_x_discrete(name = "Year") +
-                  facet_wrap( ~ entity) +
-                  ggtitle(paste0("Figure 4.4 Percentage of new and relapse(a) pulmonary TB cases with bacteriological confirmation, 2000 - ",
+                  facet_wrap( ~ entity, ncol = 4) +
+                  ggtitle(paste0("Figure 4.4\nPercentage of new and relapse(a) pulmonary TB cases with bacteriological confirmation, 2000 - ",
                                report_year-1,
-                               "\n,globally and for WHO regions.")) +
+                               ", globally\nand for WHO regions.")) +
                   theme_glb.rpt() +
                   theme(legend.position="top",
                         legend.title=element_blank())

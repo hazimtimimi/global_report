@@ -68,13 +68,13 @@ kids_data_combined <- kids_data %>%
 
 # produce the map
 kids_map <- WHOmap.print(kids_data_combined,
-                        paste0("Figure 4.3 Percentage new and relapse TB cases that were children (aged < 15), ",
+                        paste0("Figure 4.3\nPercentage new and relapse TB cases that were children (aged < 15), ",
                                report_year-1,
                                "(a)"),
                            "Percentage",
                            copyright=FALSE,
-                           #colors=c('yellow', 'lightgreen', 'green', 'darkgreen'),
-                           colors=c('#edf8e9', '#bae4b3', '#74c476', '#238b45'),
+                           #colors=c('#edf8e9', '#bae4b3', '#74c476', '#238b45'),
+                           colors=brewer.pal(4, "Blues"),
                            show=FALSE)
 
 # Add footnote about using earlier data for some countries
@@ -87,8 +87,6 @@ kids_foot <- paste("(a)",
 
 
 kids_map <- arrangeGrob(kids_map, bottom = textGrob(kids_foot, x = 0, hjust = -0.1, vjust=0.1, gp = gpar(fontsize = 10)))
-
-
 
 figsave(kids_map,
         select(kids_data_combined,
