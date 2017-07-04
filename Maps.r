@@ -48,7 +48,7 @@ kids_data$kids_pct <- ifelse(is.na(kids_data$c_new_014) | NZ(kids_data$c_agesex_
 
 kids_data$cat <- cut(kids_data$kids_pct,
                      c(0, 2.0, 5.0, 10.0, Inf),
-                     c('0-1.9%', '2-4.9%', '5-9.9%', '>=10%'),
+                     c('0-1.9', '2-4.9', '5-9.9', '>=10'),
                right=FALSE)
 
 # Find the countries with empty data for latest year and see if there are data for the previous year
@@ -130,7 +130,7 @@ bacconf_data$bacconf_pct <- ifelse(is.na(bacconf_data$pulm_bacconf_tot) | NZ(bac
 
 bacconf_data$cat <- cut(bacconf_data$bacconf_pct,
                      c(0, 50, 65, 80, Inf),
-                     c('0-49.9%', '50-64.9%', '65-79.9%', '>=80%'),
+                     c('0-49.9', '50-64.9', '65-79.9', '>=80'),
                right=FALSE)
 
 
@@ -150,13 +150,13 @@ bacconf_data_combined <- bacconf_data %>%
 
 # produce the map
 bacconf_map <- WHOmap.print(bacconf_data_combined,
-                        paste0("Figure 4.5 Percentage of new and relapse pulmonary TB cases with bacteriological confirmation, ",
+                        paste0("Figure 4.5\nPercentage of new and relapse pulmonary TB cases with bacteriological confirmation, ",
                               report_year-1,
                                "(a)"),
                            "Percentage",
                            copyright=FALSE,
-                           #colors=c('yellow', 'lightgreen', 'green', 'darkgreen'),
-                           colors=c('#edf8e9', '#bae4b3', '#74c476', '#238b45'),
+                           #colors=c('#edf8e9', '#bae4b3', '#74c476', '#238b45'),
+                           colors=brewer.pal(4, "PuRd"),
                            show=FALSE)
 
 # Add footnote about using earlier data for some countries
@@ -198,7 +198,84 @@ rm(list=ls(pattern = "^bacconf"))
 # Percentage of extrapulmonary cases among new and relapse TB cases, 2016
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-#  !!!!!!  TO BE DONE !!!!!!!
+
+ep_data <- notification %>%
+                filter(year  >= report_year - 2) %>%
+                select(iso3,
+                       year,
+					  new_labconf, new_clindx, new_ep,
+                      ret_rel_labconf, ret_rel_clindx, ret_rel_ep)
+
+
+#calculate % of extrapulmonary cases
+ep_data$newrel_tot <- ep_data %>%
+                          select(new_labconf:ret_rel_ep)%>%
+                          sum_of_row()
+
+ep_data$ep_tot <- ep_data %>%
+                                  select(new_ep, ret_rel_ep) %>%
+                                  sum_of_row()
+
+
+ep_data$ep_pct <- ifelse(is.na(ep_data$ep_tot) | NZ(ep_data$newrel_tot) == 0, NA,
+                                  ep_data$ep_tot * 100 / ep_data$newrel_tot)
+
+
+
+
+ep_data$cat <- cut(ep_data$ep_pct,
+                     c(0, 10, 20, 30, Inf),
+                     c('0-9.9', '10-19.9', '20-29.9', '>=30'),
+               right=FALSE)
+
+
+# Find the countries with empty data for latest year and see if there are data for the previous year
+ep_prev_year_data <- ep_data %>%
+                           filter(year == report_year - 1 & is.na(ep_pct)) %>%
+                           select(iso3) %>%
+                           inner_join(filter(ep_data, year == report_year - 2)) %>%
+                           filter(!is.na(ep_pct))
+
+# Now combine into one dataframe, with previous data used if latest year's data are not available
+ep_data_combined <- ep_data %>%
+                          filter(year == report_year - 1) %>%
+                          anti_join(ep_prev_year_data, by= "iso3") %>%
+                          rbind(ep_prev_year_data)
+
+
+# produce the map
+ep_map <- WHOmap.print(ep_data_combined,
+                        paste0("Figure 4.7\nPercentage of extrapulmonary cases among new and relapse TB cases, ",
+                              report_year-1,
+                               "(a)"),
+                           "Percentage",
+                           copyright=FALSE,
+                           colors=brewer.pal(4, "YlOrRd"),
+                           show=FALSE)
+
+# Add footnote about using earlier data for some countries
+ep_foot <- paste("(a)",
+                      report_year - 2,
+                      "data were used for ",
+                      nrow(ep_prev_year_data),
+                      "countries.")
+
+
+ep_map <- arrangeGrob(ep_map, bottom = textGrob(ep_foot, x = 0, hjust = -0.1, vjust=0.1, gp = gpar(fontsize = 10)))
+
+
+
+figsave(ep_map,
+        select(ep_data_combined,
+                         iso3,
+                         ep_pct,
+                         cat),
+        "f4_7_pct_ep_map")
+
+# Clean up (remove any objects with their name beginning with 'ep')
+rm(list=ls(pattern = "^ep"))
+
+
 
 
 
@@ -224,17 +301,16 @@ hivstatus_data <- notification %>%
 
 hivstatus_data$cat <- cut(hivstatus_data$hivstatus_pct,
                      c(0, 25, 50, 75, Inf),
-                     c('0-24.9%', '25-49.9%', '50-74.9%', '>=75%'),
+                     c('0-24.9', '25-49.9', '50-74.9', '>=75'),
                right=FALSE)
 
 
 # produce the map
 hivstatus_map <- WHOmap.print(hivstatus_data,
-                        paste("Figure 4.9 Percentage of new and relapse TB cases with documented HIV status(a),", report_year-1),
+                        paste("Figure 4.9\nPercentage of new and relapse TB cases with documented HIV status(a),", report_year-1),
                            "Percentage",
                            copyright=FALSE,
-                           #colors=c('yellow', 'lightgreen', 'green', 'darkgreen'),
-                           colors=c('#edf8e9', '#bae4b3', '#74c476', '#238b45'),
+                           colors=brewer.pal(4, "BuGn"),
                            show=FALSE)
 
 

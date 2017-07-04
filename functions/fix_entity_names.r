@@ -9,7 +9,7 @@ get_names_for_tables <- function(df, col="country"){
              ifelse(df[[col]]=='Democratic People\'s Republic of Korea', 'DPR Korea',
              ifelse(df[[col]]=='United Republic of Tanzania', 'UR Tanzania',
              ifelse(df[[col]]=='global', 'Global',
-             ifelse(df[[col]]=='SEA', 'SEAR', d[[col]]))))))
+             ifelse(df[[col]]=='SEA', 'SEAR', df[[col]]))))))
 
   return(df)
 }

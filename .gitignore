@@ -4,7 +4,7 @@
 .RData
 global_report.Rproj
 # ignore the configuration file to set user's local environment
-set_*.r
+set_environment.r
 # ignore all html files
 *.html
 # A folder for making preview Rmds

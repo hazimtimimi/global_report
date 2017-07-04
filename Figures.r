@@ -604,11 +604,11 @@ inc_plot <- inc_data %>%
             ggplot(aes(x=year, y=c_newinc_100k, ymin=0)) +
             geom_line(size=1) +
             geom_ribbon(aes(x=year, ymin=e_inc_100k_lo, ymax=e_inc_100k_hi),
-                        fill=incidence_colour,
+                        fill=standard_palette("incidence"),
                         alpha=0.4) +
             geom_line(aes(year, e_inc_100k),
                       size=1,
-                      colour=incidence_colour) +
+                      colour=standard_palette("incidence")) +
 
             facet_wrap( ~ entity, ncol = 4, scales="free_y") +
             scale_y_continuous(name = "Rate per 100 000 population per year") +
@@ -939,8 +939,8 @@ hivstatus_plot <- hivstatus_data %>%
                   expand_limits(y=c(0,100)) +
                   xlab("Year") +
                   #scale_x_discrete(name = "Year") +
-                  facet_wrap( ~ entity) +
-                  ggtitle(paste0("Figure 4.8 Percentage of new and relapse(a) TB cases with documented HIV status, 2004 - ",
+                  facet_wrap( ~ entity, ncol = 4) +
+                  ggtitle(paste0("Figure 4.8\nPercentage of new and relapse(a) TB cases with documented HIV status, 2004 - ",
                                report_year-1,
                                ", globally and for WHO regions")) +
                   theme_glb.rpt() +
@@ -1013,20 +1013,20 @@ inctbhiv_plot <- inctbhiv_data %>%
                   ggplot(aes(x=year, y=hivtest_pos, ymin=0)) +
                   geom_line(size=1) +
                   geom_ribbon(aes(x=year, ymin=e_inc_tbhiv_num_lo, ymax=e_inc_tbhiv_num_hi),
-                              fill="red",
+                              fill=standard_palette("tbhiv_incidence"),
                               alpha=0.4) +
                   geom_line(aes(year, e_inc_tbhiv_num),
                             size=1,
-                            colour="red") +
+                            colour=standard_palette("tbhiv_incidence")) +
 
                   geom_line(aes(year, hiv_art),
                             size=1,
-                            colour="blue") +
+                            colour=standard_palette("art")) +
 
                   scale_y_continuous(name = "New and relapse cases per year (millions)") +
                   xlab("Year") +
 
-                  ggtitle(paste0("Figure 4.10 Global numbers of notified new and relapse cases(a) known to be HIV-positive (black),\nnumber started on antiretroviral therapy (blue) and estimated number of incident HIV-positive TB cases (red), 2004 - ",
+                  ggtitle(paste0("Figure 4.10\nGlobal numbers of notified new and relapse cases(a) known to be HIV-positive (black),\nnumber started on antiretroviral therapy (blue) and estimated number of incident HIV-positive TB cases (red), 2004 - ",
                                report_year-1,
                          ".\nShaded areas represent uncertainty bands.")) +
 
@@ -1090,8 +1090,8 @@ rm(list=ls(pattern = "tbhiv"))
 # (green), 2000-2016, 30 high TB burden countries
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-newinc_30hbc <- report_country %>%
-                filter(g_hb_tb==1) %>%
+newinc_30hbc <- country_group_membership %>%
+                filter(group_type == "g_hb_tb" & group_name == 1) %>%
                 select(iso2)
 
 newinc_data <- notification %>%
@@ -1129,11 +1129,11 @@ inc_plot <- inc_data %>%
             ggplot(aes(x=year, y=c_newinc_100k, ymin=0)) +
             geom_line(size=1) +
             geom_ribbon(aes(x=year, ymin=e_inc_100k_lo, ymax=e_inc_100k_hi),
-                        fill=I('#00FF33'),
+                        fill=standard_palette("incidence"),
                         alpha=0.4) +
             geom_line(aes(year, e_inc_100k),
                       size=1,
-                      colour=I('#00FF33')) +
+                      colour=standard_palette("incidence")) +
 
             scale_y_continuous(name = "Rate per 100 000 population per year") +
             xlab("Year") +
@@ -1142,7 +1142,7 @@ inc_plot <- inc_data %>%
                         scales = "free_y",
                         ncol = 5) +
 
-            ggtitle(paste0("Figure 4.17 Case notification rates (new and relapse cases, all forms) (black) compared with estimated TB incidence rates  (green),\n2000 - ",
+            ggtitle(paste0("Figure 4.17\nCase notification rates (new and relapse cases, all forms) (black) compared with estimated TB incidence rates  (green),\n2000 - ",
                          report_year-1,
                          ", 30 high TB burden countries. Shaded areas represent uncertainty bands.")) +
             theme_glb.rpt() +
@@ -1161,7 +1161,7 @@ inc_plot <- arrangeGrob(inc_plot,
 
 
 # Save the plot
-figsave(inc_plot, inc_data, "f4_17_inc_plot_hbc")
+figsave(inc_plot, inc_data, "f4_17_inc_plot_hbc", width=7, height=11)
 
 # Clean up (remove any objects with their name containing 'inc_')
 rm(list=ls(pattern = "inc_"))
@@ -1186,8 +1186,8 @@ coverage_inc_country <- estimates_epi_rawvalues %>%
                          get_names_for_tables( col = "entity")
 
 # Filter the country list down to high burden ones
-coverage_30hbc <- report_country %>%
-                  filter(g_hb_tb==1) %>%
+coverage_30hbc <- country_group_membership %>%
+                  filter(group_type == "g_hb_tb" & group_name == 1) %>%
                   select(iso2)
 
 coverage_inc_country <- coverage_inc_country %>%
@@ -1261,7 +1261,7 @@ coverage_plot <- coverage_data %>%
                   geom_point() +
                   labs(x="",
                        y="Treatment coverage (%)",
-                       title=paste("Figure 4.18 Estimated TB treatment coverage (new and relapse patients as a percentage of estimated TB incidence)\n in",
+                       title=paste("Figure 4.18\nEstimated TB treatment coverage (new and relapse patients as a percentage of estimated TB incidence)\n in",
                                    report_year - 1,
                                    ", 30 high TB burden countries, WHO regions and globally")) +
                   geom_pointrange(aes(ymin=c_cdr_lo,
@@ -1305,9 +1305,9 @@ rm(list=ls(pattern = "^coverage"))
 # 2004-2016, 30 high TB/HIV burden countries
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-tbhiv_30hbc <- report_country %>%
-                filter(g_hb_tbhiv==1) %>%
-                select(iso2)
+tbhiv_30hbc <- country_group_membership %>%
+               filter(group_type == "g_hb_tbhiv" & group_name == 1) %>%
+               select(iso2)
 
 tbhiv_data <- TBHIV_for_aggregates %>%
               filter(year >= 2004) %>%
@@ -1358,15 +1358,15 @@ inctbhiv_plot <- inctbhiv_data %>%
                   ggplot(aes(x=year, y=hivtest_pos, ymin=0)) +
                   geom_line(size=1) +
                   geom_ribbon(aes(x=year, ymin=e_inc_tbhiv_num_lo, ymax=e_inc_tbhiv_num_hi),
-                              fill="red",
+                              fill=standard_palette("tbhiv_incidence"),
                               alpha=0.4) +
                   geom_line(aes(year, e_inc_tbhiv_num),
                             size=1,
-                            colour="red") +
+                            colour=standard_palette("tbhiv_incidence")) +
 
                   geom_line(aes(year, hiv_art),
                             size=1,
-                            colour="blue") +
+                            colour=standard_palette("art")) +
 
                   scale_y_continuous(name = "New and relapse cases per year (thousands)") +
                   xlab("Year") +
@@ -1375,7 +1375,7 @@ inctbhiv_plot <- inctbhiv_data %>%
                               scales = "free_y",
                               ncol = 5) +
 
-                  ggtitle(paste0("Figure 4.20 Number of new and relapse cases(a) known to be HIV-positive (black) and\nnumber started on ART (blue) compared with estimated number of incident HIV-positive TB cases (red),\n2004 - ",
+                  ggtitle(paste0("Figure 4.20\nNumber of new and relapse cases(a) known to be HIV-positive (black) and\nnumber started on ART (blue) compared with estimated number of incident HIV-positive TB cases (red),\n2004 - ",
                                report_year-1,
                                ", 30 high TB/HIV burden countries")) +
                   theme_glb.rpt()
@@ -1388,7 +1388,7 @@ inctbhiv_plot <- arrangeGrob(inctbhiv_plot, bottom = textGrob(inctbhiv_foot, x =
 
 
 # Save the plot
-figsave(inctbhiv_plot, inctbhiv_data, "f4_20_inctbhiv_plot_hbc")
+figsave(inctbhiv_plot, inctbhiv_data, "f4_20_inctbhiv_plot_hbc", width=7, height=11)
 
 # Clean up (remove any objects with their name containing 'tbhiv')
 rm(list=ls(pattern = "tbhiv"))
@@ -1413,9 +1413,9 @@ coveragehiv_inc_country <- estimates_epi_rawvalues %>%
                            get_names_for_tables( col = "entity")
 
 # Filter the country list down to high burden ones
-coveragehiv_30hbc <- report_country %>%
-                      filter(g_hb_tbhiv==1) %>%
-                      select(iso2)
+coveragehiv_30hbc <- country_group_membership %>%
+                     filter(group_type == "g_hb_tbhiv" & group_name == 1) %>%
+                     select(iso2)
 
 coveragehiv_inc_country <- coveragehiv_inc_country %>%
                             inner_join(coveragehiv_30hbc)
@@ -1515,7 +1515,7 @@ coveragehiv_plot <- coveragehiv_data %>%
                     geom_point() +
                     labs(x="",
                          y="Treatment coverage (%)",
-                         title=paste0("Figure 4.21 Estimated ART treatment coverage for HIV-positive TB cases\n",
+                         title=paste0("Figure 4.21\nEstimated ART treatment coverage for HIV-positive TB cases\n",
                                      "(HIV-positive TB patients on ART as a percentage of the estimated incidence of HIV-positive TB) in ",
                                      report_year - 1,
                                      ",\n30 high TB/HIV burden countries, WHO Regions and globally")) +
@@ -1564,9 +1564,10 @@ coveragerr_inc_country <- estimates_drtb_rawvalues %>%
                           get_names_for_tables( col = "entity")
 
 # Filter the country list down to high burden ones
-coveragerr_30hbc <- report_country %>%
-                    filter(g_hb_mdr==1) %>%
-                    select(iso2)
+coveragerr_30hbc <-  country_group_membership %>%
+                     filter(group_type == "g_hb_mdr" & group_name == 1) %>%
+                     select(iso2)
+
 
 coveragerr_inc_country <- coveragerr_inc_country %>%
                           inner_join(coveragerr_30hbc)
@@ -1763,9 +1764,9 @@ txout_global <- txout_country %>%
                 select(-rel_with_new_flg)
 
 # Filter the country list down to high burden ones
-txout_30hbc <- report_country %>%
-                filter(g_hb_tb==1) %>%
-                select(iso2)
+txout_30hbc <- country_group_membership %>%
+               filter(group_type == "g_hb_tb" & group_name == 1) %>%
+               select(iso2)
 
 txout_country <- txout_country %>%
                   inner_join(txout_30hbc) %>%
@@ -1823,21 +1824,29 @@ txout <- txout %>%
           # Drop the actual numbers and keep percentages
           select(-contains("newrel"))
 
-#tsr_table$area <- factor(tsr_table$area, levels=rev(tsr_table$area))
-
 
 # Flip into long mode for stacked bar plotting
 txout_long <- melt(txout, id=1)
 
+
+# stacking order changed with upgrade of ggplot to version 2.2. Having
+# difficulty getting the plot order right. Had to reverese legend order
+# to match plot order using guide=guide_legend(reverse=TRUE) in scale_fill_manula below
+
+# See https://blog.rstudio.org/2016/11/14/ggplot2-2-2-0/ and
+# https://stackoverflow.com/a/38425909 and
+# http://quabr.com/44390199/ggplot-strange-ordering-of-stacked-bar
+
+
+
 # Plot as stacked bars
 txout_plot <- txout_long %>%
-              ggplot(aes(entity, value, fill=variable)) +
-                      geom_bar(stat="identity",
-                               position="stack") +
+              ggplot(aes(entity, value, fill=variable, reverse = TRUE)) +
+                      geom_col() +
                       coord_flip() +
 
                       theme_glb.rpt() +
-                      scale_fill_manual("", values = outcomes_palette) +
+                      scale_fill_manual("", guide=guide_legend(reverse=TRUE), values = outcomes_palette()) +
                       labs(x="", y="Percentage of cohort (%)") +
 
                       theme(legend.position="bottom",
@@ -1845,7 +1854,7 @@ txout_plot <- txout_long %>%
 
                       expand_limits(c(0,0)) +
 
-                      ggtitle(paste0("Figure 4.23 Treatment outcomes for new and relapse TB cases in ",
+                      ggtitle(paste0("Figure 4.23\nTreatment outcomes for new and relapse TB cases in ",
                                      report_year - 2,
                                      ",\n30 high TB burden countries, WHO regions and globally"))
 
@@ -2055,9 +2064,9 @@ txtbhivout_global <- txtbhivout_country %>%
                 mutate(entity = "Global")
 
 # Filter the country list down to high burden ones
-txtbhivout_30hbc <- report_country %>%
-                filter(g_hb_tbhiv==1) %>%
-                select(iso2)
+txtbhivout_30hbc <- country_group_membership %>%
+                    filter(group_type == "g_hb_tbhiv" & group_name == 1) %>%
+                    select(iso2)
 
 txtbhivout_country <- txtbhivout_country %>%
                   inner_join(txtbhivout_30hbc) %>%
@@ -2133,7 +2142,7 @@ txtbhivout_plot <- txtbhivout_long %>%
                       coord_flip() +
 
                       theme_glb.rpt() +
-                      scale_fill_manual("", values = outcomes_palette) +
+                      scale_fill_manual("", values = outcomes_palette()) +
                       labs(x="", y="Percentage of cohort (%)") +
 
                       theme(legend.position="bottom",
@@ -2141,7 +2150,7 @@ txtbhivout_plot <- txtbhivout_long %>%
 
                       expand_limits(c(0,0)) +
 
-                      ggtitle(paste0("Figure 4.25 Treatment outcomes for new and relapse TB/HIV cases in\n",
+                      ggtitle(paste0("Figure 4.25\nTreatment outcomes for new and relapse TB/HIV cases in\n",
                                      report_year - 2,
                                      ", 30 high TB/HIV burden countries, WHO regions and globally"))
 
@@ -2199,9 +2208,9 @@ txmdrout_global <- txmdrout_country %>%
                 mutate(entity = "Global")
 
 # Filter the country list down to high burden ones
-txmdrout_30hbc <- report_country %>%
-                filter(g_hb_mdr==1) %>%
-                select(iso2)
+txmdrout_30hbc <- country_group_membership %>%
+                  filter(group_type == "g_hb_mdr" & group_name == 1) %>%
+                  select(iso2)
 
 txmdrout_country <- txmdrout_country %>%
                   inner_join(txmdrout_30hbc) %>%
@@ -2277,7 +2286,7 @@ txmdrout_plot <- txmdrout_long %>%
                       coord_flip() +
 
                       theme_glb.rpt() +
-                      scale_fill_manual("", values = outcomes_palette) +
+                      scale_fill_manual("", values = outcomes_palette()) +
                       labs(x="", y="Percentage of cohort (%)") +
 
                       theme(legend.position="bottom",
@@ -2285,7 +2294,7 @@ txmdrout_plot <- txmdrout_long %>%
 
                       expand_limits(c(0,0)) +
 
-                      ggtitle(paste0("Figure 4.26 Treatment outcomes for rifampicin-resistant TB cases\nstarted on treatment in ",
+                      ggtitle(paste0("Figure 4.26\nTreatment outcomes for rifampicin-resistant TB cases\nstarted on treatment in ",
                                      report_year - 3,
                                      ",\n30 high MDR-TB burden countries, WHO regions and globally"))
 

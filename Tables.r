@@ -92,9 +92,9 @@ notif_table_html <- xtable(notifs_summary)
 
 digits(notif_table_html) <- 0
 
-notif_table_filename <- paste0("Tables/t4_1_notifs_summary", Sys.Date(), ".htm")
+notif_table_filename <- paste0(figures_folder, "Tables/t4_1_notifs_summary", Sys.Date(), ".htm")
 
-cat(paste("<h3>Table 4.1 Notifications of TB, TB/HIV and MDR/RR-TB cases, globally and for WHO regions,",
+cat(paste("<h3>Table 4.1<br />Notifications of TB, TB/HIV and MDR/RR-TB cases, globally and for WHO regions,",
           report_year-1,
           "</h3>"),
     file=notif_table_filename)
@@ -139,40 +139,81 @@ rm(list=c("notifs_global", "notifs_summary", "notif_table_html", "notif_table_fi
 # National policies and their implementation to increase access to rapid TB testing and universal DST, 2016
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+# Get list of all high-burden countries (TB, TB/HIV, MDR-TB)
+# and re-create old group structure (one variable per high burden group)
 
-#
-# TABLE HEADINGS AND VARIABLES USED NEED CHANGING   !!!!!!!!
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+rdxpolicy_hbccodes <-  country_group_membership %>%
+                       filter(  (group_type %in% c("g_hb_tb", "g_hb_tbhiv","g_hb_mdr")) &
+                              group_name == 1) %>%
+                       select(iso2, group_type, group_name) %>%
+                       spread(key = group_type, value = group_name, fill = 0)
 
 
+# Grab a few of the notification variables to calculate coverage of DST
+
+rdxpolicy_notifs <- notification %>%
+                    filter(year == report_year - 1) %>%
+                    select(iso2,
+
+                           c_notified,
+                           c_newinc,
+
+                           rdx_data_available,
+                           newinc_rdx,
+                           rdxsurvey_newinc,
+                           rdxsurvey_newinc_rdx,
+
+                           rdst_new,
+                           rdst_ret,
+                           rdst_unk,
+
+                           conf_rrmdr,
+                           rr_sldst) %>%
+
+                    # restrict to high burden countries
+                    inner_join(rdxpolicy_hbccodes) %>%
+
+                    # Calculate coverage percentages
+                    mutate(pcnt_wrd = ifelse(rdx_data_available == 60 & NZ(c_newinc) > 0,
+                                             frmt(newinc_rdx * 100 /c_newinc),
+                                      ifelse(rdx_data_available == 61 & NZ(rdxsurvey_newinc) > 0,
+                                             frmt(rdxsurvey_newinc_rdx * 100 /rdxsurvey_newinc), "-")),
 
 
-rdxpolicy_hbccodes <- report_country %>%
-                      select(iso2,
-                             starts_with("g_hb_"))
+                           pcnt_dst = ifelse(NZ(c_notified) > 0 & !
+                                               (is.na(rdst_new) & is.na(rdst_ret) & is.na(rdst_unk)),
+                                             frmt((NZ(rdst_new) + NZ(rdst_ret) + NZ(rdst_unk)) * 100 / c_notified),
+                                             "-"),
+
+                           pcnt_sldst = ifelse(NZ(conf_rrmdr)> 0,
+                                               frmt(rr_sldst * 100 / conf_rrmdr), "-")
+
+                           )
+
+
 
 rdxpolicy_country <- strategy %>%
                      filter(year == report_year - 1) %>%
                      select(country,
                             iso2,
                             g_whoregion,
-                            xpert_in_guide_tb,
-                            xpert_in_guide_TBHIV,
-                            xpert_in_guide_drtb,
-                            xpert_in_guide_children,
-                            xpert_in_guide_eptb) %>%
-                     inner_join(rdxpolicy_hbccodes) %>%
-                     # drop iso2
+                            wrd_initial_test,
+                            universal_dst) %>%
+
+                     # restrict to high burden countries, and add notification calculations
+                     inner_join(rdxpolicy_notifs) %>%
+
+                     # restrict to variables for the table
                      select(entity = country,
                             g_whoregion,
                             g_hb_tb,
                             g_hb_tbhiv,
                             g_hb_mdr,
-                            xpert_in_guide_tb,
-                            xpert_in_guide_TBHIV,
-                            xpert_in_guide_drtb,
-                            xpert_in_guide_children,
-                            xpert_in_guide_eptb) %>%
+                            wrd_initial_test,
+                            pcnt_wrd,
+                            universal_dst,
+                            pcnt_dst,
+                            pcnt_sldst) %>%
                       # shorten long country names
                       get_names_for_tables( col = "entity") %>%
                       # order by country name
@@ -210,40 +251,22 @@ rdxpolicy_pcnt  <- function(x, show_calc = FALSE){
 rdxpolicy_g_hb_tb <- rdxpolicy_country %>%
                      filter(g_hb_tb == 1) %>%
                      summarise_each(funs(rdxpolicy_pcnt(.)),
-                                  starts_with("xpert_in_guide")) %>%
+                                  one_of(c("wrd_initial_test", "universal_dst"))) %>%
                      mutate(entity="High TB burden countries")
 
 rdxpolicy_g_hb_tbhiv <- rdxpolicy_country %>%
                      filter(g_hb_tbhiv == 1) %>%
                      summarise_each(funs(rdxpolicy_pcnt(.)),
-                                  starts_with("xpert_in_guide")) %>%
+                                  one_of(c("wrd_initial_test", "universal_dst"))) %>%
                      mutate(entity="High TB/HIV burden countries")
 
 
 rdxpolicy_g_hb_mdr <- rdxpolicy_country %>%
                      filter(g_hb_mdr == 1) %>%
                      summarise_each(funs(rdxpolicy_pcnt(.)),
-                                  starts_with("xpert_in_guide")) %>%
+                                  one_of(c("wrd_initial_test", "universal_dst"))) %>%
                      mutate(entity="High MDR burden countries")
 
-# Aggregate by WHO region
-rdxpolicy_regions <- rdxpolicy_country %>%
-                     group_by(g_whoregion) %>%
-                     summarise_each(funs(rdxpolicy_pcnt(.)),
-                                  starts_with("xpert_in_guide")) %>%
-                     # merge with region names
-                     inner_join(who_region_names) %>%
-                     # drop region code
-                     select(-g_whoregion)
-
-# Global aggregate
-rdxpolicy_global <- rdxpolicy_country %>%
-                     summarise_each(funs(rdxpolicy_pcnt(.)),
-                                  starts_with("xpert_in_guide")) %>%
-                     mutate(entity="Global")
-
-
-# Wayne decided in the end to only show high burden country aggregates
 
 rdxpolicy_aggs <- rbind(rdxpolicy_g_hb_tb,
                         rdxpolicy_g_hb_tbhiv,
@@ -251,7 +274,10 @@ rdxpolicy_aggs <- rbind(rdxpolicy_g_hb_tb,
                   # Add placeholder variables to match structure of country list
                   mutate(g_hb_tb = NA,
                          g_hb_tbhiv = NA,
-                         g_hb_mdr = NA)
+                         g_hb_mdr = NA,
+                         pcnt_wrd = NA,
+                         pcnt_dst = NA,
+                         pcnt_sldst = NA)
 
 
 # Restrict country data to the high burden countries and then append aggregates
@@ -264,9 +290,9 @@ rdxpolicy_hbcs <- rdxpolicy_country %>%
 # Create HTML output
 rdxpolicy_table_html <- xtable(rdxpolicy_hbcs)
 
-rdxpolicy_table_filename <- paste0("Tables/t4_4_xpert_policy", Sys.Date(), ".htm")
+rdxpolicy_table_filename <- paste0(figures_folder, "Tables/t4_4_lab_policy", Sys.Date(), ".htm")
 
-cat(paste("<h3>Table 4.4 National policies and their implementation to increase access to rapid TB testing and universal DST <sup>a</sup>, ",
+cat(paste("<h3>Table 4.4<br />National policies and their implementation to increase access to rapid TB testing and universal DST <sup>a</sup>, ",
           report_year-1,
           "</h3>
           <style>
@@ -285,21 +311,16 @@ print(rdxpolicy_table_html,
       add.to.row=list(pos=list(0,
                                nrow(rdxpolicy_table_html)),
                       command=c("<tr>
-                                  <td colspan='4'>&nbsp;</td>
-                                  <td colspan='5'>National policy stipulating Xpert MTB/RIF as the
-                                                  <i>initial</i> diagnostic test for: </td>
-                              <tr>
-                              <tr>
                                   <td>&nbsp;</td>
                                   <td>High TB burden</td>
                                   <td>High TB/HIV burden</td>
-                                  <td>High MDR-TB burden</td>                                                                             <td>All people presumed to have TB</td>
-                                  <td>People at risk of HIV-associated TB</td>
-                                  <td>People at risk of drug-resistant TB</td>
-                                  <td>Children presumed to have TB</td>
-                                  <td>Extrapulmonary TB using selected specimens </td>
+                                  <td>High MDR-TB burden</td>                                                                    <td>National policy and algorithm indicate a WRD as the initial diagnostic test for all people presumed to have TB</td>
+                                  <td>Percentage of notified new and relapse TB cases tested with a WRD as the initial diagnostic test</td>
+                                  <td>National policy and algorithm indicate universal access to DST</td>
+                                  <td>Percentage of notified TB cases with DST results for rifampicin</td>
+                                  <td>Percentage of notified rifampicin-resistant TB cases with DST results for fluoroquinolones and second-line injectable agents</td>
                               </tr>",
-                              "<tr><td colspan='9'><sup>a</sup>The 48 countries shown in the table are the countries that are in one of more of the three lists of high TB, TB/HIV and MDR-TB burden countries (see also Chapter 2, Figure 2.3 and Table 2.2).</td>
+                              "<tr><td colspan='9'><sup>a</sup>The 48 countries shown in the table are the countries that are in one of more of the three lists of high TB, TB/HIV and MDR-TB burden countries (see also Chapter 2, Figure 2.2 and Table 2.3).</td>
                               </tr>")
                       )
       )
