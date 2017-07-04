@@ -47,22 +47,23 @@ standard_palette <- function(type){
 
 outcomes_palette <- function() {
 
-   c("#009E73",   # Success (green)
-     "#D55E00",   # Failure (red)
-     "#E69F00",   # Died (orange)
-     "#F0E442",   # Lost to follow-up (yellow)
-     "#999999",   # Not evaluated (gray)
-     "#CCCCCC"    # No data (light gray)
-    )
+   # colours used in 2016
+   # c("#009E73",   # Success (green)
+   #   "#D55E00",   # Failure (red)
+   #   "#E69F00",   # Died (orange)
+   #   "#F0E442",   # Lost to follow-up (yellow)
+   #   "#999999",   # Not evaluated (gray)
+   #   "#CCCCCC"    # No data (light gray)
+   #  )
 
-  # Alternative taken from colour picker off 2016 report PDF doesn't work so well.
-  # c("#008670",   # Success (green)
-  #   "#ED1D24",   # Failure (red)
-  #   "#F7941E",   # Died (orange)
-  #   "#E5DDB3",   # Lost to follow-up (yellow)
-  #   "#D1D3D4",   # Not evaluated (gray)
-  #   "#CCCCCC"    # No data (light gray)
-  #   )
+  # Alternative taken from colour picker off 2016 report PDF
+  c("Treatment success" = "#008670",  # Success (green)
+    "Failure" = "#ED1D24",            # Failure (red)
+    "Died" = "#F7941E",               # Died (orange)
+    "Lost to follow-up" = "#E5DDB3",  # Lost to follow-up (yellow)
+    "Not evaluated" = "#D1D3D4",      # Not evaluated (gray)
+    "No data reported" = "#CCCCCC"    # No data (light gray)
+    )
 
 }
 
@@ -70,8 +71,8 @@ outcomes_palette <- function() {
 
 agesex_palette <- function() {
 
- c("#EC008C",  # Females (garish pink used by Sue in 2016)
-   "#F7941E"   # Males (orange)
+ c("Female" = "#EC008C",  # Females (garish pink used by Sue in 2016)
+   "Male"   = "#F7941E"   # Males (orange)
  )
 
 }

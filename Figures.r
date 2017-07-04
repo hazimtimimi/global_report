@@ -1829,24 +1829,26 @@ txout <- txout %>%
 txout_long <- melt(txout, id=1)
 
 
-# stacking order changed with upgrade of ggplot to version 2.2. Having
-# difficulty getting the plot order right. Had to reverese legend order
-# to match plot order using guide=guide_legend(reverse=TRUE) in scale_fill_manula below
-
-# See https://blog.rstudio.org/2016/11/14/ggplot2-2-2-0/ and
-# https://stackoverflow.com/a/38425909 and
-# http://quabr.com/44390199/ggplot-strange-ordering-of-stacked-bar
-
-
+# stacking order changed with upgrade of ggplot to version 2.2. GRRRRRRRR
+# Why GRRRRRR? Because, of course, this broke existing code that was working!
+# Finally figured out the solution -- use geom_col with the following parameter
+# geom_col(position = position_stack(reverse = TRUE))
+#
+# It also helped to have a named list for the colour palette.
+# See http://ggplot2.tidyverse.org/reference/geom_bar.html  and
+#     http://ggplot2.tidyverse.org/reference/scale_manual.html
 
 # Plot as stacked bars
 txout_plot <- txout_long %>%
-              ggplot(aes(entity, value, fill=variable, reverse = TRUE)) +
-                      geom_col() +
+              ggplot(aes(entity,
+                         value,
+                         fill = variable)) +
+
+                      geom_col(position = position_stack(reverse = TRUE)) +
                       coord_flip() +
 
                       theme_glb.rpt() +
-                      scale_fill_manual("", guide=guide_legend(reverse=TRUE), values = outcomes_palette()) +
+                      scale_fill_manual("", values = outcomes_palette()) +
                       labs(x="", y="Percentage of cohort (%)") +
 
                       theme(legend.position="bottom",
@@ -2136,9 +2138,11 @@ txtbhivout_long <- melt(txtbhivout, id=1)
 
 # Plot as stacked bars
 txtbhivout_plot <- txtbhivout_long %>%
-              ggplot(aes(entity, value, fill=variable)) +
-                      geom_bar(stat="identity",
-                               position="stack") +
+              ggplot(aes(entity,
+                         value,
+                         fill = variable)) +
+
+                      geom_col(position = position_stack(reverse = TRUE)) +
                       coord_flip() +
 
                       theme_glb.rpt() +
@@ -2280,9 +2284,11 @@ txmdrout_long <- melt(txmdrout, id=1)
 
 # Plot as stacked bars
 txmdrout_plot <- txmdrout_long %>%
-              ggplot(aes(entity, value, fill=variable)) +
-                      geom_bar(stat="identity",
-                               position="stack") +
+              ggplot(aes(entity,
+                         value,
+                         fill = variable)) +
+
+                      geom_col(position = position_stack(reverse = TRUE)) +
                       coord_flip() +
 
                       theme_glb.rpt() +
