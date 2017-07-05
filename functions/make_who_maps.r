@@ -214,7 +214,7 @@ WHOmap.print <- function(data, map.title="", legend.title="", colors=NULL, low.c
     x1 <- seq_gradient_pal(low.color, high.color)(x)
   } else x1 <- colors
 
-  colors2 <- c(x1, 'grey90', 'grey75')
+  colors2 <- c(x1, 'white', 'grey75')
 
   # Get dimensions
   if(zoom=='Global'){
@@ -259,7 +259,5 @@ WHOmap.print <- function(data, map.title="", legend.title="", colors=NULL, low.c
            }
 
   return(plot)
-
-  cat("Here you go. You can save it with ggsave if you'd like.")
 
 }

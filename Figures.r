@@ -503,11 +503,47 @@ rm(list=ls(pattern = "^bacconf"))
 # Figure 4.6  (NEW MAP FOR 2017 REPORT) ------
 # Percentage of new and relapse TB cases tested using a WHO-recommended
 # rapid diagnostic as the initial diagnostic test, 2016
-
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-#  !!!!!!  TO BE DONE !!!!!!!
+rdxpolicy_data <- notification %>%
+                    filter(year == report_year - 1) %>%
+                    select(iso3,
+                           c_newinc,
+                           rdx_data_available,
+                           newinc_rdx,
+                           rdxsurvey_newinc,
+                           rdxsurvey_newinc_rdx) %>%
 
+                    # Calculate percente using WRD as initial diagnostic test
+                    mutate(pcnt_wrd = ifelse(rdx_data_available == 60 & NZ(c_newinc) > 0,
+                                             newinc_rdx * 100 /c_newinc,
+                                      ifelse(rdx_data_available == 61 & NZ(rdxsurvey_newinc) > 0,
+                                             rdxsurvey_newinc_rdx * 100 /rdxsurvey_newinc, NA)))
+
+rdxpolicy_data$cat <- cut(rdxpolicy_data$pcnt_wrd,
+                          c(0, 25, 50, 75, Inf),
+                          c('0-24.9', '25-49.9', '50-74.9', '>=75'),
+                          right=FALSE)
+
+
+# produce the map
+rdxpolicy_map <- WHOmap.print(rdxpolicy_data,
+                              paste0("Figure 4.6\nPercentage of new and relapse TB cases tested using a WHO-recommended rapid diagnostic\nas the initial diagnostic test, ",
+                                    report_year-1),
+                                 "Percentage",
+                                 copyright=FALSE,
+                                 colors=brewer.pal(4, "Greens"),
+                                 show=FALSE)
+
+figsave(rdxpolicy_map,
+        select(rdxpolicy_data,
+                         iso3,
+                         pcnt_wrd,
+                         cat),
+        "f4_6_pct_wrd_map")
+
+# Clean up (remove any objects with their name beginning with 'ep')
+rm(list=ls(pattern = "^rdxpolicy"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -2205,13 +2241,12 @@ kids_data <- within(kids_data, {
 
 # produce the map
 kids_map <- WHOmap.print(kids_data,
-                        paste("Figure 5.1\nAvailability of data on the number number of children aged <5 years who were,",
-                              "\nhousehold contacts of bacteriologically confirmed pulmonary TB cases and were started on",
+                        paste("Figure 5.1\nAvailability of data on the number number of children aged <5 years who were\nhousehold contacts of bacteriologically confirmed pulmonary TB cases and were started on",
                               "\nTB preventive treatment,",
                               report_year-1),
                            legend.title = "Country response",
                            copyright=FALSE,
-                           colors=c('green', 'blue', 'yellow'),
+                           colors=c('#91A93E', '#0066B3', '#E5DDB3'),
                            na.label="No response",
                            show=FALSE)
 
@@ -2284,7 +2319,7 @@ hcw_map <- WHOmap.print(hcw_data,
 
 figsave(hcw_map,
         hcw_data,
-        "f5_3_hcw_notf_rate_ratio")
+        "f5_4_hcw_notf_rate_ratio")
 
 # Clean up (remove any objects with their name beginning with 'hcw')
 rm(list=ls(pattern = "^hcw"))
