@@ -22,6 +22,13 @@ This will create a series of folders (or add to them if they are already created
   * _Review_ These are the latest tables and figures (along with data) that can be reviewed in one place.
   * _Tables_ These are dated HTM files for sending to the graphic designer.
 
+Then run the following scripts to create the tables, figures and profile figures respectively:
+
+```
+> source(Tables.r)
+> source(Figures.r)
+> source(profile_figures.r)
+```
 
 **To create CSV files for the web annex tables, do in R:**
 ```

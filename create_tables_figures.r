@@ -129,7 +129,9 @@ stop("
 
 
 # Run everything -----
-source(file.path(scripts_folder, "Figures.r"))
 source(file.path(scripts_folder, "Tables.r"))
-source(file.path(scripts_folder, "Maps.r"))
+
+source(file.path(scripts_folder, "Figures.r"))
+
+source(file.path(scripts_folder, "profile_figures.r"))
 
