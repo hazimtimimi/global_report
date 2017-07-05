@@ -1951,14 +1951,6 @@ txoutnum_data <- txoutnum_data %>%
 # (see http://stackoverflow.com/a/35500964 for why I had to use as.data.frame() )
 txoutnum_long <- melt(as.data.frame(txoutnum_data), id=c("entity","year"))
 
-# Alternative palette for treatment outcomes
-# (adapted from colourblind-friendly palettes at http://www.cookbook-r.com/Graphs/Colors_(ggplot2)/)
-
-txoutnum_palette <- c("#009E73",   # Success (green)
-                      "#D55E00",   # Failure or others (red)
-                      "#999999"   # Not evaluated (gray)
-                      )
-
 
 # Plot as stacked bars, with global separate from regions so can use different scales
 # otherwise AMR, EMR and EUR are hard to see
@@ -1966,13 +1958,12 @@ txoutnum_palette <- c("#009E73",   # Success (green)
 txoutnum_plot_reg <- txoutnum_long %>%
                   filter(entity!="Global") %>%
                   ggplot(aes(year, value, fill=variable)) +
-                  geom_bar(stat="identity",
-                           position="stack") +
+                  geom_col(position = position_stack(reverse = TRUE)) +
 
                   facet_wrap( ~ entity) +
 
                   theme_glb.rpt() +
-                  scale_fill_manual("", values = txoutnum_palette) +
+                  scale_fill_manual("", values = outcomes_num_palette()) +
                   labs(x="", y="Number of cases (millions)") +
 
                   theme(legend.position="bottom",
@@ -1982,13 +1973,12 @@ txoutnum_plot_reg <- txoutnum_long %>%
 txoutnum_plot_glob <- txoutnum_long %>%
                   filter(entity=="Global") %>%
                   ggplot(aes(year, value, fill=variable)) +
-                  geom_bar(stat="identity",
-                           position="stack") +
+                  geom_col(position = position_stack(reverse = TRUE)) +
 
-                  facet_wrap( ~ entity) +
+                  facet_wrap( ~ entity, nrow = 3, ncol = 2) +
 
                   theme_glb.rpt() +
-                  scale_fill_manual("", values = txoutnum_palette) +
+                  scale_fill_manual("", values = outcomes_num_palette()) +
                   labs(x="", y="Number of cases (millions)") +
 
                   theme(legend.position="bottom",
@@ -1999,10 +1989,11 @@ txoutnum_plot_glob <- txoutnum_long %>%
 
 txoutnum_plot <- arrangeGrob(txoutnum_plot_glob,
                              txoutnum_plot_reg,
-                             ncol = 2,
-                             top = textGrob(label = paste0("Figure 4.24 Treatment outcomes for new and relapse TB cases(a) (absolute numbers), 2000 - ",
+                             nrow = 2,
+                             ncol = 1,
+                             top = textGrob(label = paste0("Figure 4.24\nTreatment outcomes for new and relapse TB cases(a) (absolute numbers), 2000 - ",
                            report_year-2,
-                           ", globally and for WHO regions."),
+                           ", globally\nand for WHO regions."),
                                              x = 0.02,
                                              just = "left",
                                              gp = gpar(fontsize = 10)),
@@ -2014,7 +2005,7 @@ txoutnum_plot <- arrangeGrob(txoutnum_plot_glob,
 
 
 # Save the plot
-figsave(txoutnum_plot, txoutnum_data, "f4_24_outcomes_absolute")
+figsave(txoutnum_plot, txoutnum_data, "f4_24_outcomes_absolute", width=7, height=11)
 
 # Clean up (remove any objects with their name starting 'txout')
 rm(list=ls(pattern = "^txoutnum"))

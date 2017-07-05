@@ -67,6 +67,19 @@ outcomes_palette <- function() {
 
 }
 
+# Alternative palette for treatment outcomes absolute numbers --
+# (adapted from colourblind-friendly palettes at http://www.cookbook-r.com/Graphs/Colors_(ggplot2)/)
+
+outcomes_num_palette <- function() {
+
+  c("Treatment success"               = "#009E73",  # Success (green)
+    "Failure/Died/Lost to follow-up"  = "#D55E00",  # Failure or others (red)
+    "Not evaluated"                   = "#999999"   # Not evaluated (gray)
+                      )
+
+}
+
+
 # Palette for age/sex pyramids ----
 
 agesex_palette <- function() {
