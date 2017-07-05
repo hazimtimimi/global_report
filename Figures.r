@@ -500,7 +500,7 @@ rm(list=ls(pattern = "^bacconf"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 4.6  (NEW MAP FOR 2017 REPORT) ------
+# Figure 4.6  (Map) ------
 # Percentage of new and relapse TB cases tested using a WHO-recommended
 # rapid diagnostic as the initial diagnostic test, 2016
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -547,7 +547,7 @@ rm(list=ls(pattern = "^rdxpolicy"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 4.7  (NEW MAP FOR 2017 REPORT) ------
+# Figure 4.7  (Map) ------
 # Percentage of extrapulmonary cases among new and relapse TB cases, 2016
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -895,16 +895,51 @@ rm(list=ls(pattern = "tbhiv"))
 # Percentage of MDR/RR-TB cases tested for susceptibility to second-line drugs, 2016
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-#  !!!!!!  TO BE DONE !!!!!!!
+sldst_data <- notification %>%
+              filter(year == report_year - 1) %>%
+              select(iso3,
+                     conf_rrmdr,
+                     rr_sldst) %>%
+
+              # Calculate percentage RR cases with 2nd line DST
+              mutate(pcnt_sldst = ifelse(NZ(conf_rrmdr)> 0,
+                                         rr_sldst * 100 / conf_rrmdr, NA)
+                     )
+
+sldst_data$cat <- cut(sldst_data$pcnt_sldst,
+                          c(0, 25, 50, 75, Inf),
+                          c('0-24.9', '25-49.9', '50-74.9', '>=75'),
+                          right=FALSE)
+
+
+# produce the map
+sldst_map <- WHOmap.print(sldst_data,
+                          paste0("Figure 4.15\nPercentage of MDR/RR-TB cases tested for susceptibility to second-line drugs, ",
+                                    report_year-1),
+                                 "Percentage",
+                                 copyright=FALSE,
+                                 colors=brewer.pal(4, "Blues"),
+                                 show=FALSE)
+
+figsave(sldst_map,
+        select(sldst_data,
+                         iso3,
+                         pcnt_sldst,
+                         cat),
+        "f4_15_pct_sldst_map")
+
+# Clean up (remove any objects with their name beginning with 'sldst')
+rm(list=ls(pattern = "^sldst"))
+
+
 
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Figure 4.16  (MAP TRANSFERRED OVER FROM DENNIS FOR THE 2017 REPORT) ------
-# Number of patients with laboratory-confirmed XDR–TB started on treatment, 2016
+# DROPPED!
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-#  !!!!!!  TO BE DONE !!!!!!!
 
 
 
