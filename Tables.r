@@ -135,7 +135,7 @@ rm(list=c("notifs_global", "notifs_summary", "notif_table_html", "notif_table_fi
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Table 4.4  ------
+# Table 4.3  ------
 # National policies and their implementation to increase access to rapid TB testing and universal DST, 2016
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -292,7 +292,7 @@ rdxpolicy_table_html <- xtable(rdxpolicy_hbcs)
 
 rdxpolicy_table_filename <- paste0(figures_folder, "Tables/t4_4_lab_policy", Sys.Date(), ".htm")
 
-cat(paste("<h3>Table 4.4<br />National policies and their implementation to increase access to rapid TB testing and universal DST <sup>a</sup>, ",
+cat(paste("<h3>Table 4.3<br />National policies and their implementation to increase access to rapid TB testing and universal DST <sup>a</sup>, ",
           report_year-1,
           "</h3>
           <style>
@@ -325,7 +325,7 @@ print(rdxpolicy_table_html,
                       )
       )
 
-tablecopy("t4_4_xpert_policy")
+tablecopy("t4_3_xpert_policy")
 
 # Clean up (remove any objects with their name beginning with 'rdxpolicy')
 rm(list=ls(pattern = "^rdxpolicy"))

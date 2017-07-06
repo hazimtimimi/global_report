@@ -934,19 +934,8 @@ rm(list=ls(pattern = "^sldst"))
 
 
 
-
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 4.16  (MAP TRANSFERRED OVER FROM DENNIS FOR THE 2017 REPORT) ------
-# DROPPED!
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-
-
-
-
-
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 4.17   ------
+# Figure 4.16   ------
 # Case notification rates (new and relapse cases, all forms) (black) compared with estimated TB incidence rates,
 # (green), 2000-2016, 30 high TB burden countries
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1003,7 +992,7 @@ inc_plot <- inc_data %>%
                         scales = "free_y",
                         ncol = 5) +
 
-            ggtitle(paste0("Figure 4.17\nCase notification rates (new and relapse cases, all forms) (black) compared with estimated TB incidence rates  (green),\n2000 - ",
+            ggtitle(paste0("Figure 4.16\nCase notification rates (new and relapse cases, all forms) (black) compared with estimated TB incidence rates  (green),\n2000 - ",
                          report_year-1,
                          ", 30 high TB burden countries. Shaded areas represent uncertainty bands.")) +
             theme_glb.rpt() +
@@ -1022,7 +1011,7 @@ inc_plot <- arrangeGrob(inc_plot,
 
 
 # Save the plot
-figsave(inc_plot, inc_data, "f4_17_inc_plot_hbc", width=7, height=11)
+figsave(inc_plot, inc_data, "f4_16_inc_plot_hbc", width=7, height=11)
 
 # Clean up (remove any objects with their name containing 'inc_')
 rm(list=ls(pattern = "inc_"))
@@ -1031,7 +1020,7 @@ rm(list=ls(pattern = "inc_"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 4.18   ------
+# Figure 4.17   ------
 # Estimated TB treatment coverage (new and relapse patients as a percentage of estimated TB incidence)
 # in 2016, 30 high TB burden countries, WHO regions and globally
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1122,7 +1111,7 @@ coverage_plot <- coverage_data %>%
                   geom_point() +
                   labs(x="",
                        y="Treatment coverage (%)",
-                       title=paste("Figure 4.18\nEstimated TB treatment coverage (new and relapse patients as a percentage of estimated TB incidence)\n in",
+                       title=paste("Figure 4.17\nEstimated TB treatment coverage (new and relapse patients as a percentage of estimated TB incidence)\n in",
                                    report_year - 1,
                                    ", 30 high TB burden countries, WHO regions and globally")) +
                   geom_pointrange(aes(ymin=c_cdr_lo,
@@ -1152,7 +1141,7 @@ coverage_plot <- arrangeGrob(coverage_plot,
 
 
 # Save the plot
-figsave(coverage_plot, coverage_data, "f4_18_txcoverage_tb")
+figsave(coverage_plot, coverage_data, "f4_17_txcoverage_tb")
 
 # Clean up (remove any objects with their name starting with 'coverage')
 rm(list=ls(pattern = "^coverage"))
@@ -1160,7 +1149,7 @@ rm(list=ls(pattern = "^coverage"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 4.20   ------
+# Figure 4.19   ------
 # Number of new and relapse cases known to be HIV-positive (black)
 # and number started on ART (blue) compared with estimated number of incident HIV-positive TB cases (red),
 # 2004-2016, 30 high TB/HIV burden countries
@@ -1236,7 +1225,7 @@ inctbhiv_plot <- inctbhiv_data %>%
                               scales = "free_y",
                               ncol = 5) +
 
-                  ggtitle(paste0("Figure 4.20\nNumber of new and relapse cases(a) known to be HIV-positive (black) and\nnumber started on ART (blue) compared with estimated number of incident HIV-positive TB cases (red),\n2004 - ",
+                  ggtitle(paste0("Figure 4.19\nNumber of new and relapse cases(a) known to be HIV-positive (black) and\nnumber started on ART (blue) compared with estimated number of incident HIV-positive TB cases (red),\n2004 - ",
                                report_year-1,
                                ", 30 high TB/HIV burden countries")) +
                   theme_glb.rpt()
@@ -1249,7 +1238,7 @@ inctbhiv_plot <- arrangeGrob(inctbhiv_plot, bottom = textGrob(inctbhiv_foot, x =
 
 
 # Save the plot
-figsave(inctbhiv_plot, inctbhiv_data, "f4_20_inctbhiv_plot_hbc", width=7, height=11)
+figsave(inctbhiv_plot, inctbhiv_data, "f4_19_inctbhiv_plot_hbc", width=7, height=11)
 
 # Clean up (remove any objects with their name containing 'tbhiv')
 rm(list=ls(pattern = "tbhiv"))
@@ -1257,7 +1246,7 @@ rm(list=ls(pattern = "tbhiv"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 4.21   ------
+# Figure 4.20   ------
 # Estimated ART treatment coverage for HIV-positive TB cases
 # (HIV-positive TB patients on ART as a percentage of the estimated incidence of HIV-positive TB)
 # in 2016, 30 high TB/HIV burden countries, WHO regions and globally
@@ -1376,7 +1365,7 @@ coveragehiv_plot <- coveragehiv_data %>%
                     geom_point() +
                     labs(x="",
                          y="Treatment coverage (%)",
-                         title=paste0("Figure 4.21\nEstimated ART treatment coverage for HIV-positive TB cases\n",
+                         title=paste0("Figure 4.20\nEstimated ART treatment coverage for HIV-positive TB cases\n",
                                      "(HIV-positive TB patients on ART as a percentage of the estimated incidence of HIV-positive TB) in ",
                                      report_year - 1,
                                      ",\n30 high TB/HIV burden countries, WHO Regions and globally")) +
@@ -1399,7 +1388,7 @@ if (coveragehiv_nodata_count > 0)
   }
 
 # Save the plot
-figsave(coveragehiv_plot, coveragehiv_data, "f4_21_txcoverage_tbhiv")
+figsave(coveragehiv_plot, coveragehiv_data, "f4_20_txcoverage_tbhiv")
 
 # Clean up (remove any objects with their name starting with 'coveragehiv')
 rm(list=ls(pattern = "^coveragehiv"))
@@ -1407,7 +1396,7 @@ rm(list=ls(pattern = "^coveragehiv"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 4.22   ------
+# Figure 4.21   ------
 # Estimated MDR/RR-TB treatment coverage for MDR/RR-TB
 # (patients started on treatment for MDR-TB as a percentage of the estimated number of MDR/RR-TB cases among notified pulmonary TB cases)
 # in 2016, 30 high MDR-TB burden countries, WHO regions and globally
@@ -1537,7 +1526,7 @@ coveragerr_plot <- coveragerr_data %>%
                     geom_point() +
                     labs(x="",
                          y="Treatment coverage (%)",
-                         title=paste0("Figure 4.22 Estimated MDR/RR-TB treatment coverage for MDR/RR-TB\n",
+                         title=paste0("Figure 4.21 Estimated MDR/RR-TB treatment coverage for MDR/RR-TB\n",
                                      "(patients started on treatment for MDR-TB as a percentage of the estimated number of MDR/RR-TB cases\namong notified pulmonary TB cases) in ",
                                      report_year - 1,
                                      ", 30 high MDR-TB burden countries, WHO Regions and globally")) +
@@ -1560,7 +1549,7 @@ if (coveragerr_nodata_count > 0)
   }
 
 # Save the plot
-figsave(coveragerr_plot, coveragerr_data, "f4_22_txcoverage_drtb")
+figsave(coveragerr_plot, coveragerr_data, "f4_21_txcoverage_drtb")
 
 # Clean up (remove any objects with their name starting with 'coveragerr')
 rm(list=ls(pattern = "^coveragerr"))
@@ -1570,7 +1559,7 @@ rm(list=ls(pattern = "^coveragerr"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 4.23   ------
+# Figure 4.22   ------
 # Treatment outcomes for new and relapse TB cases in 2015,
 # 30 high TB burden countries, WHO regions and globally
 #
@@ -1717,7 +1706,7 @@ txout_plot <- txout_long %>%
 
                       expand_limits(c(0,0)) +
 
-                      ggtitle(paste0("Figure 4.23\nTreatment outcomes for new and relapse TB cases in ",
+                      ggtitle(paste0("Figure 4.22\nTreatment outcomes for new and relapse TB cases in ",
                                      report_year - 2,
                                      ",\n30 high TB burden countries, WHO regions and globally"))
 
@@ -1729,7 +1718,7 @@ txout_plot <- arrangeGrob(txout_plot,
                                          gp = gpar(fontsize = 10)))
 
 
-figsave(txout_plot, txout, "f4_23_outcomes_tb", width=7, height=11) # Designer needs wide data; output portrait mode
+figsave(txout_plot, txout, "f4_22_outcomes_tb", width=7, height=11) # Designer needs wide data; output portrait mode
 
 # Clean up (remove any objects with their name starting with 'txout')
 rm(list=ls(pattern = "^txout"))
@@ -1738,7 +1727,7 @@ rm(list=ls(pattern = "^txout"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 4.24  ------
+# Figure 4.23  ------
 # Treatment outcomes for new and relapse TB cases (absolute numbers), 2000 - 2015,
 # globally and for WHO regions
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1852,7 +1841,7 @@ txoutnum_plot <- arrangeGrob(txoutnum_plot_glob,
                              txoutnum_plot_reg,
                              nrow = 2,
                              ncol = 1,
-                             top = textGrob(label = paste0("Figure 4.24\nTreatment outcomes for new and relapse TB cases(a) (absolute numbers), 2000 - ",
+                             top = textGrob(label = paste0("Figure 4.23\nTreatment outcomes for new and relapse TB cases(a) (absolute numbers), 2000 - ",
                            report_year-2,
                            ", globally\nand for WHO regions."),
                                              x = 0.02,
@@ -1866,7 +1855,7 @@ txoutnum_plot <- arrangeGrob(txoutnum_plot_glob,
 
 
 # Save the plot
-figsave(txoutnum_plot, txoutnum_data, "f4_24_outcomes_absolute", width=7, height=11)
+figsave(txoutnum_plot, txoutnum_data, "f4_23_outcomes_absolute", width=7, height=11)
 
 # Clean up (remove any objects with their name starting 'txout')
 rm(list=ls(pattern = "^txoutnum"))
@@ -1876,7 +1865,7 @@ rm(list=ls(pattern = "^txoutnum"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 4.25   ------
+# Figure 4.24   ------
 # Treatment outcomes for new and relapse TB/HIV cases in 2015,
 # 30 high TB/HIV burden countries, WHO regions and globally
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -2006,19 +1995,19 @@ txtbhivout_plot <- txtbhivout_long %>%
 
                       expand_limits(c(0,0)) +
 
-                      ggtitle(paste0("Figure 4.25\nTreatment outcomes for new and relapse TB/HIV cases in\n",
+                      ggtitle(paste0("Figure 4.24\nTreatment outcomes for new and relapse TB/HIV cases in\n",
                                      report_year - 2,
                                      ", 30 high TB/HIV burden countries, WHO regions and globally"))
 
 
-figsave(txtbhivout_plot, txtbhivout, "f4_25_outcomes_tbhiv", width=7, height=11) # Designer needs wide data; output portrait mode
+figsave(txtbhivout_plot, txtbhivout, "f4_24_outcomes_tbhiv", width=7, height=11) # Designer needs wide data; output portrait mode
 
 # Clean up (remove any objects with their name starting with 'txtbhivout')
 rm(list=ls(pattern = "^txtbhivout"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 4.26   ------
+# Figure 4.25   ------
 # Treatment outcomes for rifampicin-resistant TB cases started on treatment in 2014,
 # 30 high MDR-TB burden countries, WHO regions and globally
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -2152,16 +2141,23 @@ txmdrout_plot <- txmdrout_long %>%
 
                       expand_limits(c(0,0)) +
 
-                      ggtitle(paste0("Figure 4.26\nTreatment outcomes for rifampicin-resistant TB cases\nstarted on treatment in ",
+                      ggtitle(paste0("Figure 4.25\nTreatment outcomes for rifampicin-resistant TB cases\nstarted on treatment in ",
                                      report_year - 3,
                                      ",\n30 high MDR-TB burden countries, WHO regions and globally"))
 
 
-figsave(txmdrout_plot, txmdrout, "f4_26_outcomes_mdr", width=7, height=11) # Designer needs wide data; output portrait mode
+figsave(txmdrout_plot, txmdrout, "f4_25_outcomes_mdr", width=7, height=11) # Designer needs wide data; output portrait mode
 
 # Clean up (remove any objects with their name starting with 'txmdrout')
 rm(list=ls(pattern = "^txmdrout"))
 
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Figure 4.26  (NEW suggested by Dennis and Annabel) ------
+# Treatment outcomes for new and relapse TB cases (2012-2015), new and relapse cases among people living with HIV (2012-2015) and rifampicin-resistant TB cases (2011-2014), globally
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+#  !!!!!!  TO BE DONE !!!!!!!
 
 
 
@@ -2177,7 +2173,7 @@ rm(list=ls(pattern = "^txmdrout"))
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Figure 4.28a  (MAP TRANSFERRED OVER FROM DENNIS FOR THE 2017 REPORT) ------
 # Countries that had used bedaquiline for the treatment of M/XDR–TB as part of expanded access,
-# compassionate use or under normal programmatic conditions by the end of 2016
+# compassionate use or under normal programmatic conditions by the end of June 2017
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 #  !!!!!!  TO BE DONE !!!!!!!
@@ -2187,7 +2183,7 @@ rm(list=ls(pattern = "^txmdrout"))
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Figure 4.28b  (MAP TRANSFERRED OVER FROM DENNIS FOR THE 2017 REPORT) ------
 # Countries that had used delamanid for the treatment of M/XDR–TB as part of expanded access,
-# compassionate use or under normal programmatic conditions by the end of 2016
+# compassionate use or under normal programmatic conditions by the end of June 2017
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 #  !!!!!!  TO BE DONE !!!!!!!
@@ -2196,7 +2192,7 @@ rm(list=ls(pattern = "^txmdrout"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure Box 4.3.1  (Map) ------
+# Figure Box 4.6.1  (Map) ------
 # Percentage of basic management units in which there is community engagement
 # or provision of treatment adherence support, 2016
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -2221,7 +2217,7 @@ comm_data$cat <- cut(comm_data$comm_pct,
 
 # produce the map
 comm_map <- WHOmap.print(comm_data,
-                        paste("Figure Box 4.3.1 Percentage of basic management units in which there is community engagement",
+                        paste("Figure Box 4.6.1\nPercentage of basic management units in which there is community engagement",
                               "\nor provision of treatment adherence support,",
                               report_year-1),
                            "Percentage",
@@ -2235,7 +2231,7 @@ figsave(comm_map,
                iso3,
                comm_pct,
                cat),
-        "f4_box_4_3_1_pct_BMU_community_map")
+        "f4_box_4_6_1_pct_BMU_community_map")
 
 
 
@@ -2362,51 +2358,14 @@ rm(list=ls(pattern = "^hcw"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Chapter 6 ------
+# Chapter 7 ------
 # Universal health coverage, social protection and
 # and addressing social determinants: Implications for TB
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 6.2 (Map) ---------
-# Government spending on health, as a percentage of gross domestic product (GDP), 2015
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-# Get data from external spreadsheet supplied by Ines
-govspend_data <- readWorksheetFromFile(file.path(rdata_folder,
-                                            "Extra data",
-                                            "IGB",
-                                            "Fig6_IGB_28 Jul 2016.xlsx"),
-                                  sheet="6_1_map_data")
-
-# re-calculate the categories
-govspend_data$cat <- cut(govspend_data$prop,
-                     c(0, 4, 6, 10, Inf),
-                     c('<4%', '4-5.9%', '6-9.9%', '>=10%'),
-               right=FALSE)
-
-
-# produce the map
-govspend_map <- WHOmap.print(govspend_data,
-                        paste("Figure 6.2 Government spending on health, as a percentage of gross domestic product (GDP),", report_year-2),
-                           "Percentage\nof GDP",
-                           copyright=FALSE,
-                           colors=c('#edf8e9', '#bae4b3', '#74c476', '#238b45'),
-                           show=FALSE)
-
-figsave(govspend_map,
-        select(govspend_data,
-               iso3,
-               prop,
-               cat),
-        "f6_2_pct_gov_health_spend_map")
-
-# Clean up (remove any objects with their name beginning with 'govspend')
-rm(list=ls(pattern = "^govspend"))
-
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 6.3 (Map) ---------
+# Figure 7.4 (Map) ---------
 # Out-of-pocket expenditures as a percentage of total health expenditures, 2015
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -2436,7 +2395,7 @@ figsave(oop_map,
                iso3,
                percentage,
                cat),
-        "f6_3_pct_oop_map")
+        "f7_4_pct_oop_map")
 
 # Clean up (remove any objects with their name beginning with 'oop')
 rm(list=ls(pattern = "^oop"))
