@@ -317,7 +317,7 @@ print(rdxpolicy_table_html,
                                   <td>Percentage of notified bacteriologically confirmed TB cases with DST results for rifampicin <sup>b</sup></td>
                                   <td>Percentage of notified rifampicin-resistant TB cases with DST results for fluoroquinolones and second-line injectable agents</td>
                               </tr>",
-                              "<tr><td colspan='9'><sup>a</sup>The 48 countries shown in the table are the countries that are in one of more of the three lists of high TB, TB/HIV and MDR-TB burden countries (see also Chapter 2, Figure 2.2 and Table 2.3).<br /><sup>b</sup>Testing in cases with unknown previous treatment history are not included.</td>
+                              "<tr><td colspan='9'><sup>a</sup>The 48 countries shown in the table are the countries that are in one of more of the three lists of high TB, TB/HIV and MDR-TB burden countries (see also Chapter 2, Figure 2.2 and Table 2.3).<br /><sup>b</sup>Testing in cases with unknown previous treatment history is not included.</td>
                               </tr>")
                       )
       )

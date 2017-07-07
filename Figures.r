@@ -854,13 +854,78 @@ rm(list=ls(pattern = "tbhiv"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 4.12  (MAP TRANSFERRED OVER FROM DENNIS FOR THE 2017 REPORT) ------
+# Figure 4.12  (Map) ------
 # Percentage of bacteriologically confirmed TB cases tested for RR-TB, 2016
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-#  !!!!!!  TO BE DONE !!!!!!!
+
+dst_data <- notification %>%
+            filter(year >= report_year - 2) %>%
+            select(iso3,
+                   year,
+                   new_labconf,
+                   c_ret,
+                   rdst_new,
+                   rdst_ret) %>%
+
+              # Calculate coverage of DST percentages
+              mutate(# percent DST among lab-confirmed cases is a bit of a fudge:
+                     # numerator rdst_new + rdst_ret  (ignore cases with unknown treatment history)
+                     # denominator is a bit of a fudge: new_labconf + c_ret
+                     dst_pct = ifelse((NZ(new_labconf) + NZ(c_ret)) == 0 |
+                                         is.na(rdst_new) & is.na(rdst_ret), NA,
+                                       (NZ(rdst_new) + NZ(rdst_ret)) * 100 /
+                                                     (NZ(new_labconf) + NZ(c_ret)))
+                     )
+
+dst_data$cat <- cut(dst_data$dst_pct,
+                     c(0, 10, 40, 80, Inf),
+                     c('0-9', '10-39', '40-79', '>=80'),
+               right=FALSE)
+
+# Find the countries with empty data for latest year and see if there are data for the previous year
+dst_prev_year_data <- dst_data %>%
+                      filter(year == report_year - 1 & is.na(dst_pct)) %>%
+                      select(iso3) %>%
+                      inner_join(filter(dst_data, year == report_year - 2)) %>%
+                      filter(!is.na(dst_pct))
+
+# Now combine into one dataframe, with previous data used if latest year's data are not available
+dst_data_combined <- dst_data %>%
+                     filter(year == report_year - 1) %>%
+                     anti_join(dst_prev_year_data, by= "iso3") %>%
+                     rbind(dst_prev_year_data)
+
+# produce the map
+dst_map <- WHOmap.print(dst_data,
+                        paste("Figure 4.12\nPercentage of bacteriologically confirmed TB cases tested for RR-TB,(a),", report_year-1),
+                         "Percentage",
+                         copyright=FALSE,
+                         colors=brewer.pal(4, "YlOrBr"),
+                         show=FALSE)
 
 
+# Add footnote about testing and also about using earlier data for some countries
+dst_foot <- paste("(a) Among new laboratory confirmed and previously treated cases; cases with unknown previous treatment history are not included.",
+                  report_year - 2,
+                  "data were used for ",
+                  nrow(dst_prev_year_data),
+                  "countries")
+
+
+
+dst_map <- arrangeGrob(dst_map, bottom = textGrob(dst_foot, x = 0, hjust = -0.1, vjust=0.1, gp = gpar(fontsize = 8)))
+
+
+figsave(dst_map,
+        select(dst_data,
+               iso3,
+               dst_pct,
+               cat),
+        "f4_12_dst_map")
+
+# Clean up (remove any objects with their name beginning with 'dst')
+rm(list=ls(pattern = "^dst"))
 
 
 
