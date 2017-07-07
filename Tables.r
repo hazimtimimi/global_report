@@ -153,7 +153,8 @@ rdxpolicy_notifs <- notification %>%
                     filter(year == report_year - 1) %>%
                     select(iso2,
 
-                           c_notified,
+                           new_labconf,
+                           c_ret,
                            c_newinc,
 
                            rdx_data_available,
@@ -163,7 +164,6 @@ rdxpolicy_notifs <- notification %>%
 
                            rdst_new,
                            rdst_ret,
-                           rdst_unk,
 
                            conf_rrmdr,
                            rr_sldst) %>%
@@ -177,10 +177,13 @@ rdxpolicy_notifs <- notification %>%
                                       ifelse(rdx_data_available == 61 & NZ(rdxsurvey_newinc) > 0,
                                              display_num(rdxsurvey_newinc_rdx * 100 /rdxsurvey_newinc), "-")),
 
-
-                           pcnt_dst = ifelse(NZ(c_notified) > 0 & !
-                                               (is.na(rdst_new) & is.na(rdst_ret) & is.na(rdst_unk)),
-                                             display_num((NZ(rdst_new) + NZ(rdst_ret) + NZ(rdst_unk)) * 100 / c_notified),
+                           # percent DST among lab-confirmed cases is a bit of a fudge:
+                           # numerator rdst_new + rdst_ret  (ignore cases with unknown treatment history)
+                           # denominator is a bit of a fudge: new_labconf + c_ret
+                           pcnt_dst = ifelse(NZ(new_labconf) + NZ(c_ret) > 0 & !
+                                               (is.na(rdst_new) & is.na(rdst_ret)),
+                                             display_num((NZ(rdst_new) + NZ(rdst_ret)) * 100 /
+                                                           (NZ(new_labconf) + NZ(c_ret))),
                                              "-"),
 
                            pcnt_sldst = ifelse(NZ(conf_rrmdr)> 0,
@@ -246,22 +249,23 @@ rdxpolicy_pcnt  <- function(x, show_calc = FALSE){
 
 
 # calculate aggregates (% of non-empty responses that are 1 out of the 30 countries in each HB list)
+# For use by Wayne, not to be shown in report table
 rdxpolicy_g_hb_tb <- rdxpolicy_country %>%
                      filter(g_hb_tb == 1) %>%
-                     summarise_each(funs(rdxpolicy_pcnt(.)),
+                     summarise_each(funs(rdxpolicy_pcnt(., show_calc = TRUE)),
                                   one_of(c("wrd_initial_test", "universal_dst"))) %>%
                      mutate(entity="High TB burden countries")
 
 rdxpolicy_g_hb_tbhiv <- rdxpolicy_country %>%
                      filter(g_hb_tbhiv == 1) %>%
-                     summarise_each(funs(rdxpolicy_pcnt(.)),
+                     summarise_each(funs(rdxpolicy_pcnt(., show_calc = TRUE)),
                                   one_of(c("wrd_initial_test", "universal_dst"))) %>%
                      mutate(entity="High TB/HIV burden countries")
 
 
 rdxpolicy_g_hb_mdr <- rdxpolicy_country %>%
                      filter(g_hb_mdr == 1) %>%
-                     summarise_each(funs(rdxpolicy_pcnt(.)),
+                     summarise_each(funs(rdxpolicy_pcnt(., show_calc = TRUE)),
                                   one_of(c("wrd_initial_test", "universal_dst"))) %>%
                      mutate(entity="High MDR burden countries")
 
@@ -269,20 +273,15 @@ rdxpolicy_g_hb_mdr <- rdxpolicy_country %>%
 rdxpolicy_aggs <- rbind(rdxpolicy_g_hb_tb,
                         rdxpolicy_g_hb_tbhiv,
                         rdxpolicy_g_hb_mdr) %>%
-                  # Add placeholder variables to match structure of country list
-                  mutate(g_hb_tb = NA,
-                         g_hb_tbhiv = NA,
-                         g_hb_mdr = NA,
-                         pcnt_wrd = NA,
-                         pcnt_dst = NA,
-                         pcnt_sldst = NA)
+                  # reorder columns for Wayne
+                  select(entity, wrd_initial_test, universal_dst)
 
 
-# Restrict country data to the high burden countries and then append aggregates
+# Restrict country data to the high burden countries
 rdxpolicy_hbcs <- rdxpolicy_country %>%
                   select(-g_whoregion) %>%
-                  filter(g_hb_tb == 1 | g_hb_tbhiv == 1 | g_hb_mdr == 1) %>%
-                  rbind(rdxpolicy_aggs)
+                  filter(g_hb_tb == 1 | g_hb_tbhiv == 1 | g_hb_mdr == 1)
+
 
 
 # Create HTML output
@@ -315,13 +314,21 @@ print(rdxpolicy_table_html,
                                   <td>High MDR-TB burden</td>                                                                    <td>National policy and algorithm indicate a WRD as the initial diagnostic test for all people presumed to have TB</td>
                                   <td>Percentage of notified new and relapse TB cases tested with a WRD as the initial diagnostic test</td>
                                   <td>National policy and algorithm indicate universal access to DST</td>
-                                  <td>Percentage of notified TB cases with DST results for rifampicin</td>
+                                  <td>Percentage of notified bacteriologically confirmed TB cases with DST results for rifampicin <sup>b</sup></td>
                                   <td>Percentage of notified rifampicin-resistant TB cases with DST results for fluoroquinolones and second-line injectable agents</td>
                               </tr>",
-                              "<tr><td colspan='9'><sup>a</sup>The 48 countries shown in the table are the countries that are in one of more of the three lists of high TB, TB/HIV and MDR-TB burden countries (see also Chapter 2, Figure 2.2 and Table 2.3).</td>
+                              "<tr><td colspan='9'><sup>a</sup>The 48 countries shown in the table are the countries that are in one of more of the three lists of high TB, TB/HIV and MDR-TB burden countries (see also Chapter 2, Figure 2.2 and Table 2.3).<br /><sup>b</sup>Testing in cases with unknown previous treatment history are not included.</td>
                               </tr>")
                       )
       )
+
+
+# Export the aggregate stats for Wayne to use
+write.csv(rdxpolicy_aggs,
+          file=paste0(figures_folder, "Tables/t4_3_lab_policy_agg_for_wayne", Sys.Date(), ".csv"),
+          row.names=FALSE,
+          na="")
+
 
 
 # Clean up (remove any objects with their name beginning with 'rdxpolicy')
