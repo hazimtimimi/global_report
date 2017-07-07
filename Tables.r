@@ -175,18 +175,18 @@ rdxpolicy_notifs <- notification %>%
 
                     # Calculate coverage percentages
                     mutate(pcnt_wrd = ifelse(rdx_data_available == 60 & NZ(c_newinc) > 0,
-                                             frmt(newinc_rdx * 100 /c_newinc),
+                                             display_num(newinc_rdx * 100 /c_newinc),
                                       ifelse(rdx_data_available == 61 & NZ(rdxsurvey_newinc) > 0,
-                                             frmt(rdxsurvey_newinc_rdx * 100 /rdxsurvey_newinc), "-")),
+                                             display_num(rdxsurvey_newinc_rdx * 100 /rdxsurvey_newinc), "-")),
 
 
                            pcnt_dst = ifelse(NZ(c_notified) > 0 & !
                                                (is.na(rdst_new) & is.na(rdst_ret) & is.na(rdst_unk)),
-                                             frmt((NZ(rdst_new) + NZ(rdst_ret) + NZ(rdst_unk)) * 100 / c_notified),
+                                             display_num((NZ(rdst_new) + NZ(rdst_ret) + NZ(rdst_unk)) * 100 / c_notified),
                                              "-"),
 
                            pcnt_sldst = ifelse(NZ(conf_rrmdr)> 0,
-                                               frmt(rr_sldst * 100 / conf_rrmdr), "-")
+                                               display_num(rr_sldst * 100 / conf_rrmdr), "-")
 
                            )
 
@@ -290,7 +290,7 @@ rdxpolicy_hbcs <- rdxpolicy_country %>%
 # Create HTML output
 rdxpolicy_table_html <- xtable(rdxpolicy_hbcs)
 
-rdxpolicy_table_filename <- paste0(figures_folder, "Tables/t4_4_lab_policy", Sys.Date(), ".htm")
+rdxpolicy_table_filename <- paste0(figures_folder, "Tables/t4_3_lab_policy", Sys.Date(), ".htm")
 
 cat(paste("<h3>Table 4.3<br />National policies and their implementation to increase access to rapid TB testing and universal DST <sup>a</sup>, ",
           report_year-1,
@@ -325,15 +325,9 @@ print(rdxpolicy_table_html,
                       )
       )
 
-tablecopy("t4_3_xpert_policy")
+tablecopy("t4_3_lab_policy")
 
 # Clean up (remove any objects with their name beginning with 'rdxpolicy')
 rm(list=ls(pattern = "^rdxpolicy"))
-
-stop("
-
-     >>>>>>>>>>
-     Stopping here for testing!
-     <<<<<<<<<<<<")
 
 
