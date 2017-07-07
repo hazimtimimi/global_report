@@ -127,8 +127,6 @@ print(notif_table_html,
                       )
       )
 
-tablecopy("t4_1_notifs_summary")
-
 
 # and now clear up the mess left behind
 rm(list=c("notifs_global", "notifs_summary", "notif_table_html", "notif_table_filename"))
@@ -325,7 +323,6 @@ print(rdxpolicy_table_html,
                       )
       )
 
-tablecopy("t4_3_lab_policy")
 
 # Clean up (remove any objects with their name beginning with 'rdxpolicy')
 rm(list=ls(pattern = "^rdxpolicy"))

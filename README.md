@@ -16,10 +16,9 @@ Make sure you have your version of `set_environment.r` set up and saved in the p
 ```
 This will create a series of folders (or add to them if they are already created) with the following uses:
 
-  * _CPFigs_ These are formatted PDF figures for the country profiles for the graphic designer.
+  * _CPFigs_ These are formatted PDF files for the country profiles for the graphic designer.
   * _FigData_ These are CSV files of the data behind each figure in case specific numbers are needed.
   * _Figs_ These are dated PDF files for sending to the graphic designer.
-  * _Review_ These are the latest tables and figures (along with data) that can be reviewed in one place.
   * _Tables_ These are dated HTM files for sending to the graphic designer.
 
 Then run the following scripts to create the tables, figures and profile figures respectively:

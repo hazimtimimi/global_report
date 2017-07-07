@@ -112,7 +112,6 @@ india_footnote <- "Estimates of TB incidence for India are interim in nature, pe
 
 dir.create(figures_folder, showWarnings = FALSE)
 if(!(file.path(figures_folder, "FigData") %in% list.dirs(figures_folder, recursive=FALSE))){
-  dir.create(file.path(figures_folder, "Review"))
   dir.create(file.path(figures_folder, "FigData"))
   dir.create(file.path(figures_folder, "Figs"))
   dir.create(file.path(figures_folder, "CPFigs"))

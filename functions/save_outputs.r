@@ -33,10 +33,10 @@ figsave <- function(obj, data, name, width=11, height=7){
   #        colormodel="cmyk")
 
   # save PNG for reviewer
-  ggsave(filename=paste0(figures_folder, "/Review/", name, ".png"),
-         plot=obj,
-         width=width,
-         height=height)
+  # ggsave(filename=paste0(figures_folder, "/Review/", name, ".png"),
+  #        plot=obj,
+  #        width=width,
+  #        height=height)
 
   # save data for designer
   write.csv(data,
@@ -44,20 +44,8 @@ figsave <- function(obj, data, name, width=11, height=7){
             row.names=FALSE,
             na="")
 
-  # save data for reviewer
-  out <- xtable(data)
-  print(out,
-        file=paste(figures_folder, "/Review/", name, ".htm", sep=""),
-        type="html")
-
 }
 
-# For saving tables ----
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-tablecopy <- function(table){
-  file.copy(paste0("Tables/", table, Sys.Date(), ".htm"), paste0("Review/", table, ".htm"), overwrite=TRUE)
-}
 
 # For adding an x-axis to orphaned plots ----
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
