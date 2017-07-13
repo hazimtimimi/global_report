@@ -2322,17 +2322,29 @@ rm(list=ls(pattern = "^comm"))
 kids_data <-  strategy %>%
               filter(year==report_year - 1) %>%
               select(iso3,
-                     prevtx_data_available)
+                     country,
+                     prevtx_data_available,
+                     newinc_con04_prevtx,
+                     ptsurvey_newinc,
+                     ptsurvey_newinc_con04_prevtx) %>%
 
-# Assign categories
-kids_data <- within(kids_data, {
+              # Assign categories
+              mutate(cat =
+                        ifelse(prevtx_data_available==0 |
+                                prevtx_data_available==60 & is.na(newinc_con04_prevtx) |
+                                prevtx_data_available==61 & (is.na(ptsurvey_newinc) | is.na(ptsurvey_newinc_con04_prevtx)),
+                              "Number not available",
+                        ifelse(prevtx_data_available==60,"Number available from routine surveillance",
+                        ifelse(prevtx_data_available==61,"Number estimated from a survey" ,NA)))) %>%
 
-  cat <- ifelse(prevtx_data_available==0,"Number not available", NA)
-  cat <- ifelse(prevtx_data_available==60,"Number available from routine surveillance", cat)
-  cat <- ifelse(prevtx_data_available==61,"Number estimated from a survey", cat)
-  cat <- factor(cat)
+              # drop unnecessary variables
+              select(country,
+                     iso3,
+                     cat)
 
-})
+
+kids_data$cat <- factor(kids_data$cat)
+
 
 
 # produce the map
