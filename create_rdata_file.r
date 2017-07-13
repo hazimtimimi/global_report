@@ -59,6 +59,10 @@ save (aggregated_estimates_epi,
       report_country,
       strategy,
       TBHIV_for_aggregates,
+
+      external_indicator_defs,
+      external_indicator_data,
+
       data.date,
       file=paste0("data_",Sys.Date(),".Rdata"))
 

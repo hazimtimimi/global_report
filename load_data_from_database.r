@@ -70,6 +70,10 @@ report_country             <- .fixnamibia(sqlFetch(ch, "view_TME_master_report_c
 strategy                   <- .fixnamibia(sqlFetch(ch, "view_TME_master_strategy"))
 TBHIV_for_aggregates       <- .fixnamibia(sqlFetch(ch, "view_TME_master_TBHIV_for_aggregates"))
 
+# external data views
+external_indicator_defs    <- sqlFetch(ch, "external_indicators.view_indicator_definition")
+external_indicator_data    <- .fixnamibia(sqlFetch(ch, "external_indicators.view_indicator_data"))
+
 close(ch)
 
 # format dr_surveillance to play nicer with the other data.frames
