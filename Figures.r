@@ -956,7 +956,7 @@ rm(list=ls(pattern = "^dst"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 4.15  (NEW MAP FOR 2017 REPORT) ------
+# Figure 4.15  (map) ------
 # Percentage of MDR/RR-TB cases tested for susceptibility to second-line drugs, 2016
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -2434,31 +2434,42 @@ rm(list=ls(pattern = "^hcw"))
 # Out-of-pocket expenditures as a percentage of total health expenditures, 2015
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-# Get data from external spreadsheet supplied by Ines
-oop_data <- readWorksheetFromFile(file.path(rdata_folder,
-                                            "Extra data",
-                                            "IGB",
-                                            "Fig6_IGB_28 Jul 2016.xlsx"),
-                                  sheet="6_3_map_data")
+# Get data from external data views (data downloaded from the World Bank repository)
+oop_data <- external_indicator_data %>%
+            filter(indicator_id == "SH.XPD.OOPC.TO.ZS" )
 
-# re-calculate the categories
-oop_data$cat <- cut(oop_data$percentage,
+# Get the most recent year for which there are data
+oop_year <- oop_data %>%
+            select(year) %>%
+            max()
+
+# Filter the oop data for the latest year
+oop_data <- oop_data %>%
+            filter(year == oop_year) %>%
+            # boil down to bar minimum
+            select(country,
+                   iso3,
+                   value)
+
+# Add the categories
+oop_data$cat <- cut(oop_data$value,
                      c(0, 15.5, 30, 45, Inf),
                      c('<=15%', '16-29%', '30-44%', '>=45%'),
                right=FALSE)
 
 # produce the map
 oop_map <- WHOmap.print(oop_data,
-                        paste("Figure 6.3 Out-of-pocket expenditures as a percentage of total health expenditures,", report_year-2),
+                        paste("Figure 7.4\nOut-of-pocket expenditures as a percentage of total health expenditures,", oop_year),
                            "Percentage",
                            copyright=FALSE,
-                           colors=c('#edf8e9', '#bae4b3', '#74c476', '#238b45'),
+                           colors=brewer.pal(4, "OrRd"),
                            show=FALSE)
 
 figsave(oop_map,
         select(oop_data,
+               country,
                iso3,
-               percentage,
+               value,
                cat),
         "f7_4_pct_oop_map")
 
