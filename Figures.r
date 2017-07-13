@@ -2236,22 +2236,82 @@ rm(list=ls(pattern = "^txmdrout"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 4.28a  (MAP TRANSFERRED OVER FROM DENNIS FOR THE 2017 REPORT) ------
+# Figure 4.28a  (map) ------
 # Countries that had used bedaquiline for the treatment of M/XDR–TB as part of expanded access,
 # compassionate use or under normal programmatic conditions by the end of June 2017
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-#  !!!!!!  TO BE DONE !!!!!!!
+bdq_data <- read.csv(file = paste0(rdata_folder, "bdq.dlm.maps.csv"))
+
+bdq_data <- bdq_data %>%
+            mutate(cat = ifelse(mdrxdr_bdq_used == 1, "Bedaquiline used",
+                         ifelse(mdrxdr_bdq_used == 0, "Bedaquiline not used", NA))) %>%
+
+            # drop unnecessary variables
+            select(country, iso3, cat)
+
+
+bdq_data$cat <- factor(bdq_data$cat)
+
+# produce the map
+bdq_map<- WHOmap.print(bdq_data,
+                        "Figure 4.28a\nCountries that had used bedaquiline for the treatment of M/XDR–TB as part of expanded access,\ncompassionate use or under normal programmatic conditions by the end of June 2017",
+                              "\nTB preventive treatment,",
+                           legend.title = "Country response",
+                           copyright=FALSE,
+                           colors=c("lightgreen", "darkgreen"),
+                           na.label="No response",
+                           show=FALSE)
+
+figsave(bdq_map,
+        bdq_data,
+        "f4_28a_bdq_map")
+
+
+# Clean up (remove any objects with their name beginning with 'bdq')
+rm(list=ls(pattern = "^bdq"))
+
 
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 4.28b  (MAP TRANSFERRED OVER FROM DENNIS FOR THE 2017 REPORT) ------
+# Figure 4.28b  (map) ------
 # Countries that had used delamanid for the treatment of M/XDR–TB as part of expanded access,
 # compassionate use or under normal programmatic conditions by the end of June 2017
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-#  !!!!!!  TO BE DONE !!!!!!!
+
+dlm_data <- read.csv(file = paste0(rdata_folder, "bdq.dlm.maps.csv"))
+
+dlm_data <- dlm_data %>%
+            mutate(cat = ifelse(mdrxdr_dlm_used == 1, "Delamanid used",
+                         ifelse(mdrxdr_dlm_used == 0, "Delamanid not used", NA))) %>%
+
+            # drop unnecessary variables
+            select(country, iso3, cat)
+
+
+dlm_data$cat <- factor(dlm_data$cat)
+
+# produce the map
+dlm_map<- WHOmap.print(dlm_data,
+                        "Figure 4.28b\nCountries that had used delamanid for the treatment of M/XDR–TB as part of expanded access,\ncompassionate use or under normal programmatic conditions by the end of June 2017",
+                              "\nTB preventive treatment,",
+                           legend.title = "Country response",
+                           copyright=FALSE,
+                           colors=c("lightblue", "darkblue"),
+                           na.label="No response",
+                           show=FALSE)
+
+figsave(dlm_map,
+        dlm_data,
+        "f4_28b_dlm_map")
+
+
+# Clean up (remove any objects with their name beginning with 'dlm')
+rm(list=ls(pattern = "^dlm"))
+
+
 
 
 
