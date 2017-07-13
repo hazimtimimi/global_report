@@ -2322,17 +2322,29 @@ rm(list=ls(pattern = "^comm"))
 kids_data <-  strategy %>%
               filter(year==report_year - 1) %>%
               select(iso3,
-                     prevtx_data_available)
+                     country,
+                     prevtx_data_available,
+                     newinc_con04_prevtx,
+                     ptsurvey_newinc,
+                     ptsurvey_newinc_con04_prevtx) %>%
 
-# Assign categories
-kids_data <- within(kids_data, {
+              # Assign categories
+              mutate(cat =
+                        ifelse(prevtx_data_available==0 |
+                                prevtx_data_available==60 & is.na(newinc_con04_prevtx) |
+                                prevtx_data_available==61 & (is.na(ptsurvey_newinc) | is.na(ptsurvey_newinc_con04_prevtx)),
+                              "Number not available",
+                        ifelse(prevtx_data_available==60,"Number available from routine surveillance",
+                        ifelse(prevtx_data_available==61,"Number estimated from a survey" ,NA)))) %>%
 
-  cat <- ifelse(prevtx_data_available==0,"Number not available", NA)
-  cat <- ifelse(prevtx_data_available==60,"Number available from routine surveillance", cat)
-  cat <- ifelse(prevtx_data_available==61,"Number estimated from a survey", cat)
-  cat <- factor(cat)
+              # drop unnecessary variables
+              select(country,
+                     iso3,
+                     cat)
 
-})
+
+kids_data$cat <- factor(kids_data$cat)
+
 
 
 # produce the map
@@ -2394,6 +2406,13 @@ hcw_data <-  hcw_notif_adults %>%
                                         /
                                         (as.numeric(hcw_tot) * c_15plus),
                                         NA)) %>%
+
+                    # filter out dodgy data where the number of HCWs in a country is clearly too low
+                    # Check if logic below still applies in future years !!!!!
+                    mutate(nrr = ifelse(hcw_tot < 1000 &
+                                       e_pop_15plus > 1e6 &
+                                       hcw_tb_infected > 0, NA, nrr)) %>%
+
                     select(iso3,
                            nrr)
 
