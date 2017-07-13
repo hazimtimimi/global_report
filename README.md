@@ -3,16 +3,16 @@
 
 ## Use
 
-Make sure you have your version of `set_environment.r` set up and saved in the project root folder (see notes further below).
+Create a project in RStudio (easiest to call it global_report) and download these files to the root folder of the project. Make sure you have your version of `set_environment.r` set up and saved in the project root folder (see notes further below).
 
 **To create an .RData file from the database, do in R:**
 ```
-> source(create_rdata_file.r)
+> source("create_rdata_file.r")
 ```
 
 **To create tables, figures and maps for the global report, do in R:**
 ```
-> source(create_tables_figures.r)
+> source("create_tables_figures.r")
 ```
 This will create a series of folders (or add to them if they are already created) with the following uses:
 
@@ -24,25 +24,25 @@ This will create a series of folders (or add to them if they are already created
 Then run the following scripts to create the tables, figures and profile figures respectively:
 
 ```
-> source(Tables.r)
-> source(Figures.r)
-> source(profile_figures.r)
+> source("Tables.r")
+> source("Figures.r")
+> source("profile_figures.r")
 ```
 
 **To create CSV files for the web annex tables, do in R:**
 ```
-> source(create_tables_annex_for_web.r)
+> source("create_tables_annex_for_web.r")
 ```
 
 **To re-assemble PDF files for the web annex tables, do in R:**
 ```
-> source(split_rename_PDFs_annex_for_web.r)
+> source("split_rename_PDFs_annex_for_web.r")
 ```
 
 
 ## The set_environment.r file
 
-You need to create this in your root folder to match your local computing environment. It sets up the paths to input and output folders and the connection string to the database (if available).
+You need to create this in your project's root folder to match your local computing environment. It sets up the paths to input and output folders and the connection string to the database (if available).
 
 Here is a template to use:
 
