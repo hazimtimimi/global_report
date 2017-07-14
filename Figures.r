@@ -844,11 +844,120 @@ rm(list=ls(pattern = "tbhiv"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 4.11  (TRANSFERRED OVER FROM DENNIS FOR THE 2017 REPORT) ------
+# Figure 4.11 ------
 # Percentage of bacteriologically confirmed TB cases tested for RR–TB, globally and for WHO regions, 2009–2016
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-#  !!!!!!  TO BE DONE !!!!!!!
+# This one is a bit of a mess. For years up to 2014 (i.e. reporting year 2015),
+# we took the highest value of DST coverage in the surveillance or notification pages.
+# For years 2015 onwards (2016 data collection year onwards) we only use the notification value
+
+dst_notif_data <- notification %>%
+                  filter(year >= 2009) %>%
+                  select(year,
+                         iso3,
+                         g_whoregion,
+                         new_labconf,
+                         c_ret,
+                         rdst_new,
+                         rdst_ret) %>%
+                  mutate(
+                        # denominator is a bit of a fudge: new_labconf + c_ret
+                         dst_denom = ifelse(is.na(new_labconf) & is.na(c_ret), NA,
+                                           (NZ(new_labconf) + NZ(c_ret))),
+                        # numerator
+                        dst_notif_num = ifelse(is.na(rdst_new) & is.na(rdst_ret), NA,
+                                           (NZ(rdst_new) + NZ(rdst_ret)))
+                        )
+
+dst_drs_data <- dr_surveillance %>%
+                filter(year >= 2009 & year < 2015) %>%
+                select(year,
+                       iso3,
+                       dst_rlt_new,
+                       dst_rlt_ret) %>%
+                mutate(
+                      # numerator
+                      dst_drs_num = ifelse(is.na(dst_rlt_new) & is.na(dst_rlt_ret), NA,
+                                           (NZ(dst_rlt_new) + NZ(dst_rlt_ret)))
+                      )
+
+# Link the two data sets
+
+dst_data <- dst_notif_data %>%
+            left_join(dst_drs_data) %>%
+
+            # To calculate the percentage DST coverage we need to identify the greater of the two numerators
+            # Set numerator to NA if the denominator is NA for a country-year
+            mutate(
+                  dst_num = ifelse(NZ(dst_denom) == 0, NA,
+                            ifelse((is.na(dst_notif_num) & !is.na(dst_drs_num)) |
+                                     (NZ(dst_drs_num) >= NZ(dst_notif_num)),
+                                   dst_drs_num,
+                            ifelse((!is.na(dst_notif_num) & is.na(dst_drs_num)) |
+                                     (NZ(dst_notif_num) >= NZ(dst_drs_num)),
+                                   dst_notif_num, NA )))
+            ) %>%
+
+            # Drop unwanted variables
+            select(iso3,
+                   year,
+                   g_whoregion,
+                   dst_num,
+                   dst_denom) %>%
+
+            # Drop rows with empty numerators
+            filter(!is.na(dst_num))
+
+
+dst_global <- dst_data %>%
+              group_by(year) %>%
+              summarise_each(funs(sum(.,na.rm = TRUE)),
+                             dst_num:dst_denom) %>%
+              mutate(entity = "Global") %>%
+              ungroup()
+
+dst_regional <- dst_data %>%
+                group_by(g_whoregion, year) %>%
+                summarise_each(funs(sum(.,na.rm = TRUE)),
+                               dst_num:dst_denom)  %>%
+                # merge with regional names
+                inner_join(who_region_names, by = "g_whoregion") %>%
+                ungroup() %>%
+                select(-g_whoregion)
+
+
+dst_agg <- rbind(dst_regional, dst_global) %>%
+
+           # OK, now you can calculate the percentage coverage
+           mutate( dst_pcnt = dst_num * 100 / dst_denom)
+
+# Change the order
+dst_agg$entity <- factor(dst_agg$entity,
+                             levels = c("Africa", "The Americas", "Eastern Mediterranean", "Europe", "South-East Asia", "Western Pacific", "Global"))
+
+
+# Plot as lines
+dst_plot <- dst_agg %>%
+            ggplot(aes(x=year, y=dst_pcnt, ymin=0)) +
+            geom_line(size=1) +
+
+            facet_wrap( ~ entity, ncol = 4, scales="fixed") +
+            scale_y_continuous(name = "% of cases") +
+            xlab("Year") +
+
+            ggtitle(paste0("Figure 4.11\nPercentage of bacteriologically confirmed TB cases tested for RR–TB, globally and for WHO regions, 2009 - ",
+                         report_year-1)) +
+
+            theme_glb.rpt() +
+            theme(legend.position="top",
+                  legend.title=element_blank())
+
+# Save the plot
+figsave(dst_plot, dst_agg, "f4_11_dst_aggregates")
+
+# Clean up (remove any objects with their name containing 'dst_')
+rm(list=ls(pattern = "dst_"))
 
 
 
@@ -931,7 +1040,7 @@ rm(list=ls(pattern = "^dst"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 4.13  (TRANSFERRED OVER FROM DENNIS FOR THE 2017 REPORT) ------
+# Figure 4.13  (TRANSFERRED OVER FROM DENNIS FOR THE 2017 REPORT) TBD------
 # Global number of MDR/RR-TB cases detected (pink) and number enrolled on MDR-TB treatment (green) 2009–2016,
 # compared with estimates for 2016 of the number of incident cases of MDR/RR-TB (uncertainty interval shown in blue)
 # and the number of MDR/RR-TB cases among notified pulmonary cases (uncertainty interval shown in black)
@@ -944,7 +1053,7 @@ rm(list=ls(pattern = "^dst"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 4.14  (TRANSFERRED OVER FROM DENNIS FOR THE 2017 REPORT) ------
+# Figure 4.14  (TRANSFERRED OVER FROM DENNIS FOR THE 2017 REPORT) TBD ------
 # Number of MDR/RR-TB cases detected (pink) and enrolled on MDR-TB treatment (green) 2009–2016 compared with estimated
 # number of MDR/RR-TB cases among notified pulmonary TB cases in 2016 (uncertainty interval shown in red),
 # 30 high MDR-TB burden countries
@@ -2218,7 +2327,7 @@ rm(list=ls(pattern = "^txmdrout"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 4.26  (NEW suggested by Dennis and Annabel) ------
+# Figure 4.26  (NEW suggested by Dennis and Annabel) TBD ------
 # Treatment outcomes for new and relapse TB cases (2012-2015), new and relapse cases among people living with HIV (2012-2015) and rifampicin-resistant TB cases (2011-2014), globally
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
