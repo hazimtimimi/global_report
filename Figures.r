@@ -2228,12 +2228,37 @@ rm(list=ls(pattern = "^txmdrout"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 4.27  (MAP TRANSFERRED OVER FROM DENNIS FOR THE 2017 REPORT) ------
+# Figure 4.27  (map) ------
 # Countries that had used shorter MDR–TB treatment regimens by the end of 2016
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-#  !!!!!!  TO BE DONE !!!!!!!
+short_data <- notification %>%
+              filter(year == report_year - 1) %>%
+              select(country,
+                     iso3,
+                     mdr_shortreg_used) %>%
+              mutate(cat = ifelse(mdr_shortreg_used == 1, "Shorter MDR–TB\ntreatment regimens used",
+                            ifelse(mdr_shortreg_used == 0, "Not used",
+                            ifelse(mdr_shortreg_used == 3, "Don't know", NA))))
 
+short_data$cat <-factor(short_data$cat)
+
+# produce the map
+short_map<- WHOmap.print(short_data,
+                        paste0("Figure 4.27\nCountries that had used shorter MDR–TB treatment regimens by the end of ", report_year - 1),
+                           legend.title = "Country response",
+                           copyright=FALSE,
+                           brewer.pal(3, "Greens"),
+                           na.label="No response",
+                           show=FALSE)
+
+figsave(short_map,
+        short_data,
+        "f4_27_short_map")
+
+
+# Clean up (remove any objects with their name beginning with 'short')
+rm(list=ls(pattern = "^short"))
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Figure 4.28a  (map) ------
