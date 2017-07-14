@@ -1046,10 +1046,67 @@ rm(list=ls(pattern = "^dst"))
 # and the number of MDR/RR-TB cases among notified pulmonary cases (uncertainty interval shown in black)
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-#  !!!!!!  TO BE DONE !!!!!!!
+rr_data <- dr_derived_variables %>%
+           filter(year >= 2009) %>%
+           select(iso3,
+                  year,
+                  c_rrmdr)
 
+rr_txdata <- notification %>%
+             filter(year >= 2009) %>%
+             select(iso3,
+                    year,
+                    conf_mdr_tx,
+                    unconf_mdr_tx,
+                    conf_rrmdr_tx,
+                    unconf_rrmdr_tx)
 
+# calculate total enrolled on treatment
+rr_txdata$enrolled <- rr_txdata %>%
+                      select(unconf_mdr_tx, conf_mdr_tx, unconf_rrmdr_tx, conf_rrmdr_tx) %>%
+                      sum_of_row()
 
+# Link the two and drop unneeded variables
+rr_data <- rr_data %>%
+           inner_join(rr_txdata) %>%
+           select(iso3,
+                  year,
+                  c_rrmdr,
+                  enrolled)
+
+# Calculate global aggregates and convert sums to thousands
+rr_global <- rr_data %>%
+             group_by(year) %>%
+             summarise_each(funs(sum(.,na.rm = TRUE)/1000),
+                           c_rrmdr:enrolled) %>%
+             ungroup()
+
+# Plot as lines
+rr_plot <-  rr_global %>%
+            ggplot(aes(x=year, y=c_rrmdr, ymin=0)) +
+            geom_line(size=1, colour = "Pink") +
+            geom_line(aes(year, enrolled),
+                      size=1,
+                      colour="Green") +
+
+            scale_y_continuous(name = "Number of cases (thousands)") +
+            xlab("Year") +
+
+            ggtitle(paste0("Figure 4.13\nGlobal number of MDR/RR-TB cases detected (pink) and number enrolled on MDR-TB treatment (green), 2009 - ",
+                         report_year-1,
+                         ",\ncompared with estimates for ",
+                          report_year-1,
+                         " of the number of incident cases of MDR/RR-TB (uncertainty interval shown in blue),\nand the number of MDR/RR-TB cases among notified pulmonary cases (uncertainty interval shown in black)")) +
+
+            theme_glb.rpt() +
+            theme(legend.position="top",
+                  legend.title=element_blank())
+
+# Save the plot
+figsave(rr_plot, rr_global, "f4_13_drtb_detect_enroll_global")
+
+# Clean up (remove any objects with their name beginning with 'rr_')
+rm(list=ls(pattern = "^rr_"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

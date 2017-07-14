@@ -48,8 +48,11 @@ country_groups             <- sqlFetch(ch, "view_country_groups")
 data_codes                 <- sqlFetch(ch, "view_TME_data_codes")
 data_collection            <- .fixnamibia(sqlFetch(ch, "view_TME_master_data_collection"))
 data_dictionary            <- sqlFetch(ch, "view_TME_data_dictionary")
+
+dr_derived_variables       <- .fixnamibia(sqlFetch(ch, "view_dr_derived_variables"))
 dr_surveillance            <- .fixnamibia(sqlFetch(ch, "view_TME_master_dr_surveillance"))
 drs                        <- .fixnamibia(sqlFetch(ch, "view_TME_master_drs"))
+
 estimates_epi              <- .fixnamibia(sqlFetch(ch, "view_TME_estimates_epi"))
 estimates_epi_rawvalues    <- .fixnamibia(sqlFetch(ch, "view_TME_estimates_epi_rawvalues"))
 estimates_drtb             <- .fixnamibia(sqlFetch(ch, "view_TME_estimates_drtb"))
@@ -57,6 +60,7 @@ estimates_drtb_rawvalues   <- .fixnamibia(sqlFetch(ch, "view_TME_estimates_drtb_
 estimates_mdr              <- .fixnamibia(sqlFetch(ch, "view_TME_estimates_mdr"))
 estimates_mdr_in_notified  <- .fixnamibia(sqlFetch(ch, "view_TME_estimates_mdr_in_notified"))
 estimates_population       <- .fixnamibia(sqlFetch(ch, "view_TME_estimates_population"))
+
 finance                    <- .fixnamibia(sqlFetch(ch, "view_TME_master_finance"))
 notification               <- .fixnamibia(sqlFetch(ch, "view_TME_master_notification"))
 notification_exceptions    <- sqlFetch(ch, "view_TME_master_notification_exceptions")
