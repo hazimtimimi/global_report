@@ -2446,12 +2446,157 @@ rm(list=ls(pattern = "^txmdrout"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 4.26  (NEW suggested by Dennis and Annabel) TBD ------
-# Treatment outcomes for new and relapse TB cases (2012-2015), new and relapse cases among people living with HIV (2012-2015) and rifampicin-resistant TB cases (2011-2014), globally
+# Figure 4.26 ------
+# Treatment outcomes for new and relapse TB cases (2012-2015), new and relapse cases among people living with HIV (2012-2015) and rifampicin-resistant TB cases (2012-2014), globally
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-#  !!!!!!  TO BE DONE !!!!!!!
+out_tb_data <- outcomes %>%
+               filter(year >= 2012 & year <= report_year - 2) %>%
+               select(iso2,
+                     year,
+                     contains("newrel_")) %>%
+               # calculate global aggregates
+               group_by(year) %>%
+               summarise_each(funs(sum(., na.rm = TRUE)),
+                              newrel_coh:c_newrel_neval) %>%
+               ungroup()%>%
 
+                # Calculate outcome proportions for plotting as stacked bars
+                mutate(`Treatment success` = ifelse(NZ(newrel_coh) > 0,
+                                                    newrel_succ * 100 / newrel_coh,
+                                                    NA),
+                       Failure = ifelse(NZ(newrel_coh) > 0,
+                                            newrel_fail * 100 / newrel_coh,
+                                            NA),
+                       Died = ifelse(NZ(newrel_coh) > 0,
+                                        newrel_died * 100 / newrel_coh,
+                                        NA),
+                       `Lost to follow-up` = ifelse(NZ(newrel_coh) > 0,
+                                                    newrel_lost * 100 / newrel_coh,
+                                                    NA),
+                       `Not evaluated` = ifelse(NZ(newrel_coh) > 0,
+                                                c_newrel_neval * 100 / newrel_coh,
+                                                NA)) %>%
+
+                # Drop the actual numbers and keep percentages
+                select(-contains("newrel")) %>%
+
+                # Flip into long mode for stacked bar plotting
+                gather("outcome", "percent", 2:6)  %>%
+
+                # Add tx group type
+                mutate(subgroup = "All DS-TB")
+
+
+
+out_hiv_data <- outcomes %>%
+                filter(year >= 2012 & year <= report_year - 2) %>%
+                select(iso2,
+                       year,
+                       contains("tbhiv_")) %>%
+                # calculate global aggregates
+                group_by(year) %>%
+                summarise_each(funs(sum(., na.rm = TRUE)),
+                                tbhiv_coh:c_tbhiv_neval) %>%
+                ungroup() %>%
+
+                # Calculate outcome proportions for plotting as stacked bars
+                mutate(`Treatment success` = ifelse(NZ(tbhiv_coh) > 0,
+                                                    tbhiv_succ * 100 / tbhiv_coh,
+                                                    NA),
+                       Failure = ifelse(NZ(tbhiv_coh) > 0,
+                                            tbhiv_fail * 100 / tbhiv_coh,
+                                            NA),
+                       Died = ifelse(NZ(tbhiv_coh) > 0,
+                                        tbhiv_died * 100 / tbhiv_coh,
+                                        NA),
+                       `Lost to follow-up` = ifelse(NZ(tbhiv_coh) > 0,
+                                                    tbhiv_lost * 100 / tbhiv_coh,
+                                                    NA),
+                       `Not evaluated` = ifelse(NZ(tbhiv_coh) > 0,
+                                                c_tbhiv_neval * 100 / tbhiv_coh,
+                                                NA)) %>%
+
+                # Drop the actual numbers and keep percentages
+                select(-contains("tbhiv")) %>%
+
+                # Flip into long mode for stacked bar plotting
+                gather("outcome", "percent", 2:6)  %>%
+
+                # Add tx group type
+                mutate(subgroup = "DS-TB/HIV")
+
+
+
+out_mdr_data <- outcomes %>%
+                filter(year >= 2012 & year <= report_year - 2) %>%
+                select(iso2,
+                       year,
+                       contains("mdr_")) %>%
+                # calculate global aggregates
+                group_by(year) %>%
+                summarise_each(funs(sum(., na.rm = TRUE)),
+                               mdr_coh:c_mdr_neval) %>%
+                ungroup() %>%
+
+                # Calculate outcome proportions for plotting as stacked bars
+                mutate(`Treatment success` = ifelse(NZ(mdr_coh) > 0,
+                                                    mdr_succ * 100 / mdr_coh,
+                                                    NA),
+                       Failure = ifelse(NZ(mdr_coh) > 0,
+                                            mdr_fail * 100 / mdr_coh,
+                                            NA),
+                       Died = ifelse(NZ(mdr_coh) > 0,
+                                        mdr_died * 100 / mdr_coh,
+                                        NA),
+                       `Lost to follow-up` = ifelse(NZ(mdr_coh) > 0,
+                                                    mdr_lost * 100 / mdr_coh,
+                                                    NA),
+                       `Not evaluated` = ifelse(NZ(mdr_coh) > 0,
+                                                c_mdr_neval * 100 / mdr_coh,
+                                                NA)) %>%
+
+                # Drop the actual numbers and keep percentages
+                select(-contains("mdr")) %>%
+
+                # Flip into long mode for stacked bar plotting
+                gather("outcome", "percent", 2:6)  %>%
+
+                # Add tx group type
+                mutate(subgroup = "MDR/RR-TB")
+
+# Combine the three data frames
+out_data <- rbind(out_tb_data, out_hiv_data, out_mdr_data)
+
+
+# Plot as stacked bars
+out_plot <- out_data %>%
+            ggplot(aes(year,
+                       percent,
+                       fill = outcome)) +
+
+                    #geom_col(position = position_stack(reverse = TRUE)) +
+                    geom_col() +
+                    facet_wrap( ~ subgroup, ncol = 3) +
+                    coord_flip() +
+
+                    theme_glb.rpt() +
+                    scale_fill_manual("", values = outcomes_palette()) +
+                    labs(x="", y="Percentage of cohort (%)") +
+
+                    theme(legend.position="bottom",
+                          panel.grid=element_blank()) +
+
+                    expand_limits(c(0,0)) +
+
+                    ggtitle(paste0("Figure 4.26\nTreatment outcomes for new and relapse TB cases, new and relapse cases among people living with HIV,\nand rifampicin-resistant TB cases, 2012 - ",
+                                   report_year - 2,
+                                   " globally"))
+
+figsave(out_plot, out_data, "f4_26_outcomes_tb_hiv_mdr") # Designer needs wide data; output portrait mode
+
+# Clean up (remove any objects with their name starting with 'out_')
+rm(list=ls(pattern = "^out_"))
 
 
 
