@@ -1040,7 +1040,7 @@ rm(list=ls(pattern = "^dst"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 4.13  (TRANSFERRED OVER FROM DENNIS FOR THE 2017 REPORT) TBD------
+# Figure 4.13 ------
 # Global number of MDR/RR-TB cases detected (pink) and number enrolled on MDR-TB treatment (green) 2009–2016,
 # compared with estimates for 2016 of the number of incident cases of MDR/RR-TB (uncertainty interval shown in blue)
 # and the number of MDR/RR-TB cases among notified pulmonary cases (uncertainty interval shown in black)
@@ -1110,14 +1110,76 @@ rm(list=ls(pattern = "^rr_"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 4.14  (TRANSFERRED OVER FROM DENNIS FOR THE 2017 REPORT) TBD ------
+# Figure 4.14 ------
 # Number of MDR/RR-TB cases detected (pink) and enrolled on MDR-TB treatment (green) 2009–2016 compared with estimated
 # number of MDR/RR-TB cases among notified pulmonary TB cases in 2016 (uncertainty interval shown in red),
 # 30 high MDR-TB burden countries
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-#  !!!!!!  TO BE DONE !!!!!!!
+rr_30hbc <- country_group_membership %>%
+               filter(group_type == "g_hb_mdr" & group_name == 1) %>%
+               select(iso2)
 
+
+rr_data <- dr_derived_variables %>%
+           filter(year >= 2009) %>%
+           select(country,
+                  iso2,
+                  year,
+                  c_rrmdr)
+
+rr_txdata <- notification %>%
+             filter(year >= 2009) %>%
+             select(iso2,
+                    year,
+                    conf_mdr_tx,
+                    unconf_mdr_tx,
+                    conf_rrmdr_tx,
+                    unconf_rrmdr_tx)  %>%
+             # restrict to the 30 high burden countries
+             inner_join(rr_30hbc)
+
+# calculate total enrolled on treatment
+rr_txdata$enrolled <- rr_txdata %>%
+                      select(unconf_mdr_tx, conf_mdr_tx, unconf_rrmdr_tx, conf_rrmdr_tx) %>%
+                      sum_of_row()
+
+# Link the two and drop unneeded variables
+rr_data <- rr_data %>%
+           inner_join(rr_txdata) %>%
+           select(country,
+                  year,
+                  c_rrmdr,
+                  enrolled)
+
+# Plot as lines
+rr_plot <-  rr_data %>%
+            ggplot(aes(x=year, y=c_rrmdr, ymin=0)) +
+            geom_line(size=1, colour = "Pink") +
+            geom_line(aes(year, enrolled),
+                      size=1,
+                      colour="Green") +
+
+            facet_wrap( ~ country, scales="free_y", ncol = 5) +
+
+            scale_y_continuous(name = "Number of cases") +
+            xlab("Year") +
+
+            ggtitle(paste0("Figure 4.14\nNumber of MDR/RR-TB cases detected (pink) and enrolled on MDR-TB treatment\n(green), 2009 - ",
+                         report_year-1,
+                         ", compared with estimates for ",
+                          report_year-1,
+                         " of the \nnumber of MDR/RR-TB cases among notified pulmonary cases (uncertainty interval\nshown in red), 30 high MDR-TB burden countries")) +
+
+            theme_glb.rpt() +
+            theme(legend.position="top",
+                  legend.title=element_blank())
+
+# Save the plot
+figsave(rr_plot, rr_data, "f4_14_drtb_detect_enroll_hbc", width=7, height=11)
+
+# Clean up (remove any objects with their name beginning with 'rr_')
+rm(list=ls(pattern = "^rr_"))
 
 
 
