@@ -239,6 +239,7 @@ rm(list=ls(pattern = "^agesex"))
 kids_data <- notification %>%
              filter(year >= report_year - 2) %>%
              select(iso3,
+                    country,
                     year,
                     c_new_014,
                     newrel_m15plus,
@@ -302,6 +303,7 @@ kids_map <- arrangeGrob(kids_map, bottom = textGrob(kids_foot, x = 0, hjust = -0
 figsave(kids_map,
         select(kids_data_combined,
                          iso3,
+                         country,
                          kids_pct,
                          cat),
         "f4_3_pct_children_map")
@@ -424,6 +426,7 @@ rm(list=ls(pattern = "^bacconf"))
 bacconf_data <- notification %>%
                 filter(year  >= report_year - 2) %>%
                 select(iso3,
+                       country,
                        year,
                       new_labconf, new_clindx,
                       ret_rel_labconf, ret_rel_clindx)
@@ -491,6 +494,7 @@ bacconf_map <- arrangeGrob(bacconf_map, bottom = textGrob(bacconf_foot, x = 0, h
 figsave(bacconf_map,
         select(bacconf_data_combined,
                          iso3,
+                         country,
                          bacconf_pct,
                          cat),
         "f4_5_pct_bacconf_map")
@@ -508,6 +512,7 @@ rm(list=ls(pattern = "^bacconf"))
 rdxpolicy_data <- notification %>%
                     filter(year == report_year - 1) %>%
                     select(iso3,
+                           country,
                            c_newinc,
                            rdx_data_available,
                            newinc_rdx,
@@ -538,6 +543,7 @@ rdxpolicy_map <- WHOmap.print(rdxpolicy_data,
 figsave(rdxpolicy_map,
         select(rdxpolicy_data,
                          iso3,
+                         country,
                          pcnt_wrd,
                          cat),
         "f4_6_pct_wrd_map")
@@ -555,6 +561,7 @@ rm(list=ls(pattern = "^rdxpolicy"))
 ep_data <- notification %>%
                 filter(year  >= report_year - 2) %>%
                 select(iso3,
+                       country,
                        year,
 					  new_labconf, new_clindx, new_ep,
                       ret_rel_labconf, ret_rel_clindx, ret_rel_ep)
@@ -621,6 +628,7 @@ ep_map <- arrangeGrob(ep_map, bottom = textGrob(ep_foot, x = 0, hjust = -0.1, vj
 figsave(ep_map,
         select(ep_data_combined,
                          iso3,
+                         country,
                          ep_pct,
                          cat),
         "f4_7_pct_ep_map")
@@ -715,6 +723,7 @@ rm(list=ls(pattern = "^hivstatus"))
 hivstatus_data <- notification %>%
                   filter(year == report_year - 1) %>%
                   select(iso3,
+                         country,
                          c_newinc,
                          newrel_hivtest) %>%
 
@@ -750,6 +759,7 @@ hivstatus_map <- arrangeGrob(hivstatus_map, bottom = textGrob(hivstatus_foot, x 
 figsave(hivstatus_map,
         select(hivstatus_data,
                          iso3,
+                         country,
                          hivstatus_pct,
                          cat),
         "f4_9_pct_HIV_status_map")
@@ -971,6 +981,7 @@ rm(list=ls(pattern = "dst_"))
 dst_data <- notification %>%
             filter(year >= report_year - 2) %>%
             select(iso3,
+                   country,
                    year,
                    new_labconf,
                    c_ret,
@@ -1029,6 +1040,7 @@ dst_map <- arrangeGrob(dst_map, bottom = textGrob(dst_foot, x = 0, hjust = -0.1,
 figsave(dst_map,
         select(dst_data,
                iso3,
+               country,
                dst_pct,
                cat),
         "f4_12_dst_map")
@@ -1191,6 +1203,7 @@ rm(list=ls(pattern = "^rr_"))
 sldst_data <- notification %>%
               filter(year == report_year - 1) %>%
               select(iso3,
+                     country,
                      conf_rrmdr,
                      rr_sldst) %>%
 
@@ -1217,6 +1230,7 @@ sldst_map <- WHOmap.print(sldst_data,
 figsave(sldst_map,
         select(sldst_data,
                          iso3,
+                         country,
                          pcnt_sldst,
                          cat),
         "f4_15_pct_sldst_map")
@@ -2807,7 +2821,7 @@ kids_data$cat <- factor(kids_data$cat)
 
 # produce the map
 kids_map <- WHOmap.print(kids_data,
-                        paste("Figure 5.1\nAvailability of data on the number number of children aged <5 years who were\nhousehold contacts of bacteriologically confirmed pulmonary TB cases and were started on",
+                        paste("Figure 5.1\nAvailability of data on the number of children aged <5 years who were\nhousehold contacts of bacteriologically confirmed pulmonary TB cases and were started on",
                               "\nTB preventive treatment,",
                               report_year-1),
                            legend.title = "Country response",
