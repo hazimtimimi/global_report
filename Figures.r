@@ -820,9 +820,10 @@ rm(list=ls(pattern = "^hivstatus"))
 
 
 hivstatus_data <- notification %>%
-                  filter(year == report_year - 1) %>%
+                  filter(year >= report_year - 2) %>%
                   select(iso3,
                          country,
+                         year,
                          c_newinc,
                          newrel_hivtest) %>%
 
@@ -831,24 +832,41 @@ hivstatus_data <- notification %>%
                                                 newrel_hivtest * 100 / c_newinc))
 
 
-
 hivstatus_data$cat <- cut(hivstatus_data$hivstatus_pct,
                      c(0, 25, 50, 75, Inf),
                      c('0-24.9', '25-49.9', '50-74.9', '>=75'),
                right=FALSE)
 
 
+# Find the countries with empty data for latest year and see if there are data for the previous year
+hivstatus_prev_year_data <- hivstatus_data %>%
+                           filter(year == report_year - 1 & is.na(hivstatus_pct)) %>%
+                           select(iso3) %>%
+                           inner_join(filter(hivstatus_data, year == report_year - 2)) %>%
+                           filter(!is.na(hivstatus_pct))
+
+# Now combine into one dataframe, with previous data used if latest year's data are not available
+hivstatus_data_combined <- hivstatus_data %>%
+                          filter(year == report_year - 1) %>%
+                          anti_join(hivstatus_prev_year_data, by= "iso3") %>%
+                          rbind(hivstatus_prev_year_data)
+
+
 # produce the map
-hivstatus_map <- WHOmap.print(hivstatus_data,
-                        paste("Figure 4.9\nPercentage of new and relapse TB cases with documented HIV status(a),", report_year-1),
+hivstatus_map <- WHOmap.print(hivstatus_data_combined,
+                        paste("Figure 4.9\nPercentage of new and relapse TB cases with documented HIV status,", report_year-1, "(a)"),
                            "Percentage",
                            copyright=FALSE,
                            colors=brewer.pal(4, "BuGn"),
                            show=FALSE)
 
 
-# Add footnote about Russia
-hivstatus_foot <- "(a) Data for the Russian Federation are for new TB patients in the civilian sector only"
+# Add footnote about using earlier data for some countries
+hivstatus_foot <- paste("(a)",
+                      report_year - 2,
+                      "data were used for ",
+                      nrow(hivstatus_prev_year_data),
+                      "countries.")
 
 
 
@@ -856,7 +874,7 @@ hivstatus_map <- arrangeGrob(hivstatus_map, bottom = textGrob(hivstatus_foot, x 
 
 
 figsave(hivstatus_map,
-        select(hivstatus_data,
+        select(hivstatus_data_combined,
                          iso3,
                          country,
                          hivstatus_pct,
