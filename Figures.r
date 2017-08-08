@@ -1584,9 +1584,8 @@ coverage_30hbc <- country_group_membership %>%
 
 coverage_inc_country <- coverage_inc_country %>%
                         inner_join(coverage_30hbc) %>%
-                       #add markers for Bangladesh and India footnotes
-                       mutate(entity = ifelse(entity == "Bangladesh", "Bangladesh(a)",
-                                              ifelse(entity == "India", "India(b)", entity)))
+                       #add marker for India footnote
+                       mutate(entity = ifelse(entity == "India", "India(a)", entity))
 
 
 coverage_country <- notification %>%
@@ -1665,8 +1664,6 @@ coverage_plot <- coverage_data %>%
 
 # Add footnotes
 coverage_footnote <- paste("(a)",
-                           bangladesh_footnote,
-                           "\n(b)",
                            india_footnote)
 # If there are countries with no data then mention it in the footnotes
 if (coverage_nodata_count > 0)
