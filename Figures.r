@@ -820,9 +820,10 @@ rm(list=ls(pattern = "^hivstatus"))
 
 
 hivstatus_data <- notification %>%
-                  filter(year == report_year - 1) %>%
+                  filter(year >= report_year - 2) %>%
                   select(iso3,
                          country,
+                         year,
                          c_newinc,
                          newrel_hivtest) %>%
 
@@ -831,24 +832,41 @@ hivstatus_data <- notification %>%
                                                 newrel_hivtest * 100 / c_newinc))
 
 
-
 hivstatus_data$cat <- cut(hivstatus_data$hivstatus_pct,
                      c(0, 25, 50, 75, Inf),
                      c('0-24.9', '25-49.9', '50-74.9', '>=75'),
                right=FALSE)
 
 
+# Find the countries with empty data for latest year and see if there are data for the previous year
+hivstatus_prev_year_data <- hivstatus_data %>%
+                           filter(year == report_year - 1 & is.na(hivstatus_pct)) %>%
+                           select(iso3) %>%
+                           inner_join(filter(hivstatus_data, year == report_year - 2)) %>%
+                           filter(!is.na(hivstatus_pct))
+
+# Now combine into one dataframe, with previous data used if latest year's data are not available
+hivstatus_data_combined <- hivstatus_data %>%
+                          filter(year == report_year - 1) %>%
+                          anti_join(hivstatus_prev_year_data, by= "iso3") %>%
+                          rbind(hivstatus_prev_year_data)
+
+
 # produce the map
-hivstatus_map <- WHOmap.print(hivstatus_data,
-                        paste("Figure 4.9\nPercentage of new and relapse TB cases with documented HIV status(a),", report_year-1),
+hivstatus_map <- WHOmap.print(hivstatus_data_combined,
+                        paste("Figure 4.9\nPercentage of new and relapse TB cases with documented HIV status,", report_year-1, "(a)"),
                            "Percentage",
                            copyright=FALSE,
                            colors=brewer.pal(4, "BuGn"),
                            show=FALSE)
 
 
-# Add footnote about Russia
-hivstatus_foot <- "(a) Data for the Russian Federation are for new TB patients in the civilian sector only"
+# Add footnote about using earlier data for some countries
+hivstatus_foot <- paste("(a)",
+                      report_year - 2,
+                      "data were used for ",
+                      nrow(hivstatus_prev_year_data),
+                      "countries.")
 
 
 
@@ -856,7 +874,7 @@ hivstatus_map <- arrangeGrob(hivstatus_map, bottom = textGrob(hivstatus_foot, x 
 
 
 figsave(hivstatus_map,
-        select(hivstatus_data,
+        select(hivstatus_data_combined,
                          iso3,
                          country,
                          hivstatus_pct,
@@ -1039,11 +1057,14 @@ dst_regional <- dst_data %>%
 dst_agg <- rbind(dst_regional, dst_global) %>%
 
            # OK, now you can calculate the percentage coverage
-           mutate( dst_pcnt = dst_num * 100 / dst_denom)
+           mutate( dst_pcnt = dst_num * 100 / dst_denom) %>%
+
+           # Add a footnote call to Africa
+           mutate( entity = ifelse(entity == "Africa", "Africa(b)", entity))
 
 # Change the order
 dst_agg$entity <- factor(dst_agg$entity,
-                             levels = c("Africa", "The Americas", "Eastern Mediterranean", "Europe", "South-East Asia", "Western Pacific", "Global"))
+                             levels = c("Africa(b)", "The Americas", "Eastern Mediterranean", "Europe", "South-East Asia", "Western Pacific", "Global"))
 
 
 # Plot as lines
@@ -1053,14 +1074,21 @@ dst_plot <- dst_agg %>%
 
             facet_wrap( ~ entity, ncol = 4, scales="fixed") +
             scale_y_continuous(name = "% of cases") +
+            expand_limits(y=c(0,100)) +
             xlab("Year") +
 
             ggtitle(paste0("Figure 4.11\nPercentage of bacteriologically confirmed TB cases tested for RR–TB, globally and for WHO regions, 2009 - ",
-                         report_year-1)) +
+                         report_year-1,
+                         "(a)")) +
 
             theme_glb.rpt() +
             theme(legend.position="top",
                   legend.title=element_blank())
+
+# Add explanatory footnotes
+dst_footnote <- "(a) Among new laboratory confirmed and retreatment cases; test results in cases with unknown previous history are not included.\n(b) The spike in coverage in the African Region in 2015 is due to the reporting of laboratory results for many cases in South Africa differentiated by treatment history."
+
+dst_plot <- arrangeGrob(dst_plot, bottom = textGrob(dst_footnote, x = 0, hjust = -0.1, vjust=0.1, gp = gpar(fontsize = 9)))
 
 # Save the plot
 figsave(dst_plot, dst_agg, "f4_11_dst_aggregates")
