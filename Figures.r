@@ -433,17 +433,30 @@ bacconf_data <- notification %>%
                                                       # new variables
                                                       (new_labconf + new_clindx + ret_rel_labconf + ret_rel_clindx))) %>%
 
-                # Adjust calculation for EUR pre-2013
-                 mutate(bacconf_pct_numerator = ifelse(year < 2013 & g_whoregion == 'EUR',
+                # Adjust calculation for EUR pre-2013 (applies to years 2002 - 2012)
+                 mutate(bacconf_pct_numerator = ifelse(between(year, 2002, 2012) & g_whoregion == 'EUR',
                                                       # old variables, but using new_labconf
                                                       new_labconf,
                                                       # otherwise keep calculation from previous step
                                                       bacconf_pct_numerator),
-                        bacconf_pct_denominator = ifelse(year < 2013 & g_whoregion == 'EUR',
+                        bacconf_pct_denominator = ifelse(between(year, 2002, 2012) & g_whoregion == 'EUR',
                                                       # old variables
                                                       (new_sp + new_sn + new_su),
                                                       # otherwise keep calculation from previous step
-                                                      bacconf_pct_denominator)) %>%
+                                                      bacconf_pct_denominator),
+
+                        # Finally deal with EUR 2000 and 2001 numerator
+                        bacconf_pct_numerator = ifelse(between(year, 2000, 2001) & g_whoregion == 'EUR',
+                                                      # old variables
+                                                      new_sp,
+                                                      # otherwise keep calculation from previous step
+                                                      bacconf_pct_numerator),
+                        bacconf_pct_denominator = ifelse(between(year, 2000, 2001) & g_whoregion == 'EUR',
+                                                      # old variables
+                                                      (new_sp + new_sn + new_su),
+                                                      # otherwise keep calculation from previous step
+                                                      bacconf_pct_denominator)
+                        ) %>%
 
                 # merge with regional names
                 inner_join(who_region_names, by = "g_whoregion") %>%
@@ -482,7 +495,7 @@ bacconf_plot <- bacconf_data %>%
                 ggplot(aes(x=year, y=bacconf_pct)) +
                   geom_line(size=1) +
                   scale_y_continuous(name = "% bacteriologically confirmed") +
-                  expand_limits(y=c(20,80)) +
+                  expand_limits(y=c(0,100)) +
                   xlab("Year") +
                   facet_wrap( ~ entity, ncol = 4) +
                   ggtitle(paste0("Figure 4.4\nPercentage of new and relapse(a) pulmonary TB cases with bacteriological confirmation, 2000 - ",
@@ -493,7 +506,7 @@ bacconf_plot <- bacconf_data %>%
                         legend.title=element_blank())
 
 # Add footnote
-bacconf_foot <- "(a) The calculation is for new pulmonary cases in years prior to 2013 based on smear results, except for the European Region\nwhere data on confirmation by culture was also available."
+bacconf_foot <- "(a) The calculation is for new pulmonary cases in years prior to 2013 based on smear results, except for the European Region\nwhere data on confirmation by culture was also available for the period 2002 - 2012."
 
 bacconf_plot <- arrangeGrob(bacconf_plot, bottom = textGrob(bacconf_foot, x = 0, hjust = -0.1, vjust=0.1, gp = gpar(fontsize = 10)))
 
