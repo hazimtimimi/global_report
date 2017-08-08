@@ -1414,9 +1414,10 @@ rm(list=ls(pattern = "^rr_"))
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 sldst_data <- notification %>%
-              filter(year == report_year - 1) %>%
+              filter(year >= report_year - 2) %>%
               select(iso3,
                      country,
+                     year,
                      conf_rrmdr,
                      rr_sldst) %>%
 
@@ -1430,18 +1431,42 @@ sldst_data$cat <- cut(sldst_data$pcnt_sldst,
                           c('0-24.9', '25-49.9', '50-74.9', '>=75'),
                           right=FALSE)
 
+# Find the countries with empty data for latest year and see if there are data for the previous year
+sldst_prev_year_data <- sldst_data %>%
+                         filter(year == report_year - 1 & is.na(pcnt_sldst)) %>%
+                         select(iso3) %>%
+                         inner_join(filter(sldst_data, year == report_year - 2)) %>%
+                         filter(!is.na(pcnt_sldst))
+
+# Now combine into one dataframe, with previous data used if latest year's data are not available
+sldst_data_combined <- sldst_data %>%
+                        filter(year == report_year - 1) %>%
+                        anti_join(sldst_prev_year_data, by= "iso3") %>%
+                        rbind(sldst_prev_year_data)
+
 
 # produce the map
-sldst_map <- WHOmap.print(sldst_data,
+sldst_map <- WHOmap.print(sldst_data_combined,
                           paste0("Figure 4.15\nPercentage of MDR/RR-TB cases tested for susceptibility to second-line drugs, ",
-                                    report_year-1),
+                                    report_year-1,
+                                  "(a)"),
                                  "Percentage",
                                  copyright=FALSE,
                                  colors=brewer.pal(4, "Blues"),
                                  show=FALSE)
 
+# Add footnote about using earlier data for some countries
+sldst_foot <- paste("(a)",
+                      report_year - 2,
+                      "data were used for ",
+                      nrow(sldst_prev_year_data),
+                      "countries.")
+
+sldst_map <- arrangeGrob(sldst_map, bottom = textGrob(sldst_foot, x = 0, hjust = -0.1, vjust=0.1, gp = gpar(fontsize = 10)))
+
+
 figsave(sldst_map,
-        select(sldst_data,
+        select(sldst_data_combined,
                          iso3,
                          country,
                          pcnt_sldst,
