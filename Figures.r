@@ -1990,6 +1990,164 @@ rm(list=ls(pattern = "^coveragerr"))
 
 
 
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Figure 4.21 (alternative)  ------
+# Estimated MDR/RR-TB treatment coverage for MDR/RR-TB
+# (patients started on treatment for MDR-TB as a percentage of the estimated incidence of MDR/RR-TB)
+# in 2016, 30 high MDR-TB burden countries, WHO regions and globally
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+
+coveragerr_inc_country <- estimates_drtb_rawvalues %>%
+                          filter(year == report_year - 1) %>%
+                          select(entity = country,
+                                  iso2,
+                                  e_inc_rr_num,
+                                  e_inc_rr_num_lo,
+                                  e_inc_rr_num_hi)  %>%
+                          # shorten long country names
+                          get_names_for_tables( col = "entity")
+
+# Filter the country list down to high burden ones
+coveragerr_30hbc <-  country_group_membership %>%
+                     filter(group_type == "g_hb_mdr" & group_name == 1) %>%
+                     select(iso2)
+
+
+coveragerr_inc_country <- coveragerr_inc_country %>%
+                          inner_join(coveragerr_30hbc)
+
+coveragerr_country <-  notification %>%
+                       filter(year == report_year - 1) %>%
+                       select(iso2,
+                              unconf_rrmdr_tx,
+                              conf_rrmdr_tx)
+
+coveragerr_country$rrmdr_tx <- sum_of_row(coveragerr_country[c("unconf_rrmdr_tx", "conf_rrmdr_tx")] )
+
+
+
+coveragerr_country <- coveragerr_country %>%
+                       inner_join(coveragerr_inc_country) %>%
+                       mutate(c_rr_coverage = rrmdr_tx * 100 / e_inc_rr_num,
+                              c_rr_coverage_lo = rrmdr_tx * 100  / e_inc_rr_num_hi,
+                              c_rr_coverage_hi = rrmdr_tx * 100  / e_inc_rr_num_lo,
+                              # highlight countries with no data
+                              entity = ifelse(is.na(rrmdr_tx), paste0(entity, "*"), entity )) %>%
+                       select(entity,
+                              c_rr_coverage,
+                              c_rr_coverage_lo,
+                              c_rr_coverage_hi) %>%
+                       arrange(desc(c_rr_coverage))
+
+# Calculate how many countries highlighted as having no data
+coveragerr_nodata_count <- coveragerr_country %>%
+                            filter(grepl("[*]$", entity)) %>%
+                            nrow()
+
+
+coveragerr_inc_region <- aggregated_estimates_drtb_rawvalues %>%
+                          filter(year == report_year - 1 & group_type == "g_whoregion") %>%
+                          select(g_whoregion = group_name,
+                                  e_inc_rr_num,
+                                  e_inc_rr_num_lo,
+                                  e_inc_rr_num_hi)
+
+coveragerr_region <- notification %>%
+                      filter(year == report_year - 1) %>%
+                      group_by(g_whoregion) %>%
+                      summarise_each(funs(sum(., na.rm = TRUE)),
+                                     unconf_rrmdr_tx, conf_rrmdr_tx) %>%
+                      mutate(rrmdr_tx = unconf_rrmdr_tx +  conf_rrmdr_tx) %>%
+
+                      # merge with estimates and calculate treatment coverage
+                      inner_join(coveragerr_inc_region) %>%
+                       mutate(c_rr_coverage = rrmdr_tx * 100 / e_inc_rr_num,
+                              c_rr_coverage_lo = rrmdr_tx * 100  / e_inc_rr_num_hi,
+                              c_rr_coverage_hi = rrmdr_tx * 100  / e_inc_rr_num_lo) %>%
+
+                      # merge with regional names and simplify
+                      inner_join(who_region_names, by = "g_whoregion") %>%
+                      select(entity,
+                              c_rr_coverage,
+                              c_rr_coverage_lo,
+                              c_rr_coverage_hi)  %>%
+                      arrange(desc(c_rr_coverage))
+
+
+coveragerr_inc_global <- aggregated_estimates_drtb_rawvalues %>%
+                         filter(year == report_year - 1 & group_type == "global") %>%
+                         select(e_inc_rr_num,
+                                e_inc_rr_num_lo,
+                                e_inc_rr_num_hi)%>%
+                         mutate(entity = "Global")
+
+
+coveragerr_global <- notification %>%
+                      filter(year == report_year - 1) %>%
+                      summarise_each(funs(sum(., na.rm = TRUE)),
+                                     unconf_rrmdr_tx, conf_rrmdr_tx) %>%
+                      mutate(rrmdr_tx = unconf_rrmdr_tx +  conf_rrmdr_tx,
+                             entity = "Global") %>%
+
+                      # merge with estimates and calculate treatment coverage
+                      inner_join(coveragerr_inc_global) %>%
+                      mutate(c_rr_coverage = rrmdr_tx * 100 / e_inc_rr_num,
+                              c_rr_coverage_lo = rrmdr_tx * 100  / e_inc_rr_num_hi,
+                              c_rr_coverage_hi = rrmdr_tx * 100  / e_inc_rr_num_lo) %>%
+                      select(entity,
+                              c_rr_coverage,
+                              c_rr_coverage_lo,
+                              c_rr_coverage_hi)
+
+# Create dummy records so can see a horizontal line in the output to separate countries, regions and global parts
+coveragerr_dummy1 <- data.frame(entity = "-----", c_rr_coverage = NA, c_rr_coverage_lo = 0, c_rr_coverage_hi = 100)
+coveragerr_dummy2 <- data.frame(entity = "------", c_rr_coverage = NA, c_rr_coverage_lo = 0, c_rr_coverage_hi = 100)
+
+# Create combined dataframe in order of countries then regional and global estimates
+coveragerr_data <- rbind(coveragerr_country, coveragerr_dummy1, coveragerr_region, coveragerr_dummy2, coveragerr_global)
+
+# The dataframe is in the order I want, so make entity an ordered factor based on
+# what I already have. That way ggplot will not reorder by entity name
+# But I need to reverse order for plotting
+
+coveragerr_data$entity <- factor(coveragerr_data$entity, levels = rev(coveragerr_data$entity))
+
+
+# plot as horizontal error bars
+coveragerr_plot <- coveragerr_data %>%
+                    ggplot(aes(x=entity,
+                               y=c_rr_coverage)) +
+                    geom_point() +
+                    labs(x="",
+                         y="Treatment coverage (%)",
+                         title=paste0("Figure 4.21 (alternative) Estimated MDR/RR-TB treatment coverage for MDR/RR-TB\n",
+                                     "(patients started on treatment for MDR-TB as a percentage of the estimated incidence of MDR/RR-TB\nin ",
+                                     report_year - 1,
+                                     ", 30 high MDR-TB burden countries, WHO Regions and globally")) +
+                    geom_pointrange(aes(ymin=c_rr_coverage_lo,
+                                        ymax=c_rr_coverage_hi)) +
+                    theme_glb.rpt() +
+                    theme(plot.title = element_text(hjust = 0)) +
+                    expand_limits(y=0) +
+                    coord_flip()
+
+# If there are countries with no data then add a footnote
+if (coveragerr_nodata_count > 0)
+  {
+  coveragerr_plot <- arrangeGrob(coveragerr_plot,
+                                bottom = textGrob("* No data",
+                                               x = 0,
+                                               hjust = -0.1,
+                                               vjust=0,
+                                               gp = gpar(fontsize = 10)))
+  }
+
+# Save the plot
+figsave(coveragerr_plot, coveragerr_data, "f4_21_txcoverage_drtb_alternative")
+
+# Clean up (remove any objects with their name starting with 'coveragerr')
+rm(list=ls(pattern = "^coveragerr"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
