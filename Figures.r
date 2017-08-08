@@ -1584,9 +1584,8 @@ coverage_30hbc <- country_group_membership %>%
 
 coverage_inc_country <- coverage_inc_country %>%
                         inner_join(coverage_30hbc) %>%
-                       #add markers for Bangladesh and India footnotes
-                       mutate(entity = ifelse(entity == "Bangladesh", "Bangladesh(a)",
-                                              ifelse(entity == "India", "India(b)", entity)))
+                       #add marker for India footnote
+                       mutate(entity = ifelse(entity == "India", "India(a)", entity))
 
 
 coverage_country <- notification %>%
@@ -1665,8 +1664,6 @@ coverage_plot <- coverage_data %>%
 
 # Add footnotes
 coverage_footnote <- paste("(a)",
-                           bangladesh_footnote,
-                           "\n(b)",
                            india_footnote)
 # If there are countries with no data then mention it in the footnotes
 if (coverage_nodata_count > 0)
@@ -2268,9 +2265,6 @@ rm(list=ls(pattern = "^coveragerr"))
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
-
-
-
 txout_country  <- outcomes %>%
                   filter(year==report_year - 2) %>%
                   select(country,
@@ -2288,8 +2282,7 @@ txout_country  <- outcomes %>%
                   mutate(entity = ifelse(!is.na(rel_with_new_flg) & rel_with_new_flg == 0,
                                          paste0(entity, "*"),
                                          entity)) %>%
-                  select(-rel_with_new_flg) %>%
-                  arrange(entity)
+                  select(-rel_with_new_flg)
 
 # Calculate regional aggregates
 txout_region <- txout_country %>%
@@ -2300,7 +2293,6 @@ txout_region <- txout_country %>%
                   # merge with regional names and simplify to match structure of country table
                 inner_join(who_region_names, by = "g_whoregion") %>%
                 select(-g_whoregion)
-
 
 # Calculate global aggregate
 txout_global <- txout_country %>%
@@ -2313,6 +2305,7 @@ txout_global <- txout_country %>%
                 mutate(entity = "Global") %>%
                 select(-rel_with_new_flg)
 
+
 # Filter the country list down to high burden ones
 txout_30hbc <- country_group_membership %>%
                filter(group_type == "g_hb_tb" & group_name == 1) %>%
@@ -2324,25 +2317,14 @@ txout_country <- txout_country %>%
                   select(-iso2,
                          -g_whoregion)
 
+
 # Check if any of the countries have no data so that we can add a 'No data reported' option
 txout_nodata_count <- txout_country %>%
                       filter(is.na(newrel_coh)) %>%
                       nrow()
 
-
-# Create dummy records so can see a horizontal line in the output to separate countries, regions and global parts
-txout_dummy1 <- data.frame(entity = "-----", newrel_coh = NA, newrel_succ = NA, newrel_fail = NA,
-                           newrel_died = NA, newrel_lost = NA, c_newrel_neval = NA)
-txout_dummy2 <- data.frame(entity = "------", newrel_coh = NA, newrel_succ = NA, newrel_fail = NA,
-                           newrel_died = NA, newrel_lost = NA, c_newrel_neval = NA)
-
-
-
-# Create combined table in order of countries then regional and global estimates
-txout <- rbind(txout_country, txout_dummy1, txout_region, txout_dummy2, txout_global)
-
 # Calculate outcome proportions for plotting as stacked bars
-txout <- txout %>%
+txout_country <- txout_country %>%
           mutate(`Treatment success` = ifelse(NZ(newrel_coh) > 0,
                                               newrel_succ * 100 / newrel_coh,
                                               NA),
@@ -2359,14 +2341,83 @@ txout <- txout %>%
                                           c_newrel_neval * 100 / newrel_coh,
                                           NA))
 
+# Sort in descending order of success rate
+txout_country <- txout_country %>%
+                 arrange(desc(`Treatment success`))
+
+
+# Calculate outcome proportions for regional aggregates
+txout_region <- txout_region %>%
+          mutate(`Treatment success` = ifelse(NZ(newrel_coh) > 0,
+                                              newrel_succ * 100 / newrel_coh,
+                                              NA),
+                 Failure = ifelse(NZ(newrel_coh) > 0,
+                                      newrel_fail * 100 / newrel_coh,
+                                      NA),
+                 Died = ifelse(NZ(newrel_coh) > 0,
+                                  newrel_died * 100 / newrel_coh,
+                                  NA),
+                 `Lost to follow-up` = ifelse(NZ(newrel_coh) > 0,
+                                              newrel_lost * 100 / newrel_coh,
+                                              NA),
+                 `Not evaluated` = ifelse(NZ(newrel_coh) > 0,
+                                          c_newrel_neval * 100 / newrel_coh,
+                                          NA))
+
+# Sort regions in descending order of success rate
+txout_region <- txout_region %>%
+                 arrange(desc(`Treatment success`))
+
+
+# Calculate outcome proportions for global aggregates
+txout_global <- txout_global %>%
+          mutate(`Treatment success` = ifelse(NZ(newrel_coh) > 0,
+                                              newrel_succ * 100 / newrel_coh,
+                                              NA),
+                 Failure = ifelse(NZ(newrel_coh) > 0,
+                                      newrel_fail * 100 / newrel_coh,
+                                      NA),
+                 Died = ifelse(NZ(newrel_coh) > 0,
+                                  newrel_died * 100 / newrel_coh,
+                                  NA),
+                 `Lost to follow-up` = ifelse(NZ(newrel_coh) > 0,
+                                              newrel_lost * 100 / newrel_coh,
+                                              NA),
+                 `Not evaluated` = ifelse(NZ(newrel_coh) > 0,
+                                          c_newrel_neval * 100 / newrel_coh,
+                                          NA))
+
+# Create dummy records so can see a horizontal line in the output to separate countries, regions and global parts
+txout_dummy1 <- data.frame(entity = "-----", newrel_coh = NA, newrel_succ = NA, newrel_fail = NA,
+                           newrel_died = NA, newrel_lost = NA, c_newrel_neval = NA,
+                           Failure = NA, Died = NA)
+
+# Had to use mutate to create the next 3 fields because data.frame converted spaces to dots. Grrr
+txout_dummy1 <- txout_dummy1 %>%
+                mutate(`Treatment success` = NA,
+                       `Lost to follow-up` = NA,
+                       `Not evaluated` = NA)
+
+txout_dummy2 <- txout_dummy1 %>% mutate(entity = "------")
+
+
+
 # Add a 'no data' option so non-reporters are highlighted in the output
 # (but only if we have at least one country with no data)
 if (txout_nodata_count > 0 )
   {
-  txout <- txout %>%
-            mutate(`No data reported` = ifelse(is.na(newrel_coh) & substring(entity,1,2) != "--" ,100,0))
+  txout_country <- txout_country %>%
+                    mutate(`No data reported` = ifelse(is.na(newrel_coh) & substring(entity,1,2) != "--" ,100,0))
+
+  txout_region <- txout_region %>% mutate(`No data reported` = NA)
+  txout_global <- txout_global %>% mutate(`No data reported` = NA)
+  txout_dummy1 <- txout_dummy1 %>% mutate(`No data reported` = NA)
+  txout_dummy2 <- txout_dummy2 %>% mutate(`No data reported` = NA)
   }
 
+
+# Create combined table in order of countries then regional and global estimates
+txout <- rbind(txout_country, txout_dummy1, txout_region, txout_dummy2, txout_global)
 
 txout <- txout %>%
           # Keep record of current order (in reverse) so plot comes out as we want it
@@ -2411,7 +2462,8 @@ txout_plot <- txout_long %>%
                                      ",\n30 high TB burden countries, WHO regions and globally"))
 
 txout_plot <- arrangeGrob(txout_plot,
-                          bottom = textGrob("* Treatment outcomes are for new cases only.",
+                          bottom = textGrob(paste0("* Treatment outcomes are for new cases only.",
+                                                   "\nNOTE FOR SUE: PLEASE ADD SUCCESS RATE NUMBER ON EACH LINE AS WAS DONE\nIN LAST YEAR'S FIGURE 4.20"),
                                          x = 0,
                                          hjust = -0.1,
                                          vjust=0,
