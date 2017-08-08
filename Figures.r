@@ -1144,7 +1144,7 @@ dst_data_combined <- dst_data %>%
                      rbind(dst_prev_year_data)
 
 # produce the map
-dst_map <- WHOmap.print(dst_data,
+dst_map <- WHOmap.print(dst_data_combined,
                         paste("Figure 4.12\nPercentage of bacteriologically confirmed TB cases tested for RR-TB,(a),", report_year-1),
                          "Percentage",
                          copyright=FALSE,
@@ -1165,7 +1165,7 @@ dst_map <- arrangeGrob(dst_map, bottom = textGrob(dst_foot, x = 0, hjust = -0.1,
 
 
 figsave(dst_map,
-        select(dst_data,
+        select(dst_data_combined,
                iso3,
                country,
                dst_pct,
