@@ -22,7 +22,7 @@ theme_glb.rpt <- function(base_size=10, base_family="") {
       panel.grid.minor = element_blank(),
       strip.background = element_rect(fill="white", colour=NA),
       strip.text = element_text(hjust=0),
-      strip.text.x = element_text(size=12),
+      strip.text.x = element_text(size=10),
       plot.title = element_text(hjust=0)
       #       plot.margin = unit(c(0,0))
     )

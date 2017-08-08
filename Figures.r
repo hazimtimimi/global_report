@@ -1338,8 +1338,7 @@ rm(list=ls(pattern = "^rr_"))
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Figure 4.14 ------
-# Number of MDR/RR-TB cases detected (pink) and enrolled on MDR-TB treatment (green) 2009–2016 compared with estimated
-# number of MDR/RR-TB cases among notified pulmonary TB cases in 2016 (uncertainty interval shown in red),
+# Number of MDR/RR-TB cases detected (pink) and enrolled on MDR-TB treatment (green) 2009–2016,
 # 30 high MDR-TB burden countries
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -1377,7 +1376,10 @@ rr_data <- rr_data %>%
            select(country,
                   year,
                   c_rrmdr,
-                  enrolled)
+                  enrolled) %>%
+
+            # shorten long country names
+            get_names_for_tables( col = "country")
 
 # Plot as lines
 rr_plot <-  rr_data %>%
@@ -1394,9 +1396,7 @@ rr_plot <-  rr_data %>%
 
             ggtitle(paste0("Figure 4.14\nNumber of MDR/RR-TB cases detected (pink) and enrolled on MDR-TB treatment\n(green), 2009 - ",
                          report_year-1,
-                         ", compared with estimates for ",
-                          report_year-1,
-                         " of the \nnumber of MDR/RR-TB cases among notified pulmonary cases (uncertainty interval\nshown in red), 30 high MDR-TB burden countries")) +
+                         ", 30 high MDR-TB burden countries")) +
 
             theme_glb.rpt() +
             theme(legend.position="top",
@@ -1407,8 +1407,6 @@ figsave(rr_plot, rr_data, "f4_14_drtb_detect_enroll_hbc", width=7, height=11)
 
 # Clean up (remove any objects with their name beginning with 'rr_')
 rm(list=ls(pattern = "^rr_"))
-
-
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Figure 4.15  (map) ------
