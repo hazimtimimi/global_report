@@ -255,7 +255,7 @@ agesex_agg_long$sex <- factor(agesex_agg_long$sex,
 agesex_agg_long$agegroup <- str_extract(agesex_agg_long$group, "014|1524|2534|3544|4554|5564|65")
 agesex_agg_long$agegroup <- factor(agesex_agg_long$agegroup,
                                    levels=c("014", "1524", "2534", "3544", "4554", "5564", "65"),
-                                   labels=c("0\u201314", "15\u201324", "25\u201334", "35\u201344", "45\u201354", "55\u201364", "\u226565"))
+                                   labels=c("0\u201314", "15\u201324", "25\u201334", "35\u201344", "45\u201354", "55\u201364", ">=65"))
 
 agesex_agg_long <- agesex_agg_long %>% select(-group)
 
