@@ -3317,7 +3317,7 @@ hcw_data$cat <- cut(hcw_data$nrr,
 # produce the map
 hcw_map <- WHOmap.print(hcw_data,
                         paste("Figure 5.4\nNotification rate ratio of TB among healthcare workers\ncompared with the general adult population,", report_year-1),
-                           "Notification rate ratio",
+                           "Notification\nrate ratio",
                            copyright=FALSE,
                            #colors=c('yellow', 'lightgreen', 'green', 'darkgreen'),
                            colors=c('#edf8e9', '#bae4b3', '#74c476', '#238b45'),
