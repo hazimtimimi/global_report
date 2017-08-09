@@ -2261,7 +2261,7 @@ rm(list=ls(pattern = "^coveragerr"))
 # 30 high TB burden countries, WHO regions and globally
 #
 #
-#  !!!! NOTE CHANGE FOR 2017 REPORT: SORT BY TSR, NOT COUNTRY NAME!
+# NOTE CHANGE FOR 2017 REPORT: SORT BY TSR, NOT COUNTRY NAME!
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
@@ -2283,6 +2283,7 @@ txout_country  <- outcomes %>%
                                          paste0(entity, "*"),
                                          entity)) %>%
                   select(-rel_with_new_flg)
+
 
 # Calculate regional aggregates
 txout_region <- txout_country %>%
@@ -2325,21 +2326,8 @@ txout_nodata_count <- txout_country %>%
 
 # Calculate outcome proportions for plotting as stacked bars
 txout_country <- txout_country %>%
-          mutate(`Treatment success` = ifelse(NZ(newrel_coh) > 0,
-                                              newrel_succ * 100 / newrel_coh,
-                                              NA),
-                 Failure = ifelse(NZ(newrel_coh) > 0,
-                                      newrel_fail * 100 / newrel_coh,
-                                      NA),
-                 Died = ifelse(NZ(newrel_coh) > 0,
-                                  newrel_died * 100 / newrel_coh,
-                                  NA),
-                 `Lost to follow-up` = ifelse(NZ(newrel_coh) > 0,
-                                              newrel_lost * 100 / newrel_coh,
-                                              NA),
-                 `Not evaluated` = ifelse(NZ(newrel_coh) > 0,
-                                          c_newrel_neval * 100 / newrel_coh,
-                                          NA))
+                 calculate_outcomes_pct("newrel_")
+
 
 # Sort in descending order of success rate
 txout_country <- txout_country %>%
@@ -2348,48 +2336,19 @@ txout_country <- txout_country %>%
 
 # Calculate outcome proportions for regional aggregates
 txout_region <- txout_region %>%
-          mutate(`Treatment success` = ifelse(NZ(newrel_coh) > 0,
-                                              newrel_succ * 100 / newrel_coh,
-                                              NA),
-                 Failure = ifelse(NZ(newrel_coh) > 0,
-                                      newrel_fail * 100 / newrel_coh,
-                                      NA),
-                 Died = ifelse(NZ(newrel_coh) > 0,
-                                  newrel_died * 100 / newrel_coh,
-                                  NA),
-                 `Lost to follow-up` = ifelse(NZ(newrel_coh) > 0,
-                                              newrel_lost * 100 / newrel_coh,
-                                              NA),
-                 `Not evaluated` = ifelse(NZ(newrel_coh) > 0,
-                                          c_newrel_neval * 100 / newrel_coh,
-                                          NA))
+                calculate_outcomes_pct("newrel_")
 
 # Sort regions in descending order of success rate
 txout_region <- txout_region %>%
                  arrange(desc(`Treatment success`))
 
-
 # Calculate outcome proportions for global aggregates
 txout_global <- txout_global %>%
-          mutate(`Treatment success` = ifelse(NZ(newrel_coh) > 0,
-                                              newrel_succ * 100 / newrel_coh,
-                                              NA),
-                 Failure = ifelse(NZ(newrel_coh) > 0,
-                                      newrel_fail * 100 / newrel_coh,
-                                      NA),
-                 Died = ifelse(NZ(newrel_coh) > 0,
-                                  newrel_died * 100 / newrel_coh,
-                                  NA),
-                 `Lost to follow-up` = ifelse(NZ(newrel_coh) > 0,
-                                              newrel_lost * 100 / newrel_coh,
-                                              NA),
-                 `Not evaluated` = ifelse(NZ(newrel_coh) > 0,
-                                          c_newrel_neval * 100 / newrel_coh,
-                                          NA))
+                calculate_outcomes_pct("newrel_")
 
 # Create dummy records so can see a horizontal line in the output to separate countries, regions and global parts
-txout_dummy1 <- data.frame(entity = "-----", newrel_coh = NA, newrel_succ = NA, newrel_fail = NA,
-                           newrel_died = NA, newrel_lost = NA, c_newrel_neval = NA,
+txout_dummy1 <- data.frame(entity = "-----", coh = NA, succ = NA, fail = NA,
+                           died = NA, lost = NA, c_neval = NA,
                            Failure = NA, Died = NA)
 
 # Had to use mutate to create the next 3 fields because data.frame converted spaces to dots. Grrr
@@ -2407,7 +2366,7 @@ txout_dummy2 <- txout_dummy1 %>% mutate(entity = "------")
 if (txout_nodata_count > 0 )
   {
   txout_country <- txout_country %>%
-                    mutate(`No data reported` = ifelse(is.na(newrel_coh) & substring(entity,1,2) != "--" ,100,0))
+                    mutate(`No data reported` = ifelse(is.na(coh) & substring(entity,1,2) != "--" ,100,0))
 
   txout_region <- txout_region %>% mutate(`No data reported` = NA)
   txout_global <- txout_global %>% mutate(`No data reported` = NA)
@@ -2423,7 +2382,7 @@ txout <- txout %>%
           # Keep record of current order (in reverse) so plot comes out as we want it
           mutate(entity = factor(entity, levels=rev(entity))) %>%
           # Drop the actual numbers and keep percentages
-          select(-contains("newrel"))
+          select(-coh, -succ, -fail, -died, -lost, -c_neval)
 
 
 # Flip into long mode for stacked bar plotting
@@ -2615,29 +2574,26 @@ rm(list=ls(pattern = "^txoutnum"))
 
 
 
-
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Figure 4.24   ------
 # Treatment outcomes for new and relapse TB/HIV cases in 2015,
 # 30 high TB/HIV burden countries, WHO regions and globally
+#
+# NOTE CHANGE FOR 2017 REPORT: SORT BY TSR, NOT COUNTRY NAME!
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-#
-#
-#  !!!! NOTE CHANGE FOR 2017 REPORT: SORT BY TSR, NOT COUNTRY NAME!
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-
-txtbhivout_country  <- outcomes %>%
-                  filter(year==report_year - 2) %>%
-                  select(country,
-                         iso2,
-                         g_whoregion,
-                         contains("tbhiv_")) %>%
-                  # shorten long country names
-                  get_names_for_tables() %>%
-                  rename(entity = country ) %>%
-                  arrange(entity)
+txtbhivout_country  <-  outcomes %>%
+                        filter(year==report_year - 2) %>%
+                        select(country,
+                               iso2,
+                               g_whoregion,
+                               contains("tbhiv_")) %>%
+                        # remove un-needed variables
+                        select(-c_tbhiv_tsr) %>%
+                        # shorten long country names
+                        get_names_for_tables() %>%
+                        rename(entity = country ) %>%
+                        arrange(entity)
 
 # Calculate regional aggregates
 txtbhivout_region <- txtbhivout_country %>%
@@ -2645,7 +2601,7 @@ txtbhivout_region <- txtbhivout_country %>%
                 summarise_each(funs(sum(., na.rm = TRUE)),
                                contains("tbhiv_")) %>%
 
-                  # merge with regional names and simplify to match structure of country table
+                # merge with regional names and simplify to match structure of country table
                 inner_join(who_region_names, by = "g_whoregion") %>%
                 select(-g_whoregion)
 
@@ -2675,59 +2631,67 @@ txtbhivout_nodata_count <- txtbhivout_country %>%
                             filter(is.na(tbhiv_coh) | tbhiv_coh == 0) %>%
                             nrow()
 
+# Calculate outcome proportions for plotting as stacked bars
+txtbhivout_country <- txtbhivout_country %>%
+                      calculate_outcomes_pct("tbhiv_")
+
+# Sort in descending order of success rate
+txtbhivout_country <- txtbhivout_country %>%
+                      arrange(desc(`Treatment success`))
+
+# Calculate outcome proportions for regional aggregates
+txtbhivout_region <- txtbhivout_region %>%
+                     calculate_outcomes_pct("tbhiv_")
+
+# Sort regions in descending order of success rate
+txtbhivout_region <- txtbhivout_region %>%
+                     arrange(desc(`Treatment success`))
+
+# Calculate outcome proportions for global aggregates
+txtbhivout_global <- txtbhivout_global %>%
+                     calculate_outcomes_pct("tbhiv_")
 
 # Create dummy records so can see a horizontal line in the output to separate countries, regions and global parts
-txtbhivout_dummy1 <- data.frame(entity = "-----", tbhiv_coh = NA, tbhiv_succ = NA, tbhiv_fail = NA,
-                           tbhiv_died = NA, tbhiv_lost = NA, c_tbhiv_neval = NA, c_tbhiv_tsr = NA)
-txtbhivout_dummy2 <- data.frame(entity = "------", tbhiv_coh = NA, tbhiv_succ = NA, tbhiv_fail = NA,
-                           tbhiv_died = NA, tbhiv_lost = NA, c_tbhiv_neval = NA, c_tbhiv_tsr = NA)
+txtbhivout_dummy1 <- data.frame(entity = "-----", coh = NA, succ = NA, fail = NA,
+                                 died = NA, lost = NA, c_neval = NA,
+                                 Failure = NA, Died = NA)
 
+# Had to use mutate to create the next 3 fields because data.frame converted spaces to dots. Grrr
+txtbhivout_dummy1 <- txtbhivout_dummy1 %>%
+                      mutate(`Treatment success` = NA,
+                             `Lost to follow-up` = NA,
+                             `Not evaluated` = NA)
 
+txtbhivout_dummy2 <- txtbhivout_dummy1 %>% mutate(entity = "------")
 
-# Create combined table in order of countries then regional and global estimates
-txtbhivout <- rbind(txtbhivout_country, txtbhivout_dummy1, txtbhivout_region, txtbhivout_dummy2, txtbhivout_global)
-
-# Calculate outcome proportions for plotting as stacked bars
-txtbhivout <- txtbhivout %>%
-          mutate(`Treatment success` = ifelse(NZ(tbhiv_coh) > 0,
-                                              tbhiv_succ * 100 / tbhiv_coh,
-                                              NA),
-                 Failure = ifelse(NZ(tbhiv_coh) > 0,
-                                      tbhiv_fail * 100 / tbhiv_coh,
-                                      NA),
-                 Died = ifelse(NZ(tbhiv_coh) > 0,
-                                  tbhiv_died * 100 / tbhiv_coh,
-                                  NA),
-                 `Lost to follow-up` = ifelse(NZ(tbhiv_coh) > 0,
-                                              tbhiv_lost * 100 / tbhiv_coh,
-                                              NA),
-                 `Not evaluated` = ifelse(NZ(tbhiv_coh) > 0,
-                                          c_tbhiv_neval * 100 / tbhiv_coh,
-                                          NA))
 
 # Add a 'no data' option so non-reporters are highlighted in the output
 # (but only if we have at least one country with no data)
 if (txtbhivout_nodata_count > 0 )
   {
-  txtbhivout <- txtbhivout %>%
-                mutate(`No data reported` = ifelse((is.na(tbhiv_coh) | tbhiv_coh == 0) & substring(entity,1,2) != "--" ,100,0))
-  }
+  txtbhivout_country <- txtbhivout_country %>%
+                    mutate(`No data reported` = ifelse((is.na(coh) | coh == 0) & substring(entity,1,2) != "--" ,100,0))
+
+  txtbhivout_region <- txtbhivout_region %>% mutate(`No data reported` = NA)
+  txtbhivout_global <- txtbhivout_global %>% mutate(`No data reported` = NA)
+  txtbhivout_dummy1 <- txtbhivout_dummy1 %>% mutate(`No data reported` = NA)
+  txtbhivout_dummy2 <- txtbhivout_dummy2 %>% mutate(`No data reported` = NA)
+}
+
+
+# Create combined table in order of countries then regional and global estimates
+txtbhivout <- rbind(txtbhivout_country, txtbhivout_dummy1, txtbhivout_region, txtbhivout_dummy2, txtbhivout_global)
 
 
 txtbhivout <- txtbhivout %>%
           # Keep record of current order (in reverse) so plot comes out as we want it
           mutate(entity = factor(entity, levels=rev(entity))) %>%
           # Drop the actual numbers and keep percentages
-          select(-contains("tbhiv"))
-
-
-#tsr_table$area <- factor(tsr_table$area, levels=rev(tsr_table$area))
+          select(-coh, -succ, -fail, -died, -lost, -c_neval)
 
 
 # Flip into long mode for stacked bar plotting
 txtbhivout_long <- melt(txtbhivout, id=1)
-
-
 
 # Plot as stacked bars
 txtbhivout_plot <- txtbhivout_long %>%
@@ -2750,6 +2714,15 @@ txtbhivout_plot <- txtbhivout_long %>%
                       ggtitle(paste0("Figure 4.24\nTreatment outcomes for new and relapse TB/HIV cases in\n",
                                      report_year - 2,
                                      ", 30 high TB/HIV burden countries, WHO regions and globally"))
+
+
+txtbhivout_plot <- arrangeGrob(txtbhivout_plot,
+                          bottom = textGrob("NOTE FOR SUE: PLEASE ADD SUCCESS RATE NUMBER ON EACH LINE AS WAS DONE\nIN LAST YEAR'S FIGURE 4.22",
+                                         x = 0,
+                                         hjust = -0.1,
+                                         vjust=0,
+                                         gp = gpar(fontsize = 10)))
+
 
 
 figsave(txtbhivout_plot, txtbhivout, "f4_24_outcomes_tbhiv", width=7, height=11) # Designer needs wide data; output portrait mode

@@ -79,6 +79,7 @@ source("functions/make_who_maps.r")
 source("functions/round_numbers.r")
 source("functions/save_outputs.r")
 source("functions/set_plot_themes.r")
+source("functions/calculate_outcomes_pct.r")
 
 
 # Load data ----
