@@ -2858,7 +2858,7 @@ rm(list=ls(pattern = "^dlm"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure Box 4.6.1  (Map) ------
+# Figure Box 4.5.1  (Map) ------
 # Percentage of basic management units in which there is community engagement
 # or provision of treatment adherence support, 2016
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -2883,7 +2883,7 @@ comm_data$cat <- cut(comm_data$comm_pct,
 
 # produce the map
 comm_map <- WHOmap.print(comm_data,
-                        paste("Figure Box 4.6.1\nPercentage of basic management units in which there is community engagement",
+                        paste("Figure Box 4.5.1\nPercentage of basic management units in which there is community engagement",
                               "\nor provision of treatment adherence support,",
                               report_year-1),
                            "Percentage",
@@ -2905,7 +2905,7 @@ figsave(comm_map,
                iso3,
                comm_pct,
                cat),
-        "f4_box_4_6_1_pct_BMU_community_map")
+        "f4_box_4_5_1_pct_BMU_community_map")
 
 
 
