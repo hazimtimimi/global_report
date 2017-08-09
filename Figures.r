@@ -3174,6 +3174,14 @@ comm_map <- WHOmap.print(comm_data,
                            colors=c('#edf8e9', '#bae4b3', '#74c476', '#238b45'),
                            show=FALSE)
 
+
+comm_map <- arrangeGrob(comm_map,
+                       bottom = textGrob("Data only requested from 114 countries.",
+                                         x = 0,
+                                         hjust = -0.1,
+                                         vjust=0,
+                                         gp = gpar(fontsize = 10)))
+
 figsave(comm_map,
         select(comm_data,
                iso3,
