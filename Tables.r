@@ -180,13 +180,16 @@ rdxpolicy_notifs <- notification %>%
                            # percent DST among lab-confirmed cases is a bit of a fudge:
                            # numerator rdst_new + rdst_ret  (ignore cases with unknown treatment history)
                            # denominator is a bit of a fudge: new_labconf + c_ret
-                           pcnt_dst = ifelse(NZ(new_labconf) + NZ(c_ret) > 0 & !
+                           # Can sometimes get numerator > denominator so display ">100" in those cases
+                           pcnt_dst = ifelse( (NZ(rdst_new) + NZ(rdst_ret)) > (NZ(new_labconf) + NZ(c_ret)),
+                                              ">100",
+                                      ifelse(NZ(new_labconf) + NZ(c_ret) > 0 & !
                                                (is.na(rdst_new) & is.na(rdst_ret)),
                                              display_num((NZ(rdst_new) + NZ(rdst_ret)) * 100 /
                                                            (NZ(new_labconf) + NZ(c_ret))),
-                                             "-"),
+                                             "-")),
 
-                           pcnt_sldst = ifelse(NZ(conf_rrmdr)> 0,
+                           pcnt_sldst = ifelse(NZ(conf_rrmdr)> 0 & !is.na(rr_sldst),
                                                display_num(rr_sldst * 100 / conf_rrmdr), "-")
 
                            )
@@ -317,7 +320,7 @@ print(rdxpolicy_table_html,
                                   <td>Percentage of notified bacteriologically confirmed TB cases with DST results for rifampicin <sup>b</sup></td>
                                   <td>Percentage of notified rifampicin-resistant TB cases with DST results for fluoroquinolones and second-line injectable agents</td>
                               </tr>",
-                              "<tr><td colspan='9'><sup>a</sup>The 48 countries shown in the table are the countries that are in one of more of the three lists of high TB, TB/HIV and MDR-TB burden countries (see also Chapter 2, Figure 2.2 and Table 2.3).<br /><sup>b</sup>Testing in cases with unknown previous treatment history is not included.</td>
+                              "<tr><td colspan='9'><sup>a</sup>The 48 countries shown in the table are the countries that are in one of more of the three lists of high TB, TB/HIV and MDR-TB burden countries (see also Chapter 2, Figure 2.2 and Table 2.3).<br /><sup>b</sup>Testing in cases with unknown previous treatment history is not included. The percentage may exceed 100% for several reasons, e.g. samples rather than cases are counted in the numerator; laboratory specimen results are not linked to the denominator data source when enumerated; or there is incomplete reporting of bacteriologically confirmed cases in the denominator. Bacteriologically confirmed extrapulmonary cases are not included in the denominator because they cannot be differentiated from clinically diagnosed ones in the way data are reported to WHO.</td>
                               </tr>")
                       )
       )
