@@ -3032,7 +3032,7 @@ short_data$cat <-factor(short_data$cat)
 # produce the map
 short_map<- WHOmap.print(short_data,
                         paste0("Figure 4.27\nCountries that had used shorter MDR–TB treatment regimens by the end of ", report_year - 1),
-                           legend.title = "Country response",
+                           legend.title = "Country\nresponse",
                            copyright=FALSE,
                            brewer.pal(3, "Greens"),
                            na.label="No response",
@@ -3067,12 +3067,18 @@ bdq_data$cat <- factor(bdq_data$cat)
 # produce the map
 bdq_map<- WHOmap.print(bdq_data,
                         "Figure 4.28a\nCountries that had used bedaquiline for the treatment of M/XDR–TB as part of expanded access,\ncompassionate use or under normal programmatic conditions by the end of June 2017",
-                              "\nTB preventive treatment,",
-                           legend.title = "Country response",
+                           legend.title = "",
                            copyright=FALSE,
                            colors=c("lightgreen", "darkgreen"),
                            na.label="No response",
                            show=FALSE)
+
+bdq_map <- arrangeGrob(bdq_map,
+                       bottom = textGrob("Data shown reflects country reporting supplemented with additional information from pharmaceutical manuacturers.",
+                                         x = 0,
+                                         hjust = -0.1,
+                                         vjust=0,
+                                         gp = gpar(fontsize = 10)))
 
 figsave(bdq_map,
         bdq_data,
@@ -3107,12 +3113,18 @@ dlm_data$cat <- factor(dlm_data$cat)
 # produce the map
 dlm_map<- WHOmap.print(dlm_data,
                         "Figure 4.28b\nCountries that had used delamanid for the treatment of M/XDR–TB as part of expanded access,\ncompassionate use or under normal programmatic conditions by the end of June 2017",
-                              "\nTB preventive treatment,",
-                           legend.title = "Country response",
+                           legend.title = "",
                            copyright=FALSE,
                            colors=c("lightblue", "darkblue"),
                            na.label="No response",
                            show=FALSE)
+
+dlm_map <- arrangeGrob(dlm_map,
+                       bottom = textGrob("Data shown reflects country reporting supplemented with additional information from pharmaceutical manuacturers.",
+                                         x = 0,
+                                         hjust = -0.1,
+                                         vjust=0,
+                                         gp = gpar(fontsize = 10)))
 
 figsave(dlm_map,
         dlm_data,
