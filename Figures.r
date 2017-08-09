@@ -2735,14 +2735,9 @@ rm(list=ls(pattern = "^txtbhivout"))
 # Figure 4.25   ------
 # Treatment outcomes for rifampicin-resistant TB cases started on treatment in 2014,
 # 30 high MDR-TB burden countries, WHO regions and globally
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-
 #
-#
-#  !!!! NOTE CHANGE FOR 2017 REPORT: SORT BY TSR, NOT COUNTRY NAME!
+# NOTE CHANGE FOR 2017 REPORT: SORT BY TSR, NOT COUNTRY NAME!
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
 
 
 txmdrout_country  <- outcomes %>%
@@ -2751,8 +2746,8 @@ txmdrout_country  <- outcomes %>%
                          iso2,
                          g_whoregion,
                          contains("mdr_")) %>%
-                  # drop old cured/completed fields
-                  select(-mdr_cur, -mdr_cmplt) %>%
+                  # drop old cured/completed and the tsr fields
+                  select(-mdr_cur, -mdr_cmplt, -c_mdr_tsr) %>%
                   # shorten long country names
                   get_names_for_tables() %>%
                   rename(entity = country ) %>%
@@ -2794,59 +2789,68 @@ txmdrout_nodata_count <- txmdrout_country %>%
                             filter(is.na(mdr_coh) | mdr_coh == 0) %>%
                             nrow()
 
+# Calculate outcome proportions for plotting as stacked bars
+txmdrout_country <- txmdrout_country %>%
+                    calculate_outcomes_pct("mdr_")
+
+# Sort in descending order of success rate
+txmdrout_country <- txmdrout_country %>%
+                    arrange(desc(`Treatment success`))
+
+# Calculate outcome proportions for regional aggregates
+txmdrout_region <- txmdrout_region %>%
+                   calculate_outcomes_pct("mdr_")
+
+# Sort regions in descending order of success rate
+txmdrout_region <- txmdrout_region %>%
+                   arrange(desc(`Treatment success`))
+
+# Calculate outcome proportions for global aggregates
+txmdrout_global <- txmdrout_global %>%
+                   calculate_outcomes_pct("mdr_")
+
+
 
 # Create dummy records so can see a horizontal line in the output to separate countries, regions and global parts
-txmdrout_dummy1 <- data.frame(entity = "-----", mdr_coh = NA, mdr_succ = NA, mdr_fail = NA,
-                           mdr_died = NA, mdr_lost = NA, c_mdr_neval = NA, c_mdr_tsr = NA)
-txmdrout_dummy2 <- data.frame(entity = "------", mdr_coh = NA, mdr_succ = NA, mdr_fail = NA,
-                           mdr_died = NA, mdr_lost = NA, c_mdr_neval = NA, c_mdr_tsr = NA)
+txmdrout_dummy1 <- data.frame(entity = "-----", coh = NA, succ = NA, fail = NA,
+                                 died = NA, lost = NA, c_neval = NA,
+                                 Failure = NA, Died = NA)
 
+# Had to use mutate to create the next 3 fields because data.frame converted spaces to dots. Grrr
+txmdrout_dummy1 <- txmdrout_dummy1 %>%
+                    mutate(`Treatment success` = NA,
+                           `Lost to follow-up` = NA,
+                           `Not evaluated` = NA)
 
-
-# Create combined table in order of countries then regional and global estimates
-txmdrout <- rbind(txmdrout_country, txmdrout_dummy1, txmdrout_region, txmdrout_dummy2, txmdrout_global)
-
-# Calculate outcome proportions for plotting as stacked bars
-txmdrout <- txmdrout %>%
-          mutate(`Treatment success` = ifelse(NZ(mdr_coh) > 0,
-                                              mdr_succ * 100 / mdr_coh,
-                                              NA),
-                 Failure = ifelse(NZ(mdr_coh) > 0,
-                                      mdr_fail * 100 / mdr_coh,
-                                      NA),
-                 Died = ifelse(NZ(mdr_coh) > 0,
-                                  mdr_died * 100 / mdr_coh,
-                                  NA),
-                 `Lost to follow-up` = ifelse(NZ(mdr_coh) > 0,
-                                              mdr_lost * 100 / mdr_coh,
-                                              NA),
-                 `Not evaluated` = ifelse(NZ(mdr_coh) > 0,
-                                          c_mdr_neval * 100 / mdr_coh,
-                                          NA))
+txmdrout_dummy2 <- txmdrout_dummy1 %>% mutate(entity = "------")
 
 # Add a 'no data' option so non-reporters are highlighted in the output
 # (but only if we have at least one country with no data)
 if (txmdrout_nodata_count > 0 )
   {
-  txmdrout <- txmdrout %>%
-                mutate(`No data reported` = ifelse((is.na(mdr_coh) | mdr_coh == 0) & substring(entity,1,2) != "--" ,100,0))
-  }
+  txmdrout_country <- txmdrout_country %>%
+                    mutate(`No data reported` = ifelse((is.na(coh) | coh == 0) & substring(entity,1,2) != "--" ,100,0))
+
+  txmdrout_region <- txmdrout_region %>% mutate(`No data reported` = NA)
+  txmdrout_global <- txmdrout_global %>% mutate(`No data reported` = NA)
+  txmdrout_dummy1 <- txmdrout_dummy1 %>% mutate(`No data reported` = NA)
+  txmdrout_dummy2 <- txmdrout_dummy2 %>% mutate(`No data reported` = NA)
+}
+
+
+# Create combined table in order of countries then regional and global estimates
+txmdrout <- rbind(txmdrout_country, txmdrout_dummy1, txmdrout_region, txmdrout_dummy2, txmdrout_global)
 
 
 txmdrout <- txmdrout %>%
           # Keep record of current order (in reverse) so plot comes out as we want it
           mutate(entity = factor(entity, levels=rev(entity))) %>%
           # Drop the actual numbers and keep percentages
-          select(-contains("mdr"))
-
-
-#tsr_table$area <- factor(tsr_table$area, levels=rev(tsr_table$area))
+          select(-coh, -succ, -fail, -died, -lost, -c_neval)
 
 
 # Flip into long mode for stacked bar plotting
 txmdrout_long <- melt(txmdrout, id=1)
-
-
 
 # Plot as stacked bars
 txmdrout_plot <- txmdrout_long %>%
@@ -2869,6 +2873,15 @@ txmdrout_plot <- txmdrout_long %>%
                       ggtitle(paste0("Figure 4.25\nTreatment outcomes for rifampicin-resistant TB cases\nstarted on treatment in ",
                                      report_year - 3,
                                      ",\n30 high MDR-TB burden countries, WHO regions and globally"))
+
+
+txmdrout_plot <- arrangeGrob(txmdrout_plot,
+                          bottom = textGrob("NOTE FOR SUE: PLEASE ADD SUCCESS RATE NUMBER ON EACH LINE AS WAS DONE\nIN LAST YEAR'S FIGURE 4.23",
+                                         x = 0,
+                                         hjust = -0.1,
+                                         vjust=0,
+                                         gp = gpar(fontsize = 10)))
+
 
 
 figsave(txmdrout_plot, txmdrout, "f4_25_outcomes_mdr", width=7, height=11) # Designer needs wide data; output portrait mode
