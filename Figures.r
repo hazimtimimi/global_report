@@ -1282,7 +1282,9 @@ rr_plot <-  rr_data %>%
 
             theme_glb.rpt() +
             theme(legend.position="top",
-                  legend.title=element_blank())
+                  legend.title=element_blank(),
+                  strip.text.x = element_text(size=7))  #reduce font size of labels above each panel
+
 
 # Save the plot
 figsave(rr_plot, rr_data, "f4_13_drtb_detect_enroll_hbc", width=7, height=11)
