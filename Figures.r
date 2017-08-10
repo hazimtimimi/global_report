@@ -1196,6 +1196,9 @@ rr_plot <-  rr_global %>%
                               ymax=e_inc_rr_num_hi),
                           width=0.2, size=1, color="blue") +
 
+            geom_point(aes(x=year, y=e_inc_rr_num),
+                       shape = 21, colour = "blue", fill = "white", size = 5, stroke = 2) +
+
             scale_y_continuous(name = "Number of cases (thousands)") +
             xlab("Year") +
 
@@ -1203,7 +1206,7 @@ rr_plot <-  rr_global %>%
                          report_year-1,
                          ",\ncompared with estimate for ",
                           report_year-1,
-                         " of the number of incident cases of MDR/RR-TB (uncertainty interval shown in blue))")) +
+                         " of the number of incident cases of MDR/RR-TB (uncertainty interval shown in blue)")) +
 
             theme_glb.rpt() +
             theme(legend.position="top",
