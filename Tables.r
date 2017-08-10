@@ -133,6 +133,78 @@ rm(list=c("notifs_global", "notifs_summary", "notif_table_html", "notif_table_fi
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Table 4.2  ------
+# Number of people newly enrolled in HIV care in 2016 who were also notified as a TB case in 2016, xx high TB/HIV burden countries that reported data
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# Get list of high-burden TB/HIV countries
+
+hiv_countries <-  country_group_membership %>%
+                   filter(group_type == "g_hb_tbhiv" & group_name == 1) %>%
+                   select(iso2)
+
+# Get the data for the table
+
+hiv_data <- notification %>%
+            filter(year == report_year - 1 & iso2 %in% hiv_countries$iso2) %>%
+            select(country,
+                   hiv_tbdetect,
+                   hiv_reg_new2) %>%
+
+            # remove countries with no data
+            filter(!(is.na(hiv_tbdetect) & is.na(hiv_reg_new2)))
+
+# Calculate the total and append to the end
+hiv_total <- hiv_data %>%
+              summarise_each(funs(sum(., na.rm = TRUE)),
+                                -country) %>%
+                  mutate(country="Total")
+
+hiv_data <- rbind(hiv_data, hiv_total) %>%
+
+            # Calculate the percentages
+            mutate(detected_pct = display_num(hiv_tbdetect * 100 / hiv_reg_new2))
+
+
+# Create HTML output
+hiv_table_html <- xtable(hiv_data)
+
+digits(hiv_table_html) <- 0
+
+hiv_table_filename <- paste0(figures_folder, "Tables/t4_2_tb_in_hiv", Sys.Date(), ".htm")
+
+cat(paste0("<h3>Table 4.2<br />Number of people newly enrolled in HIV care in ",
+          report_year - 1,
+          " who were also notified as a TB case in ",
+          report_year - 1,
+          ", ",
+          nrow(hiv_data),
+          " high TB/HIV burden countries that reported data.</h3>"),
+    file=hiv_table_filename)
+
+
+print(hiv_table_html,
+      type="html",
+      file=hiv_table_filename,
+      include.rownames=FALSE,
+      include.colnames=FALSE,
+      html.table.attributes="border='0' rules='rows' width='800' cellpadding='5'",
+      append=TRUE,
+      add.to.row=list(pos=list(0),
+                      command=c("<tr>
+                                  <td style='width: 150px;'>&nbsp;</td>
+                                  <td>Number of people newly enrolled in HIV care</td>
+                                  <td>Number notified as a TB case</td>
+                                  <td>Notified TB cases as a percentage of those newly enrolled in HIV care </td>
+                              </tr>")
+                      )
+      )
+
+
+# Clean up (remove any objects with their name beginning with 'hiv')
+rm(list=ls(pattern = "^hiv"))
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Table 4.3  ------
 # National policies and their implementation to increase access to rapid TB testing and universal DST, 2016
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
