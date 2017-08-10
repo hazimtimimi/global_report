@@ -366,7 +366,7 @@ kids_data_combined <- kids_data %>%
 
 # produce the map
 kids_map <- WHOmap.print(kids_data_combined,
-                        paste0("Figure 4.3\nPercentage new and relapse TB cases that were children (aged < 15), ",
+                        paste0("Figure 4.3\nPercentage of new and relapse TB cases that were children (aged < 15), ",
                                report_year-1,
                                "(a)"),
                            "Percentage",
@@ -1420,7 +1420,8 @@ inc_plot <- inc_data %>%
                          ",\n30 high TB burden countries. Shaded areas represent uncertainty bands.")) +
             theme_glb.rpt() +
             theme(legend.position="top",
-                  legend.title=element_blank())
+                  legend.title=element_blank(),
+                  strip.text.x = element_text(size=8))  #reduce font size of labels above each panel
 
 # Add Bangladesh and India footnotes
 inc_plot <- arrangeGrob(inc_plot,
@@ -1428,7 +1429,7 @@ inc_plot <- arrangeGrob(inc_plot,
                                                  india_footnote),
                                           x = 0.02,
                                           just = "left",
-                                          gp = gpar(fontsize = 8)))
+                                          gp = gpar(fontsize = 7)))
 
 
 # Save the plot
@@ -1643,16 +1644,17 @@ inctbhiv_plot <- inctbhiv_data %>%
                               scales = "free_y",
                               ncol = 5) +
 
-                  ggtitle(paste0("Figure 4.18\nNumber of new and relapse cases(a) known to be HIV-positive (black) and\nnumber started on ART (blue) compared with estimated number of incident HIV-positive TB cases (red),\n2004 - ",
+                  ggtitle(paste0("Figure 4.18\nNumber of new and relapse cases(a) known to be HIV-positive (black) and\nnumber started on ART (blue) compared with estimated number of \nincident HIV-positive TB cases (red), 2004 - ",
                                report_year-1,
                                ", 30 high TB/HIV burden countries")) +
-                  theme_glb.rpt()
 
+                  theme_glb.rpt() +
+                  theme(strip.text.x = element_text(size=8))  #reduce font size of labels above each panel
 
 # Add footnote
 inctbhiv_foot <- "(a) The calculation is for all cases in years prior to 2015."
 
-inctbhiv_plot <- arrangeGrob(inctbhiv_plot, bottom = textGrob(inctbhiv_foot, x = 0, hjust = -0.1, vjust=0.1, gp = gpar(fontsize = 10)))
+inctbhiv_plot <- arrangeGrob(inctbhiv_plot, bottom = textGrob(inctbhiv_foot, x = 0, hjust = -0.1, vjust=0.1, gp = gpar(fontsize = 8)))
 
 
 # Save the plot
@@ -1945,9 +1947,9 @@ coveragerr_plot <- coveragerr_data %>%
                     labs(x="",
                          y="Treatment coverage (%)",
                          title=paste0("Figure 4.20\nEstimated MDR/RR-TB treatment coverage for MDR/RR-TB\n",
-                                     "(patients started on treatment for MDR-TB as a percentage of the estimated incidence of MDR/RR-TB\nin ",
+                                     "(patients started on treatment for MDR-TB as a percentage of the estimated incidence of MDR/RR-TB) in ",
                                      report_year - 1,
-                                     ", 30 high MDR-TB burden countries, WHO Regions and globally")) +
+                                     ",\n30 high MDR-TB burden countries, WHO Regions and globally")) +
                     geom_pointrange(aes(ymin=c_rr_coverage_lo,
                                         ymax=c_rr_coverage_hi)) +
                     theme_glb.rpt() +
