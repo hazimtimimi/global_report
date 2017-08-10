@@ -2293,7 +2293,7 @@ rm(list=ls(pattern = "^txoutnum"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 4.23   ------
+# Figure 4.24   ------
 # Treatment outcomes for new and relapse TB/HIV cases in 2015,
 # 30 high TB/HIV burden countries, WHO regions and globally
 #
@@ -2429,7 +2429,7 @@ txtbhivout_plot <- txtbhivout_long %>%
 
                       expand_limits(c(0,0)) +
 
-                      ggtitle(paste0("Figure 4.23\nTreatment outcomes for new and relapse TB/HIV cases in\n",
+                      ggtitle(paste0("Figure 4.24\nTreatment outcomes for new and relapse TB/HIV cases in\n",
                                      report_year - 2,
                                      ", 30 high TB/HIV burden countries, WHO regions and globally"))
 
@@ -2443,14 +2443,14 @@ txtbhivout_plot <- arrangeGrob(txtbhivout_plot,
 
 
 
-figsave(txtbhivout_plot, txtbhivout, "f4_23_outcomes_tbhiv", width=7, height=11) # Designer needs wide data; output portrait mode
+figsave(txtbhivout_plot, txtbhivout, "f4_24_outcomes_tbhiv", width=7, height=11) # Designer needs wide data; output portrait mode
 
 # Clean up (remove any objects with their name starting with 'txtbhivout')
 rm(list=ls(pattern = "^txtbhivout"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 4.24   ------
+# Figure 4.25   ------
 # Treatment outcomes for rifampicin-resistant TB cases started on treatment in 2014,
 # 30 high MDR-TB burden countries, WHO regions and globally
 #
@@ -2588,7 +2588,7 @@ txmdrout_plot <- txmdrout_long %>%
 
                       expand_limits(c(0,0)) +
 
-                      ggtitle(paste0("Figure 4.24\nTreatment outcomes for rifampicin-resistant TB cases\nstarted on treatment in ",
+                      ggtitle(paste0("Figure 4.25\nTreatment outcomes for rifampicin-resistant TB cases\nstarted on treatment in ",
                                      report_year - 3,
                                      ",\n30 high MDR-TB burden countries, WHO regions and globally"))
 
@@ -2602,14 +2602,14 @@ txmdrout_plot <- arrangeGrob(txmdrout_plot,
 
 
 
-figsave(txmdrout_plot, txmdrout, "f4_24_outcomes_mdr", width=7, height=11) # Designer needs wide data; output portrait mode
+figsave(txmdrout_plot, txmdrout, "f4_25_outcomes_mdr", width=7, height=11) # Designer needs wide data; output portrait mode
 
 # Clean up (remove any objects with their name starting with 'txmdrout')
 rm(list=ls(pattern = "^txmdrout"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 4.25 ------
+# Figure 4.23 ------
 # Treatment outcomes for new and relapse TB cases (2012-2015), new and relapse cases among people living with HIV (2012-2015) and rifampicin-resistant TB cases (2012-2014), globally
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -2713,7 +2713,7 @@ out_plot <- out_data_long %>%
 
                     expand_limits(c(0,0)) +
 
-                    ggtitle(paste0("Figure 4.25\nTreatment outcomes for new and relapse TB cases, new and relapse cases among people living with HIV,\nand rifampicin-resistant TB cases, 2012 - ",
+                    ggtitle(paste0("Figure 4.23\nTreatment outcomes for new and relapse TB cases, new and relapse cases among people living with HIV,\nand rifampicin-resistant TB cases, 2012 - ",
                                    report_year - 2,
                                    " globally"))
 
@@ -2724,7 +2724,7 @@ out_plot <- arrangeGrob(out_plot,
                                          vjust=0,
                                          gp = gpar(fontsize = 10)))
 
-figsave(out_plot, out_data_long, "f4_25_outcomes_tb_hiv_mdr") # Designer needs wide data; output portrait mode
+figsave(out_plot, out_data_long, "f4_23_outcomes_tb_hiv_mdr") # Designer needs wide data; output portrait mode
 
 # Clean up (remove any objects with their name starting with 'out_')
 rm(list=ls(pattern = "^out_"))
