@@ -178,7 +178,7 @@ cat(paste0("<h3>Table 4.2<br />Number of people newly enrolled in HIV care in ",
           " who were also notified as a TB case in ",
           report_year - 1,
           ", ",
-          nrow(hiv_data),
+          nrow(hiv_data) - 1,
           " high TB/HIV burden countries that reported data.</h3>"),
     file=hiv_table_filename)
 
