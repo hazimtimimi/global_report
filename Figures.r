@@ -1015,7 +1015,7 @@ dst_plot <- dst_agg %>%
             geom_line(size=1) +
 
             facet_wrap( ~ entity, ncol = 4, scales="fixed") +
-            scale_y_continuous(name = "% of cases") +
+            scale_y_continuous(name = "Percentage of cases") +
             expand_limits(y=c(0,100)) +
             xlab("Year") +
 
@@ -1087,7 +1087,7 @@ dst_data_combined <- dst_data %>%
 
 # produce the map
 dst_map <- WHOmap.print(dst_data_combined,
-                        paste("Figure 4.11\nPercentage of bacteriologically confirmed TB cases tested for RR-TB,(a),", report_year-1),
+                        paste0("Figure 4.11\nPercentage of bacteriologically confirmed TB cases tested for RR-TB, ", report_year-1, "(a)"),
                          "Percentage",
                          copyright=FALSE,
                          colors=brewer.pal(4, "YlOrBr"),
