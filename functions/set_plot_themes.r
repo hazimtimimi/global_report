@@ -62,7 +62,7 @@ outcomes_palette <- function() {
     "Died" = "#F7941E",               # Died (orange)
     "Lost to follow-up" = "#E5DDB3",  # Lost to follow-up (yellow)
     "Not evaluated" = "#D1D3D4",      # Not evaluated (gray)
-    "No data reported" = "#CCCCCC"    # No data (light gray)
+    "No data reported" = "#888888"    # No data (dark gray)
     )
 
 }
