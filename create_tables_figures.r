@@ -102,9 +102,7 @@ who_region_names <- get_region_names()
 
 
 # Repeated footnotes -----
-bangladesh_footnote <- "Estimates of TB incidence for Bangladesh will be reviewed once final results from the 2015/2016 national TB prevalence survey are available."
-
-india_footnote <- "Estimates of TB incidence for India are interim in nature, pending results from the national TB prevalence survey planned for 2017/2018."
+india_footnote <- "Estimates of TB incidence for India are interim in nature, pending results from the national TB prevalence survey planned for 2018/2019."
 
 
 # Create a folder structure for output files ----
