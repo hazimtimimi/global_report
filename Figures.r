@@ -1122,6 +1122,7 @@ rm(list=ls(pattern = "^dst"))
 # Figure 4.12 ------
 # Global number of MDR/RR-TB cases detected (pink) and number enrolled on MDR-TB treatment (green) 2009–2016,
 # compared with estimate for 2016 of the number of incident cases of MDR/RR-TB (uncertainty interval shown in blue)
+# and the number of MDR/RR-TB cases among notified pulmonary cases (uncertainty interval shown in black)
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 rr_data <- dr_derived_variables %>%
@@ -1165,10 +1166,16 @@ rr_global_inc <- aggregated_estimates_drtb_rawvalues %>%
                   select(year,
                          e_inc_rr_num,
                          e_inc_rr_num_lo,
-                         e_inc_rr_num_hi) %>%
+                         e_inc_rr_num_hi,
+                         e_rr_in_notified_pulm,
+                         e_rr_in_notified_pulm_lo,
+                         e_rr_in_notified_pulm_hi) %>%
                   mutate(e_inc_rr_num    = e_inc_rr_num    / 1000,
                          e_inc_rr_num_lo = e_inc_rr_num_lo / 1000,
-                         e_inc_rr_num_hi = e_inc_rr_num_hi / 1000)
+                         e_inc_rr_num_hi = e_inc_rr_num_hi / 1000,
+                         e_rr_in_notified_pulm = e_rr_in_notified_pulm / 1000,
+                         e_rr_in_notified_pulm_lo = e_rr_in_notified_pulm_lo / 1000,
+                         e_rr_in_notified_pulm_hi = e_rr_in_notified_pulm_hi / 1000)
 
 rr_global <- rr_global %>%
              left_join(rr_global_inc)
@@ -1190,6 +1197,15 @@ rr_plot <-  rr_global %>%
             geom_point(aes(x=year, y=e_inc_rr_num),
                        shape = 21, colour = "blue", fill = "white", size = 5, stroke = 2) +
 
+
+            # Add estimated cases among notified pulmonary cases
+            geom_errorbar(aes(ymin=e_rr_in_notified_pulm_lo,
+                              ymax=e_rr_in_notified_pulm_hi),
+                          width=0.2, size=1, color="black") +
+
+            geom_point(aes(x=year, y=e_rr_in_notified_pulm),
+                       shape = 21, colour = "black", fill = "white", size = 5, stroke = 2) +
+
             scale_y_continuous(name = "Number of cases (thousands)") +
             xlab("Year") +
 
@@ -1197,7 +1213,8 @@ rr_plot <-  rr_global %>%
                          report_year-1,
                          ",\ncompared with estimate for ",
                           report_year-1,
-                         " of the number of incident cases of MDR/RR-TB (uncertainty interval shown in blue)")) +
+                         " of the number of incident cases of MDR/RR-TB (uncertainty interval shown in blue)\n",
+                         "and the number of MDR/RR-TB cases among notified pulmonary cases (uncertainty interval shown in black)")) +
 
             theme_glb.rpt() +
             theme(legend.position="top",
