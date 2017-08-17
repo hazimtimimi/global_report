@@ -1528,7 +1528,7 @@ coverage_plot <- coverage_data %>%
                   geom_point() +
                   labs(x="",
                        y="Treatment coverage (%)",
-                       title=paste("Figure 4.16\nEstimated TB treatment coverage (new and relapse patients as a percentage of estimated TB incidence)\n in",
+                       title=paste0("Figure 4.16\nEstimated TB treatment coverage (new and relapse patients as a percentage of estimated TB incidence)\n in ",
                                    report_year - 1,
                                    ", 30 high TB burden countries, WHO regions and globally")) +
                   geom_pointrange(aes(ymin=c_cdr_lo,
@@ -1972,7 +1972,7 @@ rm(list=ls(pattern = "^coveragerr"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 4.21   ------
+# Figure 4.22   ------
 # Treatment outcomes for new and relapse TB cases in 2015,
 # 30 high TB burden countries, WHO regions and globally
 #
@@ -2132,7 +2132,7 @@ txout_plot <- txout_long %>%
 
                       expand_limits(c(0,0)) +
 
-                      ggtitle(paste0("Figure 4.21\nTreatment outcomes for new and relapse TB cases in ",
+                      ggtitle(paste0("Figure 4.22\nTreatment outcomes for new and relapse TB cases in ",
                                      report_year - 2,
                                      ",\n30 high TB burden countries, WHO regions and globally"))
 
@@ -2145,7 +2145,7 @@ txout_plot <- arrangeGrob(txout_plot,
                                          gp = gpar(fontsize = 10)))
 
 
-figsave(txout_plot, txout, "f4_21_outcomes_tb", width=7, height=11) # Designer needs wide data; output portrait mode
+figsave(txout_plot, txout, "f4_22_outcomes_tb", width=7, height=11) # Designer needs wide data; output portrait mode
 
 # Clean up (remove any objects with their name starting with 'txout')
 rm(list=ls(pattern = "^txout"))
@@ -2154,7 +2154,7 @@ rm(list=ls(pattern = "^txout"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 4.22  ------
+# Figure 4.24  ------
 # Treatment outcomes for new and relapse TB cases (absolute numbers), 2000 - 2015,
 # globally and for WHO regions
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -2268,7 +2268,7 @@ txoutnum_plot <- arrangeGrob(txoutnum_plot_glob,
                              txoutnum_plot_reg,
                              nrow = 2,
                              ncol = 1,
-                             top = textGrob(label = paste0("Figure 4.22\nTreatment outcomes for new and relapse TB cases(a) (absolute numbers), 2000-",
+                             top = textGrob(label = paste0("Figure 4.24\nTreatment outcomes for new and relapse TB cases(a) (absolute numbers), 2000-",
                            report_year-2,
                            ", globally\nand for WHO regions."),
                                              x = 0.02,
@@ -2282,7 +2282,7 @@ txoutnum_plot <- arrangeGrob(txoutnum_plot_glob,
 
 
 # Save the plot
-figsave(txoutnum_plot, txoutnum_data, "f4_22_outcomes_absolute", width=7, height=11)
+figsave(txoutnum_plot, txoutnum_data, "f4_24_outcomes_absolute", width=7, height=11)
 
 # Clean up (remove any objects with their name starting 'txout')
 rm(list=ls(pattern = "^txoutnum"))
@@ -2291,7 +2291,7 @@ rm(list=ls(pattern = "^txoutnum"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 4.24   ------
+# Figure 4.25   ------
 # Treatment outcomes for new and relapse TB/HIV cases in 2015,
 # 30 high TB/HIV burden countries, WHO regions and globally
 #
@@ -2427,7 +2427,7 @@ txtbhivout_plot <- txtbhivout_long %>%
 
                       expand_limits(c(0,0)) +
 
-                      ggtitle(paste0("Figure 4.24\nTreatment outcomes for new and relapse TB/HIV cases in\n",
+                      ggtitle(paste0("Figure 4.25\nTreatment outcomes for new and relapse TB/HIV cases in\n",
                                      report_year - 2,
                                      ", 30 high TB/HIV burden countries, WHO regions and globally"))
 
@@ -2441,14 +2441,14 @@ txtbhivout_plot <- arrangeGrob(txtbhivout_plot,
 
 
 
-figsave(txtbhivout_plot, txtbhivout, "f4_24_outcomes_tbhiv", width=7, height=11) # Designer needs wide data; output portrait mode
+figsave(txtbhivout_plot, txtbhivout, "f4_25_outcomes_tbhiv", width=7, height=11) # Designer needs wide data; output portrait mode
 
 # Clean up (remove any objects with their name starting with 'txtbhivout')
 rm(list=ls(pattern = "^txtbhivout"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 4.25   ------
+# Figure 4.26   ------
 # Treatment outcomes for rifampicin-resistant TB cases started on treatment in 2014,
 # 30 high MDR-TB burden countries, WHO regions and globally
 #
@@ -2586,7 +2586,7 @@ txmdrout_plot <- txmdrout_long %>%
 
                       expand_limits(c(0,0)) +
 
-                      ggtitle(paste0("Figure 4.25\nTreatment outcomes for rifampicin-resistant TB cases\nstarted on treatment in ",
+                      ggtitle(paste0("Figure 4.26\nTreatment outcomes for rifampicin-resistant TB cases\nstarted on treatment in ",
                                      report_year - 3,
                                      ",\n30 high MDR-TB burden countries, WHO regions and globally"))
 
@@ -2600,7 +2600,7 @@ txmdrout_plot <- arrangeGrob(txmdrout_plot,
 
 
 
-figsave(txmdrout_plot, txmdrout, "f4_25_outcomes_mdr", width=7, height=11) # Designer needs wide data; output portrait mode
+figsave(txmdrout_plot, txmdrout, "f4_26_outcomes_mdr", width=7, height=11) # Designer needs wide data; output portrait mode
 
 # Clean up (remove any objects with their name starting with 'txmdrout')
 rm(list=ls(pattern = "^txmdrout"))
@@ -2730,7 +2730,7 @@ rm(list=ls(pattern = "^out_"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 4.26  (map) ------
+# Figure 4.27  (map) ------
 # Countries that had used shorter MDR–TB treatment regimens by the end of 2016
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -2747,7 +2747,7 @@ short_data$cat <-factor(short_data$cat)
 
 # produce the map
 short_map<- WHOmap.print(short_data,
-                        paste0("Figure 4.26\nCountries that had used shorter MDR–TB treatment regimens by the end of ", report_year - 1),
+                        paste0("Figure 4.27\nCountries that had used shorter MDR–TB treatment regimens by the end of ", report_year - 1),
                            legend.title = "Country\nresponse",
                            copyright=FALSE,
                            brewer.pal(3, "Greens"),
@@ -2756,14 +2756,14 @@ short_map<- WHOmap.print(short_data,
 
 figsave(short_map,
         short_data,
-        "f4_26_short_regimen_map")
+        "f4_27_short_regimen_map")
 
 
 # Clean up (remove any objects with their name beginning with 'short')
 rm(list=ls(pattern = "^short"))
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 4.27a  (map) ------
+# Figure 4.28  (map) ------
 # Countries that had used bedaquiline for the treatment of M/XDR–TB as part of expanded access,
 # compassionate use or under normal programmatic conditions by the end of June 2017
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -2782,7 +2782,7 @@ bdq_data$cat <- factor(bdq_data$cat)
 
 # produce the map
 bdq_map<- WHOmap.print(bdq_data,
-                        "Figure 4.27a\nCountries that had used bedaquiline for the treatment of M/XDR–TB as part of expanded access,\ncompassionate use or under normal programmatic conditions by the end of June 2017",
+                        "Figure 4.28\nCountries that had used bedaquiline for the treatment of M/XDR–TB as part of expanded access,\ncompassionate use or under normal programmatic conditions by the end of June 2017",
                            legend.title = "",
                            copyright=FALSE,
                            colors=c("lightgreen", "darkgreen"),
@@ -2798,7 +2798,7 @@ bdq_map <- arrangeGrob(bdq_map,
 
 figsave(bdq_map,
         bdq_data,
-        "f4_27a_bdq_map")
+        "f4_28_bdq_map")
 
 
 # Clean up (remove any objects with their name beginning with 'bdq')
@@ -2808,7 +2808,7 @@ rm(list=ls(pattern = "^bdq"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 4.27b  (map) ------
+# Figure 4.29  (map) ------
 # Countries that had used delamanid for the treatment of M/XDR–TB as part of expanded access,
 # compassionate use or under normal programmatic conditions by the end of June 2017
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -2828,7 +2828,7 @@ dlm_data$cat <- factor(dlm_data$cat)
 
 # produce the map
 dlm_map<- WHOmap.print(dlm_data,
-                        "Figure 4.27b\nCountries that had used delamanid for the treatment of M/XDR–TB as part of expanded access,\ncompassionate use or under normal programmatic conditions by the end of June 2017",
+                        "Figure 4.29\nCountries that had used delamanid for the treatment of M/XDR–TB as part of expanded access,\ncompassionate use or under normal programmatic conditions by the end of June 2017",
                            legend.title = "",
                            copyright=FALSE,
                            colors=c("lightblue", "darkblue"),
@@ -2844,7 +2844,7 @@ dlm_map <- arrangeGrob(dlm_map,
 
 figsave(dlm_map,
         dlm_data,
-        "f4_27b_dlm_map")
+        "f4_29_dlm_map")
 
 
 # Clean up (remove any objects with their name beginning with 'dlm')
