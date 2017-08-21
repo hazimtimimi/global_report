@@ -2873,7 +2873,7 @@ rm(list=ls(pattern = "^dlm"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure Box 4.5.1  (Map) ------
+# Figure Box 4.4.1  (Map) ------
 # Percentage of basic management units in which there is community engagement
 # or provision of treatment adherence support, 2016
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -2882,6 +2882,7 @@ rm(list=ls(pattern = "^dlm"))
 comm_data <- strategy %>%
               filter(year==report_year - 1) %>%
               select(iso3,
+                     country,
                      bmu,
                      bmu_community_impl,
                      community_data_available) %>%
@@ -2892,13 +2893,13 @@ comm_data <- strategy %>%
 
 comm_data$cat <- cut(comm_data$comm_pct,
                      c(0, 25, 50, 75, Inf),
-                     c('0-24.9%', '25-49.9%', '50-74.9%', '>=75%'),
+                     c('0-24.9', '25-49.9', '50-74.9', '>=75'),
                right=FALSE)
 
 
 # produce the map
 comm_map <- WHOmap.print(comm_data,
-                        paste("Figure Box 4.5.1\nPercentage of basic management units in which there is community engagement",
+                        paste("Figure Box 4.4.1\nPercentage of basic management units in which there is community engagement",
                               "\nor provision of treatment adherence support,",
                               report_year-1),
                            "Percentage",
@@ -2917,10 +2918,11 @@ comm_map <- arrangeGrob(comm_map,
 
 figsave(comm_map,
         select(comm_data,
+               country,
                iso3,
                comm_pct,
                cat),
-        "f4_box_4_5_1_pct_BMU_community_map")
+        "f4_box_4_4_1_pct_BMU_community_map")
 
 
 
