@@ -1578,6 +1578,52 @@ figsave(coverage_plot, coverage_data, "f4_16_txcoverage_tb")
 # Clean up (remove any objects with their name starting with 'coverage')
 rm(list=ls(pattern = "^coverage"))
 
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Figure 4.17  (map with bubbles) ------
+# The ten countries with the largest gaps between notifications of new and relapse
+# (incident) TB cases and the best estimates of TB incidence, 2016
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+gap_data <- estimates_epi_rawvalues %>%
+            filter(year == report_year - 1) %>%
+            select(iso3,
+                   year,
+                   e_inc_num
+                   ) %>%
+
+            # Link to notifications
+            inner_join(notification) %>%
+            select(iso3,
+                   country,
+                   e_inc_num,
+                   c_newinc) %>%
+
+            # Calculate the gap and use that for the bubble sizes
+            mutate(bubble_size = e_inc_num - c_newinc) %>%
+
+            # limit to the top 10 by size of gap
+            top_n(10, bubble_size)
+
+# Plot the gaps as bubbles
+
+gap_map <- who_bubble_map(gap_data,
+                          paste0("Figure 4.17\n",
+                                 "The ten countries with the largest gaps between notifications of new and relapse\n",
+                                 "(incident) TB cases and the best estimates of TB incidence, ",
+                                 report_year - 1),
+                          bubble_colour = "purple"
+                          )
+
+# Save the plot
+figsave(gap_map,
+        select(gap_data,
+               iso3,
+               country,
+               bubble_size),
+        "f4_17_top_10_gap_map")
+
+# Clean up (remove any objects with their name beginning with 'gap')
+rm(list=ls(pattern = "^gap"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1986,6 +2032,56 @@ figsave(coveragerr_plot, coveragerr_data, "f4_20_txcoverage_drtb")
 
 # Clean up (remove any objects with their name starting with 'coveragerr')
 rm(list=ls(pattern = "^coveragerr"))
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Figure 4.21  (map with bubbles) ------
+# The ten countries with the largest gaps between the number of patients started
+# on treatment for MDR-TB and the best estimates of MDR/RR-TB incidence, 2016
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+drgap_data <- estimates_drtb_rawvalues %>%
+              filter(year == report_year - 1) %>%
+              select(iso3,
+                     year,
+                     e_inc_rr_num
+                     ) %>%
+
+              # Link to notifications
+              inner_join(notification) %>%
+              select(iso3,
+                     country,
+                     e_inc_rr_num,
+                     unconf_rrmdr_tx,
+                     conf_rrmdr_tx) %>%
+
+              # Calculate the gap and use that for the bubble sizes
+              mutate(bubble_size = e_inc_rr_num - (NZ(unconf_rrmdr_tx) + NZ(conf_rrmdr_tx))) %>%
+
+              # limit to the top 10 by size of gap
+              top_n(10, bubble_size)
+
+# Plot the gaps as bubbles
+
+drgap_map <- who_bubble_map(drgap_data,
+                          paste0("Figure 4.21\n",
+                                 "The ten countries with the largest gaps between the number of patients started\n",
+                                 "on treatment for MDR-TB and the best estimates of MDR/RR-TB incidence, ",
+                                 report_year - 1),
+                          bubble_colour = "green"
+                          )
+
+# Save the plot
+figsave(drgap_map,
+        select(drgap_data,
+               iso3,
+               country,
+               bubble_size),
+        "f4_21_top_10_dr_gap_map")
+
+# Clean up (remove any objects with their name beginning with 'gap')
+rm(list=ls(pattern = "^drgap"))
+
+
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
