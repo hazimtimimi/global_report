@@ -425,7 +425,5 @@ who_bubble_map <- function(data,
 
             coord_cartesian(xlim = zoomx, ylim=zoomy)
 
-
-
   return(plot)
 }
