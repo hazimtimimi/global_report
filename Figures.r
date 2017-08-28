@@ -87,6 +87,42 @@ figsave(cb_map,
 # Clean up (remove any objects with their name beginning with 'cb')
 rm(list=ls(pattern = "^cb"))
 
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Figure 3.20  (map with bubbles) ------
+# Estimated incidence of MDR/RR-TB in 2016, for countries with at least 1000 incident cases
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+rrnum_data <- estimates_drtb_rawvalues %>%
+              filter(year == report_year - 1 & e_inc_rr_num >= 1000) %>%
+              select(country,
+                     iso3,
+                     bubble_size = e_inc_rr_num
+                     )
+
+# Plot as bubbles on a base map
+
+rrnum_map <- who_bubble_map(rrnum_data,
+                            paste0("Figure 3.20\n",
+                                   "Estimated incidence of MDR/RR-TB in ",
+                                   report_year - 1,
+                                   ", for countries with at least 1000\nincident cases"),
+                          bubble_colour = "red"
+                          )
+
+# Save the plot
+figsave(rrnum_map,
+        select(rrnum_data,
+               iso3,
+               country,
+               bubble_size),
+        "f3_20_rr_inc_bubble_map")
+
+# Clean up (remove any objects with their name beginning with 'rrnum')
+rm(list=ls(pattern = "^rrnum"))
+
+
+
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Chapter 4 ------
 # Diagnosis and treatment of TB, HIV-associated TB and drug-resistant TB
@@ -2078,7 +2114,7 @@ figsave(drgap_map,
                bubble_size),
         "f4_21_top_10_dr_gap_map")
 
-# Clean up (remove any objects with their name beginning with 'gap')
+# Clean up (remove any objects with their name beginning with 'drgap')
 rm(list=ls(pattern = "^drgap"))
 
 
