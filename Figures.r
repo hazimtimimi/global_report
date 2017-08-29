@@ -87,6 +87,43 @@ figsave(cb_map,
 # Clean up (remove any objects with their name beginning with 'cb')
 rm(list=ls(pattern = "^cb"))
 
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Figure 3.3  (map with bubbles) ------
+# Estimated TB incidence in 2016, for countries with at least 100 000 incident cases
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+topinc_data <- estimates_epi_rawvalues %>%
+              filter(year == report_year - 1 & e_inc_num >= 1e5) %>%
+              select(iso3,
+                     country,
+                     year,
+                     bubble_size = e_inc_num
+                     )
+
+# Plot incidence numbers as bubbles
+
+topinc_map <- who_bubble_map(topinc_data,
+                          paste0("Figure 3.3\nEstimated TB incidence in ",
+                                 report_year - 1,
+                                 ", for countries with at least 100 000 incident cases"),
+                          bubble_colour = "orange",
+                          scale_breaks = c(100000,500000,1000000,2500000),
+                          scale_limits = c(100000,3000000),
+                          scale_labels = c("100 000","500 000","1 000 000","2 500 000")
+                          )
+
+# Save the plot
+figsave(topinc_map,
+        select(topinc_data,
+               iso3,
+               country,
+               bubble_size),
+        "f3_3_inc_bubble_map")
+
+# Clean up (remove any objects with their name beginning with 'topinc')
+rm(list=ls(pattern = "^topinc"))
+
+
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Figure 3.20  (map with bubbles) ------

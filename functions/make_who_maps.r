@@ -273,7 +273,10 @@ who_bubble_map <- function(data,
                            map_title = "",
                            bubble_colour = "purple",
                            bubble_alpha = 0.4,
-                           border_colour="grey50") {
+                           border_colour = "grey50",
+                           scale_limits = NULL,
+                           scale_breaks = waiver(),
+                           scale_labels = waiver()) {
 
   # tests to make sure inputs are right
   if(nchar(map_title)>100 & any(grep("\\n", map_title))==FALSE) warning("You might want to try and trim your title a bit or wrap it with '\\n'.")
@@ -411,7 +414,11 @@ who_bubble_map <- function(data,
                        fill=bubble_colour,
                        alpha=bubble_alpha) +
 
-            scale_size_continuous(name = "", range = c(1, 25)) +
+            scale_size_area(name = "",
+                            limits = scale_limits,
+                            breaks = scale_breaks,
+                            labels = scale_labels,
+                            max_size = 25) +
 
             labs(title = map_title) +
 
