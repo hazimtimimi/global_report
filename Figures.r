@@ -126,7 +126,7 @@ rm(list=ls(pattern = "^topinc"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 3.20  (map with bubbles) ------
+# Figure 3.22  (map with bubbles) ------
 # Estimated incidence of MDR/RR-TB in 2016, for countries with at least 1000 incident cases
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -137,15 +137,20 @@ rrnum_data <- estimates_drtb_rawvalues %>%
                      bubble_size = e_inc_rr_num
                      )
 
-# Plot as bubbles on a base map
+
+# Plot incidence numbers as bubbles
 
 rrnum_map <- who_bubble_map(rrnum_data,
-                            paste0("Figure 3.20\n",
+                            paste0("Figure 3.22\n",
                                    "Estimated incidence of MDR/RR-TB in ",
                                    report_year - 1,
-                                   ", for countries with at least 1000\nincident cases"),
-                          bubble_colour = "red"
+                                   ", for countries with at least 1000 incident cases"),
+                          bubble_colour = "red",
+                          scale_breaks = c(1000,10000,100000,150000),
+                          scale_limits = c(1000,150000),
+                          scale_labels = c("1000","10 000","100 000","150 000")
                           )
+
 
 # Save the plot
 figsave(rrnum_map,
@@ -153,7 +158,7 @@ figsave(rrnum_map,
                iso3,
                country,
                bubble_size),
-        "f3_20_rr_inc_bubble_map")
+        "f3_22_rr_inc_bubble_map")
 
 # Clean up (remove any objects with their name beginning with 'rrnum')
 rm(list=ls(pattern = "^rrnum"))
@@ -1684,7 +1689,10 @@ gap_map <- who_bubble_map(gap_data,
                                  "The ten countries with the largest gaps between notifications of new and relapse\n",
                                  "(incident) TB cases and the best estimates of TB incidence, ",
                                  report_year - 1),
-                          bubble_colour = "purple"
+                          bubble_colour = "purple",
+                          scale_breaks = c(100000,500000,1000000),
+                          scale_limits = c(100000,1100000),
+                          scale_labels = c("100 000","500 000","1 000 000")
                           )
 
 # Save the plot
@@ -2140,7 +2148,10 @@ drgap_map <- who_bubble_map(drgap_data,
                                  "The ten countries with the largest gaps between the number of patients started\n",
                                  "on treatment for MDR-TB and the best estimates of MDR/RR-TB incidence, ",
                                  report_year - 1),
-                          bubble_colour = "green"
+                          bubble_colour = "green",
+                          scale_breaks = c(10000,50000,100000),
+                          scale_limits = c(9500,100000),
+                          scale_labels = c("10 000","50 000","100 000")
                           )
 
 # Save the plot
