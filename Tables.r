@@ -94,7 +94,7 @@ digits(notif_table_html) <- 0
 
 notif_table_filename <- paste0(figures_folder, "Tables/t4_1_notifs_summary", Sys.Date(), ".htm")
 
-cat(paste("<h3>Table 4.1<br />Notifications of TB, TB/HIV and MDR/RR-TB cases, globally and for WHO regions,",
+cat(paste("<h3>Table 4.1<br />Notifications of TB, HIV-positive TB and MDR/RR-TB cases, globally and for WHO regions,",
           report_year-1,
           "</h3>"),
     file=notif_table_filename)
@@ -148,11 +148,15 @@ hiv_countries <-  country_group_membership %>%
 hiv_data <- notification %>%
             filter(year == report_year - 1 & iso2 %in% hiv_countries$iso2) %>%
             select(country,
-                   hiv_tbdetect,
-                   hiv_reg_new2) %>%
+                   hiv_reg_new2,
+                   hiv_tbdetect
+                   ) %>%
 
             # remove countries with no data
-            filter(!(is.na(hiv_tbdetect) & is.na(hiv_reg_new2)))
+            filter(!(is.na(hiv_tbdetect) & is.na(hiv_reg_new2))) %>%
+
+            # order by country
+            arrange(country)
 
 # Calculate the total and append to the end
 hiv_total <- hiv_data %>%
