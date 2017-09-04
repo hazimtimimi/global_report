@@ -2489,7 +2489,7 @@ rm(list=ls(pattern = "^txoutnum"))
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Figure 4.25   ------
-# Treatment outcomes for new and relapse TB/HIV cases in 2015,
+# Treatment outcomes for new and relapse HIV-positive TB cases in 2015,
 # 30 high TB/HIV burden countries, WHO regions and globally
 #
 # NOTE CHANGE FOR 2017 REPORT: SORT BY TSR, NOT COUNTRY NAME!
@@ -2624,7 +2624,7 @@ txtbhivout_plot <- txtbhivout_long %>%
 
                       expand_limits(c(0,0)) +
 
-                      ggtitle(paste0("Figure 4.25\nTreatment outcomes for new and relapse TB/HIV cases in\n",
+                      ggtitle(paste0("Figure 4.25\nTreatment outcomes for new and relapse HIV-positive TB cases in\n",
                                      report_year - 2,
                                      ", 30 high TB/HIV burden countries, WHO regions and globally"))
 
@@ -2850,7 +2850,7 @@ out_hiv_data <- outcomes %>%
                 select(-coh, -succ, -fail, -died, -lost, -c_neval) %>%
 
                 # Add tx group type
-                mutate(subgroup = "New and relapse TB/HIV cases")
+                mutate(subgroup = "HIV-positive new and relapse TB cases")
 
 
 
@@ -3054,8 +3054,8 @@ rm(list=ls(pattern = "^dlm"))
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Figure Box 4.4.1  (Map) ------
-# Percentage of basic management units in which there is community engagement
-# or provision of treatment adherence support, 2016
+# Percentage of basic management units in which there is community contribution to new case finding
+# and/or to treatment adherence support, 2016
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
@@ -3079,8 +3079,8 @@ comm_data$cat <- cut(comm_data$comm_pct,
 
 # produce the map
 comm_map <- WHOmap.print(comm_data,
-                        paste("Figure Box 4.4.1\nPercentage of basic management units in which there is community engagement",
-                              "\nor provision of treatment adherence support,",
+                        paste("Figure Box 4.4.1\nPercentage of basic management units in which there is community contribution",
+                              "\nto new case finding and/or to treatment adherence support,",
                               report_year-1),
                            "Percentage",
                            copyright=FALSE,
