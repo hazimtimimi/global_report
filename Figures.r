@@ -1146,8 +1146,8 @@ dst_data <- notification %>%
                      )
 
 dst_data$cat <- cut(dst_data$dst_pct,
-                     c(0, 10, 40, 80, Inf),
-                     c('0-9', '10-39', '40-79', '>=80'),
+                     c(0, 10, 40, 70, Inf),
+                     c('0-9.9', '10-39.9', '40-69.9', '>=70'),
                right=FALSE)
 
 # Find the countries with empty data for latest year and see if there are data for the previous year
