@@ -8,8 +8,8 @@
 
 # - 0 is written as "0"                                                                             "0"
 # - values under 0.1 are written "<0.1"                                                          "<0.1"
-# - from 0.1 to under 1 are rounded to 2 significant figures (2 decimal places)                   "0.N"
-# - from 1 to 10 are rounded to 2 significant figures (1 decimal place)                           "N.N"
+# - from 0.1 to under 1 are rounded to 2 significant figures (2 decimal places)                  "0.NN"
+# - from 1 to under 10 are rounded to 2 significant figures (1 decimal place)                     "N.N"
 # - 10 to under 100 are rounded to 2 significant figures (the whole number, no decimal places)     "NN"
 # - 100 to under 1000 are rounded to 3 significant figures (the whole number, no decimal places   "NNN"
 # - 1000 upwards are rounded to 3 significant figures                                       "N NN0 000"
@@ -21,11 +21,11 @@
 
 # Variations:
 
-# 1. When the number represents thousands increase the precision for numbers below 1:
+# 1. When the number represents thousands, show numbers between 0.01 and 0.1:
 
 # - values under 0.01 are written "<0.01"                                                       "<0.01"
-# - values between 0.01 and 0.1 are rounded to 2 significant figures (3 decimal places)         "0.0NN"
-# - values between 0.1 and under 1 are rounded to 2 significant figures (2 decimal places)       "0.NN"
+# - values between 0.01 and under 0.1 are rounded to 2 significant figures (3 decimal places)   "0.0NN"
+
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -39,7 +39,7 @@ display_num <- function(x, thousands=FALSE) {
   # Standard format for numbers
   fstring <-  ifelse(x==0, "0",
               ifelse(signif(x, 1) < 0.1, "<0.1",
-              ifelse(signif(x, 2) < 1, formatC(signif(x,1), format="f", digits=1),
+              ifelse(signif(x, 2) < 1, formatC(signif(x,2), format="f", digits=2),
               ifelse(signif(x, 2) < 10, formatC(signif(x,2), format="f", digits=1),
               ifelse(signif(x, 3) < 100, formatC(signif(x, 2), big.mark=" ", format="d"),
                      formatC(signif(x, 3), big.mark=" ", format="d"))))))
@@ -52,8 +52,7 @@ display_num <- function(x, thousands=FALSE) {
     fstring <-  ifelse(x==0, "0",
                 ifelse(x < 0.01, "<0.01",
                 ifelse(signif(x, 2) < 0.1, formatC(signif(x,2), format="f", digits=3),
-                ifelse(signif(x, 2) < 1, formatC(signif(x,2), format="f", digits=2),
-                       fstring))))
+                       fstring)))
   }
 
   return(fstring)
