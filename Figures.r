@@ -1957,7 +1957,7 @@ rm(list=ls(pattern = "^coveragehiv"))
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Figure 4.20  ------
-# Estimated MDR/RR-TB treatment coverage for MDR/RR-TB
+# Estimated treatment coverage for MDR/RR-TB
 # (patients started on treatment for MDR-TB as a percentage of the estimated incidence of MDR/RR-TB)
 # in 2016, 30 high MDR-TB burden countries, WHO regions and globally
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -2086,7 +2086,7 @@ coveragerr_plot <- coveragerr_data %>%
                     geom_point() +
                     labs(x="",
                          y="Treatment coverage (%)",
-                         title=paste0("Figure 4.20\nEstimated MDR/RR-TB treatment coverage for MDR/RR-TB\n",
+                         title=paste0("Figure 4.20\nEstimated treatment coverage for MDR/RR-TB\n",
                                      "(patients started on treatment for MDR-TB as a percentage of the estimated incidence of MDR/RR-TB) in ",
                                      report_year - 1,
                                      ",\n30 high MDR-TB burden countries, WHO Regions and globally")) +
@@ -2135,6 +2135,9 @@ drgap_data <- estimates_drtb_rawvalues %>%
                      unconf_rrmdr_tx,
                      conf_rrmdr_tx) %>%
 
+              # Filter out countries that have not reported anything yet for the latest year
+              filter(!is.na(unconf_rrmdr_tx) & !is.na(conf_rrmdr_tx)) %>%
+
               # Calculate the gap and use that for the bubble sizes
               mutate(bubble_size = e_inc_rr_num - (NZ(unconf_rrmdr_tx) + NZ(conf_rrmdr_tx))) %>%
 
@@ -2150,7 +2153,7 @@ drgap_map <- who_bubble_map(drgap_data,
                                  report_year - 1),
                           bubble_colour = "green",
                           scale_breaks = c(10000,50000,100000),
-                          scale_limits = c(9500,100000),
+                          scale_limits = c(9500,130000),
                           scale_labels = c("10 000","50 000","100 000")
                           )
 
