@@ -127,7 +127,7 @@ rm(list=ls(pattern = "^mort_"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# 3. Region incidence and notification ----
+# 3. Regional and global incidence and notification ----
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 inc_data <- aggregated_estimates_epi_rawvalues %>%
@@ -148,10 +148,23 @@ inc_data <- aggregated_estimates_epi_rawvalues %>%
             inner_join(who_region_names, by = "g_whoregion") %>%
             select(-g_whoregion)
 
+inc_global <- aggregated_estimates_epi_rawvalues %>%
+              filter( year >= 2000 & group_type == "global") %>%
+              select(year,
+                     e_inc_100k,
+                     e_inc_100k_lo,
+                     e_inc_100k_hi,
+                     c_newinc,
+                     e_pop_num) %>%
+              mutate(c_newinc_100k = c_newinc * 1e5 / e_pop_num,
+                     entity = "Global")
+
+# Add global to the regional aggregates
+inc_data <- rbind(inc_data, inc_global)
 
 # Change the order
 inc_data$entity <- factor(inc_data$entity,
-                             levels = c("Africa", "The Americas", "Eastern Mediterranean", "Europe", "South-East Asia", "Western Pacific"))
+                             levels = c("Africa", "The Americas", "Eastern Mediterranean", "Europe", "South-East Asia", "Western Pacific", "Global"))
 
 
 # Plot
@@ -159,40 +172,38 @@ inc_plot <- inc_data %>%
             ggplot(aes(x=year, y=c_newinc_100k, ymin=0)) +
             geom_line(size=1) +
             geom_ribbon(aes(x=year, ymin=e_inc_100k_lo, ymax=e_inc_100k_hi),
-                        fill=I('#00FF33'),
+                        fill=standard_palette("incidence"),
                         alpha=0.4) +
             geom_line(aes(year, e_inc_100k),
                       size=1,
-                      colour=I('#00FF33')) +
+                      colour=standard_palette("incidence")) +
 
             geom_ribbon(aes(x=year, ymin=e_inc_tbhiv_100k_lo, ymax=e_inc_tbhiv_100k_hi),
-                        fill=I('#CC6666'),
+                        fill=standard_palette("tbhiv_incidence"),
                         alpha=0.4) +
             geom_line(aes(year,e_inc_tbhiv_100k),
                       size=1,
-                      colour=I('#CC6666')) +
+                      colour=standard_palette("tbhiv_incidence")) +
 
-            scale_y_continuous(name = "Incidence (Rate per 100 000 population per year)") +
+            facet_wrap( ~ entity, ncol = 4, scales="free_y") +
+            scale_y_continuous(name = "Rate per 100 000 population per year") +
             xlab("Year") +
 
-            facet_wrap( ~ entity,
-                        scales="free_y") +
-
-            ggtitle("Incidence graphs for the 6 regional profiles") +
+            ggtitle("Incidence graphs for the 6 regional profiles and the global profile") +
 
             theme_glb.rpt() +
             theme(legend.position="top",
                   legend.title=element_blank())
 
 # Save the plot
-figsave(inc_plot, inc_data, "regional_profiles_incidence")
+figsave(inc_plot, inc_data, "aggregate_profiles_incidence")
 
 # Clean up (remove any objects with their name containing 'inc_')
 rm(list=ls(pattern = "inc_"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# 4. Region mortality ----
+# 4. Regional and global mortality ----
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 mort_data <- aggregated_estimates_epi_rawvalues %>%
@@ -207,42 +218,49 @@ mort_data <- aggregated_estimates_epi_rawvalues %>%
             inner_join(who_region_names, by = "g_whoregion") %>%
             select(-g_whoregion)
 
+mort_global <-aggregated_estimates_epi_rawvalues %>%
+              filter( year >= 2000 & group_type == "global") %>%
+              select(year,
+                     e_mort_exc_tbhiv_100k,
+                     e_mort_exc_tbhiv_100k_lo,
+                     e_mort_exc_tbhiv_100k_hi) %>%
+              mutate(entity = "Global")
+
+# Add global to the regional aggregates
+mort_data <- rbind(mort_data, mort_global)
 
 # Change the order
 mort_data$entity <- factor(mort_data$entity,
-                             levels = c("Africa", "The Americas", "Eastern Mediterranean", "Europe", "South-East Asia", "Western Pacific"))
+                             levels = c("Africa", "The Americas", "Eastern Mediterranean", "Europe", "South-East Asia", "Western Pacific", "Global"))
 
 mort_plot <- mort_data %>%
             ggplot(aes(x=year, y=e_mort_exc_tbhiv_100k, ymin=0)) +
             geom_line(size=1,
-						colour=I('#ee82ee')) +
+						colour=standard_palette("mortality_exc_tbhiv")) +
             geom_ribbon(aes(x=year, ymin=e_mort_exc_tbhiv_100k_lo, ymax=e_mort_exc_tbhiv_100k_hi),
-                        fill=I('#ee82ee'),
+                        fill=standard_palette("mortality_exc_tbhiv"),
                         alpha=0.4) +
 
-
+            facet_wrap( ~ entity, ncol = 4, scales="free_y") +
             scale_y_continuous(name = "Mortality (excludes HIV+TB) (Rate per 100 000 population per year)") +
             xlab("Year") +
 
-            facet_wrap( ~ entity,
-                        scales = "free_y") +
-
-            ggtitle("Mortality graphs for the 6 regional profiles") +
+            ggtitle("Mortality graphs for the 6 regional profiles and the global profile") +
             theme_glb.rpt() +
             theme(legend.position="top",
                   legend.title=element_blank())
 
 # Save the plot
-figsave(mort_plot, mort_data, "regional_profiles_mortality")
+figsave(mort_plot, mort_data, "aggregate_profiles_mortality")
 
 # Clean up (remove any objects with their name containing 'mort_')
 rm(list=ls(pattern = "mort_"))
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# 5. Region Age/sex notifications  ----
+# 5. Regional and global age/sex notifications  ----
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-# This is similar to figure 4.2 below, but showing actual numbers rather than notification rates
+# This is similar to figure 4.2, but showing actual numbers rather than notification rates
 
 # Get data
 agesex <- filter(notification, year == (report_year - 1)) %>%
@@ -256,7 +274,13 @@ agesex <- filter(notification, year == (report_year - 1)) %>%
 agesex$tot_notified <- sum_of_row(agesex[c("newrel_m1524", "newrel_m2534", "newrel_m3544", "newrel_m4554", "newrel_m5564", "newrel_m65",
                                            "newrel_f1524", "newrel_f2534", "newrel_f3544", "newrel_f4554", "newrel_f5564", "newrel_f65")] )
 
-agesex_filtered_agg <- agesex %>%
+agesex_filtered_global <- agesex %>%
+                      filter(!is.na(tot_notified)) %>%
+                      summarise_each(funs(sum(.,na.rm = TRUE)),
+                                     newrel_m014:tot_notified) %>%
+                      mutate(entity = "Global")
+
+agesex_filtered_regional <- agesex %>%
                       filter(!is.na(tot_notified)) %>%
                       group_by(g_whoregion) %>%
                       summarise_each(funs(sum(.,na.rm = TRUE)),
@@ -264,6 +288,8 @@ agesex_filtered_agg <- agesex %>%
                       # merge with regional names
                       inner_join(who_region_names, by = "g_whoregion") %>%
                       select(-g_whoregion)
+
+agesex_filtered_agg <- rbind(agesex_filtered_regional, agesex_filtered_global)
 
 # Switch to long ('tidy') format to plot
 agesex_agg_long <- agesex_filtered_agg %>%
@@ -301,25 +327,25 @@ agesex_plot <- agesex_agg_long %>%
                          colour="black",
                          position="identity") +
                 scale_y_continuous(name = paste("Notified cases by age group and sex,",
-                                                report_year - 1),
+                                                report_year - 1)
                                    #Set labels manually to avoid showing negative numbers!
-                                   breaks=c(-200000,-100000,0,100000,200000,300000),
-                                   labels=c("200 000", "100 000", "0", "100 000", "200 000", "300 000")
+                                   #breaks=c(-200000,-100000,0,100000,200000,300000),
+                                   #labels=c("200 000", "100 000", "0", "100 000", "200 000", "300 000")
                                    ) +
                 scale_x_discrete("Age group (years)",
                                  labels=levels(agesex_agg_long$agegroup)) +
 
                 coord_flip() +
-                facet_wrap( ~ entity) +
+                facet_wrap( ~ entity, ncol = 4, scales="free_x") +
 
-                ggtitle(paste0("Age/sex graphs for the 6 regional profiles")) +
+                ggtitle(paste0("Age/sex graphs for the 6 regional profiles and the global profile")) +
                 theme_glb.rpt() +
                 theme(legend.position="top",
                       legend.title=element_blank())
 
 
 # Save the plot
-figsave(agesex_plot, agesex_agg_long, "regional_profiles_agesex")
+figsave(agesex_plot, agesex_agg_long, "aggregate_profiles_agesex")
 
 # Clean up (remove any objects with their name starting 'agesex_')
 rm(list=ls(pattern = "^agesex"))
@@ -328,92 +354,139 @@ rm(list=ls(pattern = "^agesex"))
 # 6. Region treatment success rates  ----
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-tsr_regional <- outcomes %>%
-                filter(year >= 2000 & year <= report_year - 2) %>%
-                select(year,
-                       g_whoregion,
-                       new_sp_coh,
-                       new_sp_cur,
-                       new_sp_cmplt,
+tsr_aggs <- outcomes %>%
+            filter(year >= 2000 & year <= report_year - 2) %>%
+            select(year,
+                   g_whoregion,
+                   new_sp_coh,
+                   new_sp_cur,
+                   new_sp_cmplt,
 
-                       new_snep_coh,
-                       new_snep_cmplt,
+                   new_snep_coh,
+                   new_snep_cmplt,
 
-                       newrel_coh,
-                       newrel_succ,
+                   newrel_coh,
+                   newrel_succ,
 
-                       ret_coh,
-                       ret_cur,
-                       ret_cmplt,
+                   ret_coh,
+                   ret_cur,
+                   ret_cmplt,
 
-                       ret_nrel_coh,
-                       ret_nrel_succ,
+                   ret_nrel_coh,
+                   ret_nrel_succ,
 
-                       hiv_new_sp_coh,
-                       hiv_new_sp_cur,
-                       hiv_new_sp_cmplt,
+                   hiv_new_sp_coh,
+                   hiv_new_sp_cur,
+                   hiv_new_sp_cmplt,
 
-                       hiv_new_snep_coh,
-                       hiv_new_snep_cmplt,
+                   hiv_new_snep_coh,
+                   hiv_new_snep_cmplt,
 
-                       hiv_ret_coh,
-                       hiv_ret_cur,
-                       hiv_ret_cmplt,
+                   hiv_ret_coh,
+                   hiv_ret_cur,
+                   hiv_ret_cmplt,
 
-                       tbhiv_coh,
-                       tbhiv_succ,
+                   tbhiv_coh,
+                   tbhiv_succ,
 
-                       mdr_coh,
-                       mdr_succ,
+                   mdr_coh,
+                   mdr_succ,
 
-                       xdr_coh,
-                       xdr_succ) %>%
-                group_by(year, g_whoregion) %>%
-                summarise_each(funs(sum(.,na.rm = TRUE)),
-                               new_sp_coh:xdr_succ)  %>%
+                   xdr_coh,
+                   xdr_succ) %>%
+            group_by(year, g_whoregion) %>%
+            summarise_each(funs(sum(.,na.rm = TRUE)),
+                           new_sp_coh:xdr_succ)  %>%
 
 
-                # merge with regional names
-                inner_join(who_region_names, by = "g_whoregion") %>%
-                select(-g_whoregion) %>%
-                ungroup()
+            # merge with regional names
+            inner_join(who_region_names, by = "g_whoregion") %>%
+            select(-g_whoregion) %>%
+            ungroup()
+
+tsr_global <- outcomes %>%
+              filter(year >= 2000 & year <= report_year - 2) %>%
+              select(year,
+                     new_sp_coh,
+                     new_sp_cur,
+                     new_sp_cmplt,
+
+                     new_snep_coh,
+                     new_snep_cmplt,
+
+                     newrel_coh,
+                     newrel_succ,
+
+                     ret_coh,
+                     ret_cur,
+                     ret_cmplt,
+
+                     ret_nrel_coh,
+                     ret_nrel_succ,
+
+                     hiv_new_sp_coh,
+                     hiv_new_sp_cur,
+                     hiv_new_sp_cmplt,
+
+                     hiv_new_snep_coh,
+                     hiv_new_snep_cmplt,
+
+                     hiv_ret_coh,
+                     hiv_ret_cur,
+                     hiv_ret_cmplt,
+
+                     tbhiv_coh,
+                     tbhiv_succ,
+
+                     mdr_coh,
+                     mdr_succ,
+
+                     xdr_coh,
+                     xdr_succ) %>%
+              group_by(year) %>%
+              summarise_each(funs(sum(.,na.rm = TRUE)),
+                             new_sp_coh:xdr_succ)  %>%
+
+              mutate(entity = "Global") %>%
+              ungroup()
+
+# Add global to the regional aggregates
+tsr_aggs <- rbind(tsr_aggs, tsr_global)
+
+# Change the order
+tsr_aggs$entity <- factor(tsr_aggs$entity,
+                             levels = c("Africa", "The Americas", "Eastern Mediterranean", "Europe", "South-East Asia", "Western Pacific", "Global"))
+
 
 # calculate the treatment success rates
 # only if the aggregated cohort exceeds 100 for most types, but > 10 for MDR and XDR so that don't get unrepresentative aggregate outcomes.
 
-tsr_regional$c_new_tsr <- ifelse(sum_of_row(tsr_regional[c("new_sp_coh", "new_snep_coh", "newrel_coh")] ) > 100,
-                              sum_of_row(tsr_regional[c("new_sp_cur", "new_sp_cmplt", "new_snep_cmplt", "newrel_succ")] ) * 100 /
-                              sum_of_row(tsr_regional[c("new_sp_coh", "new_snep_coh", "newrel_coh")] ),
+tsr_aggs$c_new_tsr <- ifelse(sum_of_row(tsr_aggs[c("new_sp_coh", "new_snep_coh", "newrel_coh")] ) > 100,
+                              sum_of_row(tsr_aggs[c("new_sp_cur", "new_sp_cmplt", "new_snep_cmplt", "newrel_succ")] ) * 100 /
+                              sum_of_row(tsr_aggs[c("new_sp_coh", "new_snep_coh", "newrel_coh")] ),
                               NA)
 
-
-tsr_regional$c_ret_tsr <- ifelse(sum_of_row(tsr_regional[c("ret_coh", "ret_nrel_coh")] ) > 100,
-                              sum_of_row(tsr_regional[c("ret_cur", "ret_cmplt", "ret_nrel_succ")] ) * 100 /
-                              sum_of_row(tsr_regional[c("ret_coh", "ret_nrel_coh")] ),
+tsr_aggs$c_ret_tsr <- ifelse(sum_of_row(tsr_aggs[c("ret_coh", "ret_nrel_coh")] ) > 100,
+                              sum_of_row(tsr_aggs[c("ret_cur", "ret_cmplt", "ret_nrel_succ")] ) * 100 /
+                              sum_of_row(tsr_aggs[c("ret_coh", "ret_nrel_coh")] ),
                               NA)
 
-
-tsr_regional$c_tbhiv_tsr <- ifelse(sum_of_row(tsr_regional[c("hiv_new_sp_coh", "hiv_new_snep_coh", "hiv_ret_coh", "tbhiv_coh")] ) > 100,
-
-                                sum_of_row(tsr_regional[c("hiv_new_sp_cur", "hiv_new_sp_cmplt", "hiv_new_snep_cmplt",
+tsr_aggs$c_tbhiv_tsr <- ifelse(sum_of_row(tsr_aggs[c("hiv_new_sp_coh", "hiv_new_snep_coh", "hiv_ret_coh", "tbhiv_coh")] ) > 100,
+                                sum_of_row(tsr_aggs[c("hiv_new_sp_cur", "hiv_new_sp_cmplt", "hiv_new_snep_cmplt",
                                                       "hiv_ret_cur", "hiv_ret_cmplt",  "tbhiv_succ")] ) * 100 /
-                                sum_of_row(tsr_regional[c("hiv_new_sp_coh", "hiv_new_snep_coh", "hiv_ret_coh", "tbhiv_coh")] ),
+                                sum_of_row(tsr_aggs[c("hiv_new_sp_coh", "hiv_new_snep_coh", "hiv_ret_coh", "tbhiv_coh")] ),
                                 NA)
 
-tsr_regional$c_mdr_tsr <- ifelse(tsr_regional$mdr_coh > 10,
-                                 tsr_regional$mdr_succ * 100 / tsr_regional$mdr_coh,
+tsr_aggs$c_mdr_tsr <- ifelse(tsr_aggs$mdr_coh > 10,
+                                 tsr_aggs$mdr_succ * 100 / tsr_aggs$mdr_coh,
                                  NA)
 
-tsr_regional$c_xdr_tsr <- ifelse(tsr_regional$xdr_coh > 10,
-                                 tsr_regional$xdr_succ * 100 / tsr_regional$xdr_coh,
+tsr_aggs$c_xdr_tsr <- ifelse(tsr_aggs$xdr_coh > 10,
+                                 tsr_aggs$xdr_succ * 100 / tsr_aggs$xdr_coh,
                                  NA)
-
-# Change the order
-tsr_regional$entity <- factor(tsr_regional$entity,
-                             levels = c("Africa", "The Americas", "Eastern Mediterranean", "Europe", "South-East Asia", "Western Pacific"))
 
 # Slim the data down
-tsr_regional <- tsr_regional %>%
+tsr_aggs <- tsr_aggs %>%
                 select(entity,
                        year,
                        c_new_tsr,
@@ -424,7 +497,7 @@ tsr_regional <- tsr_regional %>%
 
 # plot the aggregates as lines
 
-tsr_plot <- tsr_regional %>%
+tsr_plot <- tsr_aggs %>%
             ggplot(aes(x=year)) +
 
             geom_line(aes(y=c_new_tsr,
@@ -462,16 +535,15 @@ tsr_plot <- tsr_regional %>%
             scale_y_continuous(name = "Treatment success rate (%)") +
             xlab("Year") +
 
-            facet_wrap( ~ entity,
-                        scales="free_y") +
+            facet_wrap( ~ entity, ncol = 4, scales="free_y") +
 
-            ggtitle("Treatment success rate graphs for the 6 regional profiles") +
+            ggtitle("Treatment success rate graphs for the 6 regional profiles and the global profile") +
 
             theme_glb.rpt() +
             theme(legend.position="bottom")
 
 # Save the plot
-figsave(tsr_plot, tsr_regional, "regional_profiles_treatment_success")
+figsave(tsr_plot, tsr_aggs, "aggregate_profiles_treatment_success")
 
 # Clean up (remove any objects with their name containing 'inc_')
 rm(list=ls(pattern = "tsr_"))
@@ -482,10 +554,10 @@ rm(list=ls(pattern = "tsr_"))
 
 library(RODBC)
 ch <- odbcDriverConnect(connection_string)
-fin_regional   <- sqlFetch(ch, "reports.view_TME_aggregated_finance_estimates")
+fin_aggs   <- sqlFetch(ch, "reports.view_TME_aggregated_finance_estimates")
 close(ch)
 
-fin_regional <- fin_regional %>%
+fin_aggs <- fin_aggs %>%
                 filter( year > (report_year - 5)) %>%
                 mutate(domestic_funding = domestic_funding / 1e6,
                        international_funding = international_funding / 1e6,
@@ -498,21 +570,22 @@ fin_regional <- fin_regional %>%
                        unfunded_gap) %>%
 
                 # merge with regional names
-                inner_join(who_region_names, by = "g_whoregion") %>%
+                left_join(who_region_names, by = "g_whoregion") %>%
+
+                # Add 'Global' entity name
+                mutate(entity = ifelse(g_whoregion == "global", "Global", entity)) %>%
                 select(-g_whoregion)
 
-# Change the order of the WHO regions
-fin_regional$entity <- factor(fin_regional$entity,
-                             levels = c("Africa", "The Americas", "Eastern Mediterranean", "Europe", "South-East Asia", "Western Pacific"))
-
-
+# Change the order
+fin_aggs$entity <- factor(fin_aggs$entity,
+                             levels = c("Africa", "The Americas", "Eastern Mediterranean", "Europe", "South-East Asia", "Western Pacific", "Global"))
 
 # Switch to long ('tidy') format to plot
-fin_regional_long <- fin_regional %>%
-                       gather("group", "amount", 2:4)
+fin_aggs_long <- fin_aggs %>%
+                  gather("group", "amount", 2:4)
 
 # Make the group variable a factor to control the order of plotting
-fin_regional_long$group <- factor(fin_regional_long$group,
+fin_aggs_long$group <- factor(fin_aggs_long$group,
                                   levels = c("unfunded_gap",
                                              "international_funding",
                                              "domestic_funding"),
@@ -521,7 +594,7 @@ fin_regional_long$group <- factor(fin_regional_long$group,
                                              "Funded domestically"))
 
 # plot as stacked bars
-fin_plot <- fin_regional_long %>%
+fin_plot <- fin_aggs_long %>%
             ggplot(aes(x=year,
                        y=amount,
                        fill=group,
@@ -533,10 +606,9 @@ fin_plot <- fin_regional_long %>%
 
             scale_y_continuous(name = "Total budget (US$ millions constant 2016)") +
 
-            facet_wrap( ~ entity,
-                        scales = "free_y")  +
+            facet_wrap( ~ entity, ncol = 4, scales="free_y") +
 
-            ggtitle(paste0("Age/sex graphs for the 6 regional profiles")) +
+            ggtitle(paste0("Age/sex graphs for the 6 regional profiles and the global profile")) +
 
             theme_glb.rpt() +
             theme(legend.position="bottom",
@@ -545,7 +617,7 @@ fin_plot <- fin_regional_long %>%
             guides(fill=guide_legend(reverse=TRUE))
 
 # Save the plot
-figsave(fin_plot, fin_regional, "regional_profiles_finance")
+figsave(fin_plot, fin_aggs, "aggregate_profiles_finance")
 
 # Clean up (remove any objects with their name containing 'fin_')
 rm(list=ls(pattern = "fin_"))

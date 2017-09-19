@@ -37,6 +37,7 @@ standard_palette <- function(type){
   switch(type,
         "incidence" = "#91A93E",        # green
         "tbhiv_incidence" = "#ED1D24",   # pinky red
+        "mortality_exc_tbhiv" = "#1D91D1", # light blue
         "art" = "#0091D1"  # blue
   )
 
@@ -84,8 +85,8 @@ outcomes_num_palette <- function() {
 
 agesex_palette <- function() {
 
- c("Female" = "#EC008C",  # Females (garish pink used by Sue in 2016)
-   "Male"   = "#F7941E"   # Males (orange)
+ c("Female" = "#EE1D23",  # Females (red used by Sue in 2017)
+   "Male"   = "#00AAAD"   # Males   (turquoise used by Sue in 2017)
  )
 
 }
