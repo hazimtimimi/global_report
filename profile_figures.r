@@ -604,11 +604,11 @@ fin_plot <- fin_aggs_long %>%
                      size=.3,
                      colour="black") +
 
-            scale_y_continuous(name = "Total budget (US$ millions constant 2016)") +
+            scale_y_continuous(name = "Total budget (US$ millions constant 2017)") +
 
             facet_wrap( ~ entity, ncol = 4, scales="free_y") +
 
-            ggtitle(paste0("Age/sex graphs for the 6 regional profiles and the global profile")) +
+            ggtitle(paste0("TB financing graphs for the 6 regional profiles and the global profile")) +
 
             theme_glb.rpt() +
             theme(legend.position="bottom",
