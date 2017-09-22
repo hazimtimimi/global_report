@@ -1928,7 +1928,7 @@ coveragehiv_plot <- coveragehiv_data %>%
                          title=paste0("Figure 4.19\nEstimated ART treatment coverage for HIV-positive TB cases\n",
                                      "(HIV-positive TB patients on ART as a percentage of the estimated incidence of HIV-positive TB) in ",
                                      report_year - 1,
-                                     ",\n30 high TB/HIV burden countries, WHO Regions and globally")) +
+                                     ",\n30 high TB/HIV burden countries, WHO regions and globally")) +
                     geom_pointrange(aes(ymin=c_art_lo,
                                         ymax=c_art_hi)) +
                     theme_glb.rpt() +
@@ -2089,7 +2089,7 @@ coveragerr_plot <- coveragerr_data %>%
                          title=paste0("Figure 4.20\nEstimated treatment coverage for MDR/RR-TB\n",
                                      "(patients started on treatment for MDR-TB as a percentage of the estimated incidence of MDR/RR-TB) in ",
                                      report_year - 1,
-                                     ",\n30 high MDR-TB burden countries, WHO Regions and globally")) +
+                                     ",\n30 high MDR-TB burden countries, WHO regions and globally")) +
                     geom_pointrange(aes(ymin=c_rr_coverage_lo,
                                         ymax=c_rr_coverage_hi)) +
                     theme_glb.rpt() +
