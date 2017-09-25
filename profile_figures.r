@@ -154,6 +154,9 @@ inc_global <- aggregated_estimates_epi_rawvalues %>%
                      e_inc_100k,
                      e_inc_100k_lo,
                      e_inc_100k_hi,
+                     e_inc_tbhiv_100k,
+                     e_inc_tbhiv_100k_lo,
+                     e_inc_tbhiv_100k_hi,
                      c_newinc,
                      e_pop_num) %>%
               mutate(c_newinc_100k = c_newinc * 1e5 / e_pop_num,
