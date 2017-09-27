@@ -481,14 +481,8 @@ notif_country <-  notification %>%
                   mutate(pct_hivtest = ifelse(c_newinc > 0,
                                               ifelse(newrel_tbhiv_flg==1,
                                                      display_cap_pct(newrel_hivtest, c_newinc),
-                                                     display_cap_pct(newrel_hivtest, c_notified)),
-                                              NA),
-
-
-                         # Flag country name if denominator is all cases not new and relapse
-                         entity = ifelse(!is.na(newrel_tbhiv_flg) & newrel_tbhiv_flg==0,
-                                          paste0(entity, "*"),
-                                          entity))
+                                                     paste0(display_cap_pct(newrel_hivtest, c_notified), "*")),
+                                              NA))
 
 # TEMPORARY POLITICAL SOLUTION FOR RUSSIAN FEDERATION 2010 onwards:
 # DO NOT CALCULATE % tb PATIENTS WITH KNOWN HIV STATUS
