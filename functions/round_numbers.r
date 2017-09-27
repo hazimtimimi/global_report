@@ -31,7 +31,7 @@
 
 
 
-# Return a string formated for display
+# Return a number as a string formated for display
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 display_num <- function(x, thousands=FALSE) {
@@ -64,34 +64,15 @@ display_num <- function(x, thousands=FALSE) {
 # a single string. Don't do this if any of best, lo, hi are NA!
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-# frmt_intervals <- function(best,lo,hi,rates=FALSE, thou=FALSE, thouEst=FALSE){
-#
-#   x <- NA
-#
-#   if (thou==TRUE) {
-#     #format as thousands
-#     x <- ifelse(is.na(best) | is.na(lo) | is.na(hi) ,
-#                 NA,
-#                 paste0("(", frmt(lo, thou=TRUE), "–", frmt(hi, thou=TRUE), ")"))
-#   }
-#
-#   if (thou==TRUE & thouEst==TRUE) {
-#     #format as thousands
-#     x <- ifelse(is.na(best) | is.na(lo) | is.na(hi) ,
-#                 NA,
-#                 paste0("(", frmt(lo, thou=TRUE, thouEst=TRUE), "–", frmt(hi, thou=TRUE, thouEst=TRUE), ")"))
-#   }
-#
-#   if (rates==TRUE) {
-#     # format as rates
-#     x <- ifelse(is.na(best) | is.na(lo) | is.na(hi) ,
-#                 NA,
-#                 paste0("(", frmt(lo, rates=TRUE), "–", frmt(hi, rates=TRUE), ")"))
-#   }
-#
-#   return(x)
-#
-# }
+display_intervals <- function(best, lo, hi, thousands=FALSE){
+
+  interval_string <- ifelse(is.na(best) | is.na(lo) | is.na(hi) ,
+                            NA,
+                            paste0("(", display_num(lo, thousands), "–", display_num(hi, thousands), ")"))
+
+  return(interval_string)
+
+}
 
 
 # Simple rounding function that returns a string rounded to the nearest integer and
@@ -106,4 +87,13 @@ rounder <- function(x) {
 }
 
 
+# Calculate % using numerator and denominator, format the output and cap at 100%
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+display_cap_pct <- function(numerator, denominator) {
+
+  pct <- ifelse(is.na(numerator) | is.na(denominator) | denominator == 0, "",
+         ifelse(numerator > denominator, ">100", display_num(numerator * 100 / denominator)))
+
+  return(pct)
+}

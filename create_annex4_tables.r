@@ -22,7 +22,7 @@ rm(list=ls())
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # Establish the report year
-report_year <- 2016
+report_year <- 2017
 
 # The following are convenience variables since notification and most other data sets will run up to the
 # year before the reporting year and outcomes will run up to two years before the reporting year
@@ -34,12 +34,12 @@ outcome_maxyear      <- (report_year - 2)
 # flag for whether to suppress calculation of %
 # of notified TB patients who knew their HIV status (applies to table A4.4)
 
-russianfudge <- TRUE
+russianfudge <- FALSE
 
 # Apply the Malawi fudge ------
 # flag for whether to calculate % of patients who knew their HIV status using c_notified as the denominator
 
-malawifudge <- TRUE
+malawifudge <- FALSE
 
 # Kill any attempt at using factors, unless we explicitly want them!
 options(stringsAsFactors=FALSE)
@@ -55,10 +55,6 @@ options(stringsAsFactors=FALSE)
 # use_live_db:    Flag -- if TRUE then data loaded durectly from the global TB database
 #                 if FALSE then data loaded from the .RData file
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-scripts_folder <- getSrcDirectory(function(x) {x})  # See http://stackoverflow.com/a/30306616
-
-setwd(scripts_folder)
 
 source("set_environment.r")  # particular to each person so this file is in the ignore list
 
@@ -87,50 +83,15 @@ setwd(file.path(annex4_folder, "linked_CSVs"))
 library("dplyr")
 
 
-# functions ----
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Load functions ----
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-# rounding convention
-# Depends on whether dealing with thousands or rates. In general, 0 is 0, under .1 to "<0.1", then appropriate sig figs.
-# thouEst introduced for estimated thousands so that don't use 3 sig figs for small numbers (used for estimated number of TB/HIV incident cases)
-
-frmt <- function(x, rates=FALSE, thou=FALSE, thouEst=FALSE) {
-  ifelse(x==0, "0",
-  ifelse(x < 0.01 & thou==TRUE, "<0.01",
-  ifelse(x < 0.1 & thou==FALSE, "<0.1",
-  ifelse(signif(x, 2) < 1 & thou==TRUE & thouEst==FALSE, formatC(signif(x,3), format="f", digits=3),
-  ifelse(signif(x, 3) < 0.1 & thou==TRUE & thouEst==TRUE, formatC(signif(x,3), format="f", digits=3),
-  ifelse(signif(x, 2) < 1, formatC(signif(x,2), format="f", digits=2),
-  ifelse(signif(x, 2) < 10, formatC(signif(x,2), format="f", digits=1),
-  ifelse(x > 1 & rates==FALSE, formatC(signif(x, 2), big.mark=" ", format="d"),
-  ifelse(signif(x, 3) < 100, formatC(signif(x, 2), big.mark=" ", format="d"), formatC(signif(x, 3), big.mark=" ", format="d"))))))))))
-}
+source(paste0(scripts_folder, "/functions/round_numbers.r"))
+source(paste0(scripts_folder, "/functions/handle_NAs.r"))
 
 
-# paste together uncertainty intervals enclosed by parentheses
-frmt_intervals <- function(best,lo,hi,rates=FALSE, thou=FALSE, thouEst=FALSE){
-  x <- NA
-  # Only show confidence intervals if any of best, lo, hi are not NA
-  if (thou==TRUE) {
-    #format as thousands
-    x <- ifelse(is.na(best) | is.na(lo) | is.na(hi) , NA, paste0("(", frmt(lo, thou=TRUE), "–", frmt(hi, thou=TRUE), ")"))
-  }
-  if (thou==TRUE & thouEst==TRUE) {
-    #format as thousands
-    x <- ifelse(is.na(best) | is.na(lo) | is.na(hi) , NA, paste0("(", frmt(lo, thou=TRUE, thouEst=TRUE), "–", frmt(hi, thou=TRUE, thouEst=TRUE), ")"))
-  }
-  if (rates==TRUE) {
-    # format as rates
-    x <- ifelse(is.na(best) | is.na(lo) | is.na(hi) , NA, paste0("(", frmt(lo, rates=TRUE), "–", frmt(hi, rates=TRUE), ")"))
-  }
-  return(x)
-}
 
 
-# Simple rounder that also adds in the thousands separator
-rounder <- function(x) {
-  ifelse(is.na(x), NA, formatC(round(x,0), big.mark=" ", format="d"))
-}
 
 # Combine datasets ----
 # Creates a table in order of countries, who regional aggregates and global aggregate, with a header row
@@ -151,34 +112,6 @@ combine_tables <- function(by_country, by_region, by_global){
   return(a)
 }
 
-
-# Better row sum ----
-# This function sums rows ignoring NAs unless all are NA
-# [rowSums() returns 0 instead of NA if all are NA and you use na.rm=TRUE]
-# use it like this
-# df$snu <- sum_of_row(df[c('new_sn', 'new_su')])
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-sum_of_row <- function(x) {
-  tosum <- as.matrix(x)
-  summed <- rowMeans((tosum), na.rm=TRUE) * rowSums(!is.na((tosum)))
-  return(summed)
-}
-
-
-# Convert a null (NA) to zero
-NZ <- function(x){
-  x <- ifelse(is.na(x),0,x)
-  return(x)
-}
-
-# Calculate % using numerator and denominator, format the output and cap at 100%
-cap_frmt_pct <- function(numerator, denominator) {
-
-  pct <- ifelse(is.na(numerator) | NZ(denominator) == 0, "",
-         ifelse((numerator * 100 / denominator) > 100, ">100", frmt(numerator * 100 / denominator)))
-
-  return(pct)
-}
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -272,39 +205,39 @@ inc_table <- within(inc_table, {
   pop_num <- ifelse(e_pop_num / 1000000 < 1, "< 1", rounder(e_pop_num / 1000000))
 
   # incidence (convert numbers to thousands)
-  inc_num <- frmt(e_inc_num / 1000, rates=TRUE, thou=TRUE)
-  inc_num_lo_hi <- frmt_intervals(e_inc_num / 1000,
+  inc_num <- display_num(e_inc_num / 1000, thousands=TRUE)
+  inc_num_lo_hi <- display_intervals(e_inc_num / 1000,
                                   e_inc_num_lo / 1000,
-                                  e_inc_num_hi / 1000, rates=TRUE, thou=TRUE)
+                                  e_inc_num_hi / 1000, thousands=TRUE)
 
-  inc_rate <- frmt(e_inc_100k, rates=TRUE)
-  inc_rate_lo_hi <- frmt_intervals(e_inc_100k,
+  inc_rate <- display_num(e_inc_100k)
+  inc_rate_lo_hi <- display_intervals(e_inc_100k,
                                    e_inc_100k_lo,
-                                   e_inc_100k_hi, rates=TRUE)
+                                   e_inc_100k_hi)
 
   # TB/HIV incidence (convert numbers to thousands)
-  inc_tbhiv_num <- frmt(e_inc_tbhiv_num / 1000, rates=TRUE, thou=TRUE, thouEst=TRUE)
-  inc_tbhiv_num_lo_hi <- frmt_intervals(e_inc_tbhiv_num / 1000,
+  inc_tbhiv_num <- display_num(e_inc_tbhiv_num / 1000, thousands=TRUE)
+  inc_tbhiv_num_lo_hi <- display_intervals(e_inc_tbhiv_num / 1000,
                                         e_inc_tbhiv_num_lo / 1000,
-                                        e_inc_tbhiv_num_hi / 1000, rates=TRUE, thou=TRUE, thouEst=TRUE)
+                                        e_inc_tbhiv_num_hi / 1000, thousands=TRUE)
 
-  inc_tbhiv_rate <- frmt(e_inc_tbhiv_100k, rates=TRUE)
-  inc_tbhiv_rate_lo_hi <- frmt_intervals(e_inc_tbhiv_100k,
+  inc_tbhiv_rate <- display_num(e_inc_tbhiv_100k)
+  inc_tbhiv_rate_lo_hi <- display_intervals(e_inc_tbhiv_100k,
                                          e_inc_tbhiv_100k_lo,
-                                         e_inc_tbhiv_100k_hi, rates=TRUE)
+                                         e_inc_tbhiv_100k_hi)
 
   # MDR/RR-TB incidence (convert numbers to thousands)
-  inc_rr_num <- frmt(e_inc_rr_num / 1000, thou=TRUE, thouEst=TRUE)
-  inc_rr_num_lo_hi <- frmt_intervals(e_inc_rr_num / 1000,
+  inc_rr_num <- display_num(e_inc_rr_num / 1000, thousands=TRUE)
+  inc_rr_num_lo_hi <- display_intervals(e_inc_rr_num / 1000,
                                         e_inc_rr_num_lo / 1000,
-                                        e_inc_rr_num_hi / 1000, thou=TRUE, thouEst=TRUE)
+                                        e_inc_rr_num_hi / 1000, thousands=TRUE)
 
 
   # Need to calculate MDR/RR-TB incidence rates
-  inc_rr_rate <- frmt( (e_inc_rr_num * 1e5 / e_pop_num), rates=TRUE)
-  inc_rr_rate_lo_hi <- frmt_intervals((e_inc_rr_num * 1e5 / e_pop_num),
+  inc_rr_rate <- display_num( (e_inc_rr_num * 1e5 / e_pop_num))
+  inc_rr_rate_lo_hi <- display_intervals((e_inc_rr_num * 1e5 / e_pop_num),
                                        (e_inc_rr_num_lo * 1e5 / e_pop_num),
-                                       (e_inc_rr_num_hi * 1e5 / e_pop_num), rates=TRUE)
+                                       (e_inc_rr_num_hi * 1e5 / e_pop_num))
 
   # Add for blank columns
   blank <- ""
@@ -385,37 +318,37 @@ mort_table <- within(mort_table, {
   e_pop_num <- ifelse(e_pop_num / 1000000 < 1, "< 1", rounder(e_pop_num / 1000000))
 
   # mortality (HIV-negative TB) (convert numbers to thousands)
-  mort_exc_tbhiv_num <- frmt(e_mort_exc_tbhiv_num / 1000, thou=TRUE)
-  mort_exc_tbhiv_num_lo_hi <- frmt_intervals(e_mort_exc_tbhiv_num / 1000,
+  mort_exc_tbhiv_num <- display_num(e_mort_exc_tbhiv_num / 1000, thousands=TRUE)
+  mort_exc_tbhiv_num_lo_hi <- display_intervals(e_mort_exc_tbhiv_num / 1000,
                                  e_mort_exc_tbhiv_num_lo / 1000,
-                                 e_mort_exc_tbhiv_num_hi / 1000, thou=TRUE)
+                                 e_mort_exc_tbhiv_num_hi / 1000, thousands=TRUE)
 
-  mort_exc_tbhiv_rate <- frmt(e_mort_exc_tbhiv_100k, rates=TRUE)
-  mort_exc_tbhiv_rate_lo_hi <- frmt_intervals(e_mort_exc_tbhiv_100k,
+  mort_exc_tbhiv_rate <- display_num(e_mort_exc_tbhiv_100k)
+  mort_exc_tbhiv_rate_lo_hi <- display_intervals(e_mort_exc_tbhiv_100k,
                                 e_mort_exc_tbhiv_100k_lo,
-                                e_mort_exc_tbhiv_100k_hi, rates=TRUE)
+                                e_mort_exc_tbhiv_100k_hi)
 
   # mortality (HIV-positive TB) (convert numbers to thousands)
-  mort_tbhiv_num <- frmt(e_mort_tbhiv_num / 1000, thou=TRUE, thouEst=TRUE)
-  mort_tbhiv_num_lo_hi <- frmt_intervals(e_mort_tbhiv_num / 1000,
+  mort_tbhiv_num <- display_num(e_mort_tbhiv_num / 1000, thousands=TRUE)
+  mort_tbhiv_num_lo_hi <- display_intervals(e_mort_tbhiv_num / 1000,
                                  e_mort_tbhiv_num_lo / 1000,
-                                 e_mort_tbhiv_num_hi / 1000, thou=TRUE, thouEst=TRUE)
+                                 e_mort_tbhiv_num_hi / 1000, thousands=TRUE)
 
-  mort_tbhiv_rate <- frmt(e_mort_tbhiv_100k, rates=TRUE)
-  mort_tbhiv_rate_lo_hi <- frmt_intervals(e_mort_tbhiv_100k,
+  mort_tbhiv_rate <- display_num(e_mort_tbhiv_100k)
+  mort_tbhiv_rate_lo_hi <- display_intervals(e_mort_tbhiv_100k,
                                 e_mort_tbhiv_100k_lo,
-                                e_mort_tbhiv_100k_hi, rates=TRUE)
+                                e_mort_tbhiv_100k_hi)
 
   # Mortality (HIV-negative and HIV-positive TB cases) (convert numbers to thousands)
-  mort_num <- frmt(e_mort_num / 1000, thou=TRUE)
-  mort_num_lo_hi <- frmt_intervals(e_mort_num / 1000,
+  mort_num <- display_num(e_mort_num / 1000, thousands=TRUE)
+  mort_num_lo_hi <- display_intervals(e_mort_num / 1000,
                                  e_mort_num_lo / 1000,
-                                 e_mort_num_hi / 1000, thou=TRUE)
+                                 e_mort_num_hi / 1000, thousands=TRUE)
 
-  mort_rate <- frmt(e_mort_100k, rates=TRUE)
-  mort_rate_lo_hi <- frmt_intervals(e_mort_100k,
+  mort_rate <- display_num(e_mort_100k)
+  mort_rate_lo_hi <- display_intervals(e_mort_100k,
                                 e_mort_100k_lo,
-                                e_mort_100k_hi, rates=TRUE)
+                                e_mort_100k_hi)
 
   # Add for blank columns
   blank <- ""
@@ -478,13 +411,13 @@ mdr_rr_measured[mdr_rr_measured$source_ret == "Model",
 mdr_rr_measured <- within(mdr_rr_measured, {
 
   # concatenate confidence interval variables into bracketed strings
-  e_rr_pct_new_lo_hi <- frmt_intervals(e_rr_pct_new,
+  e_rr_pct_new_lo_hi <- display_intervals(e_rr_pct_new,
                                        e_rr_pct_new_lo,
-                                       e_rr_pct_new_hi, rates=TRUE)
+                                       e_rr_pct_new_hi)
 
-  e_rr_pct_ret_lo_hi <- frmt_intervals(e_rr_pct_ret,
+  e_rr_pct_ret_lo_hi <- display_intervals(e_rr_pct_ret,
                                        e_rr_pct_ret_lo,
-                                       e_rr_pct_ret_hi, rates=TRUE)
+                                       e_rr_pct_ret_hi)
 
   # Add for blank columns
   blank <- ""
