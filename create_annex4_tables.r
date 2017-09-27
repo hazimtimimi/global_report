@@ -459,6 +459,7 @@ notif_country <-  notification %>%
                          newinc_rdx,
                          rdxsurvey_newinc_rdx,
                          rdxsurvey_newinc,
+                         newrel_tbhiv_flg,
                          newrel_hivtest,
                          new_labconf,
                          new_clindx,
@@ -468,16 +469,26 @@ notif_country <-  notification %>%
                   # calculate % with rapid daignostics (only done at country level)
                   mutate(pct_rdx = ifelse(c_newinc > 0,
                                           ifelse(rdx_data_available == 60,
-                                                rounder(newinc_rdx * 100 / c_newinc),
+                                                display_cap_pct(newinc_rdx, c_newinc),
                                                 ifelse(rdx_data_available == 61,
-                                                       rounder(rdxsurvey_newinc_rdx * 100 / rdxsurvey_newinc),
+                                                       display_cap_pct(rdxsurvey_newinc_rdx, rdxsurvey_newinc),
                                                        NA)),
                                           NA)) %>%
 
                   # calculate % with known HIV status (use different variables for aggregates)
+                  # In 2017 data collection year the variable newrel_tbhiv_flg was introduced to
+                  # indicate whether the denominator is new and relapse or if it is all notified cases
                   mutate(pct_hivtest = ifelse(c_newinc > 0,
-                                              rounder(newrel_hivtest * 100 / c_newinc),
-                                              NA))
+                                              ifelse(newrel_tbhiv_flg==1,
+                                                     display_cap_pct(newrel_hivtest, c_newinc),
+                                                     display_cap_pct(newrel_hivtest, c_notified)),
+                                              NA),
+
+
+                         # Flag country name if denominator is all cases not new and relapse
+                         entity = ifelse(!is.na(newrel_tbhiv_flg) & newrel_tbhiv_flg==0,
+                                          paste0(entity, "*"),
+                                          entity))
 
 # TEMPORARY POLITICAL SOLUTION FOR RUSSIAN FEDERATION 2010 onwards:
 # DO NOT CALCULATE % tb PATIENTS WITH KNOWN HIV STATUS
@@ -558,7 +569,7 @@ notif_region <- aggregated_estimates_epi %>%
                 mutate(pct_rdx = NA,
 
                        # calculate % with known HIV status
-                       pct_hivtest = rounder(hivtest_pct_numerator * 100 / hivtest_pct_denominator)) %>%
+                       pct_hivtest = display_cap_pct(hivtest_pct_numerator, hivtest_pct_denominator)) %>%
 
                 select(-g_whoregion,
                        -hivtest_pct_numerator,
@@ -586,7 +597,7 @@ notif_global <-  TBHIV_for_aggregates %>%
                   mutate(pct_rdx = NA,
 
                          # calculate % with known HIV status
-                         pct_hivtest = rounder(hivtest_pct_numerator * 100 / hivtest_pct_denominator)) %>%
+                         pct_hivtest = display_cap_pct(hivtest_pct_numerator, hivtest_pct_denominator)) %>%
 
                   select(-hivtest_pct_numerator,
                          -hivtest_pct_denominator)
@@ -660,10 +671,10 @@ notif_table <- combine_tables(notif_country, notif_region, notif_global)
 
 notif_table <- notif_table %>%
                 mutate(pct_pulm = ifelse(c_newinc > 0,
-                                         rounder(pulmonary * 100 / c_newinc),
+                                         display_cap_pct(pulmonary, c_newinc),
                                          NA),
                        pct_pulm_bact_conf = ifelse(pulmonary > 0,
-                                                   rounder(pulmonary_bact_conf * 100 / pulmonary),
+                                                   display_cap_pct(pulmonary_bact_conf, pulmonary),
                                                    NA),
 
                        # and format abosulte numbers for publication
