@@ -86,7 +86,7 @@ library("dplyr")
 # Load functions ----
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-source(paste0(scripts_folder, "/functions/round_numbers.r"))
+source(paste0(scripts_folder, "/functions/round_numbers.r"), encoding = "UTF-8")
 source(paste0(scripts_folder, "/functions/handle_NAs.r"))
 
 
@@ -826,102 +826,38 @@ tbhiv_country <- notification %>%
                  filter(year == notification_maxyear) %>%
 
                  # restrict to high burden countries
-                 inner_join(tbhiv_30hbc) %>%
-                 select(entity = country,
-                         iso2,
-                         c_notified,
-                         c_newinc,
-                         newrel_tbhiv_flg,
-                         newrel_hivtest,
-                         newrel_hivpos,
-                         newrel_art,
-                         hiv_ipt,
-                         hiv_reg_new,
-                         hiv_tbdetect,
-                         hiv_reg_new2)
+                 inner_join(tbhiv_30hbc, by = "iso2") %>%
+                 select(iso2,
+                        hiv_ipt,
+                        hiv_reg_new,
+                        hiv_tbdetect,
+                        hiv_reg_new2)
+
+# link to HIV testing numerators and denominators
+tbhiv_country <- TBHIV_for_aggregates %>%
+                 filter(year == notification_maxyear) %>%
+                 select(iso2,
+                        newrel_hivtest,
+                        newrel_hivpos,
+                        hivtest_pct_numerator,
+                        hivtest_pct_denominator,
+                        hivtest_pos_pct_numerator,
+                        hivtest_pos_pct_denominator,
+                        hiv_art_pct_numerator,
+                        hiv_art_pct_denominator) %>%
+                 inner_join(tbhiv_country, by = "iso2")
+
 
 # link to estimates
 tbhiv_country <- estimates_epi_rawvalues %>%
                  filter(year == notification_maxyear) %>%
-                 select(iso2,
+                 select(entity = country,
+                        iso2,
                         e_inc_tbhiv_num,
                         e_inc_tbhiv_num_lo,
                         e_inc_tbhiv_num_hi) %>%
-                 inner_join(tbhiv_country) %>%
-
-                  # Calculate percentages
-                  mutate(
-                          # % with known HIV status (use different variables for aggregates)
-                          # In 2017 data collection year the variable newrel_tbhiv_flg was introduced to
-                          # indicate whether the denominator is new and relapse or if it is all notified cases
-
-                          pct_hivtest = ifelse(c_newinc > 0,
-                                              ifelse(newrel_tbhiv_flg==1,
-                                                     display_cap_pct(newrel_hivtest, c_newinc),
-                                                     paste0(display_cap_pct(newrel_hivtest, c_notified), "*")),
-                                              NA),
-
-                          # % tested who were HIV-positive
-                          pct_hivpos = ifelse(c_newinc > 0 & newrel_hivtest > 0,
-                                              display_cap_pct(newrel_hivpos, newrel_hivtest),
-                                              NA),
-
-                          # HIV-positive as % of estimated HIV-positive TB cases
-                          pct_estimated_hivpos = ifelse(c_newinc > 0 & newrel_hivtest > 0,
-                                                        display_cap_pct(newrel_hivpos, e_inc_tbhiv_num),
-                                                        NA),
-
-                          pct_estimated_hivpos_lo = ifelse(c_newinc > 0 & newrel_hivtest > 0,
-                                                            display_cap_pct(newrel_hivpos, e_inc_tbhiv_num_hi),
-                                                            NA),
-
-                          pct_estimated_hivpos_hi = ifelse(c_newinc > 0 & newrel_hivtest > 0,
-                                                            display_cap_pct(newrel_hivpos, e_inc_tbhiv_num_lo),
-                                                            NA),
-
-                          # % HIV-positive TB cases on ART
-                          pct_art = ifelse(c_newinc > 0 & newrel_hivpos > 0,
-                                          display_cap_pct(newrel_art, newrel_hivpos),
-                                          NA),
-
-                          # HIV-positive TB cases on ART as % of estimated HIV-positive TB cases
-                          pct_estimated_art = ifelse(c_newinc > 0 & newrel_hivpos > 0,
-                                                      display_cap_pct(newrel_art, e_inc_tbhiv_num),
-                                                      NA),
-
-                          pct_estimated_art_lo = ifelse(c_newinc > 0 & newrel_hivpos > 0,
-                                                      display_cap_pct(newrel_art, e_inc_tbhiv_num_hi),
-                                                      NA),
-
-                          pct_estimated_art_hi = ifelse(c_newinc > 0 & newrel_hivpos > 0,
-                                                      display_cap_pct(newrel_art, e_inc_tbhiv_num_lo),
-                                                      NA),
-
-                          # % HIV-positive newly enrolled provided preventive therapy
-                          pct_ipt = display_cap_pct(hiv_ipt, hiv_reg_new),
-
-                          # % HIV-positive newly enrolled cases also notified with TB in same year
-                          pct_tbdetect = display_cap_pct(hiv_tbdetect, hiv_reg_new2)
-                          ) %>%
-
-                select(entity,
-                       e_inc_tbhiv_num,
-                       e_inc_tbhiv_num_lo,
-                       e_inc_tbhiv_num_hi,
-                       newrel_hivtest,
-                       pct_hivtest,
-                       pct_hivpos,
-                       pct_estimated_hivpos,
-                       pct_estimated_hivpos_lo,
-                       pct_estimated_hivpos_hi,
-                       pct_art,
-                       pct_estimated_art,
-                       pct_estimated_art_lo,
-                       pct_estimated_art_hi,
-                       pct_ipt,
-                       pct_tbdetect)
-
-
+                 inner_join(tbhiv_country, by = "iso2") %>%
+                 select(-iso2)
 
 # Get regional aggregates
 tbhiv_region <- notification %>%
@@ -942,7 +878,14 @@ tbhiv_region <- TBHIV_for_aggregates %>%
                 filter(year == notification_maxyear) %>%
                 group_by(g_whoregion) %>%
                 summarise_each(funs(sum(., na.rm = TRUE)),
-                               contains("hiv")) %>%
+                                newrel_hivtest,
+                                newrel_hivpos,
+                                hivtest_pct_numerator,
+                                hivtest_pct_denominator,
+                                hivtest_pos_pct_numerator,
+                                hivtest_pos_pct_denominator,
+                                hiv_art_pct_numerator,
+                                hiv_art_pct_denominator) %>%
                 # get rid of pesky grouping
                 ungroup() %>%
                 inner_join(tbhiv_region, by = "g_whoregion")
@@ -950,59 +893,161 @@ tbhiv_region <- TBHIV_for_aggregates %>%
 # merge with regional names and estimates
 tbhiv_region <- aggregated_estimates_epi_rawvalues %>%
                 filter(year == notification_maxyear & group_type == "g_whoregion") %>%
-                select(g_whoregion = group_name,
-                       entity = group_description,
+                select(entity = group_description,
+                       g_whoregion = group_name,
                        e_inc_tbhiv_num,
                        e_inc_tbhiv_num_lo,
                        e_inc_tbhiv_num_hi) %>%
                 inner_join(tbhiv_region, by = "g_whoregion") %>%
-                arrange(g_whoregion) %>%
+                arrange(g_whoregion)%>%
+                select(-g_whoregion)
 
-                # Calculate percentages
-                mutate(
-                       # calculate % with known HIV status
-                       pct_hivtest = display_cap_pct(hivtest_pct_numerator, hivtest_pct_denominator),
 
-                       # % tested who were HIV-positive
-                       pct_hivpos = display_cap_pct(hivtest_pos_pct_numerator, hivtest_pos_pct_denominator),
+# Get global aggregate
+tbhiv_global <- notification %>%
+                filter(year == notification_maxyear) %>%
+                select(hiv_ipt,
+                       hiv_reg_new,
+                       hiv_tbdetect,
+                       hiv_reg_new2) %>%
+                summarise_each(funs(sum(., na.rm = TRUE)),
+                               contains("hiv")) %>%
+                # get rid of pesky grouping
+                ungroup()%>%
+                mutate(group_name = "global")
 
-                       # HIV-positive as % of estimated HIV-positive TB cases
-                       pct_estimated_hivpos = display_cap_pct(hivtest_pos_pct_numerator, e_inc_tbhiv_num),
 
-                       pct_estimated_hivpos_lo = display_cap_pct(hivtest_pos_pct_numerator, e_inc_tbhiv_num_hi),
-                       pct_estimated_hivpos_hi = display_cap_pct(hivtest_pos_pct_numerator, e_inc_tbhiv_num_lo),
+tbhiv_global <- TBHIV_for_aggregates %>%
+                filter(year == notification_maxyear) %>%
+                summarise_each(funs(sum(., na.rm = TRUE)),
+                                newrel_hivtest,
+                                newrel_hivpos,
+                                hivtest_pct_numerator,
+                                hivtest_pct_denominator,
+                                hivtest_pos_pct_numerator,
+                                hivtest_pos_pct_denominator,
+                                hiv_art_pct_numerator,
+                                hiv_art_pct_denominator) %>%
+                # get rid of pesky grouping
+                ungroup()%>%
+                mutate(group_name = "global") %>%
+                inner_join(tbhiv_global, by = "group_name")
 
-                       # % HIV-positive TB cases on ART
-                       pct_art = display_cap_pct(hiv_art_pct_numerator, hiv_art_pct_denominator),
-
-                       # HIV-positive TB cases on ART as % of estimated HIV-positive TB cases
-                       pct_estimated_art = display_cap_pct(hiv_art_pct_numerator, e_inc_tbhiv_num),
-
-                       pct_estimated_art_lo = display_cap_pct(hiv_art_pct_numerator, e_inc_tbhiv_num_hi),
-                       pct_estimated_art_hi = display_cap_pct(hiv_art_pct_numerator, e_inc_tbhiv_num_lo),
-
-                       # % HIV-positive newly enrolled provided preventive therapy
-                       pct_ipt = display_cap_pct(hiv_ipt, hiv_reg_new),
-
-                       # % HIV-positive newly enrolled cases also notified with TB in same year
-                       pct_tbdetect = display_cap_pct(hiv_tbdetect, hiv_reg_new2)) %>%
-
-                select(entity,
+# merge with estimates
+tbhiv_global <- aggregated_estimates_epi_rawvalues %>%
+                filter(year == notification_maxyear & group_type == "global") %>%
+                select(entity = group_description,
+                       group_name,
                        e_inc_tbhiv_num,
                        e_inc_tbhiv_num_lo,
-                       e_inc_tbhiv_num_hi,
-                       newrel_hivtest,
-                       pct_hivtest,
-                       pct_hivpos,
-                       pct_estimated_hivpos,
-                       pct_estimated_hivpos_lo,
-                       pct_estimated_hivpos_hi,
-                       pct_art,
-                       pct_estimated_art,
-                       pct_estimated_art_lo,
-                       pct_estimated_art_hi,
-                       pct_ipt,
-                       pct_tbdetect)
+                       e_inc_tbhiv_num_hi) %>%
+                inner_join(tbhiv_global, by = "group_name") %>%
+                select(-group_name)
+
+
+# Create combined table in order of countries then regional and global estimates
+tbhiv_table <- combine_tables(tbhiv_country, tbhiv_region, tbhiv_global)
+
+
+# Calculate percentages
+
+tbhiv_table <- tbhiv_table %>%
+
+              # Calculate percentages
+              mutate(
+                     # calculate % with known HIV status
+                     pct_hivtest = display_cap_pct(hivtest_pct_numerator, hivtest_pct_denominator),
+
+                     # % tested who were HIV-positive
+                     pct_hivpos = display_cap_pct(hivtest_pos_pct_numerator, hivtest_pos_pct_denominator),
+
+                     # HIV-positive as % of estimated HIV-positive TB cases
+                     pct_estimated_hivpos = display_cap_pct(hivtest_pos_pct_numerator, e_inc_tbhiv_num),
+
+                     pct_estimated_hivpos_lo = display_cap_pct(hivtest_pos_pct_numerator, e_inc_tbhiv_num_hi),
+                     pct_estimated_hivpos_hi = display_cap_pct(hivtest_pos_pct_numerator, e_inc_tbhiv_num_lo),
+
+                     # % HIV-positive TB cases on ART
+                     pct_art = display_cap_pct(hiv_art_pct_numerator, hiv_art_pct_denominator),
+
+                     # HIV-positive TB cases on ART as % of estimated HIV-positive TB cases
+                     pct_estimated_art = display_cap_pct(hiv_art_pct_numerator, e_inc_tbhiv_num),
+
+                     pct_estimated_art_lo = display_cap_pct(hiv_art_pct_numerator, e_inc_tbhiv_num_hi),
+                     pct_estimated_art_hi = display_cap_pct(hiv_art_pct_numerator, e_inc_tbhiv_num_lo),
+
+                     # % HIV-positive newly enrolled provided preventive therapy
+                     pct_ipt = display_cap_pct(hiv_ipt, hiv_reg_new),
+
+                     # % HIV-positive newly enrolled cases also notified with TB in same year
+                     pct_tbdetect = display_cap_pct(hiv_tbdetect, hiv_reg_new2)) %>%
+
+              select(entity,
+                     e_inc_tbhiv_num,
+                     e_inc_tbhiv_num_lo,
+                     e_inc_tbhiv_num_hi,
+                     newrel_hivtest,
+                     pct_hivtest,
+                     pct_hivpos,
+                     pct_estimated_hivpos,
+                     pct_estimated_hivpos_lo,
+                     pct_estimated_hivpos_hi,
+                     pct_art,
+                     pct_estimated_art,
+                     pct_estimated_art_lo,
+                     pct_estimated_art_hi,
+                     pct_ipt,
+                     pct_tbdetect)
+
+# Format for output
+tbhiv_table <- tbhiv_table %>%
+               mutate(
+
+                # TB/HIV incidence (convert numbers to thousands)
+                inc_tbhiv_num = display_num(e_inc_tbhiv_num / 1000, thousands=TRUE),
+
+                inc_tbhiv_num_lo_hi = display_intervals(e_inc_tbhiv_num / 1000,
+                                                      e_inc_tbhiv_num_lo / 1000,
+                                                      e_inc_tbhiv_num_hi / 1000, thousands=TRUE),
+
+                # number tested for HIV
+                newrel_hivtest = rounder(newrel_hivtest),
+
+                # create lo_hi string for percentages of estimated TB/HIV incidence
+                pct_estimated_hivpos_lo_hi =  ifelse(pct_estimated_hivpos == "" ,
+                                                    NA,
+                                                    paste0("(",
+                                                           pct_estimated_hivpos_lo,
+                                                           "–",
+                                                           pct_estimated_hivpos_hi,
+                                                           ")")),
+
+                pct_estimated_art_lo_hi =  ifelse(pct_estimated_art == "" ,
+                                    NA,
+                                    paste0("(",
+                                           pct_estimated_art_lo,
+                                           "–",
+                                           pct_estimated_art_hi,
+                                           ")")),
+
+                # Add for blank columns
+                blank = ""
+
+               )
+
+
+# Insert "blank" placeholders for use in the output spreadsheet before writing out to CSV
+# dplyr's select statement won't repeat the blanks, hence use subset() from base r instead
+
+subset(tbhiv_table,
+       select=c("entity", "blank",
+                "inc_tbhiv_num", "inc_tbhiv_num_lo_hi", "blank",
+                "newrel_hivtest", "pct_hivtest", "blank",
+                "pct_hivpos", "pct_estimated_hivpos", "pct_estimated_hivpos_lo_hi", "blank",
+                "pct_art", "pct_estimated_art_lo_hi", "blank",
+                "pct_ipt", "pct_tbdetect"
+                )) %>%
+  write.csv(file="tbhiv_table.csv", row.names=FALSE, na="")
 
 
 # Don't leave any mess behind!
