@@ -857,7 +857,8 @@ tbhiv_country <- estimates_epi_rawvalues %>%
                         e_inc_tbhiv_num_lo,
                         e_inc_tbhiv_num_hi) %>%
                  inner_join(tbhiv_country, by = "iso2") %>%
-                 select(-iso2)
+                 select(-iso2) %>%
+                 arrange(entity)
 
 # Get regional aggregates
 tbhiv_region <- notification %>%
@@ -1044,7 +1045,7 @@ subset(tbhiv_table,
                 "inc_tbhiv_num", "inc_tbhiv_num_lo_hi", "blank",
                 "newrel_hivtest", "pct_hivtest", "blank",
                 "pct_hivpos", "pct_estimated_hivpos", "pct_estimated_hivpos_lo_hi", "blank",
-                "pct_art", "pct_estimated_art_lo_hi", "blank",
+                "pct_art", "pct_estimated_art", "pct_estimated_art_lo_hi", "blank",
                 "pct_ipt", "pct_tbdetect"
                 )) %>%
   write.csv(file="tbhiv_table.csv", row.names=FALSE, na="")
