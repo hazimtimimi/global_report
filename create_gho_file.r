@@ -14,7 +14,7 @@ rm(list=ls())
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # Establish the report year
-report_year <- 2016
+report_year <- 2017
 
 # The following are convenience variables since notification and most other data sets will run up to the
 # year before the reporting year and outcomes will run up to two years before the reporting year
@@ -24,18 +24,21 @@ outcome_maxyear      <- (report_year - 2)
 
 # Apply the Russian fudge ------
 # Flag for whether to suppress calculation of %
-# of notified TB patients who knew their HIV status (applies to table 6)
+# of notified TB patients who knew their HIV status
+# Only for years prior to 2016
 
 russianfudge <- TRUE
 
 # Apply the Malawi fudge ------
 # Flag for whether to calculate % of patients who knew their HIV status using c_notified as the denominator
+# Only for 2015
 
 malawifudge <- TRUE
 
 # Apply the Swiss fudge ------
 # Flag for whether to adjust denominator to calculate % of new cases tested for rifampicin resistance
 # because of large number with unknown treatment history
+# Only for 2015
 
 swissfudge <- TRUE
 
@@ -58,10 +61,6 @@ options(stringsAsFactors=FALSE)
 #                 if FALSE then data loaded from the .RData file
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-
-scripts_folder <- getSrcDirectory(function(x) {x})  # See http://stackoverflow.com/a/30306616
-
-setwd(scripts_folder)
 
 source("set_environment.r")  # particular to each person so this file is in the ignore list
 
@@ -111,57 +110,11 @@ library("dplyr")
 library("tidyr")
 
 
-# functions ----
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-# rounding convention
-# Depends on whether dealing with thousands or rates. In general, 0 is 0, under .1 to "<0.1", then appropriate sig figs.
-# thouEst introduced for estimated thousands so that don't use 3 sig figs for small numbers (used for estimated number of TB/HIV incident cases)
-
-frmt <- function(x, rates=FALSE, thou=FALSE, thouEst=FALSE) {
-  ifelse(x==0, "0",
-  ifelse(x < 0.01 & thou==TRUE, "<0.01",
-  ifelse(x < 0.1 & thou==FALSE, "<0.1",
-  ifelse(signif(x, 2) < 1 & thou==TRUE & thouEst==FALSE, formatC(signif(x,3), format="f", digits=3),
-  ifelse(signif(x, 3) < 0.1 & thou==TRUE & thouEst==TRUE, formatC(signif(x,3), format="f", digits=3),
-  ifelse(signif(x, 2) < 1, formatC(signif(x,2), format="f", digits=2),
-  ifelse(signif(x, 2) < 10, formatC(signif(x,2), format="f", digits=1),
-  ifelse(x > 1 & rates==FALSE, formatC(signif(x, 2), big.mark=" ", format="d"),
-  ifelse(signif(x, 3) < 100, formatC(signif(x, 2), big.mark=" ", format="d"), formatC(signif(x, 3), big.mark=" ", format="d"))))))))))
-}
-
-
-
-# Better row sum ----
-# This function sums rows ignoring NAs unless all are NA
-# [rowSums() returns 0 instead of NA if all are NA and you use na.rm=TRUE]
-# use it like this
-# df$snu <- sum_of_row(df[c('new_sn', 'new_su')])
+# Load functions ----
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-sum_of_row <- function(x) {
-  tosum <- as.matrix(x)
-  summed <- rowMeans((tosum), na.rm=TRUE) * rowSums(!is.na((tosum)))
-  # Flush out any NaN's
-  summed <- ifelse(is.nan(summed), NA, summed)
-  return(summed)
-}
 
-
-# Convert a null (NA) to zero
-NZ <- function(x){
-  x <- ifelse(is.na(x),0,x)
-  return(x)
-}
-
-# Calculate % using numerator and denominator, format the output and cap at 100%
-cap_frmt_pct <- function(numerator, denominator) {
-
-  pct <- ifelse(is.na(numerator) | NZ(denominator) == 0, "",
-                ifelse((numerator * 100 / denominator) > 100, ">100", frmt(numerator * 100 / denominator)))
-
-  return(pct)
-}
-
+source(paste0(scripts_folder, "/functions/round_numbers.r"), encoding = "UTF-8")
+source(paste0(scripts_folder, "/functions/handle_NAs.r"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -174,7 +127,17 @@ stop("
      Stopping here so can do the rest manually!
      <<<<<<<<<<<<")
 
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+#   g_income -----
+#   Recreate the old g_income variable which used to exist prior to 2017 data collection year
+#   Note that in 2017, Cook Islands and Niue did not have a g_income assignation, therefor must
+#   do a left join when combining this table with notifications, outcomes etc.
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+wb_g_income <-  country_group_membership %>%
+                 filter(group_type == "g_income")  %>%
+                 select(iso2, group_type, group_name) %>%
+                 spread(key = group_type, value = group_name, fill = 0)
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -362,14 +325,18 @@ rm(list=c("est_c_best",  "est_c_lo", "est_c_hi", "est", "est_rr"))
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
+
 # Get data
 notif <-  notification %>%
           filter(year >= 2000) %>%
+          left_join(wb_g_income, by = "iso2") %>%
           select(iso3, year, g_whoregion, g_income,
                  c_newinc,
                  new_labconf, new_sp, new_clindx, new_sn, new_su, new_ep, new_oth,
                  ret_rel_labconf, ret_rel_clindx, ret_rel_ep, ret_rel,
                  ret_nrel, ret_taf, ret_tad, ret_oth, newret_oth)
+
+
 
 
 # Calculate stuff
@@ -489,6 +456,7 @@ rm(list=c("notif", "notif_agg"))
 
 # Get country data
 hiv_test <- TBHIV_for_aggregates %>%
+            left_join(wb_g_income, by = "iso2") %>%
             select(year, g_whoregion, g_income, iso3, starts_with("hiv"), newrel_hivtest, c_notified) %>%
             filter(year >= 2003)
 
@@ -538,9 +506,9 @@ hiv_test_agg <- inner_join(hiv_test_agg, gho_group_codes, by = "group_name") %>%
 
 # Calculate the output variables for aggregates
 hiv_test_agg <- within(hiv_test_agg, {
-  hivtest_pct <- frmt(hivtest_pct_numerator * 100 / hivtest_pct_denominator )
-  hivtest_pos_pct <- frmt(hivtest_pos_pct_numerator * 100/ hivtest_pos_pct_denominator )
-  hiv_art_pct <- frmt(hiv_art_pct_numerator * 100/ hiv_art_pct_denominator )
+  hivtest_pct <- display_cap_pct(hivtest_pct_numerator, hivtest_pct_denominator )
+  hivtest_pos_pct <- display_cap_pct(hivtest_pos_pct_numerator, hivtest_pos_pct_denominator )
+  hiv_art_pct <- display_cap_pct(hiv_art_pct_numerator, hiv_art_pct_denominator )
 })
 
 
@@ -556,28 +524,22 @@ hiv_test_agg <- hiv_test_agg  %>%
 
 # Calculate and format the output variables for countries
 hiv_test <- within(hiv_test, {
-  hivtest_pct <- ifelse(hivtest_pct_denominator==0,
-                        NA,
-                        frmt(hivtest_pct_numerator * 100 / hivtest_pct_denominator ))
+  hivtest_pct <- display_cap_pct(hivtest_pct_numerator, hivtest_pct_denominator )
 
-  hivtest_pos_pct <- ifelse(hivtest_pos_pct_denominator==0,
-                            NA,
-                            frmt(hivtest_pos_pct_numerator * 100/ hivtest_pos_pct_denominator ))
+  hivtest_pos_pct <- display_cap_pct(hivtest_pos_pct_numerator, hivtest_pos_pct_denominator )
 
-  hiv_art_pct <- ifelse(hivtest_pos_pct_numerator==0,
-                        NA,
-                        frmt(hiv_art_pct_numerator * 100/ hiv_art_pct_denominator ))
+  hiv_art_pct <- display_cap_pct(hiv_art_pct_numerator, hiv_art_pct_denominator )
 
-  # TEMPORARY POLITICAL SOLUTION FOR RUSSIAN FEDERATION 2010 onwards:
+  # TEMPORARY POLITICAL SOLUTION FOR RUSSIAN FEDERATION 2010-2015:
   # DO NOT CALCULATE % tb PATIENTS WITH KNOWN HIV STATUS
   # Enable or disable using flag in section A right at the top of the script.
 
   if (isTRUE(russianfudge)) {
-    hivtest_pct <- ifelse(iso3=="RUS" & year>2009,
+    hivtest_pct <- ifelse(iso3=="RUS" & between(year, 2010, 2015),
                           NA,
                           hivtest_pct)
 
-    hivtest_pos_pct <- ifelse(iso3=="RUS" & year>2009,
+    hivtest_pos_pct <- ifelse(iso3=="RUS" & between(year, 2010, 2015),
                               NA,
                               hivtest_pos_pct)
   }
@@ -589,7 +551,7 @@ hiv_test <- within(hiv_test, {
   if (isTRUE(malawifudge)) {
 
     hivtest_pct <- ifelse(iso3=="MWI" & year == 2015,
-                          frmt(newrel_hivtest * 100 / c_notified ),
+                          display_cap_pct(newrel_hivtest, c_notified ),
                           hivtest_pct)
 
   }
@@ -648,6 +610,8 @@ rm(hiv_test)
 # Get country data
 # A. Notifications
 dst_rrmdr_country <- notification %>%
+                    left_join(wb_g_income, by = "iso2") %>%
+                    inner_join(dr_derived_variables, by = c("iso3", "year")) %>%
                     select(iso3, year, g_whoregion, g_income,
                            c_rrmdr,
                            rdst_new, new_labconf, new_sp, new_bc, c_newunk,
@@ -688,12 +652,7 @@ dst_rrmdr_country <- within(dst_rrmdr_country, {
                               new_pulm_bac_conf)
 
 
-# Flag for whether to adjust denominator to calculate % of new cases tested for rifampicin resistance
-# because of large number with unknown treatment history
-
-swissfudge <- TRUE
-
-  # TEMPORARY SOLUTION FOR Switzerland 2016:
+  # TEMPORARY SOLUTION FOR Switzerland 2016 data collection year:
 	# Switzerland informed us that out of the 531 'new or treatment history unknown' cases
 	# 162 had unknown previous treatment history, therefore denominator for the calculation
 	# should be 531 - 162
@@ -813,10 +772,10 @@ rm(list=c("dst_rrmdr_country","dst_rrmdr_agg"))
 dst_rrmdr <- within(dst_rrmdr, {
 
   # % of new pulmonary lab-confirmed cases tested
-  TB_c_dst_rlt_new_pct <- cap_frmt_pct(dst_new, new_pulm_bac_conf)
+  TB_c_dst_rlt_new_pct <- display_cap_pct(dst_new, new_pulm_bac_conf)
 
   # % of previously treated cases tested
-  TB_c_dst_rlt_ret_pct <- cap_frmt_pct(dst_ret, c_ret)
+  TB_c_dst_rlt_ret_pct <- display_cap_pct(dst_ret, c_ret)
 })
 
 
@@ -850,6 +809,7 @@ rm(dst_rrmdr)
 
 # Get country data
 outcome_country <-  outcomes %>%
+                    left_join(wb_g_income, by = "iso2") %>%
                     select(iso3, year, g_whoregion, g_income,
                            new_sp_coh, new_sp_cur, new_sp_cmplt,
                            new_snep_coh, new_snep_cmplt,
@@ -908,25 +868,23 @@ rm(list=c("outcome_region",  "outcome_income", "outcome_global"))
 outcome_agg <- within(outcome_agg, {
 
   # New or new+relapse (mutually exclusive variables, so this works)
-  c_new_tsr <- round( (new_sp_cur + new_sp_cmplt + new_snep_cmplt + newrel_succ) * 100 /
-                          (new_sp_coh + new_snep_coh + newrel_coh) )
+  c_new_tsr <- display_cap_pct( (new_sp_cur + new_sp_cmplt + new_snep_cmplt + newrel_succ),
+                                (new_sp_coh + new_snep_coh + newrel_coh) )
 
   # Retreatment or retreatment excluding relapse (mutually exclusive variables, so this works)
-  c_ret_tsr <- round( (ret_cur + ret_cmplt + ret_nrel_succ) * 100 /
-                          (ret_coh + ret_nrel_coh) )
+  c_ret_tsr <- display_cap_pct( (ret_cur + ret_cmplt + ret_nrel_succ),
+                                (ret_coh + ret_nrel_coh) )
 
   # HIV-positive, all cases (mutually exclusive variables, so this works)
-  c_tbhiv_tsr <- ifelse((hiv_new_sp_coh + hiv_new_snep_coh + hiv_ret_coh + tbhiv_coh) > 0,
-                        round( (hiv_new_sp_cur + hiv_new_sp_cmplt +
-                                hiv_new_snep_cmplt +
-                                hiv_ret_cur + hiv_ret_cmplt +
-                                tbhiv_succ) * 100 /
-                            (hiv_new_sp_coh + hiv_new_snep_coh + hiv_ret_coh + tbhiv_coh) ),
-                        NA)
+  c_tbhiv_tsr <- display_cap_pct( (hiv_new_sp_cur + hiv_new_sp_cmplt +
+                                    hiv_new_snep_cmplt +
+                                    hiv_ret_cur + hiv_ret_cmplt +
+                                    tbhiv_succ),
+                                  (hiv_new_sp_coh + hiv_new_snep_coh + hiv_ret_coh + tbhiv_coh) )
 
   # MDR and XDR (variables already harmonised in the view)
-  c_mdr_tsr <- ifelse( mdr_coh > 0, round( mdr_succ * 100 / mdr_coh), NA)
-  c_xdr_tsr <- ifelse( xdr_coh > 0, round( xdr_succ * 100 / xdr_coh), NA)
+  c_mdr_tsr <- display_cap_pct( mdr_succ, mdr_coh)
+  c_xdr_tsr <- display_cap_pct( xdr_succ, xdr_coh)
 
 })
 
