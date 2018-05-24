@@ -154,6 +154,7 @@ est_country <- estimates_epi %>%
                        e_mort_exc_tbhiv_num, e_mort_exc_tbhiv_num_lo, e_mort_exc_tbhiv_num_hi,
                        e_mort_exc_tbhiv_100k, e_mort_exc_tbhiv_100k_lo, e_mort_exc_tbhiv_100k_hi,
                        e_inc_num, e_inc_num_lo, e_inc_num_hi,
+                       e_inc_num_014, e_inc_num_014_lo, e_inc_num_014_hi,
                        e_inc_100k, e_inc_100k_lo, e_inc_100k_hi,
                        e_inc_tbhiv_100k, e_inc_tbhiv_100k_lo, e_inc_tbhiv_100k_hi,
                        e_inc_tbhiv_num, e_inc_tbhiv_num_lo, e_inc_tbhiv_num_hi,
@@ -166,6 +167,7 @@ est_agg <-  aggregated_estimates_epi %>%
                    e_mort_exc_tbhiv_num, e_mort_exc_tbhiv_num_lo, e_mort_exc_tbhiv_num_hi,
                    e_mort_exc_tbhiv_100k, e_mort_exc_tbhiv_100k_lo, e_mort_exc_tbhiv_100k_hi,
                    e_inc_num, e_inc_num_lo, e_inc_num_hi,
+                   e_inc_num_014, e_inc_num_014_lo, e_inc_num_014_hi,
                    e_inc_100k, e_inc_100k_lo, e_inc_100k_hi,
                    e_inc_tbhiv_100k, e_inc_tbhiv_100k_lo, e_inc_tbhiv_100k_hi,
                    e_inc_tbhiv_num, e_inc_tbhiv_num_lo, e_inc_tbhiv_num_hi,
@@ -209,6 +211,7 @@ est_c_best <- est %>%
               select(location_code, year,
                      e_mort_exc_tbhiv_num, e_mort_exc_tbhiv_100k,
                      e_inc_num, e_inc_100k,
+                     e_inc_num_014,
                      e_inc_tbhiv_100k, e_inc_tbhiv_num,
                      c_cdr)
 
@@ -222,6 +225,7 @@ est_c_best <- est_c_best %>%
               rename(time_period = year,
                      MDG_0000000020 = e_inc_100k,
                      TB_e_inc_num = e_inc_num,
+                     TB_e_inc_num_014 = e_inc_num_014,
                      MDG_0000000017 = e_mort_exc_tbhiv_100k,
                      TB_e_mort_exc_tbhiv_num = e_mort_exc_tbhiv_num,
                      TB_e_inc_tbhiv_100k = e_inc_tbhiv_100k,
@@ -245,6 +249,7 @@ est_c_lo <- est %>%
             select(location_code, year,
                    e_mort_exc_tbhiv_num_lo, e_mort_exc_tbhiv_100k_lo,
                    e_inc_num_lo, e_inc_100k_lo,
+                   e_inc_num_014_lo,
                    e_inc_tbhiv_100k_lo, e_inc_tbhiv_num_lo,
                    c_cdr_lo)
 
@@ -258,6 +263,7 @@ est_c_lo <- est_c_lo %>%
             rename(time_period = year,
                    MDG_0000000020 = e_inc_100k_lo,
                    TB_e_inc_num = e_inc_num_lo,
+                   TB_e_inc_num_014 = e_inc_num_014_lo,
                    MDG_0000000017 = e_mort_exc_tbhiv_100k_lo,
                    TB_e_mort_exc_tbhiv_num = e_mort_exc_tbhiv_num_lo,
                    TB_e_inc_tbhiv_100k = e_inc_tbhiv_100k_lo,
@@ -277,6 +283,7 @@ est_c_lo <- est_c_lo %>%
 est_c_hi <- est %>%
             select(location_code, year,
                    e_mort_exc_tbhiv_num_hi, e_mort_exc_tbhiv_100k_hi,
+                   e_inc_num_014_hi,
                    e_inc_num_hi, e_inc_100k_hi,
                    e_inc_tbhiv_100k_hi, e_inc_tbhiv_num_hi,
                    c_cdr_hi)
@@ -291,6 +298,7 @@ est_c_hi <- est_c_hi %>%
             rename(time_period = year,
                    MDG_0000000020 = e_inc_100k_hi,
                    TB_e_inc_num = e_inc_num_hi,
+                   TB_e_inc_num_014 = e_inc_num_014_hi,
                    MDG_0000000017 = e_mort_exc_tbhiv_100k_hi,
                    TB_e_mort_exc_tbhiv_num = e_mort_exc_tbhiv_num_hi,
                    TB_e_inc_tbhiv_100k = e_inc_tbhiv_100k_hi,
