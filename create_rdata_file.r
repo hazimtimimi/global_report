@@ -10,10 +10,6 @@
 # Clear the decks ----
 rm(list=ls())
 
-scripts_folder <- getSrcDirectory(function(x) {x})  # See http://stackoverflow.com/a/30306616
-setwd(scripts_folder)
-
-
 # Get DB connection string and path where to save the data (variable rdata_folder in set_environment.r)
 source("set_environment.r")
 
@@ -26,10 +22,13 @@ setwd(rdata_folder)
 # Save the data frames
 save (aggregated_estimates_epi,
       aggregated_estimates_epi_rawvalues,
-      aggregated_estimates_mdr_in_notified,
       aggregated_estimates_drtb,
       aggregated_estimates_drtb_rawvalues,
+      aggregated_finance_estimates,
+
       budget_expenditure,
+
+      catastrophic_costs_survey,
 
       country_group_membership,
       country_group_types,
@@ -43,15 +42,20 @@ save (aggregated_estimates_epi,
       dr_surveillance,
       drs,
 
+      drs_for_estimation_new,
+      drs_for_estimation_ret,
+      drs_for_estimation_sldst,
+      drs_most_recent_for_estimation,
+
       estimates_epi,
       estimates_epi_rawvalues,
       estimates_drtb,
       estimates_drtb_rawvalues,
-      estimates_mdr,
-      estimates_mdr_in_notified,
       estimates_population,
 
       finance,
+      finance_cleaned,
+
       notification,
       notification_exceptions,
       outcomes,
@@ -64,8 +68,8 @@ save (aggregated_estimates_epi,
       strategy,
       TBHIV_for_aggregates,
 
-      external_indicator_defs,
       external_indicator_data,
+      external_indicator_defs,
 
       data.date,
       file=paste0("data_",Sys.Date(),".Rdata"))

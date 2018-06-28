@@ -19,7 +19,7 @@ rm(list=ls())
 
 # Establish the report year ----
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-report_year <- 2017
+report_year <- 2018
 
 # Kill any attempt at using factors, unless we explicitly want them!
 options(stringsAsFactors=FALSE)
