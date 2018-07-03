@@ -54,18 +54,18 @@ source("set_environment.r")  # particular to each person so this file is in the 
 # Load packages ----
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-library("reshape")
+#library("reshape")
 library("ggplot2")
 library("grid")
 library("scales")
 library("xtable")
 library("stringr")
-library("timeSeries")
-library("ggthemes")
+#library("timeSeries")
+#library("ggthemes")
 library("dplyr")
 library("tidyr")
-library("gridExtra")
-library("XLConnect")
+#library("gridExtra")
+#library("XLConnect")
 library("RColorBrewer")
 
 
