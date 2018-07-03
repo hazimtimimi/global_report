@@ -29,14 +29,15 @@ notifs_summary <- filter(notification, year == (report_year - 1)) %>%
 
                   # calculate regional aggregates
                   group_by(g_whoregion) %>%
-                  summarise_each(funs(sum(., na.rm = TRUE)),
-                                 c_notified,
-                                 c_newinc,
-                                 new_labconf, new_clindx, new_ep,
-                                 ret_rel_labconf, ret_rel_clindx, ret_rel_ep,
-                                 newrel_hivpos,
-                                 conf_rrmdr,
-                                 all_conf_xdr)
+                  summarise_at(vars(c_notified,
+                                    c_newinc,
+                                    new_labconf, new_clindx, new_ep,
+                                    ret_rel_labconf, ret_rel_clindx, ret_rel_ep,
+                                    newrel_hivpos,
+                                    conf_rrmdr,
+                                    all_conf_xdr),
+                               sum,
+                               na.rm = TRUE)
 
 # merge with regional names
 notifs_summary <- notifs_summary %>%
@@ -47,9 +48,10 @@ notifs_summary <- notifs_summary %>%
 
 # Add global summary to the regional summary
 notifs_global <- notifs_summary %>%
-                 summarise_each(funs(sum(., na.rm = TRUE)),
-                                -entity) %>%
-                  mutate(entity="Global")
+                 summarise_at(vars(-entity),
+                              sum,
+                              na.rm = TRUE) %>%
+                 mutate(entity="Global")
 
 
 notifs_summary <- rbind(notifs_summary, notifs_global)
@@ -78,9 +80,10 @@ notifs_summary <- notifs_summary %>%
 
 
 # format the data
-for(var in 2:ncol(notifs_summary)){
-  notifs_summary[var] <- rounder(notifs_summary[[var]])
-}
+notifs_summary <- notifs_summary %>%
+                  mutate_at(vars(-entity),
+                            rounder)
+
 
 # Add % symbol to pct fields
 notifs_summary <- notifs_summary %>%
@@ -92,7 +95,7 @@ notif_table_html <- xtable(notifs_summary)
 
 digits(notif_table_html) <- 0
 
-notif_table_filename <- paste0(figures_folder, "Tables/t4_1_notifs_summary", Sys.Date(), ".htm")
+notif_table_filename <- paste0(figures_folder, "/Tables/t4_1_notifs_summary", Sys.Date(), ".htm")
 
 cat(paste("<h3>Table 4.1<br />Notifications of TB, HIV-positive TB and MDR/RR-TB cases, globally and for WHO regions,",
           report_year-1,
@@ -160,8 +163,9 @@ hiv_data <- notification %>%
 
 # Calculate the total and append to the end
 hiv_total <- hiv_data %>%
-              summarise_each(funs(sum(., na.rm = TRUE)),
-                                -country) %>%
+             summarise_at(vars(-country),
+                          sum,
+                          na.rm = TRUE) %>%
                   mutate(country="Total")
 
 hiv_data <- rbind(hiv_data, hiv_total) %>%
@@ -175,7 +179,7 @@ hiv_table_html <- xtable(hiv_data)
 
 digits(hiv_table_html) <- 0
 
-hiv_table_filename <- paste0(figures_folder, "Tables/t4_2_tb_in_hiv", Sys.Date(), ".htm")
+hiv_table_filename <- paste0(figures_folder, "/Tables/t4_2_tb_in_hiv", Sys.Date(), ".htm")
 
 cat(paste0("<h3>Table 4.2<br />Number of people newly enrolled in HIV care in ",
           report_year - 1,
@@ -331,22 +335,25 @@ rdxpolicy_pcnt  <- function(x, show_calc = FALSE){
 # For use by Wayne, not to be shown in report table
 rdxpolicy_g_hb_tb <- rdxpolicy_country %>%
                      filter(g_hb_tb == 1) %>%
-                     summarise_each(funs(rdxpolicy_pcnt(., show_calc = TRUE)),
-                                  one_of(c("wrd_initial_test", "universal_dst"))) %>%
+                     summarise_at(c("wrd_initial_test", "universal_dst"),
+                                  rdxpolicy_pcnt,
+                                  show_calc = TRUE) %>%
                      mutate(entity="High TB burden countries")
 
 rdxpolicy_g_hb_tbhiv <- rdxpolicy_country %>%
-                     filter(g_hb_tbhiv == 1) %>%
-                     summarise_each(funs(rdxpolicy_pcnt(., show_calc = TRUE)),
-                                  one_of(c("wrd_initial_test", "universal_dst"))) %>%
-                     mutate(entity="High TB/HIV burden countries")
+                        filter(g_hb_tbhiv == 1) %>%
+                        summarise_at(c("wrd_initial_test", "universal_dst"),
+                                     rdxpolicy_pcnt,
+                                     show_calc = TRUE) %>%
+                        mutate(entity="High TB/HIV burden countries")
 
 
 rdxpolicy_g_hb_mdr <- rdxpolicy_country %>%
-                     filter(g_hb_mdr == 1) %>%
-                     summarise_each(funs(rdxpolicy_pcnt(., show_calc = TRUE)),
-                                  one_of(c("wrd_initial_test", "universal_dst"))) %>%
-                     mutate(entity="High MDR burden countries")
+                      filter(g_hb_mdr == 1) %>%
+                      summarise_at(c("wrd_initial_test", "universal_dst"),
+                                   rdxpolicy_pcnt,
+                                   show_calc = TRUE) %>%
+                      mutate(entity="High MDR burden countries")
 
 
 rdxpolicy_aggs <- rbind(rdxpolicy_g_hb_tb,
@@ -366,7 +373,7 @@ rdxpolicy_hbcs <- rdxpolicy_country %>%
 # Create HTML output
 rdxpolicy_table_html <- xtable(rdxpolicy_hbcs)
 
-rdxpolicy_table_filename <- paste0(figures_folder, "Tables/t4_3_lab_policy", Sys.Date(), ".htm")
+rdxpolicy_table_filename <- paste0(figures_folder, "/Tables/t4_3_lab_policy", Sys.Date(), ".htm")
 
 cat(paste("<h3>Table 4.3<br />National policies and their implementation to increase access to rapid TB testing and universal DST <sup>a</sup>, ",
           report_year-1,
@@ -404,7 +411,7 @@ print(rdxpolicy_table_html,
 
 # Export the aggregate stats for Wayne to use
 write.csv(rdxpolicy_aggs,
-          file=paste0(figures_folder, "Tables/t4_3_lab_policy_agg_for_wayne", Sys.Date(), ".csv"),
+          file=paste0(figures_folder, "/Tables/t4_3_lab_policy_agg_for_wayne", Sys.Date(), ".csv"),
           row.names=FALSE,
           na="")
 
