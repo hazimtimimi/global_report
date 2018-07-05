@@ -2,9 +2,9 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 theme_glb.rpt <- function(base_size=10, base_family="") {
-  colors <- ggthemes_data$few
-  gray <- colors$medium['gray']
-  black <- colors$dark['black']
+
+  gray <- "#4D4D4D"
+  black <- "#000000"
 
   # I don't know why these last 3 parts are needed, but they are. List is here: http://docs.ggplot2.org/0.9.2.1/theme.html
 

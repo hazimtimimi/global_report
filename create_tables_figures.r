@@ -61,11 +61,9 @@ library("scales")
 library("xtable")
 library("stringr")
 #library("timeSeries")
-library("ggthemes")
 library("dplyr")
 library("tidyr")
 library("gridExtra")
-#library("XLConnect")
 library("RColorBrewer")
 
 
