@@ -2981,44 +2981,40 @@ rm(list=ls(pattern = "^short"))
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Figure 4.28  (map) ------
 # Countries that had used bedaquiline for the treatment of M/XDR–TB as part of expanded access,
-# compassionate use or under normal programmatic conditions by the end of June 2017
+# compassionate use or under normal programmatic conditions by the end of 2017
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-# bdq_data <- read.csv(file = paste0(rdata_folder, "bdq.dlm.maps.csv"))
-#
-# bdq_data <- bdq_data %>%
-#             mutate(cat = ifelse(mdrxdr_bdq_used == 1, "Bedaquiline used",
-#                          ifelse(mdrxdr_bdq_used == 0, "Bedaquiline not used", NA))) %>%
-#
-#             # drop unnecessary variables
-#             select(country, iso3, cat)
-#
-#
-# bdq_data$cat <- factor(bdq_data$cat)
-#
-# # produce the map
-# bdq_map<- WHOmap.print(bdq_data,
-#                         "Figure 4.28\nCountries that had used bedaquiline for the treatment of M/XDR–TB as part of expanded access,\ncompassionate use or under normal programmatic conditions by the end of June 2017",
-#                            legend.title = "",
-#                            copyright=FALSE,
-#                            colors=c("lightgreen", "darkgreen"),
-#                            na.label="No response",
-#                            show=FALSE)
-#
-# bdq_map <- arrangeGrob(bdq_map,
-#                        bottom = textGrob("Data shown reflects country reporting supplemented with additional information from pharmaceutical manuacturers.",
-#                                          x = 0,
-#                                          hjust = -0.1,
-#                                          vjust=0,
-#                                          gp = gpar(fontsize = 10)))
-#
-# figsave(bdq_map,
-#         bdq_data,
-#         "f4_28_bdq_map")
-#
-#
-# # Clean up (remove any objects with their name beginning with 'bdq')
-# rm(list=ls(pattern = "^bdq"))
+bdq_data <- notification %>%
+            filter(year == report_year - 1) %>%
+            select(country,
+                   iso3,
+                   mdrxdr_bdq_used) %>%
+            mutate(cat = ifelse(mdrxdr_bdq_used == 1, "Bedaquiline used",
+                                ifelse(mdrxdr_bdq_used == 0, "Bedaquiline not used",
+                                       ifelse(mdrxdr_bdq_used == 3, "Don't know", NA)))) %>%
+
+            # drop unnecessary variables
+            select(country, iso3, cat)
+
+
+bdq_data$cat <- factor(bdq_data$cat)
+
+# produce the map
+bdq_map<- WHOmap.print(bdq_data,
+                        paste0("Figure 4.28\nCountries that had used bedaquiline for the treatment of M/XDR–TB as part of expanded access,\ncompassionate use or under normal programmatic conditions by the end of ", report_year - 1),
+                           legend.title = "",
+                           copyright=FALSE,
+                           colors=c("lightgreen", "darkgreen", "lightyellow"),
+                           na.label="No response",
+                           show=FALSE)
+
+figsave(bdq_map,
+        bdq_data,
+        "f4_28_bdq_map")
+
+
+# Clean up (remove any objects with their name beginning with 'bdq')
+rm(list=ls(pattern = "^bdq"))
 
 
 
@@ -3026,46 +3022,42 @@ rm(list=ls(pattern = "^short"))
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Figure 4.29  (map) ------
 # Countries that had used delamanid for the treatment of M/XDR–TB as part of expanded access,
-# compassionate use or under normal programmatic conditions by the end of June 2017
+# compassionate use or under normal programmatic conditions by the end of 2017
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-#
-# dlm_data <- read.csv(file = paste0(rdata_folder, "bdq.dlm.maps.csv"))
-#
-# dlm_data <- dlm_data %>%
-#             mutate(cat = ifelse(mdrxdr_dlm_used == 1, "Delamanid used",
-#                          ifelse(mdrxdr_dlm_used == 0, "Delamanid not used", NA))) %>%
-#
-#             # drop unnecessary variables
-#             select(country, iso3, cat)
-#
-#
-# dlm_data$cat <- factor(dlm_data$cat)
-#
-# # produce the map
-# dlm_map<- WHOmap.print(dlm_data,
-#                         "Figure 4.29\nCountries that had used delamanid for the treatment of M/XDR–TB as part of expanded access,\ncompassionate use or under normal programmatic conditions by the end of June 2017",
-#                            legend.title = "",
-#                            copyright=FALSE,
-#                            colors=c("lightblue", "darkblue"),
-#                            na.label="No response",
-#                            show=FALSE)
-#
-# dlm_map <- arrangeGrob(dlm_map,
-#                        bottom = textGrob("Data shown reflects country reporting supplemented with additional information from pharmaceutical manuacturers.",
-#                                          x = 0,
-#                                          hjust = -0.1,
-#                                          vjust=0,
-#                                          gp = gpar(fontsize = 10)))
-#
-# figsave(dlm_map,
-#         dlm_data,
-#         "f4_29_dlm_map")
-#
-#
-# # Clean up (remove any objects with their name beginning with 'dlm')
-# rm(list=ls(pattern = "^dlm"))
-#
+
+dlm_data <- notification %>%
+            filter(year == report_year - 1) %>%
+            select(country,
+                   iso3,
+                   mdrxdr_dlm_used) %>%
+            mutate(cat = ifelse(mdrxdr_dlm_used == 1, "Delamanid used",
+                                ifelse(mdrxdr_dlm_used == 0, "Delamanid not used",
+                                       ifelse(mdrxdr_dlm_used == 3, "Don't know", NA)))) %>%
+
+            # drop unnecessary variables
+            select(country, iso3, cat)
+
+dlm_data$cat <- factor(dlm_data$cat)
+
+# produce the map
+dlm_map<- WHOmap.print(dlm_data,
+                       paste0("Figure 4.29\nCountries that had used delamanid for the treatment of M/XDR–TB as part of expanded access,\ncompassionate use or under normal programmatic conditions by the end of ", report_year - 1),
+                           legend.title = "",
+                           copyright=FALSE,
+                           colors=c("lightgreen", "darkgreen", "lightyellow"),
+                           na.label="No response",
+                           show=FALSE)
+
+
+figsave(dlm_map,
+        dlm_data,
+        "f4_29_dlm_map")
+
+
+# Clean up (remove any objects with their name beginning with 'dlm')
+rm(list=ls(pattern = "^dlm"))
+
 
 
 
