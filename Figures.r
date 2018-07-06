@@ -566,9 +566,10 @@ bacconf_data$entity <- factor(bacconf_data$entity,
 bacconf_plot <- bacconf_data %>%
                 ggplot(aes(x=year, y=bacconf_pct)) +
                   geom_line(size=1) +
+                  scale_x_continuous(name="Year",
+                                     breaks = c(2000, 2005, 2010, 2015, report_year-1)) +
                   scale_y_continuous(name = "Percentage bacteriologically confirmed") +
                   expand_limits(y=c(0,100)) +
-                  xlab("Year") +
                   facet_wrap( ~ entity, ncol = 4) +
                   ggtitle(paste0("Figure 4.4\nPercentage of new and relapse(a) pulmonary TB cases with bacteriological confirmation, 2000-",
                                report_year-1,
@@ -811,9 +812,9 @@ hivstatus_data$entity <- factor(hivstatus_data$entity,
 hivstatus_plot <- hivstatus_data %>%
                   ggplot(aes(x=year, y=hivstatus_pct)) +
                   geom_line(size=1) +
+                  scale_x_continuous(name= "Year", breaks = c(2005, 2009, 2013, report_year-1)) +
                   scale_y_continuous(name = "Percentage with documented status") +
                   expand_limits(y=c(0,100)) +
-                  xlab("Year") +
                   #scale_x_discrete(name = "Year") +
                   facet_wrap( ~ entity, ncol = 4) +
                   ggtitle(paste0("Figure 4.7\nPercentage of new and relapse(a) TB cases with documented HIV status, 2004-",
@@ -1367,8 +1368,9 @@ rr_plot <-  rr_data %>%
 
             facet_wrap( ~ country, scales="free_y", ncol = 5) +
 
+            scale_x_continuous(name = "Year", breaks = c(2009, 2013, report_year-1)) +
             scale_y_continuous(name = "Number of cases") +
-            xlab("Year") +
+
 
             ggtitle(paste0("Figure 4.13\nNumber of MDR/RR-TB cases detected (pink) and enrolled on MDR-TB treatment\n(green), 2009-",
                          report_year-1,
