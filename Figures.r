@@ -1293,8 +1293,9 @@ rr_plot <-  rr_global %>%
             geom_point(aes(x=year, y=e_rr_in_notified_pulm),
                        shape = 21, colour = "black", fill = "white", size = 5, stroke = 2) +
 
+            scale_x_continuous(name = "Year", breaks = c(2009, 2011, 2013, 2015, report_year-1)) +
             scale_y_continuous(name = "Number of cases (thousands)") +
-            xlab("Year") +
+
 
             ggtitle(paste0("Figure 4.12\nGlobal number of MDR/RR-TB cases detected (pink) and number enrolled on MDR-TB treatment (green), 2009-",
                          report_year-1,
