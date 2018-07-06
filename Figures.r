@@ -2462,7 +2462,7 @@ out_plot <- out_data_long %>%
                        fill = variable)) +
 
             geom_col(position = position_stack(reverse = TRUE)) +
-            facet_wrap( ~ subgroup, ncol = 3) +
+            facet_wrap( ~ subgroup, nrow = 3) +
             coord_flip() +
 
             theme_glb.rpt() +
@@ -2480,13 +2480,13 @@ out_plot <- out_data_long %>%
                            " globally"))
 
 out_plot <- arrangeGrob(out_plot,
-                        bottom = textGrob("NOTE FOR SUE: PLEASE ADD SUCCESS RATE NUMBER ON EACH LINE AS FOR THE OTHER OUTCOME FIGURES",
+                        bottom = textGrob("NOTE FOR SUE: PLEASE ADD SUCCESS RATE NUMBER ON EACH LINE\nAS FOR THE OTHER OUTCOME FIGURES",
                                           x = 0,
                                           hjust = -0.1,
                                           vjust=0,
                                           gp = gpar(fontsize = 10)))
 
-figsave(out_plot, out_data_long, "f4_23_outcomes_tb_hiv_mdr") # Designer needs wide data; output portrait mode
+figsave(out_plot, out_data_long, "f4_23_outcomes_tb_hiv_mdr", width=7, height=11) # Designer needs wide data; output portrait mode
 
 # Clean up (remove any objects with their name starting with 'out_')
 rm(list=ls(pattern = "^out_"))
