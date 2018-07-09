@@ -3139,7 +3139,7 @@ rm(list=ls(pattern = "^comm"))
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
-kids_data <-  strategy %>%
+prevtx_kids_data <-  strategy %>%
               filter(year==report_year - 1) %>%
               select(iso3,
                      country,
@@ -3154,8 +3154,8 @@ kids_data <-  strategy %>%
                                 prevtx_data_available==60 & is.na(newinc_con04_prevtx) |
                                 prevtx_data_available==61 & (is.na(ptsurvey_newinc) | is.na(ptsurvey_newinc_con04_prevtx)),
                               "Number not available",
-                        ifelse(prevtx_data_available==60,"Number available from routine surveillance",
-                        ifelse(prevtx_data_available==61,"Number estimated from a survey" ,NA)))) %>%
+                        ifelse(prevtx_data_available==60,"Number available\nfrom routine surveillance",
+                        ifelse(prevtx_data_available==61,"Number estimated\nfrom a survey" ,NA)))) %>%
 
               # drop unnecessary variables
               select(country,
@@ -3163,35 +3163,102 @@ kids_data <-  strategy %>%
                      cat)
 
 
-kids_data$cat <- factor(kids_data$cat)
+prevtx_kids_data$cat <- factor(prevtx_kids_data$cat)
 
 # Check if any countries used a survey (rarely happens)
-kids_survey <- kids_data %>% filter(cat==61) %>% nrow()
+prevtx_kids_survey <- prevtx_kids_data %>% filter(cat=="Number estimated\nfrom a survey") %>% nrow()
 
-# add a survey level to the factor if needed so that it matches the legend
-if (kids_survey == 0)
+# Adjust colours for categories in maps based on number of levels in the data
+if (prevtx_kids_survey == 0)
   {
-  kids_data$cat <- factor(kids_data$cat, levels=c(levels(kids_data$cat),"Number estimated from a survey"))
+  prevtx_kids_colours <- c('darkblue', 'lightyellow')
+  } else
+  {
+  prevtx_kids_colours <- c('darkblue', 'lightblue', 'lightyellow')
   }
 
 # produce the map
-kids_map <- WHOmap.print(kids_data,
+prevtx_kids_map <- WHOmap.print(prevtx_kids_data,
                         paste("Figure 5.1\nAvailability of data on the number of children aged <5 years who were\nhousehold contacts of bacteriologically confirmed pulmonary TB cases and were started on",
                               "\nTB preventive treatment,",
                               report_year-1),
                            legend.title = "Country response",
                            copyright=FALSE,
-                           colors=c('#91A93E', '#0066B3', '#E5DDB3'),
+                           colors=prevtx_kids_colours,
                            na.label="No response",
                            show=FALSE)
 
-figsave(kids_map,
-        kids_data,
-        "f5_1_kids_prevtx_map")
+figsave(prevtx_kids_map,
+        prevtx_kids_data,
+        "f5_1_prevtx_kids_map")
 
 
-# Clean up (remove any objects with their name beginning with 'kids')
-rm(list=ls(pattern = "^kids"))
+# Clean up (remove any objects with their name beginning with 'prevtx_kids')
+rm(list=ls(pattern = "^prevtx_kids"))
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Figure 5.2 (Map) -------
+# Availability of data on the number of people aged 5 years and above who were
+# household contacts of bacteriologically confirmed pulmonary TB cases and were started on
+# TB preventive treatment, 2017
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+prevtx_older_data <-  strategy %>%
+  filter(year==report_year - 1) %>%
+  select(iso3,
+         country,
+         prevtx_5plus_data_available,
+         newinc_con5plus_prevtx,
+         ptsurvey_newinc_5plus,
+         ptsurvey_newinc_con5plus_prevtx) %>%
+
+  # Assign categories
+  mutate(cat =
+           ifelse(prevtx_5plus_data_available==0 |
+                    prevtx_5plus_data_available==60 & is.na(newinc_con5plus_prevtx) |
+                    prevtx_5plus_data_available==61 & (is.na(ptsurvey_newinc_5plus) | is.na(ptsurvey_newinc_con5plus_prevtx)),
+                  "Number not available",
+                  ifelse(prevtx_5plus_data_available==60,"Number available\nfrom routine surveillance",
+                         ifelse(prevtx_5plus_data_available==61,"Number estimated\nfrom a survey" ,NA)))) %>%
+
+  # drop unnecessary variables
+  select(country,
+         iso3,
+         cat)
+
+
+prevtx_older_data$cat <- factor(prevtx_older_data$cat)
+
+# Check if any countries used a survey (rarely happens)
+prevtx_older_survey <- prevtx_older_data %>% filter(cat=="Number estimated\nfrom a survey") %>% nrow()
+
+# Adjust colours for categories in maps based on number of levels in the data
+if (prevtx_older_survey == 0)
+{
+  prevtx_older_colours <- c('darkblue', 'lightyellow')
+} else
+{
+  prevtx_older_colours <- c('darkblue', 'lightblue', 'lightyellow')
+}
+
+# produce the map
+prevtx_older_map <- WHOmap.print(prevtx_older_data,
+                         paste("Figure 5.2\nAvailability of data on the number of people aged 5 years and above who were\nhousehold contacts of bacteriologically confirmed pulmonary TB cases and were started on",
+                               "\nTB preventive treatment,",
+                               report_year-1),
+                         legend.title = "Country response",
+                         copyright=FALSE,
+                         colors=prevtx_older_colours,
+                         na.label="No response",
+                         show=FALSE)
+
+figsave(prevtx_older_map,
+        prevtx_older_data,
+        "f5_2_prevtx_older_map")
+
+
+# Clean up (remove any objects with their name beginning with 'prevtx_older')
+rm(list=ls(pattern = "^prevtx_older"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
