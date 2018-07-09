@@ -3262,7 +3262,7 @@ rm(list=ls(pattern = "^prevtx_older"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 5.4 (Map) ---------
+# Figure 5.5 (Map) ---------
 # Notification rate ratio of TB among healthcare workers compared with the general population, 2017
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -3319,7 +3319,7 @@ hcw_data$cat <- cut(hcw_data$nrr,
 
 # produce the map
 hcw_map <- WHOmap.print(hcw_data,
-                        paste("Figure 5.4\nNotification rate ratio of TB among healthcare workers\ncompared with the general adult population,", report_year-1),
+                        paste("Figure 5.5\nNotification rate ratio of TB among healthcare workers\ncompared with the general adult population,", report_year-1),
                            "Notification\nrate ratio",
                            copyright=FALSE,
                            #colors=c('yellow', 'lightgreen', 'green', 'darkgreen'),
@@ -3328,12 +3328,71 @@ hcw_map <- WHOmap.print(hcw_data,
 
 figsave(hcw_map,
         hcw_data,
-        "f5_4_hcw_notf_rate_ratio")
+        "f5_5_hcw_notf_rate_ratio")
 
 # Clean up (remove any objects with their name beginning with 'hcw')
 rm(list=ls(pattern = "^hcw"))
 
 
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Figure 5.7 (Map) ---------
+# Coverage of BCG vaccination, 2017
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# Download the latest data from WHO immunization department
+bcg_cov_source <-"http://www.who.int/entity/immunization/monitoring_surveillance/data/coverage_series.xls"
+bcg_cov_page <- "http://apps.who.int/immunization_monitoring/globalsummary/timeseries/tscoveragebcg.html"
+
+download.file(bcg_cov_source,
+              paste0(rdata_folder, "coverage_series", Sys.Date(), ".xls"),
+              mode="wb")
+
+# Read the BCG coverage sheet for the latest year
+bcg_cov_data <- read_xls(path = paste0(rdata_folder, "coverage_series", Sys.Date(), ".xls"),
+                         sheet = "BCG",
+                         range = "B1:E178",
+                         col_names = TRUE
+                         )
+
+# Merge with list of all countries and remove unwanted variables
+bcg_cov_data <- report_country %>%
+                select(country, iso3) %>%
+                left_join(bcg_cov_data, by = c("iso3" = "ISO_code")) %>%
+                select(country,
+                       iso3,
+                       coverage = as.character(report_year - 1))
+
+
+bcg_cov_data$cat <- cut(bcg_cov_data$coverage,
+                        c(0, 50, 90, 100),
+                        c('0-49', "50-89", "90-100"),
+                        right=FALSE)
+
+
+# produce the map
+bcg_cov_map <- WHOmap.print(bcg_cov_data,
+                            paste("Figure 5.7\nCoverage of BCG vaccination,", report_year-1),
+                            "Percentage",
+                            copyright=FALSE,
+                            colors=brewer.pal(3, "Greens"),
+                            show=FALSE)
+
+# Add footnote
+bcg_cov_map <- arrangeGrob(bcg_cov_map,
+                            bottom = textGrob(paste0("The target population of BCG coverage varies depending on national policy, but is typically for the number of live births in the year of reporting.",
+                                                     "\nSource: ", bcg_cov_page, ", accessed ", Sys.Date()),
+                                              x = 0,
+                                              hjust = -0.1,
+                                              vjust=0,
+                                              gp = gpar(fontsize = 10)))
+
+
+figsave(bcg_cov_map,
+        bcg_cov_data,
+        "f5_7_BCG_coverage_map")
+
+# Clean up (remove any objects with their name beginning with 'bcg_cov')
+rm(list=ls(pattern = "^bcg_cov"))
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Chapter 7 ------
