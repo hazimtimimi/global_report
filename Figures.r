@@ -2369,7 +2369,9 @@ rm(list=ls(pattern = "^txout"))
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Figure 4.23 ------
-# Treatment outcomes for new and relapse TB cases (2012-2016), new and relapse cases among people living with HIV (2012-2016) and rifampicin-resistant TB cases (2012-2015), globally
+# Treatment outcomes for new and relapse TB cases,
+# new and relapse cases HIV-positive TB cases, and
+# MDR/RR-TB cases, 2012-2016 globally
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 out_tb_data <- outcomes %>%
@@ -2416,7 +2418,7 @@ out_hiv_data <- outcomes %>%
                 select(-coh, -succ, -fail, -died, -lost, -c_neval) %>%
 
                 # Add tx group type
-                mutate(subgroup = "HIV-positive new and relapse TB cases")
+                mutate(subgroup = "New and relapse HIV-positive TB cases")
 
 
 
@@ -2441,7 +2443,7 @@ out_mdr_data <- outcomes %>%
                 select(-coh, -succ, -fail, -died, -lost, -c_neval, -cur, -cmplt) %>%
 
                 # Add tx group type
-                mutate(subgroup = "Rifampicin-resistant TB cases")
+                mutate(subgroup = "MDR/RR-TB cases")
 
 # Combine the three data frames
 out_data <- rbind(out_tb_data, out_hiv_data, out_mdr_data)
@@ -2454,6 +2456,12 @@ out_data <- rbind(out_tb_data, out_hiv_data, out_mdr_data)
 out_data <- as.data.frame(out_data)
 
 out_data_long <- melt(out_data, id=c(1,7))
+
+# Determine the order of subgroup for plotting
+out_data_long$subgroup <- factor(out_data_long$subgroup,
+                                    levels = c("New and relapse TB cases",
+                                               "New and relapse HIV-positive TB cases",
+                                               "MDR/RR-TB cases"))
 
 # Plot as stacked bars
 out_plot <- out_data_long %>%
@@ -2475,12 +2483,12 @@ out_plot <- out_data_long %>%
 
             expand_limits(c(0,0)) +
 
-            ggtitle(paste0("Figure 4.23\nTreatment outcomes for new and relapse TB cases, new and relapse cases among people living with HIV,\nand rifampicin-resistant TB cases, 2012-",
+            ggtitle(paste0("Figure 4.23\nTreatment outcomes for new and relapse TB cases,\nnew and relapse HIV-positive TB cases,\nand MDR/RR-TB cases, 2012-",
                            report_year - 2,
-                           " globally"))
+                           " globally(a)"))
 
 out_plot <- arrangeGrob(out_plot,
-                        bottom = textGrob("NOTE FOR SUE: PLEASE ADD SUCCESS RATE NUMBER ON EACH LINE\nAS FOR THE OTHER OUTCOME FIGURES",
+                        bottom = textGrob("(a) MDR/RR-TB annual treatment cohorts are reported one year later than other TB cohorts.\nNOTE FOR SUE: PLEASE ADD SUCCESS RATE NUMBER ON EACH LINE",
                                           x = 0,
                                           hjust = -0.1,
                                           vjust=0,
