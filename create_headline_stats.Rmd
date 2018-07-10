@@ -15,16 +15,64 @@ knitr::opts_chunk$set(echo = FALSE)
 
 ```
 
-```{r m_f_ratio}
-# Calculate the global male:female ratio
+## Global notifications, `r report_year - 1`
 
+```{r m_f_ratio}
+
+# Calculate the global male:female ratio
 sex_data <- notification %>% 
             filter(year == report_year - 1) %>% 
-            select(newrel_m014, newrel_m15plus, newrel_mu, newrel_f014, newrel_f15plus, newrel_fu) %>% 
+            select(newrel_m014, newrel_m15plus, newrel_mu, 
+                   newrel_f014, newrel_f15plus, newrel_fu) %>% 
             summarise_all(sum, na.rm = TRUE) %>% 
             mutate(m_f_ratio = (newrel_m014 + newrel_m15plus +newrel_mu) / 
                                 (newrel_f014 + newrel_f15plus + newrel_fu))
 
 ```
 
-Global male:female ratio `r paste("in", report_year - 1, ":", display_num(sex_data$m_f_ratio))`
+
+* Male:female ratio: `r display_num(sex_data$m_f_ratio)`
+
+```{r pct_kids}
+
+#clear previous junk
+rm(sex_data)
+
+# Calculate the global % of children aged 0 -14
+age_data <- notification %>% 
+            filter(year == report_year - 1) %>% 
+            select(newrel_m014, newrel_m15plus,
+                   newrel_f014, newrel_f15plus, 
+                   newrel_sexunk014, newrel_sexunk15plus) %>% 
+            summarise_all(sum, na.rm = TRUE) %>% 
+            mutate(pct_kids = (newrel_m014 + newrel_f014) * 100 / 
+                                (newrel_m014 + newrel_f014 + newrel_m15plus + newrel_f15plus))
+
+```
+
+* Percentage of children aged 0-14 amongst notified: `r display_num(age_data$pct_kids)`%
+
+```{r pct_hiv}
+
+#clear previous junk
+rm(age_data)
+
+# Calculate the global % of cases with known HIV status
+hivtest_data <-  TBHIV_for_aggregates %>% 
+                  filter(year == report_year - 1| year == report_year - 2) %>% 
+                  select(year, hivtest_pct_numerator, hivtest_pct_denominator) %>% 
+                  filter(!is.na(hivtest_pct_numerator) & !is.na(hivtest_pct_denominator) ) %>% 
+                  group_by(year) %>% 
+                  summarise_at(vars(hivtest_pct_numerator, hivtest_pct_denominator),
+                               sum, 
+                               na.rm = TRUE) %>% 
+                  mutate(pct_hivtest = hivtest_pct_numerator * 100 / 
+                                        hivtest_pct_denominator)
+
+```
+
+
+
+
+* Percentage of TB cases with documented HIV test result: `r display_num(hivtest_data[hivtest_data$year==report_year - 1,"pct_hivtest"])`%   (in the previous year it was `r display_num(hivtest_data[hivtest_data$year==report_year - 2,"pct_hivtest"])`%)
+
