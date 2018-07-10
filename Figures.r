@@ -2608,7 +2608,7 @@ txoutnum_plot_glob <- txoutnum_long %>%
                   scale_fill_manual("", values = outcomes_num_palette()) +
                   labs(x="", y="Number of cases (millions)") +
 
-                  theme(legend.position="bottom",
+                  theme(legend.position="none",
                         panel.grid=element_blank()) +
 
                   expand_limits(c(0,0))
