@@ -1,0 +1,30 @@
+---
+title: "Global TB Report 2018: Headline statistics"
+date: "`r format(Sys.time(), '%Y-%m-%d %H:%M')`"
+output: 
+  html_document:
+    theme: null
+    highlight: null
+    mathjax: null
+---
+
+```{r setup, include=FALSE}
+
+# Hide code from chunks by default
+knitr::opts_chunk$set(echo = FALSE)
+
+```
+
+```{r m_f_ratio}
+# Calculate the global male:female ratio
+
+sex_data <- notification %>% 
+            filter(year == report_year - 1) %>% 
+            select(newrel_m014, newrel_m15plus, newrel_mu, newrel_f014, newrel_f15plus, newrel_fu) %>% 
+            summarise_all(sum, na.rm = TRUE) %>% 
+            mutate(m_f_ratio = (newrel_m014 + newrel_m15plus +newrel_mu) / 
+                                (newrel_f014 + newrel_f15plus + newrel_fu))
+
+```
+
+Global male:female ratio `r paste("in", report_year - 1, ":", display_num(sex_data$m_f_ratio))`

@@ -132,3 +132,5 @@ source(file.path(scripts_folder, "Figures.r"))
 
 source(file.path(scripts_folder, "profile_figures.r"))
 
+# Create the HTML file with headline statistics
+rmarkdown::render(input = "create_headline_stats.Rmd", output_dir = figures_folder)
