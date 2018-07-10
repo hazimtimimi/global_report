@@ -1102,6 +1102,7 @@ dst_plot <- dst_agg %>%
             geom_line(size=1) +
 
             facet_wrap( ~ entity, ncol = 4, scales="fixed") +
+            scale_x_continuous(breaks = c(2009, 2013, report_year-1)) +
             scale_y_continuous(name = "Percentage of cases") +
             expand_limits(y=c(0,100)) +
             xlab("Year") +
@@ -3132,6 +3133,103 @@ figsave(comm_map,
 rm(list=ls(pattern = "^comm"))
 
 
+# Figure 4.4.2 ------Bar plot
+# Number of countries reporting on WHO community engagement indicators, 2013-2017
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+#Before 2015, the report collection form did not include variable "community_data_available"
+#Thus define the variable before 2015 as having reported either "bmu_ref_data" or "bmu_rxsupport_data" or both.
+commureport_from2013 <- strategy %>%
+  filter(year >= 2013) %>%
+  select(year,
+         g_whoregion,
+         country,
+         bmu_ref_data,
+         bmu_rxsupport_data,
+         community_data_available)%>%
+  mutate(community_data_available=replace(community_data_available,(year<=2014 & (bmu_ref_data>0 | bmu_rxsupport_data>0)),1))
+
+
+commureport_regional <- commureport_from2013 %>%
+  filter(year >= 2013) %>%
+  select(year,
+         g_whoregion,
+         country,
+         community_data_available)%>%
+  group_by(year, g_whoregion) %>%
+  summarise_at(vars(community_data_available),
+               sum,
+               na.rm = TRUE) %>%
+  # merge with regional names
+  inner_join(who_region_names, by = "g_whoregion") %>%
+  select(-g_whoregion) %>%
+  ungroup()
+
+commureport_global <- commureport_from2013 %>%
+  filter(year >= 2013 & year <= report_year) %>%
+  select(year,
+         g_whoregion,
+         community_data_available)%>%
+  group_by(year) %>%
+  summarise_at(vars(community_data_available),
+               sum,
+               na.rm = TRUE) %>%
+  mutate(entity = "Global") %>%
+  ungroup()
+
+#Combine regional and global data and reorganise
+commureport_data <- rbind(commureport_regional, commureport_global)
+
+commureport_data$entity <- factor(commureport_data$entity,
+                               levels = c("Africa", "The Americas", "Eastern Mediterranean", "Europe", "South-East Asia", "Western Pacific", "Global"))
+
+
+# Plot as bars, with global separate from regions so can use different scales
+
+commureport_plot_reg <- commureport_data %>%
+  filter(entity!="Global") %>%
+  ggplot(aes(x=year, y=community_data_available)) +
+  geom_bar(stat="identity", fill="green",width = 0.5) +
+  facet_wrap( ~ entity,ncol = 2) +
+  #This breaks setting need to be changed afterwards, it is simply because only 5 years data were used
+  #which makes the bar too wide, to control the width, it changed X axis breaks label.
+  scale_x_continuous(breaks = c(2013, 2014, 2015, 2016, report_year-1)) +
+  theme_glb.rpt() +
+  labs(x="", y="Number of countries") +
+  theme(panel.grid=element_blank()) +
+  expand_limits(c(0,0))
+
+
+commureport_plot_glob <- commureport_data %>%
+  filter(entity=="Global") %>%
+  ggplot(aes(x=year, y=community_data_available)) +
+  geom_bar(stat="identity", fill="green",width = 0.5) +
+  facet_wrap( ~ entity) +
+  #This breaks setting need to be changed afterwards, it is simply because only 5 years data were used
+  #which makes the bar too wide, to control the width, it changed X axis breaks label.
+  scale_x_continuous(breaks = c(2013, 2014, 2015, 2016, report_year-1)) +
+  theme_glb.rpt() +
+  labs(x="", y="Number of countries)") +
+  theme(panel.grid=element_blank()) +
+  expand_limits(c(0,0))
+  
+commureport_plot <- arrangeGrob(commureport_plot_glob,
+                                commureport_plot_reg,
+                             nrow = 2,
+                             ncol = 1,
+                             top = textGrob(label = paste0("Figure 4.4.2\nNumber of countries reporting on WHO community engagement indicators, 2013-",
+                                                           report_year-1,
+                                                           ", globally\nand for WHO regions"),
+                                            x = 0.02,
+                                            just = "left",
+                                            gp = gpar(fontsize = 10)))
+                            
+
+# Save the plot
+figsave(commureport_plot, commureport_data, "f4_4_2_community_indicator_reporting", width=7, height=11)
+
+# Clean up (remove any objects with their name starting 'commureport')
+rm(list=ls(pattern = "^commureport"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
