@@ -3133,7 +3133,8 @@ figsave(comm_map,
 rm(list=ls(pattern = "^comm"))
 
 
-# Figure 4.4.2 ------Bar plot
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Figure Box 4.4.2 ------
 # Number of countries reporting on WHO community engagement indicators, 2013-2017
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -3212,7 +3213,7 @@ commureport_plot_glob <- commureport_data %>%
   labs(x="", y="Number of countries)") +
   theme(panel.grid=element_blank()) +
   expand_limits(c(0,0))
-  
+
 commureport_plot <- arrangeGrob(commureport_plot_glob,
                                 commureport_plot_reg,
                              nrow = 2,
@@ -3223,7 +3224,7 @@ commureport_plot <- arrangeGrob(commureport_plot_glob,
                                             x = 0.02,
                                             just = "left",
                                             gp = gpar(fontsize = 10)))
-                            
+
 
 # Save the plot
 figsave(commureport_plot, commureport_data, "f4_4_2_community_indicator_reporting", width=7, height=11)
@@ -3499,6 +3500,54 @@ figsave(bcg_cov_map,
 
 # Clean up (remove any objects with their name beginning with 'bcg_cov')
 rm(list=ls(pattern = "^bcg_cov"))
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Chapter 6 ------
+# Financing for TB prevention, diagnosis and treatment
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Figure Box 6.3.1 (Map) ---------
+# Cost per patient treated for drug-susceptible TB and MDR-TB: current availability
+# of unit cost data from independent economic evaluations, December 2017
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# get data from CSV file obtained by Ines
+ghcc_data <- read.csv(paste0(rdata_folder,"/GHCC_box_map_data_2018-07-12.csv"))
+
+# merge the data with the master list of countries
+ghcc_data <- report_country %>%
+             select(country, iso3) %>%
+             left_join(ghcc_data, by = "iso3")
+
+ghcc_data$cat <- cut(ghcc_data$N,
+                     c(0, 2, 10, 30, Inf),
+                     c("1", "2-9", "10-29", ">=30"),
+                     right=FALSE)
+
+
+ghcc_map <- WHOmap.print(ghcc_data,
+                         "Figure Box 6.3.1\nCost per patient treated for drug-susceptible TB and MDR-TB:\ncurrent availability of unit cost data from independent economic evaluations, December 2017",
+                         "Number\navailable",
+                         copyright=FALSE,
+                         colors=brewer.pal(4, "Reds"),
+                         show=FALSE)
+
+# Add footnote for the source of the data
+ghcc_map <- arrangeGrob(ghcc_map,
+                         bottom = textGrob("Source: Global Health Cost Consortium, July 2018",
+                                           x = 0,
+                                           hjust = -0.1,
+                                           vjust=0,
+                                           gp = gpar(fontsize = 10)))
+
+figsave(ghcc_map,
+        ghcc_data,
+        "f6_box_6_3_1_unit_cost_data_map")
+
+# Clean up (remove any objects with their name beginning with 'ghcc')
+rm(list=ls(pattern = "^ghcc"))
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Chapter 7 ------
