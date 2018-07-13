@@ -536,6 +536,7 @@ prev_tx_countries_not_reported <-  prev_tx_hbccodes %>%
                                     anti_join(prev_tx_hb_data, by = "iso2") %>%
                                     arrange(originalname)
 
+
 prev_tx_countries_not_reported <- str_flatten(prev_tx_countries_not_reported$originalname, collapse = ", ")
 
 # Format for output
@@ -666,7 +667,9 @@ prev_tx_aggs <- prev_tx_aggs %>%
                        e_prevtx_eligible_lohi,
                        newinc_con04_prevtx,
                        e_prevtx_kids_pct,
-                       e_prevtx_kids_pct_lohi)
+                       e_prevtx_kids_pct_lohi) %>%
+
+                arrange(country)
 
 
 # Combine HB data with aggregates
