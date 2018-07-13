@@ -463,6 +463,7 @@ prev_tx_data <- notification %>%
                 filter(year == report_year -1) %>%
                 select(iso2,
                        country,
+                       g_whoregion,
                        hiv_ipt,
                        hiv_reg_new,
                        hiv_ipt_reg_all,
@@ -497,10 +498,6 @@ prev_tx_data <- prev_tx_data %>%
                                          coverage))
 
 
-# Merge with list of countries in HB TB or TB/HIV
-prev_tx_data <- prev_tx_data %>%
-                inner_join(prev_tx_hbccodes)
-
 # Merge with the LTBI estimates
 prev_tx_data <- estimates_ltbi %>%
                 filter(year == report_year -1) %>%
@@ -513,33 +510,38 @@ prev_tx_data <- estimates_ltbi %>%
                        e_prevtx_kids_pct_lo,
                        e_prevtx_kids_pct_hi
                       ) %>%
-                inner_join(prev_tx_data)
+
+                # Note the ltbi estimates have not been produced for all countries
+                right_join(prev_tx_data)
+
+
+# Now produce the high burden data for the table
+
+# Merge with list of countries in HB TB or TB/HIV
+prev_tx_hb_data <- prev_tx_data %>%
+                    inner_join(prev_tx_hbccodes)
 
 
 # Restrict to countries with data
-prev_tx_data <- prev_tx_data %>%
-                filter(!is.na(coverage) | !is.na(e_prevtx_kids_pct))
+prev_tx_hb_data <- prev_tx_hb_data %>%
+                    filter(!is.na(coverage) | !is.na(e_prevtx_kids_pct))
 
 
 # Calculate number of reporting high burden countries and number not reported
-prev_tx_reported <- nrow(prev_tx_data)
+prev_tx_reported <- nrow(prev_tx_hb_data)
 prev_tx_not_reported <- nrow(prev_tx_hbccodes) - prev_tx_reported
 
 # Create list of country names that have not reported
 prev_tx_countries_not_reported <-  prev_tx_hbccodes %>%
-                                    anti_join(prev_tx_data, by = "iso2")
-
-
-# %>%
-#                                     select(originalname) %>%
-#                                     str_flatten(collapse = ", ")
-
+                                    anti_join(prev_tx_hb_data, by = "iso2") %>%
+                                    arrange(originalname)
 
 prev_tx_countries_not_reported <- str_flatten(prev_tx_countries_not_reported$originalname, collapse = ", ")
 
 # Format for output
-prev_tx_data <- prev_tx_data %>%
-                mutate(e_prev_tx_eligible_lohi = display_intervals(e_prevtx_eligible,
+prev_tx_hb_data <- prev_tx_hb_data %>%
+
+                mutate(e_prevtx_eligible_lohi = display_intervals(e_prevtx_eligible,
                                                                     e_prevtx_eligible_lo,
                                                                     e_prevtx_eligible_hi),
 
@@ -554,21 +556,125 @@ prev_tx_data <- prev_tx_data %>%
                             "e_prevtx_kids_pct"),
                           display_num) %>%
 
-                select(country,
+                select(entity = country,
                        ipt_numerator,
                        ipt_denominator,
                        coverage,
                        e_prevtx_eligible,
-                       e_prev_tx_eligible_lohi,
+                       e_prevtx_eligible_lohi,
+                       newinc_con04_prevtx,
+                       e_prevtx_kids_pct,
+                       e_prevtx_kids_pct_lohi) %>%
+
+                arrange(entity)
+
+
+# Calculate regional and global aggregates
+
+# Calculate the variance of the estimated child contacts, using a normal approximation
+prev_tx_data <- prev_tx_data %>%
+                mutate(e_prevtx_eligible_variance = ((e_prevtx_eligible_hi-e_prevtx_eligible)/3.92)^2)
+
+# Make sure we do the aggregations only on rows where both the numerator and denominator are present
+prev_tx_data <- prev_tx_data %>%
+                mutate(hiv_ipt = ifelse(is.na(hiv_reg_new),
+                                        NA,
+                                        hiv_ipt),
+
+                       hiv_reg_new = ifelse(is.na(hiv_ipt),
+                                        NA,
+                                        hiv_reg_new),
+
+                       e_prevtx_eligible = ifelse(is.na(newinc_con04_prevtx),
+                                               NA,
+                                               e_prevtx_eligible),
+
+                       newinc_con04_prevtx = ifelse(is.na(e_prevtx_eligible),
+                                                    NA,
+                                                    newinc_con04_prevtx)
+                       ) %>%
+
+                mutate(e_prevtx_eligible_variance = ifelse(is.na(e_prevtx_eligible),
+                                                           NA,
+                                                           e_prevtx_eligible_variance))
+
+# Regional aggregates
+prev_tx_region <- prev_tx_data %>%
+                  group_by(g_whoregion) %>%
+                  summarise_at(c("hiv_ipt",
+                                 "hiv_reg_new",
+                                 "e_prevtx_eligible",
+                                 "e_prevtx_eligible_variance",
+                                 "newinc_con04_prevtx"),
+                               sum,
+                               na.rm = TRUE)
+# merge with regional names
+prev_tx_region <- prev_tx_region %>%
+                  inner_join(who_region_names) %>%
+                  arrange(g_whoregion) %>%
+                  select(-g_whoregion)
+
+# Global aggregates
+prev_tx_global <- prev_tx_data %>%
+                  summarise_at(c("hiv_ipt",
+                                 "hiv_reg_new",
+                                 "e_prevtx_eligible",
+                                 "e_prevtx_eligible_variance",
+                                 "newinc_con04_prevtx"),
+                               sum,
+                               na.rm = TRUE) %>%
+                  mutate(entity = "Global")
+
+
+# Combine regional and global aggregates
+prev_tx_aggs <- rbind(prev_tx_region, prev_tx_global)
+
+
+# Calculate cooverage for the aggregates
+prev_tx_aggs <- prev_tx_aggs %>%
+                # use the normal approximation again to get lower and upper bounds of the aggregate estimates
+                mutate(e_prevtx_eligible_lo = e_prevtx_eligible - 1.96 * sqrt(e_prevtx_eligible_variance),
+                       e_prevtx_eligible_hi = e_prevtx_eligible + 1.96 * sqrt(e_prevtx_eligible_variance)) %>%
+
+                mutate(e_prevtx_kids_pct = newinc_con04_prevtx * 100 / e_prevtx_eligible,
+                       e_prevtx_kids_pct_lo = newinc_con04_prevtx * 100 / e_prevtx_eligible_hi,
+                       e_prevtx_kids_pct_hi = newinc_con04_prevtx * 100 / e_prevtx_eligible_lo) %>%
+
+                mutate(e_prevtx_eligible_lohi = display_intervals(e_prevtx_eligible,
+                                                                  e_prevtx_eligible_lo,
+                                                                  e_prevtx_eligible_hi),
+
+                       e_prevtx_kids_pct_lohi = display_intervals(e_prevtx_kids_pct,
+                                                                  e_prevtx_kids_pct_lo,
+                                                                  e_prevtx_kids_pct_hi),
+
+                       coverage = display_num(hiv_ipt * 100 / hiv_reg_new)) %>%
+
+                mutate_at(c("hiv_ipt",
+                            "hiv_reg_new",
+                            "e_prevtx_eligible",
+                            "newinc_con04_prevtx",
+                            "e_prevtx_kids_pct"),
+                          display_num) %>%
+
+                # select needed columns and rename to match HB country data
+                select(entity,
+                       ipt_numerator = hiv_ipt,
+                       ipt_denominator = hiv_reg_new,
+                       coverage,
+                       e_prevtx_eligible,
+                       e_prevtx_eligible_lohi,
                        newinc_con04_prevtx,
                        e_prevtx_kids_pct,
                        e_prevtx_kids_pct_lohi)
 
 
+# Combine HB data with aggregates
+prev_tx_table_data <- rbind(prev_tx_hb_data, prev_tx_aggs)
 
 
 # Create HTML output
-prev_tx_table_html <- xtable(prev_tx_data)
+prev_tx_table_html <- xtable(prev_tx_table_data)
 
 prev_tx_table_filename <- paste0(figures_folder, "/Tables/t5_1_prev_tx", Sys.Date(), ".htm")
 
