@@ -527,7 +527,8 @@ prev_tx_not_reported <- nrow(prev_tx_hbccodes) - prev_tx_reported
 
 # Create list of country names that have not reported
 prev_tx_countries_not_reported <-  prev_tx_hbccodes %>%
-                                    anti_join(prev_tx_data, by = "iso2")
+                                    anti_join(prev_tx_data, by = "iso2") %>%
+                                    arrange(originalname)
 
 
 # %>%
@@ -562,7 +563,9 @@ prev_tx_data <- prev_tx_data %>%
                        e_prev_tx_eligible_lohi,
                        newinc_con04_prevtx,
                        e_prevtx_kids_pct,
-                       e_prevtx_kids_pct_lohi)
+                       e_prevtx_kids_pct_lohi) %>%
+
+                arrange(country)
 
 
 
