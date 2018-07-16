@@ -3509,8 +3509,8 @@ rm(list=ls(pattern = "^bcg_cov"))
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Figure Box 6.3.1 (Map) ---------
-# Cost per patient treated for drug-susceptible TB and MDR-TB: current availability
-# of unit cost data from independent economic evaluations, December 2017
+# Cost per patient treated for drug-susceptible TB or MDR-TB: current availability
+# of unit cost data from independent costing studies, 1990-2017
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # get data from CSV file obtained by Ines
@@ -3528,8 +3528,8 @@ ghcc_data$cat <- cut(ghcc_data$N,
 
 
 ghcc_map <- WHOmap.print(ghcc_data,
-                         "Figure Box 6.3.1\nCost per patient treated for drug-susceptible TB and MDR-TB:\ncurrent availability of unit cost data from independent economic evaluations, December 2017",
-                         "Number\navailable",
+                         "Figure Box 6.3.1\nCost per patient treated for drug-susceptible TB or MDR-TB:\ncurrent availability of unit cost data from independent costing studies, 1990-2017",
+                         "Number\nof studies",
                          copyright=FALSE,
                          colors=brewer.pal(4, "Reds"),
                          show=FALSE)
