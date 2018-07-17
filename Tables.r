@@ -429,7 +429,7 @@ rm(list=ls(pattern = "^rdxpolicy"))
 # Table 5.1 -------
 # TB preventive treatment for people living with HIV and children under
 # 5 years of age who were household contacts of a bacteriologically confirmed pulmonary TB case,
-# xx high TB or TB/HIV burden countries that reported data, WHO regions and globally, 2017
+# high TB or TB/HIV burden countries, 2017
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
@@ -469,13 +469,6 @@ prev_tx_data <- notification %>%
                        hiv_ipt_reg_all,
                        hiv_reg_all)
 
-# Add an asterisk to country names where IPT is reported for all patients under care instead of only
-# the newly enrolled ones
-prev_tx_data <- prev_tx_data %>%
-                mutate(country = ifelse(!is.na(hiv_ipt_reg_all) & !is.na(hiv_reg_all),
-                                        paste0(country, "*"),
-                                        country))
-
 # Create numerators and denominators for the IPT coverage data
 prev_tx_data <- prev_tx_data %>%
                 mutate(ipt_numerator = ifelse(!is.na(hiv_ipt_reg_all) & !is.na(hiv_reg_all),
@@ -487,15 +480,16 @@ prev_tx_data <- prev_tx_data %>%
 
 # Calculate IPT coverage, but only if a country has reported for newly enrolled patients
 prev_tx_data <- prev_tx_data %>%
-                mutate(coverage = ifelse(!is.na(hiv_ipt) & !is.na(hiv_reg_new) & NZ(ipt_denominator) > 0,
-                                         display_num(ipt_numerator * 100 / ipt_denominator),
+                mutate(coverage = ifelse(!is.na(hiv_ipt) & NZ(hiv_reg_new) > 0,
+                                         display_num(hiv_ipt * 100 / hiv_reg_new),
                                          NA))
 
-# Add a dash marker in coverage if a country reported for all enrolled in care
+# Add an asterisk marker in coverage if a country reported for all enrolled in care
 prev_tx_data <- prev_tx_data %>%
                 mutate(coverage = ifelse(!is.na(hiv_ipt_reg_all) & !is.na(hiv_reg_all),
-                                         "-",
-                                         coverage))
+                                         "*",
+                                         coverage)
+                       )
 
 
 # Merge with the LTBI estimates
@@ -522,24 +516,8 @@ prev_tx_hb_data <- prev_tx_data %>%
                     inner_join(prev_tx_hbccodes)
 
 
-# Restrict to countries with data
-prev_tx_hb_data <- prev_tx_hb_data %>%
-                    filter(!is.na(coverage) | !is.na(e_prevtx_kids_pct))
 
-
-# Calculate number of reporting high burden countries and number not reported
-prev_tx_reported <- nrow(prev_tx_hb_data)
-prev_tx_not_reported <- nrow(prev_tx_hbccodes) - prev_tx_reported
-
-# Create list of country names that have not reported
-prev_tx_countries_not_reported <-  prev_tx_hbccodes %>%
-                                    anti_join(prev_tx_hb_data, by = "iso2") %>%
-                                    arrange(originalname)
-
-
-prev_tx_countries_not_reported <- str_flatten(prev_tx_countries_not_reported$originalname, collapse = ", ")
-
-# Restrict the dataframe to the variables needed for the final table, and order by country name
+# Restrict the dataframe to the variables needed for the final table, shorten country names and order by country name
 prev_tx_hb_data <- prev_tx_hb_data %>%
                     select(entity = country,
                            ipt_numerator,
@@ -553,122 +531,14 @@ prev_tx_hb_data <- prev_tx_hb_data %>%
                            e_prevtx_kids_pct_lo,
                            e_prevtx_kids_pct_hi)  %>%
 
+                    # shorten long country names
+                    get_names_for_tables( col = "entity") %>%
+
                     arrange(entity)
 
 
-
-# Calculate regional and global aggregates
-
-# Calculate the variance of the estimated child contacts, using a normal approximation
-prev_tx_data <- prev_tx_data %>%
-                mutate(e_prevtx_eligible_variance = ((e_prevtx_eligible_hi-e_prevtx_eligible)/3.92)^2)
-
-# Make sure we do the aggregations only on rows where both the numerator and denominator are present
-prev_tx_data <- prev_tx_data %>%
-                mutate(hiv_ipt = ifelse(is.na(hiv_reg_new),
-                                        NA,
-                                        hiv_ipt),
-
-                       hiv_reg_new = ifelse(is.na(hiv_ipt),
-                                        NA,
-                                        hiv_reg_new),
-
-                       hiv_ipt_reg_all = ifelse(is.na(hiv_reg_all),
-                                                NA,
-                                                hiv_ipt_reg_all),
-
-                       hiv_reg_all = ifelse(is.na(hiv_ipt_reg_all),
-                                            NA,
-                                            hiv_reg_all),
-
-                       e_prevtx_eligible = ifelse(is.na(newinc_con04_prevtx),
-                                               NA,
-                                               e_prevtx_eligible),
-
-                       newinc_con04_prevtx = ifelse(is.na(e_prevtx_eligible),
-                                                    NA,
-                                                    newinc_con04_prevtx)
-                       ) %>%
-
-                mutate(e_prevtx_eligible_variance = ifelse(is.na(e_prevtx_eligible),
-                                                           NA,
-                                                           e_prevtx_eligible_variance))
-
-# Regional aggregates
-prev_tx_region <- prev_tx_data %>%
-                  group_by(g_whoregion) %>%
-                  summarise_at(c("hiv_ipt",
-                                 "hiv_reg_new",
-                                 "hiv_ipt_reg_all",
-                                 "hiv_reg_all",
-                                 "e_prevtx_eligible",
-                                 "e_prevtx_eligible_variance",
-                                 "newinc_con04_prevtx"),
-                               sum,
-                               na.rm = TRUE)
-# merge with regional names
-prev_tx_region <- prev_tx_region %>%
-                  inner_join(who_region_names) %>%
-                  arrange(g_whoregion) %>%
-                  select(-g_whoregion)
-
-# Global aggregates
-prev_tx_global <- prev_tx_data %>%
-                  summarise_at(c("hiv_ipt",
-                                 "hiv_reg_new",
-                                 "hiv_ipt_reg_all",
-                                 "hiv_reg_all",
-                                 "e_prevtx_eligible",
-                                 "e_prevtx_eligible_variance",
-                                 "newinc_con04_prevtx"),
-                               sum,
-                               na.rm = TRUE) %>%
-                  mutate(entity = "Global")
-
-
-# Combine regional and global aggregates
-prev_tx_aggs <- rbind(prev_tx_region, prev_tx_global)
-
-
-# Calculate cooverage for the aggregates
-prev_tx_aggs <- prev_tx_aggs %>%
-
-                mutate(# For IPT coverage only include patients newly enrolled in HIV care
-                        coverage = display_num(hiv_ipt * 100 / hiv_reg_new)) %>%
-
-
-                # Add the IPT numbers for newly enrolled and currently enrolled just for the display
-                mutate(ipt_numerator = hiv_ipt + hiv_ipt_reg_all,
-                       ipt_denominator = hiv_reg_new + hiv_reg_all) %>%
-
-                # use the normal approximation again to get lower and upper bounds of the aggregate estimates for prev tx among kids
-                mutate(e_prevtx_eligible_lo = e_prevtx_eligible - 1.96 * sqrt(e_prevtx_eligible_variance),
-                       e_prevtx_eligible_hi = e_prevtx_eligible + 1.96 * sqrt(e_prevtx_eligible_variance)) %>%
-
-                mutate(e_prevtx_kids_pct = newinc_con04_prevtx * 100 / e_prevtx_eligible,
-                       e_prevtx_kids_pct_lo = newinc_con04_prevtx * 100 / e_prevtx_eligible_hi,
-                       e_prevtx_kids_pct_hi = newinc_con04_prevtx * 100 / e_prevtx_eligible_lo)
-
-
-# Restrict the dataframe to the variables needed for the final table
-prev_tx_aggs <- prev_tx_aggs %>%
-                select(entity,
-                       ipt_numerator,
-                       ipt_denominator,
-                       coverage,
-                       e_prevtx_eligible,
-                       e_prevtx_eligible_lo,
-                       e_prevtx_eligible_hi,
-                       newinc_con04_prevtx,
-                       e_prevtx_kids_pct,
-                       e_prevtx_kids_pct_lo,
-                       e_prevtx_kids_pct_hi)
-
-# Combine HB data with aggregates
-prev_tx_table_data <- rbind(prev_tx_hb_data, prev_tx_aggs)
-
 # Format variables for output
-prev_tx_table_data <- prev_tx_table_data %>%
+prev_tx_table_data <- prev_tx_hb_data %>%
 
                       mutate(e_prevtx_eligible_lohi = display_intervals(e_prevtx_eligible,
                                                                   e_prevtx_eligible_lo,
@@ -699,6 +569,26 @@ prev_tx_table_data <- prev_tx_table_data %>%
                        e_prevtx_kids_pct_lohi)
 
 
+
+
+
+# Finally we have a list of exclusions based on feedback from countries compiled by Lele
+prev_tx_footnote2 <- "** Estimated coverage was not calculated because the numerator includes contacts aged 5-7years (DPR Korea), those aged 5-6 years (Nigeria),
+is predominantly contacts of household contacts (Indonesia), and includess household contacts of bacteriologically confirmed or clinically diagnosed TB cases (Malawi and Phillipines)."
+
+prev_tx_footnote2_countries = c("DPR Korea", "Nigeria", "Indonesia", "Malawi", "Philippines")
+
+# Remove the coverage calculations for the excluded countries
+prev_tx_table_data <- prev_tx_table_data %>%
+                      mutate(e_prevtx_kids_pct = ifelse(entity %in% prev_tx_footnote2_countries,
+                                                        "**",
+                                                        e_prevtx_kids_pct),
+
+                             e_prevtx_kids_pct_lohi = ifelse(entity %in% prev_tx_footnote2_countries,
+                                                        NA,
+                                                        e_prevtx_kids_pct_lohi))
+
+
 # Create HTML output
 prev_tx_table_html <- xtable(prev_tx_table_data)
 
@@ -706,8 +596,7 @@ prev_tx_table_filename <- paste0(figures_folder, "/Tables/t5_1_prev_tx", Sys.Dat
 
 cat(paste("<h3>Table 5.1<br />TB preventive treatment for people living with HIV and children",
           "under 5 years of age who were household contacts of a bacteriologically confirmed pulmonary TB case,",
-          prev_tx_reported,
-          "high TB or TB/HIV burden countries that reported data<sup>a</sup>, WHO regions and globally",
+          "high TB or TB/HIV burden countries,",
           report_year-1,
           "</h3>"),
     file=prev_tx_table_filename)
@@ -725,12 +614,12 @@ print(prev_tx_table_html,
                                 <td rowspan='3'></td>
                                 <td rowspan='3'>People living with HIV newly enrolled in care</td>
                                 <td colspan='2'>People living with HIV newly enrolled in care started on TB preventive treatment</td>
-                                <td colspan='2' style='border-left: black 2px solid;'>Estimated number of child contacts under 5 years of age eligible for TB preventive treatment<sup>c</sup></td>
+                                <td colspan='2' style='border-left: black 2px solid;'>Estimated number of child contacts under 5 years of age eligible for TB preventive treatment<sup>a</sup></td>
                                 <td colspan='3'>Children under 5 years of age started on TB preventive treatment</td>
                                 </tr>
                                 <tr>
                                 <td rowspan='2'>Number</td>
-                                <td rowspan='2'>Coverage (%)<sup>b</sup></td>
+                                <td rowspan='2'>Coverage (%)</td>
                                 <td rowspan='2' style='border-left: black 2px solid;'>Best estimate</td>
                                 <td rowspan='2'>Uncertainty interval</td>
                                 <td rowspan='2'>Number</td>
@@ -740,18 +629,10 @@ print(prev_tx_table_html,
                                 <td>Best estimate</td>
                                 <td>Uncertainty interval</td>
                                 </tr>",
-                                paste("<tr><td colspan='7'>* Reported data on people living with HIV is for all enrolled in care, not just newly enrolled in care.
-                                <br /><sup>a</sup> There were",
-                                      prev_tx_not_reported,
-                                      "other countries in the list of high TB or TB/HIV burden countries that did not report data for either risk group. These were: ",
-                                      prev_tx_countries_not_reported,
-                                      ".<br />
-                                      <sup>b</sup> The calculations exclude countries which reported data for all enrolled in care, not just newly enrolled in care, and also
-                                      countries where either the numerator or denominator was missing.<br />
-                                      <sup>c</sup> This is the estimated number of children under 5 years of age who were household contacts of a notified bacteriologically confirmed pulmonary TB case, and eligible for TB
-                                      preventive treatment. Estimates are shown to three significant figures.
-
-                                </td>
+                                paste("<tr><td colspan='7'><sup>a</sup> Estimates are shown to three significant figures.<br />",
+                                       "* Coverage was not calculated because reported data on people living with HIV is for all enrolled in care, not just those newly enrolled in care.<br />",
+                                      prev_tx_footnote2,
+                                        "</td>
                                 </tr>"))
                       )
       )
