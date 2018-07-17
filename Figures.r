@@ -3303,73 +3303,9 @@ figsave(prevtx_kids_map,
 # Clean up (remove any objects with their name beginning with 'prevtx_kids')
 rm(list=ls(pattern = "^prevtx_kids"))
 
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 5.2 (Map) -------
-# Availability of data on the number of people aged 5 years and above who were
-# household contacts of bacteriologically confirmed pulmonary TB cases and were started on
-# TB preventive treatment, 2017
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-prevtx_older_data <-  strategy %>%
-  filter(year==report_year - 1) %>%
-  select(iso3,
-         country,
-         prevtx_5plus_data_available,
-         newinc_con5plus_prevtx,
-         ptsurvey_newinc_5plus,
-         ptsurvey_newinc_con5plus_prevtx) %>%
-
-  # Assign categories
-  mutate(cat =
-           ifelse(prevtx_5plus_data_available==0 |
-                    prevtx_5plus_data_available==60 & is.na(newinc_con5plus_prevtx) |
-                    prevtx_5plus_data_available==61 & (is.na(ptsurvey_newinc_5plus) | is.na(ptsurvey_newinc_con5plus_prevtx)),
-                  "Number not available",
-                  ifelse(prevtx_5plus_data_available==60,"Number available\nfrom routine surveillance",
-                         ifelse(prevtx_5plus_data_available==61,"Number estimated\nfrom a survey" ,NA)))) %>%
-
-  # drop unnecessary variables
-  select(country,
-         iso3,
-         cat)
-
-
-prevtx_older_data$cat <- factor(prevtx_older_data$cat)
-
-# Check if any countries used a survey (rarely happens)
-prevtx_older_survey <- prevtx_older_data %>% filter(cat=="Number estimated\nfrom a survey") %>% nrow()
-
-# Adjust colours for categories in maps based on number of levels in the data
-if (prevtx_older_survey == 0)
-{
-  prevtx_older_colours <- c('darkblue', 'lightyellow')
-} else
-{
-  prevtx_older_colours <- c('darkblue', 'lightblue', 'lightyellow')
-}
-
-# produce the map
-prevtx_older_map <- WHOmap.print(prevtx_older_data,
-                         paste("Figure 5.2\nAvailability of data on the number of people aged 5 years and above who were\nhousehold contacts of bacteriologically confirmed pulmonary TB cases and were started on",
-                               "\nTB preventive treatment,",
-                               report_year-1),
-                         legend.title = "Country response",
-                         copyright=FALSE,
-                         colors=prevtx_older_colours,
-                         na.label="No response",
-                         show=FALSE)
-
-figsave(prevtx_older_map,
-        prevtx_older_data,
-        "f5_2_prevtx_older_map")
-
-
-# Clean up (remove any objects with their name beginning with 'prevtx_older')
-rm(list=ls(pattern = "^prevtx_older"))
-
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 5.5 (Map) ---------
+# Figure 5.4 (Map) ---------
 # Notification rate ratio of TB among healthcare workers compared with the general population, 2017
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -3426,7 +3362,7 @@ hcw_data$cat <- cut(hcw_data$nrr,
 
 # produce the map
 hcw_map <- WHOmap.print(hcw_data,
-                        paste("Figure 5.5\nNotification rate ratio of TB among healthcare workers\ncompared with the general adult population,", report_year-1),
+                        paste("Figure 5.4\nNotification rate ratio of TB among healthcare workers\ncompared with the general adult population,", report_year-1),
                            "Notification\nrate ratio",
                            copyright=FALSE,
                            #colors=c('yellow', 'lightgreen', 'green', 'darkgreen'),
@@ -3435,14 +3371,14 @@ hcw_map <- WHOmap.print(hcw_data,
 
 figsave(hcw_map,
         hcw_data,
-        "f5_5_hcw_notf_rate_ratio")
+        "f5_4_hcw_notf_rate_ratio")
 
 # Clean up (remove any objects with their name beginning with 'hcw')
 rm(list=ls(pattern = "^hcw"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 5.7 (Map) ---------
+# Figure 5.6 (Map) ---------
 # Coverage of BCG vaccination, 2017
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -3478,7 +3414,7 @@ bcg_cov_data$cat <- cut(bcg_cov_data$coverage,
 
 # produce the map
 bcg_cov_map <- WHOmap.print(bcg_cov_data,
-                            paste("Figure 5.7\nCoverage of BCG vaccination,", report_year-1),
+                            paste("Figure 5.6\nCoverage of BCG vaccination,", report_year-1),
                             "Percentage",
                             copyright=FALSE,
                             colors=brewer.pal(3, "Greens"),
@@ -3496,7 +3432,7 @@ bcg_cov_map <- arrangeGrob(bcg_cov_map,
 
 figsave(bcg_cov_map,
         bcg_cov_data,
-        "f5_7_BCG_coverage_map")
+        "f5_6_BCG_coverage_map")
 
 # Clean up (remove any objects with their name beginning with 'bcg_cov')
 rm(list=ls(pattern = "^bcg_cov"))
