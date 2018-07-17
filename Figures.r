@@ -3315,18 +3315,24 @@ hcw_notif_hcw <-  strategy %>%
                          hcw_tb_infected,
                          hcw_tot)
 
+# Get the total adult population aged between 15 and 64 (exclude those aged 65 and above)
 hcw_pop_adults <- estimates_population %>%
                   filter(year == report_year - 1) %>%
-                  select(iso3,
-                         e_pop_15plus)
 
+                  mutate(e_pop_adult = NZ(e_pop_m1524) + NZ(e_pop_m2534) + NZ(e_pop_m3544) + NZ(e_pop_m4554) + NZ(e_pop_m5564) +
+                                       NZ(e_pop_f1524) + NZ(e_pop_f2534) + NZ(e_pop_f3544) + NZ(e_pop_f4554) + NZ(e_pop_f5564) ) %>%
+
+                  select(iso3,
+                         e_pop_adult)
+
+# Get the total notifications among adults aged between 15 and 64 (exclude those aged 65 and above)
 hcw_notif_adults <- notification %>%
                     filter(year == report_year - 1) %>%
-                    mutate(c_15plus = NZ(newrel_f15plus) +
-                                      NZ(newrel_m15plus) +
-                                      NZ(newrel_sexunk15plus)) %>%
+                    mutate(notif_adult = NZ(newrel_m1524) + NZ(newrel_m2534) + NZ(newrel_m3544) + NZ(newrel_m4554) + NZ(newrel_m5564) +
+                                         NZ(newrel_f1524) + NZ(newrel_f2534) + NZ(newrel_f3544) + NZ(newrel_f4554) + NZ(newrel_f5564)) %>%
                     select(iso3,
-                           c_15plus) %>%
+                           notif_adult) %>%
+
                     inner_join(hcw_pop_adults)
 
 
@@ -3335,22 +3341,21 @@ hcw_data <-  hcw_notif_adults %>%
 
                     # Calculate notification rate ratio
                     # Use as.numeric() to avoid integer overflow
-                    # Exclude Kenya this year because of implausible denominator
                     mutate(nrr = ifelse(NZ(hcw_tot) > 0 &
-                                        NZ(c_15plus) > 0 &
-                                        iso3 != 'KEN',
-                                        (as.numeric(hcw_tb_infected) * as.numeric(e_pop_15plus))
+                                        NZ(notif_adult) > 0,
+                                        (as.numeric(hcw_tb_infected) * as.numeric(e_pop_adult))
                                         /
-                                        (as.numeric(hcw_tot) * c_15plus),
-                                        NA)) %>%
+                                        (as.numeric(hcw_tot) * as.numeric(notif_adult)),
+                                        NA))
 
-                    # filter out dodgy data where the number of HCWs in a country is clearly too low
-                    # Check if logic below still applies in future years !!!!!
-                    mutate(nrr = ifelse(hcw_tot < 1000 &
-                                       e_pop_15plus > 1e6 &
-                                       hcw_tb_infected > 0, NA, nrr)) %>%
+# filter out dodgy data where the number of HCWs in a country is clearly too low
+# Check if logic below still applies in future years !!!!!
+hcw_filtered_out <- hcw_data %>% filter(hcw_tot / e_pop_adult < 0.001) %>% nrow()
 
-                    select(iso3,
+hcw_data <- hcw_data %>%
+            mutate(nrr = ifelse(hcw_tot / e_pop_adult < 0.001, NA, nrr)) %>%
+
+                      select(iso3,
                            nrr)
 
 
@@ -3368,6 +3373,14 @@ hcw_map <- WHOmap.print(hcw_data,
                            #colors=c('yellow', 'lightgreen', 'green', 'darkgreen'),
                            colors=c('#edf8e9', '#bae4b3', '#74c476', '#238b45'),
                            show=FALSE)
+
+
+# Add footnote about filtering out countries
+hcw_foot <- paste("Data from ",
+                  hcw_filtered_out,
+                  " countries were excluded when the number of health care workers per adult population was less than 1 per thousand.")
+
+hcw_map <- arrangeGrob(hcw_map, bottom = textGrob(hcw_foot, x = 0, hjust = -0.1, vjust=0.1, gp = gpar(fontsize = 10)))
 
 figsave(hcw_map,
         hcw_data,
@@ -3485,58 +3498,4 @@ figsave(ghcc_map,
 # Clean up (remove any objects with their name beginning with 'ghcc')
 rm(list=ls(pattern = "^ghcc"))
 
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Chapter 7 ------
-# Universal health coverage, social protection and
-# and addressing social determinants: Implications for TB
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 7.4 (Map) ---------
-# Out-of-pocket expenditures as a percentage of total health expenditures, 2015
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-# # Get data from external data views (data downloaded from the World Bank repository)
-# oop_data <- external_indicator_data %>%
-#             filter(indicator_id == "SH.XPD.OOPC.TO.ZS" )
-#
-# # Get the most recent year for which there are data
-# oop_year <- oop_data %>%
-#             select(year) %>%
-#             max()
-#
-# # Filter the oop data for the latest year
-# oop_data <- oop_data %>%
-#             filter(year == oop_year) %>%
-#             # boil down to bar minimum
-#             select(country,
-#                    iso3,
-#                    value)
-#
-# # Add the categories
-# oop_data$cat <- cut(oop_data$value,
-#                      c(0, 15.5, 30, 45, Inf),
-#                      c('<=15%', '16-29%', '30-44%', '>=45%'),
-#                right=FALSE)
-#
-# # produce the map
-# oop_map <- WHOmap.print(oop_data,
-#                         paste("Figure 7.4\nOut-of-pocket expenditures as a percentage of total health expenditures,", oop_year),
-#                            "Percentage",
-#                            copyright=FALSE,
-#                            colors=brewer.pal(4, "OrRd"),
-#                            show=FALSE)
-#
-# figsave(oop_map,
-#         select(oop_data,
-#                country,
-#                iso3,
-#                value,
-#                cat),
-#         "f7_4_pct_oop_map")
-#
-# # Clean up (remove any objects with their name beginning with 'oop')
-# rm(list=ls(pattern = "^oop"))
-#
 
