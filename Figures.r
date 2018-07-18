@@ -3240,60 +3240,71 @@ rm(list=ls(pattern = "^commureport"))
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Figure 5.1 (Map) -------
-# Availability of data on the number of children aged <5 years who were
-# household contacts of bacteriologically confirmed pulmonary TB cases and were started on
-# TB preventive treatment, 2017
+# Coverage of TB preventive treatment among eligible children aged under 5 years, 2017
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+# Need LTBI views which were not in the RData files, so import them now and add to RData later
+options(stringsAsFactors=FALSE)
 
-prevtx_kids_data <-  strategy %>%
+.fixnamibia <- function(df){
+  # make sure Namibia's iso2 code is not interpreted as R's NA (null)
+  df$iso2 <- ifelse(df$country=="Namibia", "NA", as.character(df$iso2))
+  return(df)
+}
+
+library(RODBC)
+ch <- odbcDriverConnect(connection_string)
+
+# load views into dataframes
+estimates_ltbi   <- .fixnamibia(sqlFetch(ch, "view_TME_estimates_ltbi"))
+
+close(ch)
+
+
+prevtx_kids_data <-  estimates_ltbi %>%
               filter(year==report_year - 1) %>%
               select(iso3,
                      country,
-                     prevtx_data_available,
-                     newinc_con04_prevtx,
-                     ptsurvey_newinc,
-                     ptsurvey_newinc_con04_prevtx) %>%
+                     e_prevtx_kids_pct)
 
-              # Assign categories
-              mutate(cat =
-                        ifelse(prevtx_data_available==0 |
-                                prevtx_data_available==60 & is.na(newinc_con04_prevtx) |
-                                prevtx_data_available==61 & (is.na(ptsurvey_newinc) | is.na(ptsurvey_newinc_con04_prevtx)),
-                              "Number not available",
-                        ifelse(prevtx_data_available==60,"Number available\nfrom routine surveillance",
-                        ifelse(prevtx_data_available==61,"Number estimated\nfrom a survey" ,NA)))) %>%
+# We have a list of exclusions based on feedback from countries compiled by Lele
+prev_tx_footnote <- paste0("Estimated coverage was not calculated because the numerator includes contacts aged 5-7 years (DPR Korea), those aged 5-6 years (Nigeria),",
+                            "\nis predominantly contacts of household contacts (Indonesia), and includes household contacts of bacteriologically confirmed or clinically diagnosed",
+                           "\nTB cases (Malawi and Phillipines).")
 
-              # drop unnecessary variables
-              select(country,
-                     iso3,
-                     cat)
+prev_tx_footnote_countries = c("PRK", "NGA", "IDN", "MWI", "PHL")
 
+# Remove the coverage calculations for the excluded countries
+prevtx_kids_data <- prevtx_kids_data %>%
+                    mutate(e_prevtx_kids_pct = ifelse(iso3 %in% prev_tx_footnote_countries,
+                                                      NA,
+                                                      e_prevtx_kids_pct))
 
-prevtx_kids_data$cat <- factor(prevtx_kids_data$cat)
+# Assign categories
+prevtx_kids_data$cat <- cut(prevtx_kids_data$e_prevtx_kids_pct,
+                            c(0, 25, 50, 75, Inf),
+                            c('0-24', '25-49', '50-74', '>=75'),
+                            right = FALSE)
 
-# Check if any countries used a survey (rarely happens)
-prevtx_kids_survey <- prevtx_kids_data %>% filter(cat=="Number estimated\nfrom a survey") %>% nrow()
-
-# Adjust colours for categories in maps based on number of levels in the data
-if (prevtx_kids_survey == 0)
-  {
-  prevtx_kids_colours <- c('darkblue', 'lightyellow')
-  } else
-  {
-  prevtx_kids_colours <- c('darkblue', 'lightblue', 'lightyellow')
-  }
 
 # produce the map
 prevtx_kids_map <- WHOmap.print(prevtx_kids_data,
-                        paste("Figure 5.1\nAvailability of data on the number of children aged <5 years who were\nhousehold contacts of bacteriologically confirmed pulmonary TB cases and were started on",
-                              "\nTB preventive treatment,",
+                        paste("Figure 5.1\nCoverage of TB preventive treatment among eligible children aged under 5 years(a), ",
                               report_year-1),
-                           legend.title = "Country response",
+                           legend.title = "Coverage (%)",
                            copyright=FALSE,
-                           colors=prevtx_kids_colours,
+                           colors=brewer.pal(4, "Blues"),
                            na.label="No response",
                            show=FALSE)
+
+# add footnote
+prevtx_kids_map <- arrangeGrob(prevtx_kids_map, bottom = textGrob(paste0("(a) Children aged <5 years who were household contacts of bacteriologically confirmed pulmonary TB cases.",
+                                                                         "\n",
+                                                                          prev_tx_footnote),
+                                                                  x = 0,
+                                                                  hjust = -0.1,
+                                                                  vjust=0.1,
+                                                                  gp = gpar(fontsize = 10)))
 
 figsave(prevtx_kids_map,
         prevtx_kids_data,
@@ -3306,7 +3317,7 @@ rm(list=ls(pattern = "^prevtx_kids"))
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Figure 5.4 (Map) ---------
-# Notification rate ratio of TB among healthcare workers compared with the general population, 2017
+# Notification rate ratio of arrangeGrob()TB among healthcare workers compared with the general population, 2017
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 hcw_notif_hcw <-  strategy %>%
@@ -3348,12 +3359,13 @@ hcw_data <-  hcw_notif_adults %>%
                                         (as.numeric(hcw_tot) * as.numeric(notif_adult)),
                                         NA))
 
-# filter out dodgy data where the number of HCWs in a country is clearly too low
-# Check if logic below still applies in future years !!!!!
-hcw_filtered_out <- hcw_data %>% filter(hcw_tot / e_pop_adult < 0.001) %>% nrow()
+# filter out counrties where the number of HCWs in a country is too low
+# for now, removing any countries reporting less than 1000 HCw because that would
+# make the notification rate jump around too much
+hcw_filtered_out <- hcw_data %>% filter(hcw_tot < 1000) %>% nrow()
 
 hcw_data <- hcw_data %>%
-            mutate(nrr = ifelse(hcw_tot / e_pop_adult < 0.001, NA, nrr)) %>%
+            mutate(nrr = ifelse(hcw_tot < 1000, NA, nrr)) %>%
 
                       select(iso3,
                            nrr)
@@ -3370,15 +3382,15 @@ hcw_map <- WHOmap.print(hcw_data,
                         paste("Figure 5.4\nNotification rate ratio of TB among healthcare workers\ncompared with the general adult population,", report_year-1),
                            "Notification\nrate ratio",
                            copyright=FALSE,
-                           #colors=c('yellow', 'lightgreen', 'green', 'darkgreen'),
-                           colors=c('#edf8e9', '#bae4b3', '#74c476', '#238b45'),
+                           colors=c('lightblue', 'orange', 'red', 'darkred'),
+                           #colors=c('#edf8e9', '#bae4b3', '#74c476', '#238b45'),
                            show=FALSE)
 
 
 # Add footnote about filtering out countries
 hcw_foot <- paste("Data from ",
                   hcw_filtered_out,
-                  " countries were excluded when the number of health care workers per adult population was less than 1 per thousand.")
+                  " countries were excluded where the number of health care workers reported was less than 1 000.")
 
 hcw_map <- arrangeGrob(hcw_map, bottom = textGrob(hcw_foot, x = 0, hjust = -0.1, vjust=0.1, gp = gpar(fontsize = 10)))
 
