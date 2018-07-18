@@ -2350,16 +2350,17 @@ txout_plot <- txout_long %>%
   
   ggtitle(paste0("Figure 4.22\nTreatment outcomes for new and relapse TB cases in ",
                  report_year - 2,
-                 ",\n30 high TB burden countries, WHO regions and globally"))
+                 ",\n30 high TB burden countries, WHO regions and globally")) +
+  
+  geom_text(data=subset(txout_long,variable=="Treatment success"),aes(label = floor(value)),
+            position = position_stack(reverse = TRUE), size=3,hjust=1.5,color="white")
 
 txout_plot <- arrangeGrob(txout_plot,
-                          bottom = textGrob(paste0("* Treatment outcomes are for new cases only.",
-                                                   "\nNOTE FOR SUE: PLEASE ADD SUCCESS RATE NUMBER ON EACH LINE AS WAS DONE\nIN LAST YEAR'S FIGURE 4.22"),
+                          bottom = textGrob("* Treatment outcomes are for new cases only.",
                                             x = 0,
                                             hjust = -0.1,
                                             vjust=0,
                                             gp = gpar(fontsize = 10)))
-
 
 figsave(txout_plot, txout, "f4_22_outcomes_tb", width=7, height=11) # Designer needs wide data; output portrait mode
 
@@ -2486,10 +2487,13 @@ out_plot <- out_data_long %>%
   
   ggtitle(paste0("Figure 4.23\nTreatment outcomes for new and relapse TB cases,\nnew and relapse HIV-positive TB cases,\nand MDR/RR-TB cases, 2012-",
                  report_year - 2,
-                 " globally(a)"))
+                 " globally(a)")) +
+  
+  geom_text(data=subset(out_data_long,variable=="Treatment success"),aes(label = floor(value)),
+            position = position_stack(reverse = TRUE), size=3,hjust=1.5,color="white")
 
 out_plot <- arrangeGrob(out_plot,
-                        bottom = textGrob("(a) MDR/RR-TB annual treatment cohorts are reported one year later than other TB cohorts.\nNOTE FOR SUE: PLEASE ADD SUCCESS RATE NUMBER ON EACH LINE",
+                        bottom = textGrob("(a) MDR/RR-TB annual treatment cohorts are reported one year later than other TB cohorts.",
                                           x = 0,
                                           hjust = -0.1,
                                           vjust=0,
@@ -2780,18 +2784,12 @@ txtbhivout_plot <- txtbhivout_long %>%
   
   ggtitle(paste0("Figure 4.25\nTreatment outcomes for new and relapse HIV-positive TB cases in\n",
                  report_year - 2,
-                 ", 30 high TB/HIV burden countries, WHO regions and globally"))
+                 ", 30 high TB/HIV burden countries, WHO regions and globally")) +
+  
+  geom_text(data=subset(txtbhivout_long,variable=="Treatment success"),aes(label = floor(value)),
+            position = position_stack(reverse = TRUE), size=3,hjust=1.5,color="white")
 
-
-txtbhivout_plot <- arrangeGrob(txtbhivout_plot,
-                               bottom = textGrob("NOTE FOR SUE: PLEASE ADD SUCCESS RATE NUMBER ON EACH LINE AS WAS DONE\nIN LAST YEAR'S FIGURE 4.25",
-                                                 x = 0,
-                                                 hjust = -0.1,
-                                                 vjust=0,
-                                                 gp = gpar(fontsize = 10)))
-
-
-
+# Save the plot
 figsave(txtbhivout_plot, txtbhivout, "f4_25_outcomes_tbhiv", width=7, height=11) # Designer needs wide data; output portrait mode
 
 # Clean up (remove any objects with their name starting with 'txtbhivout')
@@ -2939,17 +2937,10 @@ txmdrout_plot <- txmdrout_long %>%
   
   ggtitle(paste0("Figure 4.26\nTreatment outcomes for rifampicin-resistant TB cases\nstarted on treatment in ",
                  report_year - 3,
-                 ",\n30 high MDR-TB burden countries, WHO regions and globally"))
+                 ",\n30 high MDR-TB burden countries, WHO regions and globally")) +
 
-
-txmdrout_plot <- arrangeGrob(txmdrout_plot,
-                             bottom = textGrob("NOTE FOR SUE: PLEASE ADD SUCCESS RATE NUMBER ON EACH LINE AS WAS DONE\nIN LAST YEAR'S FIGURE 4.26",
-                                               x = 0,
-                                               hjust = -0.1,
-                                               vjust=0,
-                                               gp = gpar(fontsize = 10)))
-
-
+  geom_text(data=subset(txmdrout_long,variable=="Treatment success"),aes(label = floor(value)),
+            position = position_stack(reverse = TRUE), size=3,hjust=1.5,color="white")
 
 figsave(txmdrout_plot, txmdrout, "f4_26_outcomes_mdr", width=7, height=11) # Designer needs wide data; output portrait mode
 
@@ -3076,29 +3067,37 @@ rm(list=ls(pattern = "^dlm"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure Box 4.4.1  (Map) ------
+# Figure Box 4.4.1  (Map) ------Adding another catogory as "data not requested"
 # Percentage of basic management units in which there is community contribution to new case finding
 # and/or to treatment adherence support, 2017
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+# Get the variable for requesting countries for those commutnity indicator or not.
+comm_datarequest <- data_collection %>%
+  filter(datcol_year==report_year) %>%
+  select(country,
+         dc_engage_community_display) 
 
-comm_data <- strategy %>%
+comm_bmu <- strategy %>%
   filter(year==report_year - 1) %>%
   select(iso3,
          country,
          bmu,
          bmu_community_impl,
-         community_data_available) %>%
+         community_data_available)%>%
   mutate(comm_pct = ifelse(is.na(bmu_community_impl) | NZ(bmu) == 0,
                            NA,
                            bmu_community_impl * 100 / bmu))
 
+# Define countries which has not been requested for data as their persentage=-1, just to creat a new catogory
+comm_data <- merge(comm_datarequest, comm_bmu, by= "country")%>%
+  mutate(comm_pct=replace(comm_pct,(dc_engage_community_display == 0),-1))
+
 
 comm_data$cat <- cut(comm_data$comm_pct,
-                     c(0, 25, 50, 75, Inf),
-                     c('0-24.9', '25-49.9', '50-74.9', '>=75'),
+                     c(-1,0, 25, 50, 75, Inf),
+                     c('Data not requested','0-24.9', '25-49.9', '50-74.9', '>=75'),
                      right=FALSE)
-
 
 # produce the map
 comm_map <- WHOmap.print(comm_data,
@@ -3107,13 +3106,11 @@ comm_map <- WHOmap.print(comm_data,
                                report_year-1),
                          "Percentage",
                          copyright=FALSE,
-                         #colors=c('yellow', 'lightgreen', 'green', 'darkgreen'),
-                         colors=c('#edf8e9', '#bae4b3', '#74c476', '#238b45'),
+                         #colors=c('lightgreen','greyblue', 'lightblue', 'Blue', 'darkblue'),
+                         colors=c('#edf8e9','#bdd7e7', '#6baed6', '#3182bd', '#08519c'),
                          show=FALSE)
-
-
 comm_map <- arrangeGrob(comm_map,
-                        bottom = textGrob("Data only requested from 114 countries.",
+                        bottom = textGrob("Data only requested from 111 countries.",
                                           x = 0,
                                           hjust = -0.1,
                                           vjust=0,
@@ -3147,87 +3144,48 @@ commureport_from2013 <- strategy %>%
          country,
          bmu_ref_data,
          bmu_rxsupport_data,
-         community_data_available)%>%
-  mutate(community_data_available=replace(community_data_available,(year<=2014 & (bmu_ref_data>0 | bmu_rxsupport_data>0)),1))
+         community_data_available,
+         notified_ref,
+         notified_ref_community,
+         rxsupport_community_coh,
+         rxsupport_community_succ)%>%
+  mutate(community_data_available2=ifelse((notified_ref>0 & notified_ref_community>=0) | (rxsupport_community_coh>0 & rxsupport_community_succ>=0),1,NA))
 
-
-commureport_regional <- commureport_from2013 %>%
-  filter(year >= 2013) %>%
-  select(year,
-         g_whoregion,
-         country,
-         community_data_available)%>%
-  group_by(year, g_whoregion) %>%
-  summarise_at(vars(community_data_available),
-               sum,
-               na.rm = TRUE) %>%
-  # merge with regional names
-  inner_join(who_region_names, by = "g_whoregion") %>%
-  select(-g_whoregion) %>%
-  ungroup()
-
-commureport_global <- commureport_from2013 %>%
+commureport_sumsince2013 <- commureport_from2013 %>%
   filter(year >= 2013 & year <= report_year) %>%
   select(year,
          g_whoregion,
-         community_data_available)%>%
+         community_data_available2)%>%
   group_by(year) %>%
-  summarise_at(vars(community_data_available),
+  summarise_at(vars(community_data_available2),
                sum,
                na.rm = TRUE) %>%
   mutate(entity = "Global") %>%
   ungroup()
 
-#Combine regional and global data and reorganise
-commureport_data <- rbind(commureport_regional, commureport_global)
+# Also Lana said numbers has been collected in 2013(data of 2012) by herself through Email so not in the database,
+# Thus we need to creat a new row for year 2012 = 13 countries manully.
+commureport_2012 <- data.frame(year=2012, entity="Global", community_data_available2=13)
 
-commureport_data$entity <- factor(commureport_data$entity,
-                                  levels = c("Africa", "The Americas", "Eastern Mediterranean", "Europe", "South-East Asia", "Western Pacific", "Global"))
+commureport_global <-rbind(commureport_2012,commureport_sumsince2013)
+# After Lana comes back, I will ask her for list of those 13 countries and introduc them into the data frame.  
 
-
-# Plot as bars, with global separate from regions so can use different scales
-
-commureport_plot_reg <- commureport_data %>%
-  filter(entity!="Global") %>%
-  ggplot(aes(x=year, y=community_data_available)) +
-  geom_bar(stat="identity", fill="green",width = 0.5) +
-  facet_wrap( ~ entity,ncol = 2) +
-  #This breaks setting need to be changed afterwards, it is simply because only 5 years data were used
+commureport_plot_glob <- commureport_global %>%
+  ggplot(aes(x=year, y=community_data_available2)) +
+  geom_bar(stat="identity", fill="darkgreen",width = 0.5) +
+  #This breaks setting need to be changed afterwards, it is simply because only 6 years data were used
   #which makes the bar too wide, to control the width, it changed X axis breaks label.
-  scale_x_continuous(breaks = c(2013, 2014, 2015, 2016, report_year-1)) +
+  scale_x_continuous(breaks = c(2012,2013, 2014, 2015, 2016, report_year-1)) +
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 70)) +
   theme_glb.rpt() +
   labs(x="", y="Number of countries") +
   theme(panel.grid=element_blank()) +
-  expand_limits(c(0,0))
-
-
-commureport_plot_glob <- commureport_data %>%
-  filter(entity=="Global") %>%
-  ggplot(aes(x=year, y=community_data_available)) +
-  geom_bar(stat="identity", fill="green",width = 0.5) +
-  facet_wrap( ~ entity) +
-  #This breaks setting need to be changed afterwards, it is simply because only 5 years data were used
-  #which makes the bar too wide, to control the width, it changed X axis breaks label.
-  scale_x_continuous(breaks = c(2013, 2014, 2015, 2016, report_year-1)) +
-  theme_glb.rpt() +
-  labs(x="", y="Number of countries)") +
-  theme(panel.grid=element_blank()) +
-  expand_limits(c(0,0))
-
-commureport_plot <- arrangeGrob(commureport_plot_glob,
-                                commureport_plot_reg,
-                                nrow = 2,
-                                ncol = 1,
-                                top = textGrob(label = paste0("Figure 4.4.2\nNumber of countries reporting on WHO community engagement indicators, 2013-",
-                                                              report_year-1,
-                                                              ", globally\nand for WHO regions"),
-                                               x = 0.02,
-                                               just = "left",
-                                               gp = gpar(fontsize = 10)))
-
+  expand_limits(c(0,0)) +
+  ggtitle(paste0("Figure 4.4.2\nNumber of countries reporting on WHO community engagement indicators, 2012-",
+                 report_year-1))
 
 # Save the plot
-figsave(commureport_plot, commureport_data, "f4_4_2_community_indicator_reporting", width=7, height=11)
+figsave(commureport_plot_glob, commureport_global, "f4_box_4_4_2_community_indicator_reporting", width=7, height=11)  
 
 # Clean up (remove any objects with their name starting 'commureport')
 rm(list=ls(pattern = "^commureport"))
