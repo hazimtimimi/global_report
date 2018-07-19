@@ -3362,6 +3362,44 @@ rm(list=ls(pattern = "^hcw"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Figure 5.5 (Map) ---------
+# BCG vaccination policy by country
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+bcg_policy_data <- read.csv(paste0(rdata_folder, "/BCG_Atlas_Data _2018-07-19.csv"),
+                            na.strings = "")
+
+# filter out empty lines and restrict to the variables we need
+bcg_policy_data <- bcg_policy_data %>%
+                   select(iso3, Country, BCG.Policy.Type) %>%
+                   filter(!is.na(iso3))
+
+bcg_policy_data$cat <- as.factor(bcg_policy_data$BCG.Policy.Type)
+
+bcg_policy_map <- WHOmap.print(bcg_policy_data,
+                               "Figure 5.5\nBCG vaccination policy by country",
+                               "Policy",
+                               copyright=FALSE,
+                               colors=c("darkgreen", "lightgreen", "purple"),
+                               show=FALSE)
+
+# Add footnote
+bcg_policy_map <- arrangeGrob(bcg_policy_map,
+                             bottom = textGrob("\nSource: The BCG World Atlas 2nd Edition, http://www.bcgatlas.org/, accessed 19 July 2018",
+                                               x = 0,
+                                               hjust = -0.1,
+                                               vjust=0,
+                                               gp = gpar(fontsize = 10)))
+
+figsave(bcg_policy_map,
+        bcg_policy_data,
+        "f5_5_BCG_policy_map")
+
+# Clean up (remove any objects with their name beginning with 'bcg_policy')
+rm(list=ls(pattern = "^bcg_policy"))
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Figure 5.6 (Map) ---------
 # Coverage of BCG vaccination, 2017
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
