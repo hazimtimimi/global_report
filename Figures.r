@@ -2335,23 +2335,23 @@ txout_plot <- txout_long %>%
 			  ggplot(aes(entity,
 			             value,
 			             fill = variable)) +
-			  
+
 			  geom_col(position = position_stack(reverse = TRUE)) +
 			  coord_flip() +
-			  
+
 			  theme_glb.rpt() +
 			  scale_fill_manual("", values = outcomes_palette()) +
 			  labs(x="", y="Percentage of cohort (%)") +
-			  
+
 			  theme(legend.position="bottom",
 			        panel.grid=element_blank()) +
-			  
+
 			  expand_limits(c(0,0)) +
-			  
+
 			  ggtitle(paste0("Figure 4.22\nTreatment outcomes for new and relapse TB cases in ",
 			                 report_year - 2,
 			                 ",\n30 high TB burden countries, WHO regions and globally")) +
-			  
+
 			  geom_text(data=subset(txout_long,variable=="Treatment success"),aes(label = floor(value)),
 			            position = position_stack(reverse = TRUE), size=3,hjust=1.5,color="white")
 
@@ -2470,25 +2470,25 @@ out_plot <- out_data_long %>%
 			  ggplot(aes(year,
 			             value,
 			             fill = variable)) +
-			  
+
 			  geom_col(position = position_stack(reverse = TRUE)) +
 			  facet_wrap( ~ subgroup, nrow = 3) +
 			  coord_flip() +
-			  
+
 			  theme_glb.rpt() +
 			  scale_fill_manual("", values = outcomes_palette()) +
-			  
+
 			  labs(x="Year started on treatment", y="Percentage of cohort (%)") +
-			  
+
 			  theme(legend.position="bottom",
 			        panel.grid=element_blank()) +
-			  
+
 			  expand_limits(c(0,0)) +
-			  
+
 			  ggtitle(paste0("Figure 4.23\nTreatment outcomes for new and relapse TB cases,\nnew and relapse HIV-positive TB cases,\nand MDR/RR-TB cases, 2012-",
 			                 report_year - 2,
 			                 " globally(a)")) +
-			  
+
 			  geom_text(data=subset(out_data_long,variable=="Treatment success"),aes(label = floor(value)),
 			            position = position_stack(reverse = TRUE), size=3,hjust=1.5,color="white")
 
@@ -2629,7 +2629,7 @@ txoutnum_plot <- arrangeGrob(txoutnum_plot_glob,
                                             x = 0.02,
                                             just = "left",
                                             gp = gpar(fontsize = 10)),
-                             
+
                              bottom = textGrob("(a) Cohorts before 2012 included new cases only.",
                                                x = 0.02,
                                                just = "left",
@@ -2769,26 +2769,26 @@ txtbhivout_plot <- txtbhivout_long %>%
 					  ggplot(aes(entity,
 					             value,
 					             fill = variable)) +
-					  
+
 					  geom_col(position = position_stack(reverse = TRUE)) +
 					  coord_flip() +
-					  
+
 					  theme_glb.rpt() +
 					  scale_fill_manual("", values = outcomes_palette()) +
 					  labs(x="", y="Percentage of cohort (%)") +
-					  
+
 					  theme(legend.position="bottom",
 					        panel.grid=element_blank()) +
-					  
+
 					  expand_limits(c(0,0)) +
-					  
+
 					  ggtitle(paste0("Figure 4.25\nTreatment outcomes for new and relapse HIV-positive TB cases in\n",
 					                 report_year - 2,
 					                 ", 30 high TB/HIV burden countries, WHO regions and globally")) +
-					  
+
 					  geom_text(data=subset(txtbhivout_long,variable=="Treatment success"),aes(label = floor(value)),
 					            position = position_stack(reverse = TRUE), size=3,hjust=1.5,color="white")
-					
+
 
 # Save the plot
 figsave(txtbhivout_plot, txtbhivout, "f4_25_outcomes_tbhiv", width=7, height=11) # Designer needs wide data; output portrait mode
@@ -2923,23 +2923,23 @@ txmdrout_plot <- txmdrout_long %>%
 				  ggplot(aes(entity,
 				             value,
 				             fill = variable)) +
-				  
+
 				  geom_col(position = position_stack(reverse = TRUE)) +
 				  coord_flip() +
-	  
+
 				  theme_glb.rpt() +
 				  scale_fill_manual("", values = outcomes_palette()) +
 				  labs(x="", y="Percentage of cohort (%)") +
-				  
+
 				  theme(legend.position="bottom",
 				        panel.grid=element_blank()) +
-				  
+
 				  expand_limits(c(0,0)) +
-				  
+
 				  ggtitle(paste0("Figure 4.26\nTreatment outcomes for rifampicin-resistant TB cases\nstarted on treatment in ",
 				                 report_year - 3,
 				                 ",\n30 high MDR-TB burden countries, WHO regions and globally")) +
-				
+
 				  geom_text(data=subset(txmdrout_long,variable=="Treatment success"),aes(label = floor(value)),
 				            position = position_stack(reverse = TRUE), size=3,hjust=1.5,color="white")
 
@@ -3077,7 +3077,7 @@ rm(list=ls(pattern = "^dlm"))
 comm_datarequest <- data_collection %>%
   filter(datcol_year==report_year) %>%
   select(country,
-         dc_engage_community_display) 
+         dc_engage_community_display)
 
 comm_bmu <- strategy %>%
 			  filter(year==report_year - 1) %>%
@@ -3169,7 +3169,7 @@ commureport_sumsince2013 <- commureport_from2013 %>%
 commureport_2012 <- data.frame(year=2012, entity="Global", community_data_available2=13)
 
 commureport_global <-rbind(commureport_2012,commureport_sumsince2013)
-# After Lana comes back, I will ask her for list of those 13 countries and introduc them into the data frame.  
+# After Lana comes back, I will ask her for list of those 13 countries and introduc them into the data frame.
 
 commureport_plot_glob <- commureport_global %>%
   ggplot(aes(x=year, y=community_data_available2)) +
@@ -3186,7 +3186,7 @@ commureport_plot_glob <- commureport_global %>%
                  report_year-1))
 
 # Save the plot
-figsave(commureport_plot_glob, commureport_global, "f4_box_4_4_2_community_indicator_reporting", width=7, height=11)  
+figsave(commureport_plot_glob, commureport_global, "f4_box_4_4_2_community_indicator_reporting", width=7, height=11)
 
 # Clean up (remove any objects with their name starting 'commureport')
 rm(list=ls(pattern = "^commureport"))
@@ -3253,7 +3253,7 @@ prevtx_kids_map <- WHOmap.print(prevtx_kids_data,
                                 legend.title = "Coverage (%)",
                                 copyright=FALSE,
                                 colors=brewer.pal(4, "Blues"),
-                                na.label="No response",
+                                na.label="Not estimated",
                                 show=FALSE)
 
 # add footnote
@@ -3448,15 +3448,15 @@ ghcc_data$cat <- cut(ghcc_data$N,
 
 
 ghcc_map <- WHOmap.print(ghcc_data,
-                         "Figure Box 6.3.1\nCost per patient treated for drug-susceptible TB or MDR-TB:\ncurrent availability of unit cost data from independent costing studies, 1990-2017",
-                         "Number\nof studies",
+                         "Fig B6.3.1\nCost per patient treated for drug-susceptible TB or MDR-TB:\ncurrent availability of unit cost data from independent costing studies, 1990-2017",
+                         "Number\navailable",
                          copyright=FALSE,
                          colors=brewer.pal(4, "Reds"),
                          show=FALSE)
 
 # Add footnote for the source of the data
 ghcc_map <- arrangeGrob(ghcc_map,
-                        bottom = textGrob("Source: Global Health Cost Consortium, July 2018",
+                        bottom = textGrob("Source: Unit Cost Study Repository, https://ghcosting.org/pages/data/ucsr/app/index, accessed 19 July 2018",
                                           x = 0,
                                           hjust = -0.1,
                                           vjust=0,
