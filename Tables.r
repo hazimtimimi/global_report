@@ -420,4 +420,222 @@ write.csv(rdxpolicy_aggs,
 # Clean up (remove any objects with their name beginning with 'rdxpolicy')
 rm(list=ls(pattern = "^rdxpolicy"))
 
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Chapter 5 ------
+# TB prevention services
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Table 5.1 -------
+# TB preventive treatment for people living with HIV and children under
+# 5 years of age who were household contacts of a bacteriologically confirmed pulmonary TB case,
+# high TB or TB/HIV burden countries, 2017
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+
+# Need LTBI views which were not in the RData files, so import them now and add to RData later
+options(stringsAsFactors=FALSE)
+
+.fixnamibia <- function(df){
+  # make sure Namibia's iso2 code is not interpreted as R's NA (null)
+  df$iso2 <- ifelse(df$country=="Namibia", "NA", as.character(df$iso2))
+  return(df)
+}
+
+library(RODBC)
+ch <- odbcDriverConnect(connection_string)
+
+# load views into dataframes
+estimates_ltbi   <- .fixnamibia(sqlFetch(ch, "view_TME_estimates_ltbi"))
+
+close(ch)
+
+
+# Get list of TB and TB/HIV high-burden countries
+prev_tx_hbccodes <-  country_group_membership %>%
+                      filter(  (group_type %in% c("g_hb_tb", "g_hb_tbhiv")) &
+                                 group_name == 1) %>%
+                      select(iso2, originalname = country) %>%
+                      distinct(iso2, originalname)
+
+
+prev_tx_data <- notification %>%
+                filter(year == report_year -1) %>%
+                select(iso2,
+                       country,
+                       g_whoregion,
+                       hiv_ipt,
+                       hiv_reg_new,
+                       hiv_ipt_reg_all,
+                       hiv_reg_all)
+
+# Create numerators and denominators for the IPT coverage data
+prev_tx_data <- prev_tx_data %>%
+                mutate(ipt_numerator = ifelse(!is.na(hiv_ipt_reg_all) & !is.na(hiv_reg_all),
+                                              hiv_ipt_reg_all,
+                                              hiv_ipt),
+                       ipt_denominator = ifelse(!is.na(hiv_ipt_reg_all) & !is.na(hiv_reg_all),
+                                                hiv_reg_all,
+                                                hiv_reg_new))
+
+# Calculate IPT coverage, but only if a country has reported for newly enrolled patients
+prev_tx_data <- prev_tx_data %>%
+                mutate(coverage = ifelse(!is.na(hiv_ipt) & NZ(hiv_reg_new) > 0,
+                                         display_num(hiv_ipt * 100 / hiv_reg_new),
+                                         NA))
+
+# Add an asterisk marker in coverage if a country reported for all enrolled in care
+prev_tx_data <- prev_tx_data %>%
+                mutate(coverage = ifelse(!is.na(hiv_ipt_reg_all) & !is.na(hiv_reg_all),
+                                         "*",
+                                         coverage)
+                       )
+
+
+# Merge with the LTBI estimates
+prev_tx_data <- estimates_ltbi %>%
+                filter(year == report_year -1) %>%
+                select(iso2,
+                       e_prevtx_eligible,
+                       e_prevtx_eligible_lo,
+                       e_prevtx_eligible_hi,
+                       newinc_con04_prevtx,
+                       e_prevtx_kids_pct,
+                       e_prevtx_kids_pct_lo,
+                       e_prevtx_kids_pct_hi
+                      ) %>%
+
+                # Note the ltbi estimates have not been produced for all countries
+                right_join(prev_tx_data)
+
+
+# Now produce the high burden data for the table
+
+# Merge with list of countries in HB TB or TB/HIV
+prev_tx_hb_data <- prev_tx_data %>%
+                    inner_join(prev_tx_hbccodes)
+
+
+
+# Restrict the dataframe to the variables needed for the final table, shorten country names and order by country name
+prev_tx_hb_data <- prev_tx_hb_data %>%
+                    select(entity = country,
+                           ipt_numerator,
+                           ipt_denominator,
+                           coverage,
+                           e_prevtx_eligible,
+                           e_prevtx_eligible_lo,
+                           e_prevtx_eligible_hi,
+                           newinc_con04_prevtx,
+                           e_prevtx_kids_pct,
+                           e_prevtx_kids_pct_lo,
+                           e_prevtx_kids_pct_hi)  %>%
+
+                    # shorten long country names
+                    get_names_for_tables( col = "entity") %>%
+
+                    arrange(entity)
+
+
+# Format variables for output
+prev_tx_table_data <- prev_tx_hb_data %>%
+
+                      mutate(e_prevtx_eligible_lohi = display_intervals(e_prevtx_eligible,
+                                                                  e_prevtx_eligible_lo,
+                                                                  e_prevtx_eligible_hi),
+
+                       e_prevtx_kids_pct_lohi = display_intervals(e_prevtx_kids_pct,
+                                                                  e_prevtx_kids_pct_lo,
+                                                                  e_prevtx_kids_pct_hi)) %>%
+
+                # format and round numbers
+                mutate(ipt_numerator = rounder(ipt_numerator),
+                       ipt_denominator = rounder(ipt_denominator),
+                       newinc_con04_prevtx = rounder(newinc_con04_prevtx),
+
+                       e_prevtx_eligible = display_num(e_prevtx_eligible),
+                       e_prevtx_kids_pct = display_num(e_prevtx_kids_pct)) %>%
+
+
+                # drop the separate *_lo and *_hi variables
+                select(entity,
+                       ipt_numerator,
+                       ipt_denominator,
+                       coverage,
+                       e_prevtx_eligible,
+                       e_prevtx_eligible_lohi,
+                       newinc_con04_prevtx,
+                       e_prevtx_kids_pct,
+                       e_prevtx_kids_pct_lohi)
+
+
+
+
+
+# Finally we have a list of exclusions based on feedback from countries compiled by Lele
+prev_tx_footnote2 <- "** Estimated coverage was not calculated because the numerator includes contacts aged 5-7years (DPR Korea), those aged 5-6 years (Nigeria),
+is predominantly contacts of household contacts (Indonesia), and includess household contacts of bacteriologically confirmed or clinically diagnosed TB cases (Malawi and Phillipines)."
+
+prev_tx_footnote2_countries = c("DPR Korea", "Nigeria", "Indonesia", "Malawi", "Philippines")
+
+# Remove the coverage calculations for the excluded countries
+prev_tx_table_data <- prev_tx_table_data %>%
+                      mutate(e_prevtx_kids_pct = ifelse(entity %in% prev_tx_footnote2_countries,
+                                                        "**",
+                                                        e_prevtx_kids_pct),
+
+                             e_prevtx_kids_pct_lohi = ifelse(entity %in% prev_tx_footnote2_countries,
+                                                        NA,
+                                                        e_prevtx_kids_pct_lohi))
+
+
+# Create HTML output
+prev_tx_table_html <- xtable(prev_tx_table_data)
+
+prev_tx_table_filename <- paste0(figures_folder, "/Tables/t5_1_prev_tx", Sys.Date(), ".htm")
+
+cat(paste("<h3>Table 5.1<br />TB preventive treatment for people living with HIV and children",
+          "under 5 years of age who were household contacts of a bacteriologically confirmed pulmonary TB case,",
+          "high TB or TB/HIV burden countries,",
+          report_year-1,
+          "</h3>"),
+    file=prev_tx_table_filename)
+
+print(prev_tx_table_html,
+      type="html",
+      file=prev_tx_table_filename,
+      include.rownames=FALSE,
+      include.colnames=FALSE,
+      html.table.attributes="border='0' rules='rows' width='1100' cellpadding='5'",
+      append=TRUE,
+      add.to.row=list(pos=list(0,
+                               nrow(prev_tx_table_html)),
+                      command=c("<tr>
+                                <td rowspan='3'></td>
+                                <td rowspan='3'>People living with HIV newly enrolled in care</td>
+                                <td colspan='2'>People living with HIV newly enrolled in care started on TB preventive treatment</td>
+                                <td colspan='2' style='border-left: black 2px solid;'>Estimated number of child contacts under 5 years of age eligible for TB preventive treatment<sup>a</sup></td>
+                                <td colspan='3'>Children under 5 years of age started on TB preventive treatment</td>
+                                </tr>
+                                <tr>
+                                <td rowspan='2'>Number</td>
+                                <td rowspan='2'>Coverage (%)</td>
+                                <td rowspan='2' style='border-left: black 2px solid;'>Best estimate</td>
+                                <td rowspan='2'>Uncertainty interval</td>
+                                <td rowspan='2'>Number</td>
+                                <td colspan='2'>Coverage (%)</td>
+                                </tr>
+                                <tr>
+                                <td>Best estimate</td>
+                                <td>Uncertainty interval</td>
+                                </tr>",
+                                paste("<tr><td colspan='7'><sup>a</sup> Estimates are shown to three significant figures.<br />",
+                                       "* Coverage was not calculated because reported data on people living with HIV is for all enrolled in care, not just those newly enrolled in care.<br />",
+                                      prev_tx_footnote2,
+                                        "</td>
+                                </tr>"))
+                      )
+      )
+
+# Clean up (remove any objects with their name beginning with 'prev_tx')
+rm(list=ls(pattern = "^prev_tx"))
