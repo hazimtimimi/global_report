@@ -3332,7 +3332,7 @@ hcw_data <- hcw_data %>%
 
 hcw_data$cat <- cut(hcw_data$nrr,
                     c(0, 1, 2, 3, Inf),
-                    c('0-0.9', '1-1.9%', '2-2.9%', '>=3'),
+                    c('0-0.9', '1-1.9', '2-2.9', '>=3'),
                     right=FALSE)
 
 
