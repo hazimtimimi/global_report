@@ -3275,6 +3275,164 @@ rm(list=ls(pattern = "^prevtx_kids"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Figure 5.2 ---------
+# Provision of TB preventive treatment to people living with HIV, 2015–2017
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+ipt <- notification %>%
+  filter(year >= 2005) %>%
+  select(iso3,
+         country,
+         year,
+         g_whoregion,
+         hiv_ipt,
+         hiv_ipt_reg_all) %>%  
+  mutate(hiv_ipt=ifelse(!is.na(hiv_ipt),hiv_ipt,hiv_ipt_reg_all))
+
+#remove data from Kenya, Zambia and Eritrea in 2016 and add data from Russia"
+#   ipt[ipt$iso3 %in% c("ZMB", "KEN", "ERI")&ipt$year==2016,"hiv_ipt"]<-NA
+#   ipt[ipt$iso3=="RUS"&ipt$year==2016,"hiv_ipt"]<-19611
+
+#checked with Annabele, last year those coUntries were removed because of data discrepancies(also removed from sever database)
+#might need to do the same thing this year later.
+#Also, she confirmed we can keep data that way in 2016 since those countries still could not provide clean data for 2016
+
+
+ipt$area <- ifelse(ipt$iso3 %in% c("ZAF"), "South Africa", 
+                   ifelse(ipt$g_whoregion=="AFR", "Rest of AFR", 
+                          "Rest of world"))
+ipt_b <- aggregate(ipt[5], by=list(year=ipt$year, area=ipt$area), sum, na.rm=T)
+ipt_b1 <- aggregate(ipt[5], by=list(year=ipt$year), FUN=sum, na.rm=T) 
+ipt_b1$area <- "Global" 
+ipt_b2 <- rbind(ipt_b, ipt_b1)
+library(reshape2)
+ipt_c <- melt(ipt_b2, id=1:2)
+ipt_c$value <- ipt_c$value/1000 
+ipt_c$area <- factor(ipt_c$area, levels=c( "Rest of world", "Rest of AFR", "South Africa", "Global")) 
+
+
+hiv_ipt_plot <- ggplot(ipt_c, aes(year, value, color=area)) + geom_line(size=1)+ 
+  scale_y_continuous("Number of people living with HIV (thousands)") + 
+  theme_glb.rpt() + scale_x_continuous(name="", breaks=c(min(ipt_c$year):max(ipt_c$year))) + 
+  scale_color_manual(values=c("#0070C0", "#77933C","orange", "red")) + guides(color = guide_legend(reverse = TRUE))+
+  ggtitle(paste("Figure 5.2\nProvision of TB preventive treatment to people living with HIV, 2005", report_year-1, sep="\u2013"))+
+  annotate("text", x=2016, y=900, label="Global", size=4)+
+  annotate("text", x=2016, y=350, label="South Africa", size=4)+
+  annotate("text", x=2016, y=520, label="Rest of Africa", size=4)+
+  annotate("text", x=2016, y=120, label="Rest of World", size=4)+
+  theme(legend.position="none")
+
+# Save the plot
+figsave(hiv_ipt_plot, ipt_c, "f5_2_IPT_in_HIV_patients", width=7, height=5)
+
+# Clean up (remove any objects with their name starting 'commureport')
+rm(list=ls(pattern = "^ipt"))
+
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Figure 5.3   ------
+# Gaps in TB prevention and TB detection for people 
+# who were newly enrolled in HIV care in 2017, selected countries
+
+
+# Annabele confirmed only when country reported same number for hiv_reg_new and hiv_reg_new2 should this country be selected,
+# othervise it would mean they use different denominator for reporting hiv_ipt and hiv_tbdetect which is unacceptable for this plot
+
+ipt_gap_country  <- notification %>%
+  filter(year==report_year - 1 & hiv_tbdetect>=0 & hiv_ipt>=0 & (hiv_reg_new>0 | hiv_reg_new2>0) & hiv_reg_new == hiv_reg_new2) %>%
+  select(country,
+         iso2,
+         g_whoregion,
+         hiv_reg_new,
+         hiv_tbdetect,
+         hiv_ipt)  %>%
+  # shorten long country names
+  get_names_for_tables() 
+
+# Filter the country list down to high TB/TBHIV burden ones
+ipt_gap_tbhivhbc <- country_group_membership %>%
+  filter(group_type == "g_hb_tb" | group_type == "g_hb_tbhiv") %>%
+  select(iso2) %>%
+  unique()
+
+ipt_gap_country <- ipt_gap_country %>%
+  inner_join(ipt_gap_tbhivhbc) %>%
+  #remove the iso2 field to match regional and countries aggregates
+  select(-iso2,
+         -g_whoregion)%>%
+  #Zimbabwe reported an unreasonal high hiv_tbdect persentage, remove it after Annabel checked with them
+  filter(country!="Zimbabwe")
+
+# Calculate proportions for plotting as stacked bars
+ipt_gap_country <- ipt_gap_country %>%
+  mutate(ipt_pct = hiv_ipt * 100 / hiv_reg_new,
+         tbdetect_pct = hiv_tbdetect * 100 / hiv_reg_new,
+         gap_pct = (hiv_reg_new - hiv_ipt - hiv_tbdetect) * 100 / hiv_reg_new) %>%
+  # Sort in descending order of started on IPT persentage
+  arrange(desc(ipt_pct)) %>%
+  # Keep record of current order (in reverse) so plot comes out as we want it
+  mutate(country = factor(country, levels=rev(country))) %>%
+  # Drop the actual numbers and keep percentages
+  select(-hiv_reg_new,-hiv_tbdetect,-hiv_ipt)
+
+# Flip into long mode for stacked bar plotting
+ipt_gap_long <- melt(ipt_gap_country, id=1)
+
+
+# stacking order changed with upgrade of ggplot to version 2.2. GRRRRRRRR
+# Why GRRRRRR? Because, of course, this broke existing code that was working!
+# Finally figured out the solution -- use geom_col with the following parameter
+# geom_col(position = position_stack(reverse = TRUE))
+#
+# It also helped to have a named list for the colour palette.
+# See http://ggplot2.tidyverse.org/reference/geom_bar.html  and
+#     http://ggplot2.tidyverse.org/reference/scale_manual.html
+
+# Plot as stacked bars
+
+ipt_gap_plot <- ipt_gap_long %>%
+  ggplot(aes(country,
+             value,
+             fill = variable)) +
+  
+  geom_col(position = position_stack(reverse = TRUE),width = 0.5) +
+  
+  theme_glb.rpt() +
+  scale_fill_manual("", values = c("lightblue","orange",  "lightgreen"),
+                    labels=c("Started on preventive treatment", "Detected and notified with active TB disease", "Gap in TB detection and TB prevention(b)")) +
+  labs(x="", y="Percentage(%)") +
+  
+  theme(legend.position="bottom",
+        #Set font for country names to avoid overlapping especialy because this year we got long names as PNG 
+        axis.text=element_text(size=7),
+        #Set margins to give enough space for those long long footnotes.
+        legend.box.margin=margin(-20,-20,-20,-20),
+        plot.margin = margin(2, 10, 80, 10),
+        panel.grid=element_blank()) +
+  
+  expand_limits(c(0,0)) +
+  
+  ggtitle(paste0("Figure 5.3\nGaps in TB prevention and TB detection for people who were newly enrolled in HIV care in ",
+                 report_year - 1,
+                 ",selected countries(a)"))
+
+# Add explanatory footnotes
+ipt_gap_footnote <- "(a) The selected countries are high TB or TB/HIV burden countries that reported on all three of the following: the number of people newly enrolled on HIV care; the number of \n      TB cases detected among people newly enrolled on HIV care; and the number of people newly enrolled on HIV care who were started on TB preventive treatment. In high \n      TB burden countries, testing for LTBI is not a requirement for initiation of TB preventive treatment, such that all those without active TB disease are eligible for TB preventive \n                              treatment.\n     (b) The gap represents people living with HIV who should have undergone complete evaluation for TB disease or TB preventive treatment."
+ipt_gap_plot <- arrangeGrob(ipt_gap_plot,
+                            bottom = textGrob(ipt_gap_footnote,
+                                              x = 0,
+                                              hjust = -0.1,
+                                              vjust=-0.7,
+                                              gp = gpar(fontsize = 8)))
+
+figsave(ipt_gap_plot, ipt_gap_country, "f5_3_gaps_for_ipt_in_new_hiv_patients", width=11, height=7) # Designer needs wide data; output portrait mode
+
+# Clean up (remove any objects with their name starting with 'ipt_gap')
+rm(list=ls(pattern = "^ipt_gap"))
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Figure 5.4 (Map) ---------
 # Notification rate ratio of arrangeGrob()TB among healthcare workers compared with the general population, 2017
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
