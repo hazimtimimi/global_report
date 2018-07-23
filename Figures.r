@@ -622,7 +622,7 @@ bacconf_data$bacconf_pct <- ifelse(is.na(bacconf_data$pulm_bacconf_tot) | NZ(bac
 
 bacconf_data$cat <- cut(bacconf_data$bacconf_pct,
                         c(0, 50, 65, 80, Inf),
-                        c('0-49.9', '50-64.9', '65-79.9', '>=80'),
+                        c('0-49', '50-64', '65-79', '>=80'),
                         right=FALSE)
 
 
@@ -708,7 +708,7 @@ ep_data$ep_pct <- ifelse(is.na(ep_data$ep_tot) | NZ(ep_data$newrel_tot) == 0, NA
 
 ep_data$cat <- cut(ep_data$ep_pct,
                    c(0, 10, 20, 30, Inf),
-                   c('0-9.9', '10-19.9', '20-29.9', '>=30'),
+                   c('0-9.9', '10-19', '20-29', '>=30'),
                    right=FALSE)
 
 
@@ -859,7 +859,7 @@ hivstatus_data <- notification %>%
 
 hivstatus_data$cat <- cut(hivstatus_data$hivstatus_pct,
                           c(0, 25, 50, 75, Inf),
-                          c('0-24.9', '25-49.9', '50-74.9', '>=75'),
+                          c('0-24', '25-49', '50-74', '>=75'),
                           right=FALSE)
 
 
@@ -1157,7 +1157,7 @@ dst_data <- notification %>%
 
 dst_data$cat <- cut(dst_data$dst_pct,
                     c(0, 10, 40, 70, Inf),
-                    c('0-9.9', '10-39.9', '40-69.9', '>=70'),
+                    c('0-9.9', '10-39', '40-69', '>=70'),
                     right=FALSE)
 
 # Find the countries with empty data for latest year and see if there are data for the previous year
@@ -1410,7 +1410,7 @@ sldst_data <- notification %>%
 
 sldst_data$cat <- cut(sldst_data$pcnt_sldst,
                       c(0, 25, 50, 75, Inf),
-                      c('0-24.9', '25-49.9', '50-74.9', '>=75'),
+                      c('0-24', '25-49', '50-74', '>=75'),
                       right=FALSE)
 
 # Find the countries with empty data for latest year and see if there are data for the previous year
@@ -3097,7 +3097,7 @@ comm_data <- merge(comm_datarequest, comm_bmu, by= "country")%>%
 
 comm_data$cat <- cut(comm_data$comm_pct,
                      c(-1,0, 25, 50, 75, Inf),
-                     c('Data not requested','0-24.9', '25-49.9', '50-74.9', '>=75'),
+                     c('Data not requested','0-24', '25-49', '50-74', '>=75'),
                      right=FALSE)
 
 # produce the map
