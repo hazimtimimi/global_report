@@ -180,31 +180,31 @@ rm(list=ls(pattern = "^rrnum"))
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 inc_data <- aggregated_estimates_epi_rawvalues %>%
-            filter( year >= 2000 & group_type == "g_whoregion") %>%
-            select(year,
-                   g_whoregion = group_name,
-                   e_inc_100k,
-                   e_inc_100k_lo,
-                   e_inc_100k_hi,
-                   c_newinc,
-                   e_pop_num) %>%
-            mutate(c_newinc_100k = c_newinc * 1e5 / e_pop_num) %>%
-
-            # merge with regional names
-            inner_join(who_region_names, by = "g_whoregion") %>%
-            select(-g_whoregion)
+  filter( year >= 2000 & group_type == "g_whoregion") %>%
+  select(year,
+         g_whoregion = group_name,
+         e_inc_100k,
+         e_inc_100k_lo,
+         e_inc_100k_hi,
+         c_newinc,
+         e_pop_num) %>%
+  mutate(c_newinc_100k = c_newinc * 1e5 / e_pop_num) %>%
+  
+  # merge with regional names
+  inner_join(who_region_names, by = "g_whoregion") %>%
+  select(-g_whoregion)
 
 
 inc_global <- aggregated_estimates_epi_rawvalues %>%
-              filter( year >= 2000 & group_type == "global") %>%
-              select(year,
-                     e_inc_100k,
-                     e_inc_100k_lo,
-                     e_inc_100k_hi,
-                     c_newinc,
-                     e_pop_num) %>%
-              mutate(c_newinc_100k = c_newinc * 1e5 / e_pop_num,
-                     entity = "Global")
+  filter( year >= 2000 & group_type == "global") %>%
+  select(year,
+         e_inc_100k,
+         e_inc_100k_lo,
+         e_inc_100k_hi,
+         c_newinc,
+         e_pop_num) %>%
+  mutate(c_newinc_100k = c_newinc * 1e5 / e_pop_num,
+         entity = "Global")
 
 # Add global to the regional aggregates
 inc_data <- rbind(inc_data, inc_global)
@@ -216,26 +216,27 @@ inc_data$entity <- factor(inc_data$entity,
 
 # Plot as lines
 inc_plot <- inc_data %>%
-            ggplot(aes(x=year, y=c_newinc_100k, ymin=0)) +
-            geom_line(size=1) +
-            geom_ribbon(aes(x=year, ymin=e_inc_100k_lo, ymax=e_inc_100k_hi),
-                        fill=standard_palette("incidence"),
-                        alpha=0.4) +
-            geom_line(aes(year, e_inc_100k),
-                      size=1,
-                      colour=standard_palette("incidence")) +
-
-            facet_wrap( ~ entity, ncol = 4, scales="free_y") +
-            scale_y_continuous(name = "Rate per 100 000 population per year") +
-            xlab("Year") +
-
-            ggtitle(paste0("Figure 4.1\nCase notification rates (new and relapse cases, all forms) (black) compared with estimated TB incidence rates (green),\n2000 - ",
-                         report_year-1,
-                         ", globally and for WHO regions. Shaded areas represent uncertainty bands.")) +
-
-            theme_glb.rpt() +
-            theme(legend.position="top",
-                  legend.title=element_blank())
+  ggplot(aes(x=year, y=c_newinc_100k, ymin=0)) +
+  geom_line(size=1) +
+  geom_ribbon(aes(x=year, ymin=e_inc_100k_lo, ymax=e_inc_100k_hi),
+              fill=standard_palette("incidence"),
+              alpha=0.4) +
+  geom_line(aes(year, e_inc_100k),
+            size=1,
+            colour=standard_palette("incidence")) +
+  
+  facet_wrap( ~ entity, ncol = 4, scales="free_y") +
+  scale_x_continuous(name="Year",
+                     breaks = c(2000, 2005, 2010, 2015, report_year-1)) +
+  scale_y_continuous(name = "Rate per 100 000 population per year") +
+  ggtitle(paste0("Figure 4.1\nCase notification rates (new and relapse cases, all forms) (black) compared with estimated TB incidence rates (green),\n2000 - ",
+                 report_year-1,
+                 ", globally and for WHO regions. Shaded areas represent uncertainty bands.")) +
+  
+  theme_glb.rpt() +
+  theme(legend.position="top",
+        legend.title=element_blank(),
+        axis.text.x = element_text(size=5))
 
 # Save the plot
 figsave(inc_plot, inc_data, "f4_1_inc_plot_aggregates")
@@ -922,67 +923,70 @@ rm(list=ls(pattern = "^hivstatus"))
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 tbhiv_data <- TBHIV_for_aggregates %>%
-              filter(year >= 2004) %>%
-              select(year,
-                     hivtest_pos,
-                     hiv_art,
-                     # new variables from 2015 onwards
-                     newrel_hivpos,
-                     newrel_art) %>%
-              group_by(year) %>%
-              summarise_at(vars(hivtest_pos:newrel_art),
-                           sum,
-                           na.rm = TRUE) %>%
-
-              # Convert to millions and merge pre/post 2014 variables
-              mutate(hivtest_pos = ifelse(year < 2015,
-                                          hivtest_pos / 1e6,
-                                          newrel_hivpos / 1e6),
-                     hiv_art = ifelse(year < 2015,
-                                      hiv_art / 1e6,
-                                      newrel_art / 1e6)) %>%
-              select(year,
-                     hivtest_pos,
-                     hiv_art)
+  filter(year >= 2004) %>%
+  select(year,
+         hivtest_pos,
+         hiv_art,
+         # new variables from 2015 onwards
+         newrel_hivpos,
+         newrel_art) %>%
+  group_by(year) %>%
+  summarise_at(vars(hivtest_pos:newrel_art),
+               sum,
+               na.rm = TRUE) %>%
+  
+  # Convert to millions and merge pre/post 2014 variables
+  mutate(hivtest_pos = ifelse(year < 2015,
+                              hivtest_pos / 1e6,
+                              newrel_hivpos / 1e6),
+         hiv_art = ifelse(year < 2015,
+                          hiv_art / 1e6,
+                          newrel_art / 1e6)) %>%
+  select(year,
+         hivtest_pos,
+         hiv_art)
 
 
 inctbhiv_data <- aggregated_estimates_epi_rawvalues %>%
-                  filter( year >= 2004 & group_name == 'global') %>%
-                  select(year,
-                         e_inc_tbhiv_num,
-                         e_inc_tbhiv_num_lo,
-                         e_inc_tbhiv_num_hi) %>%
-                  mutate(e_inc_tbhiv_num = e_inc_tbhiv_num / 1e6,
-                         e_inc_tbhiv_num_lo = e_inc_tbhiv_num_lo / 1e6,
-                         e_inc_tbhiv_num_hi = e_inc_tbhiv_num_hi / 1e6) %>%
-
-                  # Use a right-join so can see the data for the final year even in the absence of estimates
-                  right_join(tbhiv_data)
+  filter( year >= 2004 & group_name == 'global') %>%
+  select(year,
+         e_inc_tbhiv_num,
+         e_inc_tbhiv_num_lo,
+         e_inc_tbhiv_num_hi) %>%
+  mutate(e_inc_tbhiv_num = e_inc_tbhiv_num / 1e6,
+         e_inc_tbhiv_num_lo = e_inc_tbhiv_num_lo / 1e6,
+         e_inc_tbhiv_num_hi = e_inc_tbhiv_num_hi / 1e6) %>%
+  
+  # Use a right-join so can see the data for the final year even in the absence of estimates
+  right_join(tbhiv_data)
 
 
 # Plot as lines
 inctbhiv_plot <- inctbhiv_data %>%
-                  ggplot(aes(x=year, y=hivtest_pos, ymin=0)) +
-                  geom_line(size=1) +
-                  geom_ribbon(aes(x=year, ymin=e_inc_tbhiv_num_lo, ymax=e_inc_tbhiv_num_hi),
-                              fill=standard_palette("tbhiv_incidence"),
-                              alpha=0.4) +
-                  geom_line(aes(year, e_inc_tbhiv_num),
-                            size=1,
-                            colour=standard_palette("tbhiv_incidence")) +
-
-                  geom_line(aes(year, hiv_art),
-                            size=1,
-                            colour=standard_palette("art")) +
-
-                  scale_y_continuous(name = "New and relapse cases per year (millions)") +
-                  xlab("Year") +
-
-                  ggtitle(paste0("Figure 4.9\nGlobal numbers of notified new and relapse cases(a) known to be HIV-positive (black),\nnumber started on antiretroviral therapy (blue) and estimated number of incident HIV-positive TB cases (red), 2004-",
-                               report_year-1,
-                         ".\nShaded areas represent uncertainty bands.")) +
-
-                  theme_glb.rpt()
+  ggplot(aes(x=year, y=hivtest_pos, ymin=0)) +
+  geom_line(size=1) +
+  geom_ribbon(aes(x=year, ymin=e_inc_tbhiv_num_lo, ymax=e_inc_tbhiv_num_hi),
+              fill=standard_palette("tbhiv_incidence"),
+              alpha=0.4) +
+  geom_line(aes(year, e_inc_tbhiv_num),
+            size=1,
+            colour=standard_palette("tbhiv_incidence")) +
+  
+  geom_line(aes(year, hiv_art),
+            size=1,
+            colour=standard_palette("art")) +
+  
+  scale_x_continuous(name="Year",
+                     breaks = c(2004,2006,2008,2010,2012,2014,2016, report_year-1)) +
+  
+  scale_y_continuous(name = "New and relapse cases per year (millions)") +
+  xlab("Year") +
+  
+  ggtitle(paste0("Figure 4.9\nGlobal numbers of notified new and relapse cases(a) known to be HIV-positive (black),\nnumber started on antiretroviral therapy (blue) and estimated number of incident HIV-positive TB cases (red), 2004-",
+                 report_year-1,
+                 ".\nShaded areas represent uncertainty bands.")) +
+  
+  theme_glb.rpt()
 
 
 # Add footnote
