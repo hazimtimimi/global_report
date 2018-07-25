@@ -1484,8 +1484,13 @@ newinc_data <- notification %>%
                        iso2,
                        country,
                        c_newinc) %>%
-                #add markers for India footnote
-                mutate(country = ifelse(country == "India", "India(a)", country))
+                #add markers for India and other countries with pending survey resluts footnote
+                mutate(country = recode(country, "India"="India(a)",
+                                                 "Mozambique"="Mozambique(b)",
+                                                 "Myanmar"="Myanmar(b)",
+                                                 "Namibia"="Namibia(b)",
+                                                 "South Africa"="South Africa(b)",
+                                                 "Viet Nam"="Viet Nam(b)")) 
 
 inc_data <- estimates_epi_rawvalues %>%
             filter(year >= 2000) %>%
@@ -1532,14 +1537,13 @@ inc_plot <- inc_data %>%
                   legend.title=element_blank(),
                   strip.text.x = element_text(size=8))  #reduce font size of labels above each panel
 
-# Add Bangladesh and India footnotes
+# Add India and other countries footnotes
 inc_plot <- arrangeGrob(inc_plot,
                         bottom = textGrob(paste("(a)",
-                                                india_footnote),
+                                                india_incidence_footnote,"\n(b)",pending_incidence_footnote),
                                           x = 0.02,
                                           just = "left",
                                           gp = gpar(fontsize = 7)))
-
 
 # Save the plot
 figsave(inc_plot, inc_data, "f4_15_inc_plot_hbc", width=7, height=11)
@@ -1653,7 +1657,7 @@ coverage_plot <- coverage_data %>%
 
 # Add footnotes
 coverage_footnote <- paste("(a)",
-                           india_footnote)
+                           india_incidence_footnote,"\n(b)",pending_incidence_footnote)
 # If there are countries with no data then mention it in the footnotes
 if (coverage_nodata_count > 0)
   {
