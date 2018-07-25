@@ -93,12 +93,11 @@ rm(list=ls(pattern = "^cb"))
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 topinc_data <- estimates_epi_rawvalues %>%
-              filter(year == report_year - 1 & e_inc_num >= 1e5) %>%
-              select(iso3,
-                     country,
-                     year,
-                     bubble_size = e_inc_num
-                     )
+  filter(year == report_year - 1 & e_inc_num >= 1e5) %>%
+  select(iso3,
+         country,
+         bubble_size = e_inc_num
+  )
 
 # Plot incidence numbers as bubbles
 
@@ -106,12 +105,13 @@ topinc_map <- who_bubble_map(topinc_data,
                              paste0("Figure 3.3\nEstimated TB incidence in ",
                                     report_year - 1,
                                     ", for countries with at least 100 000 incident cases"),
+                             " Number of \nincident cases",
                              bubble_colour = "orange",
                              scale_breaks = c(100000,500000,1000000,2500000),
                              scale_limits = c(100000,3000000),
-                             scale_labels = c("100 000","500 000","1 000 000","2 500 000")
-)
-
+                             scale_labels = c("100 000","500 000","1 000 000","2 500 000"),
+                             #Set number of countries need to be labeled with names
+                             bubble_label_show_number = 8)
 # Save the plot
 figsave(topinc_map,
         select(topinc_data,
@@ -145,11 +145,13 @@ rrnum_map <- who_bubble_map(rrnum_data,
                                    "Estimated incidence of MDR/RR-TB in ",
                                    report_year - 1,
                                    ", for countries with at least 1000 incident cases"),
+                            " Number of \nincident cases",
                             bubble_colour = "red",
                             scale_breaks = c(1000,10000,100000,150000),
                             scale_limits = c(1000,150000),
-                            scale_labels = c("1000","10 000","100 000","150 000")
-)
+                            scale_labels = c("1000","10 000","100 000","150 000"),
+                            #Set number of countries need to be labeled with names
+                            bubble_label_show_number = 3)
 
 
 # Save the plot
