@@ -1681,24 +1681,27 @@ rm(list=ls(pattern = "^coverage"))
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 gap_data <- estimates_epi_rawvalues %>%
-            filter(year == report_year - 1) %>%
-            select(iso3,
-                   year,
-                   e_inc_num
-                   ) %>%
-
-            # Link to notifications
-            inner_join(notification) %>%
-            select(iso3,
-                   country,
-                   e_inc_num,
-                   c_newinc) %>%
-
-            # Calculate the gap and use that for the bubble sizes
-            mutate(bubble_size = e_inc_num - c_newinc) %>%
-
-            # limit to the top 10 by size of gap
-            top_n(10, bubble_size)
+  filter(year == report_year - 1) %>%
+  select(iso3,
+         year,
+         e_inc_num
+  ) %>%
+  
+  # Link to notifications
+  inner_join(notification) %>%
+  select(iso3,
+         country,
+         e_inc_num,
+         c_newinc) %>%
+  
+  # Calculate the gap and use that for the bubble sizes
+  mutate(bubble_size = e_inc_num - c_newinc) %>%
+  
+  # Modify long names of countries which will be shown as labels in map
+  mutate(country = recode(country, "Democratic Republic of the Congo"="DR Congo","United Republic of Tanzania"="UR Tanzania")) %>%
+  
+  # limit to the top 10 by size of gap
+  top_n(10, bubble_size)
 
 # Plot the gaps as bubbles
 
@@ -1706,12 +1709,25 @@ gap_map <- who_bubble_map(gap_data,
                           paste0("Figure 4.17\n",
                                  "The ten countries with the largest gaps between notifications of new and relapse\n",
                                  "(incident) TB cases and the best estimates of TB incidence, ",
-                                 report_year - 1),
+                                 report_year - 1,"(a)"),
                           bubble_colour = "purple",
                           scale_breaks = c(100000,500000,1000000),
                           scale_limits = c(100000,1100000),
-                          scale_labels = c("100 000","500 000","1 000 000")
-                          )
+                          scale_labels = c("100 000","500 000","1 000 000"),
+                          bubble_label_show_number = 10)                        
+
+# Generate names for footnote
+gap_ten_countries_name_by_rank <- gap_data  %>%
+  arrange(desc(bubble_size))   %>%
+  select(country) 
+
+gap_map <- arrangeGrob(gap_map,
+                       bottom = textGrob(paste0("(a) The ten countries ranked in order of the size of the gap between notified cases and the best estimates of TB incidence in ",report_year-1," are \n",
+                                                sapply(gap_ten_countries_name_by_rank,paste, collapse=","),".","\n",india_incidence_footnote,"\n",pending_incidence_footnote),
+                                         x = 0,
+                                         hjust = -0.1,
+                                         vjust=0.4,
+                                         gp = gpar(fontsize = 10)))                       
 
 # Save the plot
 figsave(gap_map,
@@ -2161,7 +2177,10 @@ drgap_data <- estimates_drtb_rawvalues %>%
 
               # Calculate the gap and use that for the bubble sizes
               mutate(bubble_size = e_inc_rr_num - (NZ(unconf_rrmdr_tx) + NZ(conf_rrmdr_tx))) %>%
-
+  
+              # Modify long names of countries which will be shown as labels in map
+              mutate(country = recode(country, "Democratic Republic of the Congo"="DR Congo")) %>%
+  
               # limit to the top 10 by size of gap
               top_n(10, bubble_size)
 
@@ -2171,12 +2190,25 @@ drgap_map <- who_bubble_map(drgap_data,
                             paste0("Figure 4.21\n",
                                    "The ten countries with the largest gaps between the number of patients started\n",
                                    "on treatment for MDR-TB and the best estimates of MDR/RR-TB incidence, ",
-                                   report_year - 1),
+                                   report_year - 1,"(a)"),
                             bubble_colour = "green",
                             scale_breaks = c(10000,50000,100000),
                             scale_limits = c(9500,130000),
-                            scale_labels = c("10 000","50 000","100 000")
-)
+                            scale_labels = c("10 000","50 000","100 000"),
+                            bubble_label_show_number = 10)
+
+# Generate names for footnote
+drgap_ten_countries_name_by_rank <- drgap_data  %>%
+                                    arrange(desc(bubble_size))   %>%
+                                    select(country) 
+
+drgap_map <- arrangeGrob(drgap_map,
+                       bottom = textGrob(paste0("(a) The ten countries ranked in order of the size of the gap between the number of patients started on MDR-TB treatment and the best estimate of MDR/RR-TB \nincidence in ",report_year-1," are ",
+                                                sapply(gap_ten_countries_name_by_rank,paste, collapse=","),"."),
+                                         x = 0,
+                                         hjust = -0.1,
+                                         vjust=0.4,
+                                         gp = gpar(fontsize = 10)))  
 
 # Save the plot
 figsave(drgap_map,
