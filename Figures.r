@@ -3240,85 +3240,8 @@ rm(list=ls(pattern = "^commureport"))
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 5.1 (Map) -------
-# Coverage of TB preventive treatment among eligible children aged under 5 years, 2017
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-# Need LTBI views which were not in the RData files, so import them now and add to RData later
-options(stringsAsFactors=FALSE)
-
-.fixnamibia <- function(df){
-  # make sure Namibia's iso2 code is not interpreted as R's NA (null)
-  df$iso2 <- ifelse(df$country=="Namibia", "NA", as.character(df$iso2))
-  return(df)
-}
-
-library(RODBC)
-ch <- odbcDriverConnect(connection_string)
-
-# load views into dataframes
-estimates_ltbi   <- .fixnamibia(sqlFetch(ch, "view_TME_estimates_ltbi"))
-
-close(ch)
-
-
-prevtx_kids_data <-  estimates_ltbi %>%
-              filter(year==report_year - 1) %>%
-              select(iso3,
-                     country,
-                     e_prevtx_kids_pct)
-
-# We have a list of exclusions based on feedback from countries compiled by Lele
-prev_tx_footnote <- paste0("Estimated coverage was not calculated because the numerator includes contacts aged 5-7 years (DPR Korea), those aged 5-6 years (Nigeria),",
-                           "\nis predominantly contacts of household contacts (Indonesia), and includes household contacts of bacteriologically confirmed or clinically diagnosed",
-                           "\nTB cases (Malawi and Phillipines).")
-
-prev_tx_footnote_countries = c("PRK", "NGA", "IDN", "MWI", "PHL")
-
-# Remove the coverage calculations for the excluded countries
-prevtx_kids_data <- prevtx_kids_data %>%
-                    mutate(e_prevtx_kids_pct = ifelse(iso3 %in% prev_tx_footnote_countries,
-                                                      NA,
-                                                      e_prevtx_kids_pct))
-
-# Assign categories
-prevtx_kids_data$cat <- cut(prevtx_kids_data$e_prevtx_kids_pct,
-                            c(0, 25, 50, 75, Inf),
-                            c('0-24', '25-49', '50-74', '>=75'),
-                            right = FALSE)
-
-
-# produce the map
-prevtx_kids_map <- WHOmap.print(prevtx_kids_data,
-                                paste("Figure 5.1\nCoverage of TB preventive treatment among eligible children aged under 5 years(a), ",
-                                      report_year-1),
-                                legend.title = "Coverage (%)",
-                                copyright=FALSE,
-                                colors=brewer.pal(4, "Blues"),
-                                na.label="Not estimated",
-                                show=FALSE)
-
-# add footnote
-prevtx_kids_map <- arrangeGrob(prevtx_kids_map, bottom = textGrob(paste0("(a) Children aged <5 years who were household contacts of bacteriologically confirmed pulmonary TB cases.",
-                                                                         "\n",
-                                                                         prev_tx_footnote),
-                                                                  x = 0,
-                                                                  hjust = -0.1,
-                                                                  vjust=0.1,
-                                                                  gp = gpar(fontsize = 10)))
-
-figsave(prevtx_kids_map,
-        prevtx_kids_data,
-        "f5_1_prevtx_kids_map")
-
-
-# Clean up (remove any objects with their name beginning with 'prevtx_kids')
-rm(list=ls(pattern = "^prevtx_kids"))
-
-
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 5.2 ---------
-# Provision of TB preventive treatment to people living with HIV, 2015–2017
+# Figure 5.1 ---------
+# Provision of TB preventive treatment to people newly enrolled in HIV care, 2005–2017
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 ipt <- notification %>%
@@ -3353,19 +3276,31 @@ ipt_c$value <- ipt_c$value/1000
 ipt_c$area <- factor(ipt_c$area, levels=c( "Rest of world", "Rest of AFR", "South Africa", "Global")) 
 
 
-hiv_ipt_plot <- ggplot(ipt_c, aes(year, value, color=area)) + geom_line(size=1)+ 
-  scale_y_continuous("Number of people living with HIV (thousands)") + 
+ipt_plot <- ggplot(ipt_c, aes(year, value, color=area)) + geom_line(size=1)+ 
+  scale_y_continuous("Number of people (thousands)") + 
   theme_glb.rpt() + scale_x_continuous(name="", breaks=c(min(ipt_c$year):max(ipt_c$year))) + 
   scale_color_manual(values=c("#0070C0", "#77933C","orange", "red")) + guides(color = guide_legend(reverse = TRUE))+
-  ggtitle(paste("Figure 5.2\nProvision of TB preventive treatment to people living with HIV, 2005", report_year-1, sep="\u2013"))+
+  ggtitle(paste("Figure 5.1\nProvision of TB preventive treatment to people newly enrolled in HIV care(a), 2005", report_year-1, sep="\u2013"))+
   annotate("text", x=2016, y=900, label="Global", size=4)+
   annotate("text", x=2016, y=350, label="South Africa", size=4)+
   annotate("text", x=2016, y=520, label="Rest of Africa", size=4)+
   annotate("text", x=2016, y=120, label="Rest of World", size=4)+
   theme(legend.position="none")
 
+
+# Add footnote about including countries report data for all HIV cases;
+# This may not be needed every year,so I will just edit the footnote manullay;
+ipt_plot <- arrangeGrob(ipt_plot, 
+                        bottom = textGrob("(a)For seven countries, data are for people currently enrolled in HIV care:Congo,Ecuador,Grenada,\n       Kenya,Mozambique,Nepal and Ukraine.", 
+                                              x = 0, 
+                                              hjust = -0.1, 
+                                              vjust=0.1, 
+                                              gp = gpar(fontsize = 10)))
+
+plot(ipt_plot)
+
 # Save the plot
-figsave(hiv_ipt_plot, ipt_c, "f5_2_IPT_in_HIV_patients", width=7, height=5)
+figsave(ipt_plot, ipt_c, "f5_1_IPT_in_HIV_patients", width=7, height=5)
 
 # Clean up (remove any objects with their name starting 'commureport')
 rm(list=ls(pattern = "^ipt"))
@@ -3373,7 +3308,7 @@ rm(list=ls(pattern = "^ipt"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 5.3   ------
+# Figure 5.2   ------
 # Gaps in TB prevention and TB detection for people 
 # who were newly enrolled in HIV care in 2017, selected countries
 
@@ -3455,7 +3390,7 @@ ipt_gap_plot <- ipt_gap_long %>%
   
   expand_limits(c(0,0)) +
   
-  ggtitle(paste0("Figure 5.3\nGaps in TB prevention and TB detection for people who were newly enrolled in HIV care in ",
+  ggtitle(paste0("Figure 5.2\nGaps in TB prevention and TB detection for people who were newly enrolled in HIV care in ",
                  report_year - 1,
                  ",selected countries(a)"))
 
@@ -3468,10 +3403,86 @@ ipt_gap_plot <- arrangeGrob(ipt_gap_plot,
                                               vjust=-0.7,
                                               gp = gpar(fontsize = 8)))
 
-figsave(ipt_gap_plot, ipt_gap_country, "f5_3_gaps_for_ipt_in_new_hiv_patients", width=11, height=7) # Designer needs wide data; output portrait mode
+figsave(ipt_gap_plot, ipt_gap_country, "f5_2_gaps_for_ipt_in_new_hiv_patients", width=11, height=7) # Designer needs wide data; output portrait mode
 
 # Clean up (remove any objects with their name starting with 'ipt_gap')
 rm(list=ls(pattern = "^ipt_gap"))
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Figure 5.3 (Map) -------
+# Coverage of TB preventive treatment among eligible children aged under 5 years, 2017
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# Need LTBI views which were not in the RData files, so import them now and add to RData later
+options(stringsAsFactors=FALSE)
+
+.fixnamibia <- function(df){
+  # make sure Namibia's iso2 code is not interpreted as R's NA (null)
+  df$iso2 <- ifelse(df$country=="Namibia", "NA", as.character(df$iso2))
+  return(df)
+}
+
+library(RODBC)
+ch <- odbcDriverConnect(connection_string)
+
+# load views into dataframes
+estimates_ltbi   <- .fixnamibia(sqlFetch(ch, "view_TME_estimates_ltbi"))
+
+close(ch)
+
+
+prevtx_kids_data <-  estimates_ltbi %>%
+  filter(year==report_year - 1) %>%
+  select(iso3,
+         country,
+         e_prevtx_kids_pct)
+
+# We have a list of exclusions based on feedback from countries compiled by Lele
+prev_tx_footnote <- paste0("Estimated coverage was not calculated because the numerator includes contacts aged 5-7 years (DPR Korea), those aged 5-6 years (Nigeria),",
+                           "\nis predominantly contacts of household contacts (Indonesia), and includes household contacts of bacteriologically confirmed or clinically diagnosed",
+                           "\nTB cases (Malawi and Phillipines).")
+
+prev_tx_footnote_countries = c("PRK", "NGA", "IDN", "MWI", "PHL")
+
+# Remove the coverage calculations for the excluded countries
+prevtx_kids_data <- prevtx_kids_data %>%
+  mutate(e_prevtx_kids_pct = ifelse(iso3 %in% prev_tx_footnote_countries,
+                                    NA,
+                                    e_prevtx_kids_pct))
+
+# Assign categories
+prevtx_kids_data$cat <- cut(prevtx_kids_data$e_prevtx_kids_pct,
+                            c(0, 25, 50, 75, Inf),
+                            c('0-24', '25-49', '50-74', '>=75'),
+                            right = FALSE)
+
+
+# produce the map
+prevtx_kids_map <- WHOmap.print(prevtx_kids_data,
+                                paste("Figure 5.3\nCoverage of TB preventive treatment among eligible children aged under 5 years(a), ",
+                                      report_year-1),
+                                legend.title = "Coverage (%)",
+                                copyright=FALSE,
+                                colors=brewer.pal(4, "Blues"),
+                                na.label="Not estimated",
+                                show=FALSE)
+
+# add footnote
+prevtx_kids_map <- arrangeGrob(prevtx_kids_map, bottom = textGrob(paste0("(a) Children aged <5 years who were household contacts of bacteriologically confirmed pulmonary TB cases.",
+                                                                         "\n",
+                                                                         prev_tx_footnote),
+                                                                  x = 0,
+                                                                  hjust = -0.1,
+                                                                  vjust=0.1,
+                                                                  gp = gpar(fontsize = 10)))
+
+figsave(prevtx_kids_map,
+        prevtx_kids_data,
+        "f5_3_prevtx_kids_map")
+
+
+# Clean up (remove any objects with their name beginning with 'prevtx_kids')
+rm(list=ls(pattern = "^prevtx_kids"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -3538,7 +3549,7 @@ hcw_data$cat <- cut(hcw_data$nrr,
 
 # produce the map
 hcw_map <- WHOmap.print(hcw_data,
-                        paste("Figure 5.4\nNotification rate ratio of TB among healthcare workers\ncompared with the general adult population,", report_year-1),
+                        paste("Figure 5.4\nNotification rate ratio of TB among healthcare workers compared with the general adult population,", report_year-1,"(a)"),
                         "Notification\nrate ratio",
                         copyright=FALSE,
                         colors=c('lightblue', 'orange', 'red', 'darkred'),
@@ -3547,7 +3558,7 @@ hcw_map <- WHOmap.print(hcw_data,
 
 
 # Add footnote about filtering out countries
-hcw_foot <- paste("Data from ",
+hcw_foot <- paste("(a) Data from ",
                   hcw_filtered_out,
                   " countries were excluded where the number of health care workers reported was less than 1 000.")
 
