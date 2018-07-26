@@ -520,8 +520,8 @@ prev_tx_hb_data <- prev_tx_data %>%
 # Restrict the dataframe to the variables needed for the final table, shorten country names and order by country name
 prev_tx_hb_data <- prev_tx_hb_data %>%
                     select(entity = country,
-                           ipt_numerator,
                            ipt_denominator,
+                           ipt_numerator,
                            coverage,
                            e_prevtx_eligible,
                            e_prevtx_eligible_lo,
@@ -559,8 +559,8 @@ prev_tx_table_data <- prev_tx_hb_data %>%
 
                 # drop the separate *_lo and *_hi variables
                 select(entity,
-                       ipt_numerator,
                        ipt_denominator,
+                       ipt_numerator,
                        coverage,
                        e_prevtx_eligible,
                        e_prevtx_eligible_lohi,
