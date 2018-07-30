@@ -189,7 +189,7 @@ inc_data <- aggregated_estimates_epi_rawvalues %>%
          c_newinc,
          e_pop_num) %>%
   mutate(c_newinc_100k = c_newinc * 1e5 / e_pop_num) %>%
-  
+
   # merge with regional names
   inner_join(who_region_names, by = "g_whoregion") %>%
   select(-g_whoregion)
@@ -224,7 +224,7 @@ inc_plot <- inc_data %>%
   geom_line(aes(year, e_inc_100k),
             size=1,
             colour=standard_palette("incidence")) +
-  
+
   facet_wrap( ~ entity, ncol = 4, scales="free_y") +
   scale_x_continuous(name="Year",
                      breaks = c(2000, 2005, 2010, 2015, report_year-1)) +
@@ -232,7 +232,7 @@ inc_plot <- inc_data %>%
   ggtitle(paste0("Figure 4.1\nCase notification rates (new and relapse cases, all forms) (black) compared with estimated TB incidence rates (green),\n2000 - ",
                  report_year-1,
                  ", globally and for WHO regions. Shaded areas represent uncertainty bands.")) +
-  
+
   theme_glb.rpt() +
   theme(legend.position="top",
         legend.title=element_blank(),
@@ -934,7 +934,7 @@ tbhiv_data <- TBHIV_for_aggregates %>%
   summarise_at(vars(hivtest_pos:newrel_art),
                sum,
                na.rm = TRUE) %>%
-  
+
   # Convert to millions and merge pre/post 2014 variables
   mutate(hivtest_pos = ifelse(year < 2015,
                               hivtest_pos / 1e6,
@@ -956,7 +956,7 @@ inctbhiv_data <- aggregated_estimates_epi_rawvalues %>%
   mutate(e_inc_tbhiv_num = e_inc_tbhiv_num / 1e6,
          e_inc_tbhiv_num_lo = e_inc_tbhiv_num_lo / 1e6,
          e_inc_tbhiv_num_hi = e_inc_tbhiv_num_hi / 1e6) %>%
-  
+
   # Use a right-join so can see the data for the final year even in the absence of estimates
   right_join(tbhiv_data)
 
@@ -971,21 +971,21 @@ inctbhiv_plot <- inctbhiv_data %>%
   geom_line(aes(year, e_inc_tbhiv_num),
             size=1,
             colour=standard_palette("tbhiv_incidence")) +
-  
+
   geom_line(aes(year, hiv_art),
             size=1,
             colour=standard_palette("art")) +
-  
+
   scale_x_continuous(name="Year",
                      breaks = c(2004,2006,2008,2010,2012,2014,2016, report_year-1)) +
-  
+
   scale_y_continuous(name = "New and relapse cases per year (millions)") +
   xlab("Year") +
-  
+
   ggtitle(paste0("Figure 4.9\nGlobal numbers of notified new and relapse cases(a) known to be HIV-positive (black),\nnumber started on antiretroviral therapy (blue) and estimated number of incident HIV-positive TB cases (red), 2004-",
                  report_year-1,
                  ".\nShaded areas represent uncertainty bands.")) +
-  
+
   theme_glb.rpt()
 
 
@@ -1113,7 +1113,7 @@ dst_plot <- dst_agg %>%
             expand_limits(y=c(0,100)) +
             xlab("Year") +
 
-            ggtitle(paste0("Figure 4.10\nPercentage of bacteriologically confirmed TB cases tested for RR–TB, globally and for WHO regions, 2009-",
+            ggtitle(paste0("Figure 4.10\nPercentage of bacteriologically confirmed TB cases tested for RR-TB, globally and for WHO regions, 2009-",
                          report_year-1,
                          "(a)")) +
 
@@ -1490,7 +1490,7 @@ newinc_data <- notification %>%
                                                  "Myanmar"="Myanmar(b)",
                                                  "Namibia"="Namibia(b)",
                                                  "South Africa"="South Africa(b)",
-                                                 "Viet Nam"="Viet Nam(b)")) 
+                                                 "Viet Nam"="Viet Nam(b)"))
 
 inc_data <- estimates_epi_rawvalues %>%
             filter(year >= 2000) %>%
@@ -1690,20 +1690,20 @@ gap_data <- estimates_epi_rawvalues %>%
          year,
          e_inc_num
   ) %>%
-  
+
   # Link to notifications
   inner_join(notification) %>%
   select(iso3,
          country,
          e_inc_num,
          c_newinc) %>%
-  
+
   # Calculate the gap and use that for the bubble sizes
   mutate(bubble_size = e_inc_num - c_newinc) %>%
-  
+
   # Modify long names of countries which will be shown as labels in map
   mutate(country = recode(country, "Democratic Republic of the Congo"="DR Congo","United Republic of Tanzania"="UR Tanzania")) %>%
-  
+
   # limit to the top 10 by size of gap
   top_n(10, bubble_size)
 
@@ -1718,12 +1718,12 @@ gap_map <- who_bubble_map(gap_data,
                           scale_breaks = c(100000,500000,1000000),
                           scale_limits = c(100000,1100000),
                           scale_labels = c("100 000","500 000","1 000 000"),
-                          bubble_label_show_number = 10)                        
+                          bubble_label_show_number = 10)
 
 # Generate names for footnote
 gap_ten_countries_name_by_rank <- gap_data  %>%
   arrange(desc(bubble_size))   %>%
-  select(country) 
+  select(country)
 
 gap_map <- arrangeGrob(gap_map,
                        bottom = textGrob(paste0("(a) The ten countries ranked in order of the size of the gap between notified cases and the best estimates of TB incidence in ",report_year-1," are \n",
@@ -1731,7 +1731,7 @@ gap_map <- arrangeGrob(gap_map,
                                          x = 0,
                                          hjust = -0.1,
                                          vjust=0.4,
-                                         gp = gpar(fontsize = 10)))                       
+                                         gp = gpar(fontsize = 10)))
 
 # Save the plot
 figsave(gap_map,
@@ -2181,10 +2181,10 @@ drgap_data <- estimates_drtb_rawvalues %>%
 
               # Calculate the gap and use that for the bubble sizes
               mutate(bubble_size = e_inc_rr_num - (NZ(unconf_rrmdr_tx) + NZ(conf_rrmdr_tx))) %>%
-  
+
               # Modify long names of countries which will be shown as labels in map
               mutate(country = recode(country, "Democratic Republic of the Congo"="DR Congo")) %>%
-  
+
               # limit to the top 10 by size of gap
               top_n(10, bubble_size)
 
@@ -2204,15 +2204,15 @@ drgap_map <- who_bubble_map(drgap_data,
 # Generate names for footnote
 drgap_ten_countries_name_by_rank <- drgap_data  %>%
                                     arrange(desc(bubble_size))   %>%
-                                    select(country) 
+                                    select(country)
 
 drgap_map <- arrangeGrob(drgap_map,
                        bottom = textGrob(paste0("(a) The ten countries ranked in order of the size of the gap between the number of patients started on MDR-TB treatment and the best estimate of MDR/RR-TB \nincidence in ",report_year-1," are ",
-                                                sapply(gap_ten_countries_name_by_rank,paste, collapse=","),"."),
+                                                sapply(drgap_ten_countries_name_by_rank,paste, collapse=","),"."),
                                          x = 0,
                                          hjust = -0.1,
                                          vjust=0.4,
-                                         gp = gpar(fontsize = 10)))  
+                                         gp = gpar(fontsize = 10)))
 
 # Save the plot
 figsave(drgap_map,
@@ -3251,7 +3251,7 @@ ipt <- notification %>%
          year,
          g_whoregion,
          hiv_ipt,
-         hiv_ipt_reg_all) %>%  
+         hiv_ipt_reg_all) %>%
   mutate(hiv_ipt=ifelse(!is.na(hiv_ipt),hiv_ipt,hiv_ipt_reg_all))
 
 #remove data from Kenya, Zambia and Eritrea in 2016 and add data from Russia"
@@ -3263,22 +3263,22 @@ ipt <- notification %>%
 #Also, she confirmed we can keep data that way in 2016 since those countries still could not provide clean data for 2016
 
 
-ipt$area <- ifelse(ipt$iso3 %in% c("ZAF"), "South Africa", 
-                   ifelse(ipt$g_whoregion=="AFR", "Rest of AFR", 
+ipt$area <- ifelse(ipt$iso3 %in% c("ZAF"), "South Africa",
+                   ifelse(ipt$g_whoregion=="AFR", "Rest of AFR",
                           "Rest of world"))
 ipt_b <- aggregate(ipt[5], by=list(year=ipt$year, area=ipt$area), sum, na.rm=T)
-ipt_b1 <- aggregate(ipt[5], by=list(year=ipt$year), FUN=sum, na.rm=T) 
-ipt_b1$area <- "Global" 
+ipt_b1 <- aggregate(ipt[5], by=list(year=ipt$year), FUN=sum, na.rm=T)
+ipt_b1$area <- "Global"
 ipt_b2 <- rbind(ipt_b, ipt_b1)
 library(reshape2)
 ipt_c <- melt(ipt_b2, id=1:2)
-ipt_c$value <- ipt_c$value/1000 
-ipt_c$area <- factor(ipt_c$area, levels=c( "Rest of world", "Rest of AFR", "South Africa", "Global")) 
+ipt_c$value <- ipt_c$value/1000
+ipt_c$area <- factor(ipt_c$area, levels=c( "Rest of world", "Rest of AFR", "South Africa", "Global"))
 
 
-ipt_plot <- ggplot(ipt_c, aes(year, value, color=area)) + geom_line(size=1)+ 
-  scale_y_continuous("Number of people (thousands)") + 
-  theme_glb.rpt() + scale_x_continuous(name="", breaks=c(min(ipt_c$year):max(ipt_c$year))) + 
+ipt_plot <- ggplot(ipt_c, aes(year, value, color=area)) + geom_line(size=1)+
+  scale_y_continuous("Number of people (thousands)") +
+  theme_glb.rpt() + scale_x_continuous(name="", breaks=c(min(ipt_c$year):max(ipt_c$year))) +
   scale_color_manual(values=c("#0070C0", "#77933C","orange", "red")) + guides(color = guide_legend(reverse = TRUE))+
   ggtitle(paste("Figure 5.1\nProvision of TB preventive treatment to people newly enrolled in HIV care(a), 2005", report_year-1, sep="\u2013"))+
   annotate("text", x=2016, y=900, label="Global", size=4)+
@@ -3290,11 +3290,11 @@ ipt_plot <- ggplot(ipt_c, aes(year, value, color=area)) + geom_line(size=1)+
 
 # Add footnote about including countries report data for all HIV cases;
 # This may not be needed every year,so I will just edit the footnote manullay;
-ipt_plot <- arrangeGrob(ipt_plot, 
-                        bottom = textGrob("(a)For seven countries, data are for people currently enrolled in HIV care:Congo,Ecuador,Grenada,\n       Kenya,Mozambique,Nepal and Ukraine.", 
-                                              x = 0, 
-                                              hjust = -0.1, 
-                                              vjust=0.1, 
+ipt_plot <- arrangeGrob(ipt_plot,
+                        bottom = textGrob("(a)For seven countries, data are for people currently enrolled in HIV care:Congo,Ecuador,Grenada,\n       Kenya,Mozambique,Nepal and Ukraine.",
+                                              x = 0,
+                                              hjust = -0.1,
+                                              vjust=0.1,
                                               gp = gpar(fontsize = 10)))
 
 plot(ipt_plot)
@@ -3309,7 +3309,7 @@ rm(list=ls(pattern = "^ipt"))
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Figure 5.2   ------
-# Gaps in TB prevention and TB detection for people 
+# Gaps in TB prevention and TB detection for people
 # who were newly enrolled in HIV care in 2017, selected countries
 
 
@@ -3325,7 +3325,7 @@ ipt_gap_country  <- notification %>%
          hiv_tbdetect,
          hiv_ipt)  %>%
   # shorten long country names
-  get_names_for_tables() 
+  get_names_for_tables()
 
 # Filter the country list down to high TB/TBHIV burden ones
 ipt_gap_tbhivhbc <- country_group_membership %>%
@@ -3372,24 +3372,24 @@ ipt_gap_plot <- ipt_gap_long %>%
   ggplot(aes(country,
              value,
              fill = variable)) +
-  
+
   geom_col(position = position_stack(reverse = TRUE),width = 0.5) +
-  
+
   theme_glb.rpt() +
   scale_fill_manual("", values = c("lightblue","orange",  "lightgreen"),
                     labels=c("Started on preventive treatment", "Detected and notified with active TB disease", "Gap in TB detection and TB prevention(b)")) +
   labs(x="", y="Percentage(%)") +
-  
+
   theme(legend.position="bottom",
-        #Set font for country names to avoid overlapping especialy because this year we got long names as PNG 
+        #Set font for country names to avoid overlapping especialy because this year we got long names as PNG
         axis.text=element_text(size=7),
         #Set margins to give enough space for those long long footnotes.
         legend.box.margin=margin(-20,-20,-20,-20),
         plot.margin = margin(2, 10, 80, 10),
         panel.grid=element_blank()) +
-  
+
   expand_limits(c(0,0)) +
-  
+
   ggtitle(paste0("Figure 5.2\nGaps in TB prevention and TB detection for people who were newly enrolled in HIV care in ",
                  report_year - 1,
                  ",selected countries(a)"))
@@ -3487,7 +3487,7 @@ rm(list=ls(pattern = "^prevtx_kids"))
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Figure 5.4 (Map) ---------
-# Notification rate ratio of arrangeGrob()TB among healthcare workers compared with the general population, 2017
+# Notification rate ratio of TB among healthcare workers compared with the general population, 2017
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 hcw_notif_hcw <-  strategy %>%
