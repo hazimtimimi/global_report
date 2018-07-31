@@ -15,6 +15,38 @@ knitr::opts_chunk$set(echo = FALSE)
 
 ```
 
+## Global estimates, `r report_year - 1`
+
+```{r hbc_proportion}
+# Calculate proportion of estimated incidence accounted for by countries in all three HB lists
+
+# Get the list of countries that are in all three lists
+hbc3_countries <- country_group_membership %>% 
+                  filter(group_type %in% c('g_hb_tb', 'g_hb_tbhiv', 'g_hb_mdr') & group_name == '1') %>% 
+                  select(iso2) %>% 
+                  group_by(iso2) %>% 
+                  count() %>% 
+                  filter(n==3) 
+
+        
+# Calculate the total incidence for these counrties
+
+hbc3_incidence <- estimates_epi_rawvalues %>% 
+                  filter(year == report_year - 1 & iso2 %in% hbc3_countries$iso2) %>% 
+                  summarise(hbc3_inc_num=sum(e_inc_num))
+
+# Calculate the proportion of total estimated global incidence
+
+hbc3_global_inc <- aggregated_estimates_epi_rawvalues %>% 
+                   filter(year == report_year - 1 & group_name == "global") %>% 
+                   select(e_inc_num)
+             
+hbc3_prop <- hbc3_incidence / hbc3_global_inc
+
+```
+
+* The `r nrow(hbc3_countries)` countries that are in all three high burden lists accounted for `r display_num(hbc3_prop$hbc3_inc_num * 100)`% of estimated global incidence of TB.
+
 ## Global notifications, `r report_year - 1`
 
 ```{r m_f_ratio}
