@@ -174,8 +174,8 @@ rm(list=ls(pattern = "^rrnum"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 4.1   ------
-# Case notification rates (new and relapse cases, all forms) (black) compared with estimated TB incidence rates (green),
+# Figure 4.1  new ------
+# Notifications of TB cases (new and relapse cases, all forms) (black) compared with estimated TB incidence cases (green),
 # 2000–2017, globally and for WHO regions
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -183,13 +183,15 @@ inc_data <- aggregated_estimates_epi_rawvalues %>%
   filter( year >= 2000 & group_type == "g_whoregion") %>%
   select(year,
          g_whoregion = group_name,
-         e_inc_100k,
-         e_inc_100k_lo,
-         e_inc_100k_hi,
-         c_newinc,
-         e_pop_num) %>%
-  mutate(c_newinc_100k = c_newinc * 1e5 / e_pop_num) %>%
-
+         e_inc_num,
+         e_inc_num_lo,
+         e_inc_num_hi,
+         c_newinc) %>%
+  mutate(c_newinc_millions = c_newinc / 1e6,
+         e_inc_num_millions = e_inc_num / 1e6,
+         e_inc_num_lo_millions = e_inc_num_lo / 1e6,
+         e_inc_num_hi_millions = e_inc_num_hi / 1e6) %>%
+  
   # merge with regional names
   inner_join(who_region_names, by = "g_whoregion") %>%
   select(-g_whoregion)
@@ -198,12 +200,14 @@ inc_data <- aggregated_estimates_epi_rawvalues %>%
 inc_global <- aggregated_estimates_epi_rawvalues %>%
   filter( year >= 2000 & group_type == "global") %>%
   select(year,
-         e_inc_100k,
-         e_inc_100k_lo,
-         e_inc_100k_hi,
-         c_newinc,
-         e_pop_num) %>%
-  mutate(c_newinc_100k = c_newinc * 1e5 / e_pop_num,
+         e_inc_num,
+         e_inc_num_lo,
+         e_inc_num_hi,
+         c_newinc) %>%
+  mutate(c_newinc_millions = c_newinc / 1e6,
+         e_inc_num_millions = e_inc_num / 1e6,
+         e_inc_num_lo_millions = e_inc_num_lo / 1e6,
+         e_inc_num_hi_millions = e_inc_num_hi / 1e6,
          entity = "Global")
 
 # Add global to the regional aggregates
@@ -216,30 +220,30 @@ inc_data$entity <- factor(inc_data$entity,
 
 # Plot as lines
 inc_plot <- inc_data %>%
-  ggplot(aes(x=year, y=c_newinc_100k, ymin=0)) +
+  ggplot(aes(x=year, y=c_newinc_millions, ymin=0)) +
   geom_line(size=1) +
-  geom_ribbon(aes(x=year, ymin=e_inc_100k_lo, ymax=e_inc_100k_hi),
+  geom_ribbon(aes(x=year, ymin=e_inc_num_lo_millions, ymax=e_inc_num_hi_millions),
               fill=standard_palette("incidence"),
               alpha=0.4) +
-  geom_line(aes(year, e_inc_100k),
+  geom_line(aes(year, e_inc_num_millions),
             size=1,
             colour=standard_palette("incidence")) +
-
+  
   facet_wrap( ~ entity, ncol = 4, scales="free_y") +
   scale_x_continuous(name="Year",
                      breaks = c(2000, 2005, 2010, 2015, report_year-1)) +
-  scale_y_continuous(name = "Rate per 100 000 population per year") +
-  ggtitle(paste0("Figure 4.1\nCase notification rates (new and relapse cases, all forms) (black) compared with estimated TB incidence rates (green),\n2000 - ",
+  scale_y_continuous(name = "Millions per year") +
+  ggtitle(paste0("Figure 4.1\nNotifications of TB cases (new and relapse cases, all forms) (black) compared with estimated TB incident cases(green),\n2000 - ",
                  report_year-1,
                  ", globally and for WHO regions. Shaded areas represent uncertainty bands.")) +
-
+  
   theme_glb.rpt() +
   theme(legend.position="top",
         legend.title=element_blank(),
         axis.text.x = element_text(size=5))
 
 # Save the plot
-figsave(inc_plot, inc_data, "f4_1_inc_plot_aggregates")
+figsave(inc_plot, inc_data, "f4_1_inc_number_plot_aggregates")
 
 # Clean up (remove any objects with their name containing 'inc_')
 rm(list=ls(pattern = "inc_"))
@@ -2162,31 +2166,31 @@ rm(list=ls(pattern = "^coveragerr"))
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 drgap_data <- estimates_drtb_rawvalues %>%
-              filter(year == report_year - 1) %>%
-              select(iso3,
-                     year,
-                     e_inc_rr_num
-                     ) %>%
-
-              # Link to notifications
-              inner_join(notification) %>%
-              select(iso3,
-                     country,
-                     e_inc_rr_num,
-                     unconf_rrmdr_tx,
-                     conf_rrmdr_tx) %>%
-
-              # Filter out countries that have not reported anything yet for the latest year
-              filter(!is.na(unconf_rrmdr_tx) & !is.na(conf_rrmdr_tx)) %>%
-
-              # Calculate the gap and use that for the bubble sizes
-              mutate(bubble_size = e_inc_rr_num - (NZ(unconf_rrmdr_tx) + NZ(conf_rrmdr_tx))) %>%
-
-              # Modify long names of countries which will be shown as labels in map
-              mutate(country = recode(country, "Democratic Republic of the Congo"="DR Congo")) %>%
-
-              # limit to the top 10 by size of gap
-              top_n(10, bubble_size)
+  filter(year == report_year - 1) %>%
+  select(iso3,
+         year,
+         e_inc_rr_num
+  ) %>%
+  
+  # Link to notifications
+  inner_join(notification) %>%
+  select(iso3,
+         country,
+         e_inc_rr_num,
+         unconf_rrmdr_tx,
+         conf_rrmdr_tx) %>%
+  
+  # Filter out countries that have not reported anything yet for the latest year
+  filter(!is.na(unconf_rrmdr_tx) | !is.na(conf_rrmdr_tx)) %>%
+  
+  # Calculate the gap and use that for the bubble sizes
+  mutate(bubble_size = e_inc_rr_num - (NZ(unconf_rrmdr_tx) + NZ(conf_rrmdr_tx))) %>%
+  
+  # Modify long names of countries which will be shown as labels in map
+  mutate(country = recode(country, "Democratic Republic of the Congo"="DR Congo")) %>%
+  
+  # limit to the top 10 by size of gap
+  top_n(10, bubble_size)
 
 # Plot the gaps as bubbles
 
@@ -2196,23 +2200,23 @@ drgap_map <- who_bubble_map(drgap_data,
                                    "on treatment for MDR-TB and the best estimates of MDR/RR-TB incidence, ",
                                    report_year - 1,"(a)"),
                             bubble_colour = "green",
-                            scale_breaks = c(10000,50000,100000),
-                            scale_limits = c(9500,130000),
-                            scale_labels = c("10 000","50 000","100 000"),
+                            scale_breaks = c(7500,50000,100000),
+                            scale_limits = c(7500,130000),
+                            scale_labels = c("7 500","50 000","100 000"),
                             bubble_label_show_number = 10)
 
 # Generate names for footnote
 drgap_ten_countries_name_by_rank <- drgap_data  %>%
-                                    arrange(desc(bubble_size))   %>%
-                                    select(country)
+  arrange(desc(bubble_size))   %>%
+  select(country) 
 
 drgap_map <- arrangeGrob(drgap_map,
-                       bottom = textGrob(paste0("(a) The ten countries ranked in order of the size of the gap between the number of patients started on MDR-TB treatment and the best estimate of MDR/RR-TB \nincidence in ",report_year-1," are ",
-                                                sapply(drgap_ten_countries_name_by_rank,paste, collapse=","),"."),
-                                         x = 0,
-                                         hjust = -0.1,
-                                         vjust=0.4,
-                                         gp = gpar(fontsize = 10)))
+                         bottom = textGrob(paste0("(a) The ten countries ranked in order of the size of the gap between the number of patients started on MDR-TB treatment and the best estimate of MDR/RR-TB \nincidence in ",report_year-1," are ",
+                                                  sapply(drgap_ten_countries_name_by_rank,paste, collapse=","),"."),
+                                           x = 0,
+                                           hjust = -0.1,
+                                           vjust=0.4,
+                                           gp = gpar(fontsize = 10)))  
 
 # Save the plot
 figsave(drgap_map,
