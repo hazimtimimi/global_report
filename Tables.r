@@ -433,23 +433,6 @@ rm(list=ls(pattern = "^rdxpolicy"))
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
-# Need LTBI views which were not in the RData files, so import them now and add to RData later
-options(stringsAsFactors=FALSE)
-
-.fixnamibia <- function(df){
-  # make sure Namibia's iso2 code is not interpreted as R's NA (null)
-  df$iso2 <- ifelse(df$country=="Namibia", "NA", as.character(df$iso2))
-  return(df)
-}
-
-library(RODBC)
-ch <- odbcDriverConnect(connection_string)
-
-# load views into dataframes
-estimates_ltbi   <- .fixnamibia(sqlFetch(ch, "view_TME_estimates_ltbi"))
-
-close(ch)
-
 
 # Get list of TB and TB/HIV high-burden countries
 prev_tx_hbccodes <-  country_group_membership %>%

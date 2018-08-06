@@ -67,7 +67,9 @@ estimates_epi              <- .fixnamibia(sqlFetch(ch, "view_TME_estimates_epi")
 estimates_epi_rawvalues    <- .fixnamibia(sqlFetch(ch, "view_TME_estimates_epi_rawvalues"))
 estimates_drtb             <- .fixnamibia(sqlFetch(ch, "view_TME_estimates_drtb"))
 estimates_drtb_rawvalues   <- .fixnamibia(sqlFetch(ch, "view_TME_estimates_drtb_rawvalues"))
+estimates_ltbi             <- .fixnamibia(sqlFetch(ch, "view_TME_estimates_ltbi"))
 estimates_population       <- .fixnamibia(sqlFetch(ch, "view_TME_estimates_population"))
+
 
 finance                    <- .fixnamibia(sqlFetch(ch, "view_TME_master_finance"))
 finance_cleaned            <- .fixnamibia(sqlFetch(ch, "view_TME_master_finance_cleaned"))

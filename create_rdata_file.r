@@ -51,6 +51,7 @@ save (aggregated_estimates_epi,
       estimates_epi_rawvalues,
       estimates_drtb,
       estimates_drtb_rawvalues,
+      estimates_ltbi,
       estimates_population,
 
       finance,
