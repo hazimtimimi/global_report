@@ -1006,9 +1006,8 @@ figsave(inctbhiv_plot, inctbhiv_data, "f4_9_inctbhiv_plot_global")
 rm(list=ls(pattern = "tbhiv"))
 
 
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Figure 4.10 ------
-# Percentage of bacteriologically confirmed TB cases tested for RR–TB, globally and for WHO regions, 2009–2017
+# Percentage of all TB cases tested for RR-TB, globally and for WHO regions, 2009-2017
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # This one is a bit of a mess. For years up to 2014 (i.e. reporting year 2015),
@@ -1016,117 +1015,116 @@ rm(list=ls(pattern = "tbhiv"))
 # For years 2015 onwards (2016 data collection year onwards) we only use the notification value
 
 dst_notif_data <- notification %>%
-                  filter(year >= 2009) %>%
-                  select(year,
-                         iso3,
-                         g_whoregion,
-                         new_labconf,
-                         c_ret,
-                         rdst_new,
-                         rdst_ret) %>%
-                  mutate(
-                        # denominator is a bit of a fudge: new_labconf + c_ret
-                         dst_denom = ifelse(is.na(new_labconf) & is.na(c_ret), NA,
-                                           (NZ(new_labconf) + NZ(c_ret))),
-                        # numerator
-                        dst_notif_num = ifelse(is.na(rdst_new) & is.na(rdst_ret), NA,
-                                           (NZ(rdst_new) + NZ(rdst_ret)))
-                        )
+  filter(year >= 2009) %>%
+  select(year,
+         iso3,
+         g_whoregion,
+         c_notified,
+         rdst_new,
+         rdst_ret,
+         rdst_unk) %>%
+  mutate(
+    # denominator
+    dst_denom = ifelse(is.na(c_notified), NA,
+                       NZ(c_notified)),
+    # numerator
+    dst_notif_num = ifelse(is.na(rdst_new) & is.na(rdst_ret), NA,
+                           (NZ(rdst_new) + NZ(rdst_ret) + NZ(rdst_unk)))
+  )
 
 dst_drs_data <- dr_surveillance %>%
-                filter(year >= 2009 & year < 2015) %>%
-                select(year,
-                       iso3,
-                       dst_rlt_new,
-                       dst_rlt_ret) %>%
-                mutate(
-                      # numerator
-                      dst_drs_num = ifelse(is.na(dst_rlt_new) & is.na(dst_rlt_ret), NA,
-                                           (NZ(dst_rlt_new) + NZ(dst_rlt_ret)))
-                      )
+  filter(year >= 2009 & year < 2015) %>%
+  select(year,
+         iso3,
+         dst_rlt_new,
+         dst_rlt_ret) %>%
+  mutate(
+    # numerator
+    dst_drs_num = ifelse(is.na(dst_rlt_new) & is.na(dst_rlt_ret), NA,
+                         (NZ(dst_rlt_new) + NZ(dst_rlt_ret)))
+  )
 
 # Link the two data sets
 
 dst_data <- dst_notif_data %>%
-            left_join(dst_drs_data) %>%
-
-            # To calculate the percentage DST coverage we need to identify the greater of the two numerators
-            # Set numerator to NA if the denominator is NA for a country-year
-            mutate(
-                  dst_num = ifelse(NZ(dst_denom) == 0, NA,
-                            ifelse((is.na(dst_notif_num) & !is.na(dst_drs_num)) |
-                                     (NZ(dst_drs_num) >= NZ(dst_notif_num)),
-                                   dst_drs_num,
+  left_join(dst_drs_data) %>%
+  
+  # To calculate the percentage DST coverage we need to identify the greater of the two numerators
+  # Set numerator to NA if the denominator is NA for a country-year
+  mutate(
+    dst_num = ifelse(NZ(dst_denom) == 0, NA,
+                     ifelse((is.na(dst_notif_num) & !is.na(dst_drs_num)) |
+                              (NZ(dst_drs_num) >= NZ(dst_notif_num)),
+                            dst_drs_num,
                             ifelse((!is.na(dst_notif_num) & is.na(dst_drs_num)) |
                                      (NZ(dst_notif_num) >= NZ(dst_drs_num)),
                                    dst_notif_num, NA )))
-            ) %>%
-
-            # Drop unwanted variables
-            select(iso3,
-                   year,
-                   g_whoregion,
-                   dst_num,
-                   dst_denom) %>%
-
-            # Drop rows with empty numerators
-            filter(!is.na(dst_num))
+  ) %>%
+  
+  # Drop unwanted variables
+  select(iso3,
+         year,
+         g_whoregion,
+         dst_num,
+         dst_denom) %>%
+  
+  # Drop rows with empty numerators
+  filter(!is.na(dst_num))
 
 
 dst_global <- dst_data %>%
-              group_by(year) %>%
-              summarise_at(vars(dst_num:dst_denom),
-                           sum,
-                           na.rm = TRUE) %>%
-              mutate(entity = "Global") %>%
-              ungroup()
+  group_by(year) %>%
+  summarise_at(vars(dst_num:dst_denom),
+               sum,
+               na.rm = TRUE) %>%
+  mutate(entity = "Global") %>%
+  ungroup()
 
 dst_regional <- dst_data %>%
-                group_by(g_whoregion, year) %>%
-                summarise_at(vars(dst_num:dst_denom),
-                             sum,
-                             na.rm = TRUE) %>%
-
-                # merge with regional names
-                inner_join(who_region_names, by = "g_whoregion") %>%
-                ungroup() %>%
-                select(-g_whoregion)
+  group_by(g_whoregion, year) %>%
+  summarise_at(vars(dst_num:dst_denom),
+               sum,
+               na.rm = TRUE) %>%
+  
+  # merge with regional names
+  inner_join(who_region_names, by = "g_whoregion") %>%
+  ungroup() %>%
+  select(-g_whoregion)
 
 
 dst_agg <- rbind(dst_regional, dst_global) %>%
-
-           # OK, now you can calculate the percentage coverage
-           mutate( dst_pcnt = dst_num * 100 / dst_denom) %>%
-
-           # Add a footnote call to Africa
-           mutate( entity = ifelse(entity == "Africa", "Africa(b)", entity))
+  
+  # OK, now you can calculate the percentage coverage
+  mutate( dst_pcnt = dst_num * 100 / dst_denom) %>%
+  
+  # Add a footnote call to Africa
+  mutate( entity = ifelse(entity == "Africa", "Africa(a)", entity))
 
 # Change the order
 dst_agg$entity <- factor(dst_agg$entity,
-                         levels = c("Africa(b)", "The Americas", "Eastern Mediterranean", "Europe", "South-East Asia", "Western Pacific", "Global"))
+                         levels = c("Africa(a)", "The Americas", "Eastern Mediterranean", "Europe", "South-East Asia", "Western Pacific", "Global"))
 
 
 # Plot as lines
 dst_plot <- dst_agg %>%
-            ggplot(aes(x=year, y=dst_pcnt, ymin=0)) +
-            geom_line(size=1) +
-
-            facet_wrap( ~ entity, ncol = 4, scales="fixed") +
-            scale_x_continuous(breaks = c(2009, 2013, report_year-1)) +
-            scale_y_continuous(name = "Percentage of cases") +
-            expand_limits(y=c(0,100)) +
-            xlab("Year") +
-
-            ggtitle(paste0("Figure 4.10\nPercentage of bacteriologically confirmed TB cases tested for RR-TB, globally and for WHO regions, 2009-",
-                         report_year-1,
-                         "(a)")) +
-
-            theme_glb.rpt() +
-            theme(legend.position="top",
-                  legend.title=element_blank())
+  ggplot(aes(x=year, y=dst_pcnt, ymin=0)) +
+  geom_line(size=1) +
+  
+  facet_wrap( ~ entity, ncol = 4, scales="fixed") +
+  scale_x_continuous(breaks = c(2009, 2013, report_year-1)) +
+  scale_y_continuous(name = "Percentage of cases") +
+  expand_limits(y=c(0,100)) +
+  xlab("Year") +
+  
+  ggtitle(paste0("Figure 4.10\nPercentage of all TB cases tested for RR-TB, globally and for WHO regions, 2009-",
+                 report_year-1)) +
+  
+  theme_glb.rpt() +
+  theme(legend.position="top",
+        legend.title=element_blank())
 
 # Add explanatory footnotes
-dst_footnote <- "(a) Among new laboratory confirmed and retreatment cases; test results in cases with unknown previous history are not included.\n(b) The spike in coverage in the African Region in 2015 is due to the reporting of laboratory results for many cases in South Africa differentiated by treatment history."
+dst_footnote <- "(a)The spike in coverage in the African Region in 2015 is due to the reporting of laboratory results for many cases in South Africa differentiated by treatment history."
 
 dst_plot <- arrangeGrob(dst_plot, bottom = textGrob(dst_footnote, x = 0, hjust = -0.1, vjust=0.1, gp = gpar(fontsize = 9)))
 
@@ -1136,34 +1134,29 @@ figsave(dst_plot, dst_agg, "f4_10_dst_aggregates")
 # Clean up (remove any objects with their name containing 'dst_')
 rm(list=ls(pattern = "dst_"))
 
-
-
-
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Figure 4.11  (Map) ------
-# Percentage of bacteriologically confirmed TB cases tested for RR-TB, 2017
+# Percentage of all TB cases tested for RR-TB, 2017
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
 dst_data <- notification %>%
-            filter(year >= report_year - 2) %>%
-            select(iso3,
-                   country,
-                   year,
-                   new_labconf,
-                   c_ret,
-                   rdst_new,
-                   rdst_ret) %>%
-
-              # Calculate coverage of DST percentages
-              mutate(# percent DST among lab-confirmed cases is a bit of a fudge:
-                     # numerator rdst_new + rdst_ret  (ignore cases with unknown treatment history)
-                     # denominator is a bit of a fudge: new_labconf + c_ret
-                     dst_pct = ifelse((NZ(new_labconf) + NZ(c_ret)) == 0 |
-                                         is.na(rdst_new) & is.na(rdst_ret), NA,
-                                       (NZ(rdst_new) + NZ(rdst_ret)) * 100 /
-                                                     (NZ(new_labconf) + NZ(c_ret)))
-                     )
+  filter(year >= report_year - 2) %>%
+  select(iso3,
+         country,
+         year,
+         c_notified,
+         rdst_new,
+         rdst_ret,
+         rdst_unk) %>%
+  
+  # Calculate coverage of DST percentages
+  mutate(# numerator rdst_new + rdst_ret  (add cases with unknown treatment history)
+    dst_pct = ifelse(NZ(c_notified) == 0 |
+                       is.na(rdst_new) & is.na(rdst_ret), NA,
+                     (NZ(rdst_new) + NZ(rdst_ret) + NZ(rdst_unk)) * 100 /
+                       NZ(c_notified))
+  )
 
 dst_data$cat <- cut(dst_data$dst_pct,
                     c(0, 10, 40, 70, Inf),
@@ -1172,20 +1165,20 @@ dst_data$cat <- cut(dst_data$dst_pct,
 
 # Find the countries with empty data for latest year and see if there are data for the previous year
 dst_prev_year_data <- dst_data %>%
-                      filter(year == report_year - 1 & is.na(dst_pct)) %>%
-                      select(iso3) %>%
-                      inner_join(filter(dst_data, year == report_year - 2)) %>%
-                      filter(!is.na(dst_pct))
+  filter(year == report_year - 1 & is.na(dst_pct)) %>%
+  select(iso3) %>%
+  inner_join(filter(dst_data, year == report_year - 2)) %>%
+  filter(!is.na(dst_pct))
 
 # Now combine into one dataframe, with previous data used if latest year's data are not available
 dst_data_combined <- dst_data %>%
-                     filter(year == report_year - 1) %>%
-                     anti_join(dst_prev_year_data, by= "iso3") %>%
-                     rbind(dst_prev_year_data)
+  filter(year == report_year - 1) %>%
+  anti_join(dst_prev_year_data, by= "iso3") %>%
+  rbind(dst_prev_year_data)
 
 # produce the map
 dst_map <- WHOmap.print(dst_data_combined,
-                        paste0("Figure 4.11\nPercentage of bacteriologically confirmed TB cases tested for RR-TB, ", report_year-1, "(a)"),
+                        paste0("Figure 4.11\nPercentage of all TB cases tested for RR-TB, ", report_year-1, "(a)"),
                         "Percentage",
                         copyright=FALSE,
                         colors=brewer.pal(4, "YlOrBr"),
@@ -1193,11 +1186,7 @@ dst_map <- WHOmap.print(dst_data_combined,
 
 
 # Add footnote about testing and also about using earlier data for some countries
-dst_foot <- paste("(a) Among new laboratory confirmed and previously treated cases; cases with unknown previous treatment history are not included.",
-                  report_year - 2,
-                  "data were used for",
-                  nrow(dst_prev_year_data),
-                  "countries")
+dst_foot <- paste("(a)",report_year - 2,"data were used for", nrow(dst_prev_year_data),"countries")
 
 
 
@@ -1214,6 +1203,7 @@ figsave(dst_map,
 
 # Clean up (remove any objects with their name beginning with 'dst')
 rm(list=ls(pattern = "^dst"))
+
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
