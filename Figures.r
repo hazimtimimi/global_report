@@ -1028,7 +1028,7 @@ dst_notif_data <- notification %>%
     dst_denom = ifelse(is.na(c_notified), NA,
                        NZ(c_notified)),
     # numerator
-    dst_notif_num = ifelse(is.na(rdst_new) & is.na(rdst_ret), NA,
+    dst_notif_num = ifelse(is.na(rdst_new) & is.na(rdst_ret) & is.na(rdst_unk), NA,
                            (NZ(rdst_new) + NZ(rdst_ret) + NZ(rdst_unk)))
   )
 
@@ -1095,14 +1095,14 @@ dst_regional <- dst_data %>%
 dst_agg <- rbind(dst_regional, dst_global) %>%
   
   # OK, now you can calculate the percentage coverage
-  mutate( dst_pcnt = dst_num * 100 / dst_denom) %>%
+  mutate( dst_pcnt = dst_num * 100 / dst_denom)
   
-  # Add a footnote call to Africa
-  mutate( entity = ifelse(entity == "Africa", "Africa(a)", entity))
+  # Add a footnote call to Africa, does not need it in 2018 report, comment it out 
+  # mutate( entity = ifelse(entity == "Africa", "Africa(a)", entity))
 
 # Change the order
 dst_agg$entity <- factor(dst_agg$entity,
-                         levels = c("Africa(a)", "The Americas", "Eastern Mediterranean", "Europe", "South-East Asia", "Western Pacific", "Global"))
+                         levels = c("Africa", "The Americas", "Eastern Mediterranean", "Europe", "South-East Asia", "Western Pacific", "Global"))
 
 
 # Plot as lines
@@ -1123,10 +1123,10 @@ dst_plot <- dst_agg %>%
   theme(legend.position="top",
         legend.title=element_blank())
 
-# Add explanatory footnotes
-dst_footnote <- "(a)The spike in coverage in the African Region in 2015 is due to the reporting of laboratory results for many cases in South Africa differentiated by treatment history."
+# Add explanatory footnotes, does not need it in 2018 report, comment it out 
+# dst_footnote <- "(a)The spike in coverage in the African Region in 2015 is due to the reporting of laboratory results for many cases in South Africa differentiated by treatment history."
 
-dst_plot <- arrangeGrob(dst_plot, bottom = textGrob(dst_footnote, x = 0, hjust = -0.1, vjust=0.1, gp = gpar(fontsize = 9)))
+# dst_plot <- arrangeGrob(dst_plot, bottom = textGrob(dst_footnote, x = 0, hjust = -0.1, vjust=0.1, gp = gpar(fontsize = 9)))
 
 # Save the plot
 figsave(dst_plot, dst_agg, "f4_10_dst_aggregates")
@@ -1153,7 +1153,7 @@ dst_data <- notification %>%
   # Calculate coverage of DST percentages
   mutate(# numerator rdst_new + rdst_ret  (add cases with unknown treatment history)
     dst_pct = ifelse(NZ(c_notified) == 0 |
-                       is.na(rdst_new) & is.na(rdst_ret), NA,
+                       is.na(rdst_new) & is.na(rdst_ret)& is.na(rdst_unk), NA,
                      (NZ(rdst_new) + NZ(rdst_ret) + NZ(rdst_unk)) * 100 /
                        NZ(c_notified))
   )
