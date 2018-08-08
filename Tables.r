@@ -622,3 +622,120 @@ print(prev_tx_table_html,
 
 # Clean up (remove any objects with their name beginning with 'prev_tx')
 rm(list=ls(pattern = "^prev_tx"))
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Annex 1 ------
+# The WHO global TB database
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Table A1.1  ------
+# Reporting of data in the 2018 round of global TB data collection
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+reporting_countries <- data_collection %>%
+                        filter(datcol_year == report_year & dc_form_description != 'Not requested') %>%
+                        select(iso3, g_whostatus)
+
+reporting_rates <- notification %>%
+                    filter(year == report_year - 1) %>%
+
+
+                    # define reported as having a non-empty value for notified cases of TB, RR-TB or HIV-positive TB
+                    mutate(reported = ifelse(is.na(c_notified) & is.na(conf_rrmdr) & is.na(newrel_hivpos),
+                                             0,
+                                             1)) %>%
+                    select(iso3, g_whoregion, reported) %>%
+
+                    inner_join(reporting_countries) %>%
+
+                    # ignore the distinction between associate members and non members of WHO
+                    mutate(g_whostatus = ifelse(g_whostatus == "M",
+                                                "M",
+                                                NA)) %>%
+
+
+                    # calculate summaries by region and membership of WHO
+                    group_by(g_whoregion, g_whostatus) %>%
+                    summarise(total = n(),
+                              reported = sum(reported, na.rm = TRUE) )
+
+# Create summary for all countries and territores by region
+reporting_rates_tot <- reporting_rates %>%
+                        group_by(g_whoregion) %>%
+                        summarise_at(vars(total, reported),
+                                     sum,
+                                     na.rm = TRUE)
+
+# Create summary for WHO member states by region
+reporting_rates_ms <- reporting_rates %>%
+                      filter(g_whostatus == "M") %>%
+                      select(g_whoregion,
+                             total_ms = total,
+                             reported_ms = reported)
+
+
+# Combine the two summaries into one summary table
+reporting_rates_tab <- reporting_rates_tot %>%
+                        inner_join(reporting_rates_ms)
+
+
+# Calculate a global summary
+reporting_rates_glob <- reporting_rates_tab %>%
+                          select(-g_whoregion) %>%
+                          summarise_all(sum) %>%
+                          mutate(g_whoregion = "global")
+
+# Add the global summary to the summary table
+reporting_rates_tab <- rbind(reporting_rates_tab, reporting_rates_glob)
+
+# Merge with group names
+reporting_rates_tab <- country_groups %>%
+                        filter(group_type %in% c("global", "g_whoregion")) %>%
+                        inner_join(reporting_rates_tab,
+                                   by = c("group_name" = "g_whoregion" ) ) %>%
+
+                        # Remove extra text from group descriptions
+                        mutate(group_description = str_replace(group_description, "WHO ", "")) %>%
+                        mutate(group_description = str_replace(group_description, "WHO/PAHO ", "")) %>%
+                        mutate(group_description = str_replace(group_description, " Aggregate", "")) %>%
+                        select(-group_type, -group_name)
+
+
+# Create HTML output
+reporting_html <- xtable(reporting_rates_tab)
+
+digits(reporting_html) <- 0
+
+reporting_filename <- paste0(figures_folder, "/Tables/tA1_1_reporting_rates", Sys.Date(), ".htm")
+
+cat(paste("<h3>Table A1.1<br />Reporting of data in the",
+          report_year,
+          "round of global TB data collection</h3>"),
+    file=reporting_filename)
+
+print(reporting_html,
+      type="html",
+      file=reporting_filename,
+      include.rownames=FALSE,
+      include.colnames=FALSE,
+      html.table.attributes="border='0' rules='rows' width='1100' cellpadding='5'",
+      append=TRUE,
+      add.to.row=list(pos=list(0),
+                      command=c("<tr>
+                                <td rowspan='2'></td>
+                                <td colspan='2' style='border-right: black 2px solid; text-align: center;'>Countries and territories</td>
+                                <td colspan='2' style='text-align: center;'>WHO Member States</td>
+                                </tr>
+                                <tr>
+                                <td style='text-align: right;'>Number</td>
+                                <td style='border-right: black 2px solid;  text-align: right;'>Number that reported data</td>
+                                <td style='text-align: right;'>Number</td>
+                                <td style='text-align: right;'>Number that reported data</td>
+                                </tr>")
+                      )
+      )
+
+# Clean up (remove any objects with their name beginning with 'reporting')
+rm(list=ls(pattern = "^reporting"))
