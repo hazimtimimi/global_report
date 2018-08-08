@@ -2999,18 +2999,20 @@ short_data <- notification %>%
               select(country,
                      iso3,
                      mdr_shortreg_used) %>%
-              mutate(cat = ifelse(mdr_shortreg_used == 1, "Shorter MDR–TB\ntreatment regimens used",
+              mutate(cat = ifelse(mdr_shortreg_used == 3, "Don't know",
                             ifelse(mdr_shortreg_used == 0, "Not used",
-                            ifelse(mdr_shortreg_used == 3, "Don't know", NA))))
+                            ifelse(mdr_shortreg_used == 1, "Shorter MDR–TB\ntreatment regimens used", NA))))
 
 short_data$cat <-factor(short_data$cat)
+
+short_data$cat <- factor(short_data$cat,levels = rev(levels(short_data$cat)))
 
 # produce the map
 short_map<- WHOmap.print(short_data,
                          paste0("FIG.4.27\nCountries that had used shorter MDR–TB treatment regimens by the end of ", report_year - 1),
                          legend.title = "Country\nresponse",
                          copyright=FALSE,
-                         brewer.pal(3, "Greens"),
+                         colors=c("lightgreen", "darkgreen", "lightyellow"),
                          na.label="No response",
                          show=FALSE)
 
@@ -3034,7 +3036,7 @@ bdq_data <- notification %>%
                    iso3,
                    mdrxdr_bdq_used) %>%
             mutate(cat = ifelse(mdrxdr_bdq_used == 1, "Bedaquiline used",
-                                ifelse(mdrxdr_bdq_used == 0, "Bedaquiline not used",
+                                ifelse(mdrxdr_bdq_used == 0, "Bedaquiline Not used",
                                        ifelse(mdrxdr_bdq_used == 3, "Don't know", NA)))) %>%
 
             # drop unnecessary variables
@@ -3042,6 +3044,8 @@ bdq_data <- notification %>%
 
 
 bdq_data$cat <- factor(bdq_data$cat)
+
+bdq_data$cat <- factor(bdq_data$cat,levels(bdq_data$cat)[c(2,1,3)])
 
 # produce the map
 bdq_map<- WHOmap.print(bdq_data,
@@ -3083,6 +3087,8 @@ dlm_data <- notification %>%
             select(country, iso3, cat)
 
 dlm_data$cat <- factor(dlm_data$cat)
+
+dlm_data$cat <- factor(dlm_data$cat,levels(dlm_data$cat)[c(2,1,3)])
 
 # produce the map
 dlm_map<- WHOmap.print(dlm_data,
