@@ -59,7 +59,7 @@ cb_data_combined <- cb_data %>%
 
 # produce the map
 cb_map<- WHOmap.print(cb_data_combined,
-                      "Figure 3.1\nCountries with national case-based surveillance as of July 2018 (a)",
+                      "FIG.3.1\nCountries with national case-based surveillance as of July 2018 (a)",
                       legend.title = "Country response",
                       copyright=FALSE,
                       brewer.pal(3, "Blues"),
@@ -102,7 +102,7 @@ topinc_data <- estimates_epi_rawvalues %>%
 # Plot incidence numbers as bubbles
 
 topinc_map <- who_bubble_map(topinc_data,
-                             paste0("Figure 3.3\nEstimated TB incidence in ",
+                             paste0("FIG.3.3\nEstimated TB incidence in ",
                                     report_year - 1,
                                     ", for countries with at least 100 000 incident cases"),
                              " Number of \nincident cases",
@@ -141,7 +141,7 @@ rrnum_data <- estimates_drtb_rawvalues %>%
 # Plot incidence numbers as bubbles
 
 rrnum_map <- who_bubble_map(rrnum_data,
-                            paste0("Figure 3.22\n",
+                            paste0("FIG.3.22\n",
                                    "Estimated incidence of MDR/RR-TB in ",
                                    report_year - 1,
                                    ", for countries with at least 1000 incident cases"),
@@ -233,7 +233,7 @@ inc_plot <- inc_data %>%
   scale_x_continuous(name="Year",
                      breaks = c(2000, 2005, 2010, 2015, report_year-1)) +
   scale_y_continuous(name = "Millions per year") +
-  ggtitle(paste0("Figure 4.1\nNotifications of TB cases (new and relapse cases, all forms) (black) compared with estimated TB incident cases(green),\n2000 - ",
+  ggtitle(paste0("FIG.4.1\nNotifications of TB cases (new and relapse cases, all forms) (black) compared with estimated TB incident cases(green),\n2000 - ",
                  report_year-1,
                  ", globally and for WHO regions. Shaded areas represent uncertainty bands.")) +
   
@@ -364,7 +364,7 @@ agesex_plot <- agesex_agg_long %>%
                                  labels=levels(agesex_agg_long$agegroup)) +
                 coord_flip() +
                 facet_wrap( ~ entity, ncol = 4) +
-                ggtitle(paste0("Figure 4.2\nNew and relapse TB case notification rates by age and sex(a) in ",
+                ggtitle(paste0("FIG.4.2\nNew and relapse TB case notification rates by age and sex(a) in ",
                                 report_year - 1,
                                 ", globally and for WHO regions")) +
                 theme_glb.rpt() +
@@ -444,7 +444,7 @@ kids_data_combined <- kids_data %>%
 
 # produce the map
 kids_map <- WHOmap.print(kids_data_combined,
-                         paste0("Figure 4.3\nPercentage of new and relapse TB cases that were children (aged <15), ",
+                         paste0("FIG.4.3\nPercentage of new and relapse TB cases that were children (aged <15), ",
                                 report_year-1,
                                 "(a)"),
                          "Percentage",
@@ -578,7 +578,7 @@ bacconf_plot <- bacconf_data %>%
                   scale_y_continuous(name = "Percentage bacteriologically confirmed") +
                   expand_limits(y=c(0,100)) +
                   facet_wrap( ~ entity, ncol = 4) +
-                  ggtitle(paste0("Figure 4.4\nPercentage of new and relapse(a) pulmonary TB cases with bacteriological confirmation, 2000-",
+                  ggtitle(paste0("FIG.4.4\nPercentage of new and relapse(a) pulmonary TB cases with bacteriological confirmation, 2000-",
                                report_year-1,
                                ", globally\nand for WHO regions.")) +
                   theme_glb.rpt() +
@@ -649,7 +649,7 @@ bacconf_data_combined <- bacconf_data %>%
 
 # produce the map
 bacconf_map <- WHOmap.print(bacconf_data_combined,
-                            paste0("Figure 4.5\nPercentage of new and relapse pulmonary TB cases with bacteriological confirmation, ",
+                            paste0("FIG.4.5\nPercentage of new and relapse pulmonary TB cases with bacteriological confirmation, ",
                                    report_year-1,
                                    "(a)"),
                             "Percentage",
@@ -735,7 +735,7 @@ ep_data_combined <- ep_data %>%
 
 # produce the map
 ep_map <- WHOmap.print(ep_data_combined,
-                       paste0("Figure 4.6\nPercentage of extrapulmonary cases among new and relapse TB cases, ",
+                       paste0("FIG.4.6\nPercentage of extrapulmonary cases among new and relapse TB cases, ",
                               report_year-1,
                               "(a)"),
                        "Percentage",
@@ -824,7 +824,7 @@ hivstatus_plot <- hivstatus_data %>%
                   expand_limits(y=c(0,100)) +
                   #scale_x_discrete(name = "Year") +
                   facet_wrap( ~ entity, ncol = 4) +
-                  ggtitle(paste0("Figure 4.7\nPercentage of new and relapse(a) TB cases with documented HIV status, 2004-",
+                  ggtitle(paste0("FIG.4.7\nPercentage of new and relapse(a) TB cases with documented HIV status, 2004-",
                                report_year-1,
                                ", globally and for WHO regions")) +
                   theme_glb.rpt() +
@@ -886,7 +886,7 @@ hivstatus_data_combined <- hivstatus_data %>%
 
 # produce the map
 hivstatus_map <- WHOmap.print(hivstatus_data_combined,
-                        paste("Figure 4.8\nPercentage of new and relapse TB cases with documented HIV status,", report_year-1, "(a)"),
+                        paste("FIG.4.8\nPercentage of new and relapse TB cases with documented HIV status,", report_year-1, "(a)"),
                            "Percentage",
                            copyright=FALSE,
                            colors=brewer.pal(4, "BuGn"),
@@ -986,7 +986,7 @@ inctbhiv_plot <- inctbhiv_data %>%
   scale_y_continuous(name = "New and relapse cases per year (millions)") +
   xlab("Year") +
 
-  ggtitle(paste0("Figure 4.9\nGlobal numbers of notified new and relapse cases(a) known to be HIV-positive (black),\nnumber started on antiretroviral therapy (blue) and estimated number of incident HIV-positive TB cases (red), 2004-",
+  ggtitle(paste0("FIG.4.9\nGlobal numbers of notified new and relapse cases(a) known to be HIV-positive (black),\nnumber started on antiretroviral therapy (blue) and estimated number of incident HIV-positive TB cases (red), 2004-",
                  report_year-1,
                  ".\nShaded areas represent uncertainty bands.")) +
 
@@ -1116,7 +1116,7 @@ dst_plot <- dst_agg %>%
   expand_limits(y=c(0,100)) +
   xlab("Year") +
   
-  ggtitle(paste0("Figure 4.10\nPercentage of all TB cases tested for RR-TB, globally and for WHO regions, 2009-",
+  ggtitle(paste0("FIG.4.10\nPercentage of all TB cases tested for RR-TB, globally and for WHO regions, 2009-",
                  report_year-1)) +
   
   theme_glb.rpt() +
@@ -1178,7 +1178,7 @@ dst_data_combined <- dst_data %>%
 
 # produce the map
 dst_map <- WHOmap.print(dst_data_combined,
-                        paste0("Figure 4.11\nPercentage of all TB cases tested for RR-TB, ", report_year-1, "(a)"),
+                        paste0("FIG.4.11\nPercentage of all TB cases tested for RR-TB, ", report_year-1, "(a)"),
                         "Percentage",
                         copyright=FALSE,
                         colors=brewer.pal(4, "YlOrBr"),
@@ -1298,7 +1298,7 @@ rr_plot <-  rr_global %>%
             scale_y_continuous(name = "Number of cases (thousands)") +
 
 
-            ggtitle(paste0("Figure 4.12\nGlobal number of MDR/RR-TB cases detected (pink) and number enrolled on MDR-TB treatment (green), 2009-",
+            ggtitle(paste0("FIG.4.12\nGlobal number of MDR/RR-TB cases detected (pink) and number enrolled on MDR-TB treatment (green), 2009-",
                          report_year-1,
                          ",\ncompared with estimate for ",
                           report_year-1,
@@ -1374,7 +1374,7 @@ rr_plot <-  rr_data %>%
             scale_y_continuous(name = "Number of cases") +
 
 
-            ggtitle(paste0("Figure 4.13\nNumber of MDR/RR-TB cases detected (pink) and enrolled on MDR-TB treatment\n(green), 2009-",
+            ggtitle(paste0("FIG.4.13\nNumber of MDR/RR-TB cases detected (pink) and enrolled on MDR-TB treatment\n(green), 2009-",
                          report_year-1,
                          ", 30 high MDR-TB burden countries")) +
 
@@ -1429,7 +1429,7 @@ sldst_data_combined <- sldst_data %>%
 
 # produce the map
 sldst_map <- WHOmap.print(sldst_data_combined,
-                          paste0("Figure 4.14\nPercentage of MDR/RR-TB cases tested for susceptibility to second-line drugs, ",
+                          paste0("FIG.4.14\nPercentage of MDR/RR-TB cases tested for susceptibility to second-line drugs, ",
                                     report_year-1,
                                   "(a)"),
                                  "Percentage",
@@ -1523,7 +1523,7 @@ inc_plot <- inc_data %>%
                         scales = "free_y",
                         ncol = 5) +
 
-            ggtitle(paste0("Figure 4.15\nCase notification rates (new and relapse cases, all forms) (black)\ncompared with estimated TB incidence rates (green), 2000-",
+            ggtitle(paste0("FIG.4.15\nCase notification rates (new and relapse cases, all forms) (black)\ncompared with estimated TB incidence rates (green), 2000-",
                          report_year-1,
                          ",\n30 high TB burden countries. Shaded areas represent uncertainty bands.")) +
             theme_glb.rpt() +
@@ -1639,7 +1639,7 @@ coverage_plot <- coverage_data %>%
                   geom_point() +
                   labs(x="",
                        y="Treatment coverage (%)",
-                       title=paste0("Figure 4.16\nEstimated TB treatment coverage (new and relapse patients as a percentage of estimated TB incidence)\n in ",
+                       title=paste0("FIG.4.16\nEstimated TB treatment coverage (new and relapse patients as a percentage of estimated TB incidence)\n in ",
                                    report_year - 1,
                                    ", 30 high TB burden countries, WHO regions and globally")) +
                   geom_pointrange(aes(ymin=c_cdr_lo,
@@ -1704,7 +1704,7 @@ gap_data <- estimates_epi_rawvalues %>%
 # Plot the gaps as bubbles
 
 gap_map <- who_bubble_map(gap_data,
-                          paste0("Figure 4.17\n",
+                          paste0("FIG.4.17\n",
                                  "The ten countries with the largest gaps between notifications of new and relapse\n",
                                  "(incident) TB cases and the best estimates of TB incidence, ",
                                  report_year - 1,"(a)"),
@@ -1816,7 +1816,7 @@ inctbhiv_plot <- inctbhiv_data %>%
                               scales = "free_y",
                               ncol = 5) +
 
-                  ggtitle(paste0("Figure 4.18\nNumber of new and relapse cases(a) known to be HIV-positive (black) and\nnumber started on ART (blue) compared with estimated number of \nincident HIV-positive TB cases (red), 2004-",
+                  ggtitle(paste0("FIG.4.18\nNumber of new and relapse cases(a) known to be HIV-positive (black) and\nnumber started on ART (blue) compared with estimated number of \nincident HIV-positive TB cases (red), 2004-",
                                report_year-1,
                                ", 30 high TB/HIV burden countries")) +
 
@@ -1958,7 +1958,7 @@ coveragehiv_plot <- coveragehiv_data %>%
                     geom_point() +
                     labs(x="",
                          y="Treatment coverage (%)",
-                         title=paste0("Figure 4.19\nEstimated ART treatment coverage for HIV-positive TB cases\n",
+                         title=paste0("FIG.4.19\nEstimated ART treatment coverage for HIV-positive TB cases\n",
                                      "(HIV-positive TB patients on ART as a percentage of the estimated incidence of HIV-positive TB) in ",
                                      report_year - 1,
                                      ",\n30 high TB/HIV burden countries, WHO regions and globally")) +
@@ -2121,7 +2121,7 @@ coveragerr_plot <- coveragerr_data %>%
                     geom_point() +
                     labs(x="",
                          y="Treatment coverage (%)",
-                         title=paste0("Figure 4.20\nEstimated treatment coverage for MDR/RR-TB\n",
+                         title=paste0("FIG.4.20\nEstimated treatment coverage for MDR/RR-TB\n",
                                      "(patients started on treatment for MDR-TB as a percentage of the estimated incidence of MDR/RR-TB) in ",
                                      report_year - 1,
                                      ",\n30 high MDR-TB burden countries, WHO regions and globally")) +
@@ -2185,7 +2185,7 @@ drgap_data <- estimates_drtb_rawvalues %>%
 # Plot the gaps as bubbles
 
 drgap_map <- who_bubble_map(drgap_data,
-                            paste0("Figure 4.21\n",
+                            paste0("FIG.4.21\n",
                                    "The ten countries with the largest gaps between the number of patients started\n",
                                    "on treatment for MDR-TB and the best estimates of MDR/RR-TB incidence, ",
                                    report_year - 1,"(a)"),
@@ -2384,7 +2384,7 @@ txout_plot <- txout_long %>%
 
 			  expand_limits(c(0,0)) +
 
-			  ggtitle(paste0("Figure 4.22\nTreatment outcomes for new and relapse TB cases in ",
+			  ggtitle(paste0("FIG.4.22\nTreatment outcomes for new and relapse TB cases in ",
 			                 report_year - 2,
 			                 ",\n30 high TB burden countries, WHO regions and globally")) +
 
@@ -2521,7 +2521,7 @@ out_plot <- out_data_long %>%
 
 			  expand_limits(c(0,0)) +
 
-			  ggtitle(paste0("Figure 4.23\nTreatment outcomes for new and relapse TB cases,\nnew and relapse HIV-positive TB cases,\nand MDR/RR-TB cases, 2012-",
+			  ggtitle(paste0("FIG.4.23\nTreatment outcomes for new and relapse TB cases,\nnew and relapse HIV-positive TB cases,\nand MDR/RR-TB cases, 2012-",
 			                 report_year - 2,
 			                 " globally(a)")) +
 
@@ -2659,7 +2659,7 @@ txoutnum_plot <- arrangeGrob(txoutnum_plot_glob,
                              txoutnum_plot_reg,
                              nrow = 2,
                              ncol = 1,
-                             top = textGrob(label = paste0("Figure 4.24\nTreatment outcomes for new and relapse TB cases(a) (absolute numbers), 2000-",
+                             top = textGrob(label = paste0("FIG.4.24\nTreatment outcomes for new and relapse TB cases(a) (absolute numbers), 2000-",
                                                            report_year-2,
                                                            ", globally\nand for WHO regions."),
                                             x = 0.02,
@@ -2818,7 +2818,7 @@ txtbhivout_plot <- txtbhivout_long %>%
 
 					  expand_limits(c(0,0)) +
 
-					  ggtitle(paste0("Figure 4.25\nTreatment outcomes for new and relapse HIV-positive TB cases in\n",
+					  ggtitle(paste0("FIG.4.25\nTreatment outcomes for new and relapse HIV-positive TB cases in\n",
 					                 report_year - 2,
 					                 ", 30 high TB/HIV burden countries, WHO regions and globally")) +
 
@@ -2972,7 +2972,7 @@ txmdrout_plot <- txmdrout_long %>%
 
 				  expand_limits(c(0,0)) +
 
-				  ggtitle(paste0("Figure 4.26\nTreatment outcomes for rifampicin-resistant TB cases\nstarted on treatment in ",
+				  ggtitle(paste0("FIG.4.26\nTreatment outcomes for rifampicin-resistant TB cases\nstarted on treatment in ",
 				                 report_year - 3,
 				                 ",\n30 high MDR-TB burden countries, WHO regions and globally")) +
 
@@ -3003,7 +3003,7 @@ short_data$cat <-factor(short_data$cat)
 
 # produce the map
 short_map<- WHOmap.print(short_data,
-                         paste0("Figure 4.27\nCountries that had used shorter MDR–TB treatment regimens by the end of ", report_year - 1),
+                         paste0("FIG.4.27\nCountries that had used shorter MDR–TB treatment regimens by the end of ", report_year - 1),
                          legend.title = "Country\nresponse",
                          copyright=FALSE,
                          brewer.pal(3, "Greens"),
@@ -3041,7 +3041,7 @@ bdq_data$cat <- factor(bdq_data$cat)
 
 # produce the map
 bdq_map<- WHOmap.print(bdq_data,
-                       paste0("Figure 4.28\nCountries that had used bedaquiline for the treatment of M/XDR–TB as part of expanded access,\ncompassionate use or under normal programmatic conditions by the end of ", report_year - 1),
+                       paste0("FIG.4.28\nCountries that had used bedaquiline for the treatment of M/XDR–TB as part of expanded access,\ncompassionate use or under normal programmatic conditions by the end of ", report_year - 1),
                        legend.title = "",
                        copyright=FALSE,
                        colors=c("lightgreen", "darkgreen", "lightyellow"),
@@ -3082,7 +3082,7 @@ dlm_data$cat <- factor(dlm_data$cat)
 
 # produce the map
 dlm_map<- WHOmap.print(dlm_data,
-                       paste0("Figure 4.29\nCountries that had used delamanid for the treatment of M/XDR–TB as part of expanded access,\ncompassionate use or under normal programmatic conditions by the end of ", report_year - 1),
+                       paste0("FIG.4.29\nCountries that had used delamanid for the treatment of M/XDR–TB as part of expanded access,\ncompassionate use or under normal programmatic conditions by the end of ", report_year - 1),
                        legend.title = "",
                        copyright=FALSE,
                        colors=c("lightgreen", "darkgreen", "lightyellow"),
@@ -3138,7 +3138,7 @@ comm_data$cat <- cut(comm_data$comm_pct,
 
 # produce the map
 comm_map <- WHOmap.print(comm_data,
-                         paste("Figure Box 4.4.1\nPercentage of basic management units in which there is community contribution",
+                         paste("FIG.B4.4.1\nPercentage of basic management units in which there is community contribution",
                                "\nto new case finding and/or to treatment adherence support,",
                                report_year-1),
                          "Percentage",
@@ -3218,7 +3218,7 @@ commureport_plot_glob <- commureport_global %>%
   labs(x="", y="Number of countries") +
   theme(panel.grid=element_blank()) +
   expand_limits(c(0,0)) +
-  ggtitle(paste0("Figure 4.4.2\nNumber of countries reporting on WHO community engagement indicators, 2012-",
+  ggtitle(paste0("FIG.B4.4.2\nNumber of countries reporting on WHO community engagement indicators, 2012-",
                  report_year-1))
 
 # Save the plot
@@ -3274,7 +3274,7 @@ ipt_plot <- ggplot(ipt_c, aes(year, value, color=area)) + geom_line(size=1)+
   scale_y_continuous("Number of people (thousands)") +
   theme_glb.rpt() + scale_x_continuous(name="", breaks=c(min(ipt_c$year):max(ipt_c$year))) +
   scale_color_manual(values=c("#0070C0", "#77933C","orange", "red")) + guides(color = guide_legend(reverse = TRUE))+
-  ggtitle(paste("Figure 5.1\nProvision of TB preventive treatment to people newly enrolled in HIV care(a), 2005", report_year-1, sep="\u2013"))+
+  ggtitle(paste("FIG.5.1\nProvision of TB preventive treatment to people newly enrolled in HIV care(a), 2005", report_year-1, sep="\u2013"))+
   annotate("text", x=2016, y=900, label="Global", size=4)+
   annotate("text", x=2016, y=350, label="South Africa", size=4)+
   annotate("text", x=2016, y=520, label="Rest of Africa", size=4)+
@@ -3384,7 +3384,7 @@ ipt_gap_plot <- ipt_gap_long %>%
 
   expand_limits(c(0,0)) +
 
-  ggtitle(paste0("Figure 5.2\nGaps in TB prevention and TB detection for people who were newly enrolled in HIV care in ",
+  ggtitle(paste0("FIG.5.2\nGaps in TB prevention and TB detection for people who were newly enrolled in HIV care in ",
                  report_year - 1,
                  ",selected countries(a)"))
 
@@ -3453,7 +3453,7 @@ prevtx_kids_data$cat <- cut(prevtx_kids_data$e_prevtx_kids_pct,
 
 # produce the map
 prevtx_kids_map <- WHOmap.print(prevtx_kids_data,
-                                paste("Figure 5.3\nCoverage of TB preventive treatment among eligible children aged under 5 years(a), ",
+                                paste("FIG.5.3\nCoverage of TB preventive treatment among eligible children aged under 5 years(a), ",
                                       report_year-1),
                                 legend.title = "Coverage (%)",
                                 copyright=FALSE,
@@ -3543,7 +3543,7 @@ hcw_data$cat <- cut(hcw_data$nrr,
 
 # produce the map
 hcw_map <- WHOmap.print(hcw_data,
-                        paste("Figure 5.4\nNotification rate ratio of TB among healthcare workers compared with the general adult population,", report_year-1,"(a)"),
+                        paste("FIG.5.4\nNotification rate ratio of TB among healthcare workers compared with the general adult population,", report_year-1,"(a)"),
                         "Notification\nrate ratio",
                         copyright=FALSE,
                         colors=c('lightblue', 'orange', 'red', 'darkred'),
@@ -3582,7 +3582,7 @@ bcg_policy_data <- bcg_policy_data %>%
 bcg_policy_data$cat <- as.factor(bcg_policy_data$BCG.Policy.Type)
 
 bcg_policy_map <- WHOmap.print(bcg_policy_data,
-                               "Figure 5.5\nBCG vaccination policy by country",
+                               "FIG.5.5\nBCG vaccination policy by country",
                                "Policy",
                                copyright=FALSE,
                                colors=c("darkgreen", "lightgreen", "purple"),
@@ -3641,7 +3641,7 @@ bcg_cov_data$cat <- cut(bcg_cov_data$coverage,
 
 # produce the map
 bcg_cov_map <- WHOmap.print(bcg_cov_data,
-                            paste("Figure 5.6\nCoverage of BCG vaccination,", report_year-1),
+                            paste("FIG.5.6\nCoverage of BCG vaccination,", report_year-1),
                             "Percentage",
                             copyright=FALSE,
                             colors=brewer.pal(3, "Greens"),
@@ -3691,7 +3691,7 @@ ghcc_data$cat <- cut(ghcc_data$N,
 
 
 ghcc_map <- WHOmap.print(ghcc_data,
-                         "Fig B6.3.1\nCost per patient treated for drug-susceptible TB or MDR-TB:\ncurrent availability of unit cost data from independent costing studies, 1990-2017",
+                         "FIG.B6.3.1\nCost per patient treated for drug-susceptible TB or MDR-TB:\ncurrent availability of unit cost data from independent costing studies, 1990-2017",
                          "Number\navailable",
                          copyright=FALSE,
                          colors=brewer.pal(4, "Reds"),
