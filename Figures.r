@@ -574,13 +574,13 @@ bacconf_plot <- bacconf_data %>%
                 ggplot(aes(x=year, y=bacconf_pct)) +
                   geom_line(size=1) +
                   scale_x_continuous(name="Year",
-                                     breaks = c(2000, 2005, 2010, 2015, report_year-1)) +
+                                     breaks = c(2000, 2010, report_year-1)) +
                   scale_y_continuous(name = "Percentage bacteriologically confirmed") +
                   expand_limits(y=c(0,100)) +
                   facet_wrap( ~ entity, ncol = 4) +
-                  ggtitle(paste0("FIG.4.4\nPercentage of new and relapse(a) pulmonary TB cases with bacteriological confirmation, 2000-",
+                  ggtitle(paste0("FIG.4.4\nPercentage of new and relapse(a) pulmonary TB cases with bacteriological confirmation, globally and for WHO regions,\n2000-",
                                report_year-1,
-                               ", globally\nand for WHO regions.")) +
+                               ".")) +
                   theme_glb.rpt() +
                   theme(legend.position="top",
                         legend.title=element_blank())
@@ -889,7 +889,7 @@ hivstatus_map <- WHOmap.print(hivstatus_data_combined,
                         paste("FIG.4.8\nPercentage of new and relapse TB cases with documented HIV status,", report_year-1, "(a)"),
                            "Percentage",
                            copyright=FALSE,
-                           colors=brewer.pal(4, "BuGn"),
+                           colors=c("#bdc9e1","#74a9cf", "#2b8cbe", "#045a8d"),
                            show=FALSE)
 
 
@@ -2633,7 +2633,9 @@ txoutnum_plot_reg <- txoutnum_long %>%
                   theme_glb.rpt() +
                   scale_fill_manual("", values = outcomes_num_palette()) +
                   labs(x="", y="Number of cases (millions)") +
-
+  
+                  scale_x_continuous(breaks = c(2000,2008,report_year-2)) +
+  
                   theme(legend.position="bottom",
                         panel.grid=element_blank()) +
                   expand_limits(c(0,0))
@@ -2648,8 +2650,10 @@ txoutnum_plot_glob <- txoutnum_long %>%
                   theme_glb.rpt() +
                   scale_fill_manual("", values = outcomes_num_palette()) +
                   labs(x="", y="Number of cases (millions)") +
-
-                  theme(legend.position="none",
+  
+                  scale_x_continuous(breaks = c(2000,2004,2008,2012,report_year-2)) +
+  
+                    theme(legend.position="none",
                         panel.grid=element_blank()) +
 
                   expand_limits(c(0,0))
