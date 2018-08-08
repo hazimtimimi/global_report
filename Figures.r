@@ -243,7 +243,15 @@ inc_plot <- inc_data %>%
         axis.text.x = element_text(size=5))
 
 # Save the plot
-figsave(inc_plot, inc_data, "f4_1_inc_number_plot_aggregates")
+figsave(inc_plot,
+        select(inc_data,
+               year,
+               c_newinc_millions,
+               e_inc_num_millions,
+               e_inc_num_lo_millions,
+               e_inc_num_hi_millions,
+               entity), 
+        "f4_1_inc_number_plot_aggregates")
 
 # Clean up (remove any objects with their name containing 'inc_')
 rm(list=ls(pattern = "inc_"))
@@ -3114,7 +3122,7 @@ rm(list=ls(pattern = "^dlm"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure Box 4.4.1  (Map) ------
+# Figure Box 4.5.1  (Map) ------
 # Percentage of basic management units in which there is community contribution to new case finding
 # and/or to treatment adherence support, 2017
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -3148,7 +3156,7 @@ comm_data$cat <- cut(comm_data$comm_pct,
 
 # produce the map
 comm_map <- WHOmap.print(comm_data,
-                         paste("Figure Box 4.4.1\nPercentage of basic management units in which there is community contribution",
+                         paste("Figure Box 4.5.1\nPercentage of basic management units in which there is community contribution",
                                "\nto new case finding and/or to treatment adherence support,",
                                report_year-1),
                          "Percentage",
@@ -3168,14 +3176,14 @@ figsave(comm_map,
                iso3,
                comm_pct,
                cat),
-        "f4_box_4_4_1_pct_BMU_community_map")
+        "f4_box_4_5_1_pct_BMU_community_map")
 
 # Clean up (remove any objects with their name beginning with 'comm')
 rm(list=ls(pattern = "^comm"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure Box 4.4.2 ------
+# Figure Box 4.5.2 ------
 # Number of countries reporting on WHO community engagement indicators, 2013-2017
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -3225,11 +3233,11 @@ commureport_plot_glob <- commureport_global %>%
   labs(x="", y="Number of countries") +
   theme(panel.grid=element_blank()) +
   expand_limits(c(0,0)) +
-  ggtitle(paste0("FIG.B4.4.2\nNumber of countries reporting on WHO community engagement indicators, 2012-",
+  ggtitle(paste0("FIG.B4.5.2\nNumber of countries reporting on WHO community engagement indicators, 2012-",
                  report_year-1))
 
 # Save the plot
-figsave(commureport_plot_glob, commureport_global, "f4_box_4_4_2_community_indicator_reporting", width=7, height=11)
+figsave(commureport_plot_glob, commureport_global, "f4_box_4_5_2_community_indicator_reporting", width=7, height=11)
 
 # Clean up (remove any objects with their name starting 'commureport')
 rm(list=ls(pattern = "^commureport"))
