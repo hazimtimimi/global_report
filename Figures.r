@@ -3123,41 +3123,40 @@ rm(list=ls(pattern = "^dlm"))
 comm_datarequest <- data_collection %>%
   filter(datcol_year==report_year) %>%
   select(country,
-         dc_engage_community_display)
+         dc_engage_community_display) 
 
 comm_bmu <- strategy %>%
-			  filter(year==report_year - 1) %>%
-			  select(iso3,
-			         country,
-			         bmu,
-			         bmu_community_impl,
-			         community_data_available)%>%
-			  mutate(comm_pct = ifelse(is.na(bmu_community_impl) | NZ(bmu) == 0,
-			                           NA,
-			                           bmu_community_impl * 100 / bmu))
+  filter(year==report_year - 1) %>%
+  select(iso3,
+         country,
+         bmu,
+         bmu_community_impl,
+         community_data_available)%>%
+  mutate(comm_pct = ifelse(is.na(bmu_community_impl) | NZ(bmu) == 0,
+                           NA,
+                           bmu_community_impl * 100 / bmu))
 
-# Define countries which has not been requested for data as their persentage=-1, just to creat a new catogory
+# Define countries which has not been requested for data as their persentage=1000, just to creat a new catogory
 comm_data <- merge(comm_datarequest, comm_bmu, by= "country")%>%
-  mutate(comm_pct=replace(comm_pct,(dc_engage_community_display == 0),-1))
+  mutate(comm_pct=replace(comm_pct,(dc_engage_community_display == 0),1000))
 
 
 comm_data$cat <- cut(comm_data$comm_pct,
-                     c(-1,0, 25, 50, 75, Inf),
-                     c('Data not requested','0-24', '25-49', '50-74', '>=75'),
+                     c(0, 25, 50, 75, 1000, Inf),
+                     c('0-24', '25-49', '50-74', '>=75','Data not requested'),
                      right=FALSE)
 
 # produce the map
 comm_map <- WHOmap.print(comm_data,
-                         paste("FIG.B4.4.1\nPercentage of basic management units in which there is community contribution",
+                         paste("Figure Box 4.4.1\nPercentage of basic management units in which there is community contribution",
                                "\nto new case finding and/or to treatment adherence support,",
                                report_year-1),
                          "Percentage",
                          copyright=FALSE,
-                         #colors=c('lightgreen','greyblue', 'lightblue', 'Blue', 'darkblue'),
-                         colors=c('#edf8e9','#bdd7e7', '#6baed6', '#3182bd', '#08519c'),
+                         colors=c('#bdd7e7', '#6baed6', '#3182bd', '#08519c','#edf8e9'),
                          show=FALSE)
 comm_map <- arrangeGrob(comm_map,
-                        bottom = textGrob("Data only requested from 111 countries.",
+                        bottom = textGrob(paste0("Data only requested from",sum(comm_datarequest$dc_engage_community_display)," countries."),
                                           x = 0,
                                           hjust = -0.1,
                                           vjust=0,
@@ -3170,8 +3169,6 @@ figsave(comm_map,
                comm_pct,
                cat),
         "f4_box_4_4_1_pct_BMU_community_map")
-
-
 
 # Clean up (remove any objects with their name beginning with 'comm')
 rm(list=ls(pattern = "^comm"))
