@@ -215,7 +215,7 @@ WHOmap.print <- function(data, map.title="", legend.title="", colors=NULL, low.c
   } else x1 <- colors
 
   colors2 <- c(x1, 'white', 'grey75')
-
+  
   # Get dimensions
   if(zoom=='Global'){
     leg.pos <- c(0.73, 0.41)
@@ -270,66 +270,69 @@ WHOmap.print <- function(data, map.title="", legend.title="", colors=NULL, low.c
 # ----------------------------------------------------------
 
 who_bubble_map <- function(data,
-                           map_title = "",
-                           bubble_colour = "purple",
-                           bubble_alpha = 0.4,
-                           border_colour = "grey50",
-                           scale_limits = NULL,
-                           scale_breaks = waiver(),
-                           scale_labels = waiver()) {
-
+                            map_title = "",
+                            legend_title = "",
+                            bubble_colour = "purple",
+                            bubble_alpha = 0.4,
+                            border_colour = "grey50",
+                            scale_limits = NULL,
+                            scale_breaks = waiver(),
+                            scale_labels = waiver(),
+                            bubble_label_show_number = 8) {
+  
   # tests to make sure inputs are right
   if(nchar(map_title)>100 & any(grep("\\n", map_title))==FALSE) warning("You might want to try and trim your title a bit or wrap it with '\\n'.")
-
+  
   if(any(names(data)=="bubble_size")==FALSE) stop("I need the data to include a 'bubble_size' variable!")
   if(any(names(data)=="iso3")==FALSE) stop("I need the data to include an 'iso3' variable!")
-
-
+  
+  
   #   OK let's get started!
-
+  
   # Get and format shapefiles
-
+  
   require(ggplot2)
   require(maptools)
   require(grid)
   require(scales)
   require(dplyr)
-
+  require(ggrepel)
+  
   # ----------------------------------------------------
   # Prepare map
   # ----------------------------------------------------
-
+  
   load(file.path(scripts_folder,"/Data/gparts.Rdata"))
-
+  
   # Add in missing circles for ASM, PYF, MNP, WLF
   asm <- subset(gworld, id=="WSM") ; asm$id <- "ASM" ; asm$group <- "ASM.1" ; asm$long <- asm$long + 2 ; asm$lat <- asm$lat - 0.5
   pyf <- subset(gworld, id=="COK") ; pyf$id <- "PYF" ; pyf$group <- "PYF.1" ; pyf$long <- pyf$long + 10 ; pyf$lat <- pyf$lat + 1
   mnp <- subset(gworld, id=="GUM") ; mnp$id <- "MNP" ; mnp$group <- "MNP.1" ; mnp$long <- mnp$long + 0.5 ; mnp$lat <- mnp$lat + 2
   wlf <- subset(gworld, id=="WSM") ; wlf$id <- "WLF" ; wlf$group <- "WLF.1" ; wlf$long <- wlf$long - 5 ; wlf$lat <- wlf$lat - 0.2
-
+  
   gworld <- rbind(gworld, asm, pyf, mnp, wlf)
-
+  
   # Color Svalbard and Jan Mayen the same as Norway
   gworld[gworld$group=="SJM.1", "piece"] <- "2"
   gworld[gworld$group=="SJM.2", "piece"] <- "3"
   gworld[gworld$group=="SJM.3", "piece"] <- "4"
-
+  
   gworld[gworld$id=="SJM", "id"] <- "NOR"
-
+  
   levels(gworld$group) <- c(levels(gworld$group), "NOR.2", "NOR.3", "NOR.4")
   gworld[gworld$group=="SJM.1", "group"] <- "NOR.2"
   gworld[gworld$group=="SJM.2", "group"] <- "NOR.3"
   gworld[gworld$group=="SJM.3", "group"] <- "NOR.4"
-
-
+  
+  
   # Generic map parts
-
-#   drop lines that would be whited out.
+  
+  #   drop lines that would be whited out.
   dashiso3s <- c("EGY", "ISR", "KOR", "PRK", "PSE", "SDN", "SSD")
   gworldndash <- subset(gworld, !id %in% dashiso3s)
   gworlddash <- subset(gworld, id %in% dashiso3s)
   gworlddash$group2 <- as.character(gworlddash$group)
-
+  
   SSD <- subset(gworlddash, !(long > 25 & lat < 13 & long < 34 & lat > 9) & id=='SSD')
   SSD[24:27,'group2'] <- 'SSD.1.2'
   SDN <- subset(gworlddash, !(long > 25 & lat < 13 & long < 34 & lat > 9) & !(long > 33.2 & lat < 23 & long < 35 & lat > 21.5) & id=='SDN')
@@ -346,9 +349,9 @@ who_bubble_map <- function(data,
   KOR <- KOR[1:10,]
   PRK <- subset(gworlddash, !(long > 127 & lat < 38.5 & long < 127.5 & lat > 38) & id=='PRK')
   PRK[5:12,'group2'] <- 'PRK.1.2'
-
+  
   gworlddash2 <- rbind(SSD, SDN, EGY, ISR, PSE, KOR, PRK)
-
+  
   # Create solid lines for Jammu Kashmir
   jk1 <- subset(gpoly, id=="Jammu and Kashmir")
   jk1$group2 <- as.character(jk1$group)
@@ -356,7 +359,7 @@ who_bubble_map <- function(data,
   jk1[8:16,'group2'] <- 'Jammu and Kashmir.3'
   jk1[21:22,'group2'] <- 'Jammu and Kashmir.4'
   jk2 <- subset(jk1, group2!='Jammu and Kashmir.1')
-
+  
   pol1 <- geom_polygon(data=gworld, aes(group = group), colour = border_colour, fill = "white")   # A layer to map all countries (so none are missing.)
   lin0 <- geom_path(data = gworlddash2, aes(group = group2), colour = border_colour)
   pol2 <- geom_polygon(data = subset(gpoly, id=="Lakes"), aes(group = group), fill = I("white"), colour = border_colour) 	# Adds the polygon layer
@@ -366,71 +369,79 @@ who_bubble_map <- function(data,
   lin1 <- geom_path(data = subset(gline, id %in% 2), aes(group = group), colour = border_colour) 					# solid black lines
   lin2 <- geom_path(data = subset(gline, id %in% c(0,3,6,7)), aes(group = group), colour = border_colour, linetype = "dashed") 	# dashed white and black lines (now modified to be dashed lines over color of country)
   lin3 <- geom_path(data = subset(gline, id %in% c(1,4,5)), aes(group = group), colour = border_colour, linetype = "dashed") 	# dashed black lines
-#   lin4 <- geom_path(data = subset(gline, id %in% c(8)), aes(group = group), colour = "white", linetype = "dotted")   # dotted white lines (8 and 9 are the same!) I'm replacing this with a new line 4...
+  #   lin4 <- geom_path(data = subset(gline, id %in% c(8)), aes(group = group), colour = "white", linetype = "dotted")   # dotted white lines (8 and 9 are the same!) I'm replacing this with a new line 4...
   lin4 <- geom_path(data = jk2, aes(group = group2), colour = border_colour)
   thm1 <- scale_y_continuous('', breaks = NULL)
   thm2 <- scale_x_continuous('', breaks = NULL)
   thm3 <- theme_bw()
-
-
+  
+  
   # Get dimensions
   leg.pos <- c(0.2, 0.5)
   zoomx <- c(-180, 180)
   zoomy <- c(min(gworld$lat), max(gworld$lat))
   a.ratio = 2.2/4
-
-
+  
+  
   # Link input data to the centres dataset which has the lat/long coordinates of each country's centre
   data_centres <- data %>%
-                  inner_join(centres, by = c("iso3" = "id")) %>%
-                  select(iso3,
-                         centre_lat = lat,
-                         centre_long = long,
-                         bubble_size
-                         )
-
+    inner_join(centres, by = c("iso3" = "id")) %>%
+    select(iso3,
+           country,
+           centre_lat = lat,
+           centre_long = long,
+           bubble_size
+    )
+  
   # Merge input data with GIS centres coordinates
   toplot <- merge(gworld, data_centres, by.x = "id", by.y = "iso3", all.x=TRUE)
   toplot <- toplot[order(toplot$order), ]
-
-
+  
+  
   # Create an empty 'cat' variable so that no country polygon is filled
   toplot$cat <- as.factor("")
-
+  
   # ----------------------------------------------------
   # Plot map
   # ----------------------------------------------------
-
+  
   plot <-  ggplot(toplot, aes(long, lat)) +
-
-            geom_polygon(aes(group=group, fill=cat), colour="white", show.legend = FALSE) +
-
-            pol1+pol2+pol3+pol4+pol5+lin0+lin1+lin2+lin3+lin4+thm1+thm2+thm3 +
-
-            geom_point(aes(x=centre_long, y=centre_lat, size=bubble_size),
-                       data = data_centres,
-                       shape=21,
-                       color=bubble_colour,
-                       fill=bubble_colour,
-                       alpha=bubble_alpha) +
-
-            scale_size_area(name = "",
-                            limits = scale_limits,
-                            breaks = scale_breaks,
-                            labels = scale_labels,
-                            max_size = 25) +
-
-            labs(title = map_title) +
-
-            theme(aspect.ratio = a.ratio,
-                  plot.title=element_text(size=16, hjust=0),
-                  legend.key.size = unit(0.50, "cm"),
-                  legend.text=element_text(size=8),
-                  legend.position=leg.pos,
-                  legend.justification= c(0.5,1),
-                  legend.title=element_text(size=10, hjust=0), rect=element_blank()) +
-
-            coord_cartesian(xlim = zoomx, ylim=zoomy)
-
+    
+    geom_polygon(aes(group=group, fill=cat), colour="white", show.legend = FALSE) +
+    
+    pol1+pol2+pol3+pol4+pol5+lin0+lin1+lin2+lin3+lin4+thm1+thm2+thm3 +
+    
+    geom_point(aes(x=centre_long, y=centre_lat, size=bubble_size),
+               data = data_centres,
+               shape=21,
+               color=bubble_colour,
+               fill=bubble_colour,
+               alpha=bubble_alpha) +
+    
+    geom_text_repel(data=data_centres %>% arrange(bubble_size) %>% tail(bubble_label_show_number),
+                    aes(x=centre_long,y=centre_lat,label = country),
+                    size = 3,
+                    color="black",
+                    direction = "y",
+                    nudge_y = -28) +
+    
+    scale_size_area(name = legend_title,
+                    limits = scale_limits,
+                    breaks = scale_breaks,
+                    labels = scale_labels,
+                    max_size = 25) +
+    
+    labs(title = map_title) +
+    
+    theme(aspect.ratio = a.ratio,
+          plot.title=element_text(size=16, hjust=0),
+          legend.key.size = unit(0.50, "cm"),
+          legend.text=element_text(size=8),
+          legend.position=leg.pos,
+          legend.justification= c(0.5,1),
+          legend.title=element_text(size=10, hjust=0.6), rect=element_blank()) +
+    
+    coord_cartesian(xlim = zoomx, ylim=zoomy)
+  
   return(plot)
 }

@@ -403,7 +403,7 @@ print(rdxpolicy_table_html,
                                   <td>Percentage of notified bacteriologically confirmed TB cases with DST results for rifampicin <sup>b</sup></td>
                                   <td>Percentage of notified rifampicin-resistant TB cases with DST results for fluoroquinolones and second-line injectable agents</td>
                               </tr>",
-                              "<tr><td colspan='9'><sup>a</sup>The 48 countries shown in the table are the countries that are in one of more of the three lists of high TB, TB/HIV and MDR-TB burden countries (see also Chapter 2, Figure 2.2 and Table 2.3).<br /><sup>b</sup>Testing in cases with unknown previous treatment history is not included. The percentage may exceed 100% for several reasons, e.g. samples rather than cases are counted in the numerator; laboratory specimen results are not linked to the denominator data source when enumerated; or there is incomplete reporting of bacteriologically confirmed cases in the denominator. Bacteriologically confirmed extrapulmonary cases are not included in the denominator because they cannot be differentiated from clinically diagnosed ones in the way data are reported to WHO.</td>
+                              "<tr><td colspan='9'><sup>a</sup>The 48 countries shown in the table are the countries that are in one or more of the three lists of high TB, TB/HIV and MDR-TB burden countries (see also Chapter 2, Figure 2.2 and Table 2.4).<br /><sup>b</sup>Testing in cases with unknown previous treatment history is not included. The percentage may exceed 100% for several reasons, e.g. samples rather than cases are counted in the numerator; laboratory specimen results are not linked to the denominator data source when enumerated; or there is incomplete reporting of bacteriologically confirmed cases in the denominator. Bacteriologically confirmed extrapulmonary cases are not included in the denominator because they cannot be differentiated from clinically diagnosed ones in the way data are reported to WHO.</td>
                               </tr>")
                       )
       )
@@ -420,4 +420,322 @@ write.csv(rdxpolicy_aggs,
 # Clean up (remove any objects with their name beginning with 'rdxpolicy')
 rm(list=ls(pattern = "^rdxpolicy"))
 
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Chapter 5 ------
+# TB prevention services
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Table 5.1 -------
+# TB preventive treatment for people living with HIV and children under
+# 5 years of age who were household contacts of a bacteriologically confirmed pulmonary TB case,
+# high TB or TB/HIV burden countries, 2017
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+
+
+# Get list of TB and TB/HIV high-burden countries
+prev_tx_hbccodes <-  country_group_membership %>%
+                      filter(  (group_type %in% c("g_hb_tb", "g_hb_tbhiv")) &
+                                 group_name == 1) %>%
+                      select(iso2, originalname = country) %>%
+                      distinct(iso2, originalname)
+
+
+prev_tx_data <- notification %>%
+                filter(year == report_year -1) %>%
+                select(iso2,
+                       country,
+                       g_whoregion,
+                       hiv_ipt,
+                       hiv_reg_new,
+                       hiv_ipt_reg_all,
+                       hiv_reg_all)
+
+# Create numerators and denominators for the IPT coverage data
+prev_tx_data <- prev_tx_data %>%
+                mutate(ipt_numerator = ifelse(!is.na(hiv_ipt_reg_all) & !is.na(hiv_reg_all),
+                                              hiv_ipt_reg_all,
+                                              hiv_ipt),
+                       ipt_denominator = ifelse(!is.na(hiv_ipt_reg_all) & !is.na(hiv_reg_all),
+                                                hiv_reg_all,
+                                                hiv_reg_new))
+
+# Calculate IPT coverage, but only if a country has reported for newly enrolled patients
+prev_tx_data <- prev_tx_data %>%
+                mutate(coverage = ifelse(!is.na(hiv_ipt) & NZ(hiv_reg_new) > 0,
+                                         display_num(hiv_ipt * 100 / hiv_reg_new),
+                                         NA))
+
+# Add an asterisk marker in coverage if a country reported for all enrolled in care
+prev_tx_data <- prev_tx_data %>%
+                mutate(coverage = ifelse(!is.na(hiv_ipt_reg_all) & !is.na(hiv_reg_all),
+                                         "*",
+                                         coverage)
+                       )
+
+
+# Merge with the LTBI estimates
+prev_tx_data <- estimates_ltbi %>%
+                filter(year == report_year -1) %>%
+                select(iso2,
+                       e_prevtx_eligible,
+                       e_prevtx_eligible_lo,
+                       e_prevtx_eligible_hi,
+                       newinc_con04_prevtx,
+                       e_prevtx_kids_pct,
+                       e_prevtx_kids_pct_lo,
+                       e_prevtx_kids_pct_hi
+                      ) %>%
+
+                # Note the ltbi estimates have not been produced for all countries
+                right_join(prev_tx_data)
+
+
+# Now produce the high burden data for the table
+
+# Merge with list of countries in HB TB or TB/HIV
+prev_tx_hb_data <- prev_tx_data %>%
+                    inner_join(prev_tx_hbccodes)
+
+
+
+# Restrict the dataframe to the variables needed for the final table, shorten country names and order by country name
+prev_tx_hb_data <- prev_tx_hb_data %>%
+                    select(entity = country,
+                           ipt_denominator,
+                           ipt_numerator,
+                           coverage,
+                           e_prevtx_eligible,
+                           e_prevtx_eligible_lo,
+                           e_prevtx_eligible_hi,
+                           newinc_con04_prevtx,
+                           e_prevtx_kids_pct,
+                           e_prevtx_kids_pct_lo,
+                           e_prevtx_kids_pct_hi)  %>%
+
+                    # shorten long country names
+                    get_names_for_tables( col = "entity") %>%
+
+                    arrange(entity)
+
+
+# Format variables for output
+prev_tx_table_data <- prev_tx_hb_data %>%
+
+                      mutate(e_prevtx_eligible_lohi = display_intervals(e_prevtx_eligible,
+                                                                  e_prevtx_eligible_lo,
+                                                                  e_prevtx_eligible_hi),
+
+                       e_prevtx_kids_pct_lohi = display_intervals(e_prevtx_kids_pct,
+                                                                  e_prevtx_kids_pct_lo,
+                                                                  e_prevtx_kids_pct_hi)) %>%
+
+                # format and round numbers
+                mutate(ipt_numerator = rounder(ipt_numerator),
+                       ipt_denominator = rounder(ipt_denominator),
+                       newinc_con04_prevtx = rounder(newinc_con04_prevtx),
+
+                       e_prevtx_eligible = display_num(e_prevtx_eligible),
+                       e_prevtx_kids_pct = display_num(e_prevtx_kids_pct)) %>%
+
+
+                # drop the separate *_lo and *_hi variables
+                select(entity,
+                       ipt_denominator,
+                       ipt_numerator,
+                       coverage,
+                       e_prevtx_eligible,
+                       e_prevtx_eligible_lohi,
+                       newinc_con04_prevtx,
+                       e_prevtx_kids_pct,
+                       e_prevtx_kids_pct_lohi)
+
+
+
+
+
+# Finally we have a list of exclusions based on feedback from countries compiled by Lele
+prev_tx_footnote2 <- "** Estimated coverage was not calculated because the numerator includes contacts aged 5-7years (DPR Korea), those aged 5-6 years (Nigeria),
+is predominantly contacts of household contacts (Indonesia), and includess household contacts of bacteriologically confirmed or clinically diagnosed TB cases (Malawi and Phillipines)."
+
+prev_tx_footnote2_countries = c("DPR Korea", "Nigeria", "Indonesia", "Malawi", "Philippines")
+
+# Remove the coverage calculations for the excluded countries
+prev_tx_table_data <- prev_tx_table_data %>%
+                      mutate(e_prevtx_kids_pct = ifelse(entity %in% prev_tx_footnote2_countries,
+                                                        "**",
+                                                        e_prevtx_kids_pct),
+
+                             e_prevtx_kids_pct_lohi = ifelse(entity %in% prev_tx_footnote2_countries,
+                                                        NA,
+                                                        e_prevtx_kids_pct_lohi))
+
+
+# Create HTML output
+prev_tx_table_html <- xtable(prev_tx_table_data)
+
+prev_tx_table_filename <- paste0(figures_folder, "/Tables/t5_1_prev_tx", Sys.Date(), ".htm")
+
+cat(paste("<h3>Table 5.1<br />TB preventive treatment for people living with HIV and children",
+          "under 5 years of age who were household contacts of a bacteriologically confirmed pulmonary TB case,",
+          "high TB or TB/HIV burden countries,",
+          report_year-1,
+          "</h3>"),
+    file=prev_tx_table_filename)
+
+print(prev_tx_table_html,
+      type="html",
+      file=prev_tx_table_filename,
+      include.rownames=FALSE,
+      include.colnames=FALSE,
+      html.table.attributes="border='0' rules='rows' width='1100' cellpadding='5'",
+      append=TRUE,
+      add.to.row=list(pos=list(0,
+                               nrow(prev_tx_table_html)),
+                      command=c("<tr>
+                                <td rowspan='3'></td>
+                                <td rowspan='3'>People living with HIV newly enrolled in care</td>
+                                <td colspan='2'>People living with HIV newly enrolled in care started on TB preventive treatment</td>
+                                <td colspan='2' style='border-left: black 2px solid;'>Estimated number of child contacts under 5 years of age eligible for TB preventive treatment<sup>a</sup></td>
+                                <td colspan='3'>Children under 5 years of age started on TB preventive treatment</td>
+                                </tr>
+                                <tr>
+                                <td rowspan='2'>Number</td>
+                                <td rowspan='2'>Coverage (%)</td>
+                                <td rowspan='2' style='border-left: black 2px solid;'>Best estimate</td>
+                                <td rowspan='2'>Uncertainty interval</td>
+                                <td rowspan='2'>Number</td>
+                                <td colspan='2'>Coverage (%)</td>
+                                </tr>
+                                <tr>
+                                <td>Best estimate</td>
+                                <td>Uncertainty interval</td>
+                                </tr>",
+                                paste("<tr><td colspan='7'><sup>a</sup> Estimates are shown to three significant figures.<br />",
+                                       "* Coverage was not calculated because reported data on people living with HIV is for all enrolled in care, not just those newly enrolled in care.<br />",
+                                      prev_tx_footnote2,
+                                        "</td>
+                                </tr>"))
+                      )
+      )
+
+# Clean up (remove any objects with their name beginning with 'prev_tx')
+rm(list=ls(pattern = "^prev_tx"))
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Annex 1 ------
+# The WHO global TB database
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Table A1.1  ------
+# Reporting of data in the 2018 round of global TB data collection
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+reporting_countries <- data_collection %>%
+                        filter(datcol_year == report_year & dc_form_description != 'Not requested') %>%
+                        select(iso3, g_whostatus)
+
+reporting_rates <- notification %>%
+                    filter(year == report_year - 1) %>%
+
+
+                    # define reported as having a non-empty value for notified cases of TB, RR-TB or HIV-positive TB
+                    mutate(reported = ifelse(is.na(c_notified) & is.na(conf_rrmdr) & is.na(newrel_hivpos),
+                                             0,
+                                             1)) %>%
+                    select(iso3, g_whoregion, reported) %>%
+
+                    inner_join(reporting_countries) %>%
+
+                    # ignore the distinction between associate members and non members of WHO
+                    mutate(g_whostatus = ifelse(g_whostatus == "M",
+                                                "M",
+                                                NA)) %>%
+
+
+                    # calculate summaries by region and membership of WHO
+                    group_by(g_whoregion, g_whostatus) %>%
+                    summarise(total = n(),
+                              reported = sum(reported, na.rm = TRUE) )
+
+# Create summary for all countries and territores by region
+reporting_rates_tot <- reporting_rates %>%
+                        group_by(g_whoregion) %>%
+                        summarise_at(vars(total, reported),
+                                     sum,
+                                     na.rm = TRUE)
+
+# Create summary for WHO member states by region
+reporting_rates_ms <- reporting_rates %>%
+                      filter(g_whostatus == "M") %>%
+                      select(g_whoregion,
+                             total_ms = total,
+                             reported_ms = reported)
+
+
+# Combine the two summaries into one summary table
+reporting_rates_tab <- reporting_rates_tot %>%
+                        inner_join(reporting_rates_ms)
+
+
+# Calculate a global summary
+reporting_rates_glob <- reporting_rates_tab %>%
+                          select(-g_whoregion) %>%
+                          summarise_all(sum) %>%
+                          mutate(g_whoregion = "global")
+
+# Add the global summary to the summary table
+reporting_rates_tab <- rbind(reporting_rates_tab, reporting_rates_glob)
+
+# Merge with group names
+reporting_rates_tab <- country_groups %>%
+                        filter(group_type %in% c("global", "g_whoregion")) %>%
+                        inner_join(reporting_rates_tab,
+                                   by = c("group_name" = "g_whoregion" ) ) %>%
+
+                        # Remove extra text from group descriptions
+                        mutate(group_description = str_replace(group_description, "WHO ", "")) %>%
+                        mutate(group_description = str_replace(group_description, "WHO/PAHO ", "")) %>%
+                        mutate(group_description = str_replace(group_description, " Aggregate", "")) %>%
+                        select(-group_type, -group_name)
+
+
+# Create HTML output
+reporting_html <- xtable(reporting_rates_tab)
+
+digits(reporting_html) <- 0
+
+reporting_filename <- paste0(figures_folder, "/Tables/tA1_1_reporting_rates", Sys.Date(), ".htm")
+
+cat(paste("<h3>Table A1.1<br />Reporting of data in the",
+          report_year,
+          "round of global TB data collection</h3>"),
+    file=reporting_filename)
+
+print(reporting_html,
+      type="html",
+      file=reporting_filename,
+      include.rownames=FALSE,
+      include.colnames=FALSE,
+      html.table.attributes="border='0' rules='rows' width='1100' cellpadding='5'",
+      append=TRUE,
+      add.to.row=list(pos=list(0),
+                      command=c("<tr>
+                                <td rowspan='2'></td>
+                                <td colspan='2' style='border-right: black 2px solid; text-align: center;'>Countries and territories</td>
+                                <td colspan='2' style='text-align: center;'>WHO Member States</td>
+                                </tr>
+                                <tr>
+                                <td style='text-align: right;'>Number</td>
+                                <td style='border-right: black 2px solid;  text-align: right;'>Number that reported data</td>
+                                <td style='text-align: right;'>Number</td>
+                                <td style='text-align: right;'>Number that reported data</td>
+                                </tr>")
+                      )
+      )
+
+# Clean up (remove any objects with their name beginning with 'reporting')
+rm(list=ls(pattern = "^reporting"))
