@@ -582,13 +582,12 @@ bacconf_plot <- bacconf_data %>%
                 ggplot(aes(x=year, y=bacconf_pct)) +
                   geom_line(size=1) +
                   scale_x_continuous(name="Year",
-                                     breaks = c(2000, 2010, report_year-1)) +
+                                     breaks = c(2000, 2008, report_year-1)) +
                   scale_y_continuous(name = "Percentage bacteriologically confirmed") +
                   expand_limits(y=c(0,100)) +
                   facet_wrap( ~ entity, ncol = 4) +
                   ggtitle(paste0("FIG.4.4\nPercentage of new and relapse a pulmonary TB cases with bacteriological confirmation, globally and for WHO regions,\n2000-",
-                               report_year-1,
-                               ".")) +
+                               report_year-1)) +
                   theme_glb.rpt() +
                   theme(legend.position="top",
                         legend.title=element_blank())
@@ -828,7 +827,7 @@ hivstatus_plot <- hivstatus_data %>%
                   ggplot(aes(x=year, y=hivstatus_pct)) +
                   geom_line(size=1) +
                   scale_x_continuous(name= "Year", breaks = c(2005, 2009, 2013, report_year-1)) +
-                  scale_y_continuous(name = "Percentage with documented status") +
+                  scale_y_continuous(name = "Percentage with documented HIV status") +
                   expand_limits(y=c(0,100)) +
                   #scale_x_discrete(name = "Year") +
                   facet_wrap( ~ entity, ncol = 4) +
@@ -2673,7 +2672,7 @@ txoutnum_plot <- arrangeGrob(txoutnum_plot_glob,
                              ncol = 1,
                              top = textGrob(label = paste0("FIG.4.24\nTreatment outcomes for new and relapse TB cases a (absolute numbers), 2000-",
                                                            report_year-2,
-                                                           ", globally\nand for WHO regions."),
+                                                           ", globally\nand for WHO regions"),
                                             x = 0.02,
                                             just = "left",
                                             gp = gpar(fontsize = 10)),
@@ -3009,7 +3008,7 @@ short_data <- notification %>%
                      mdr_shortreg_used) %>%
               mutate(cat = ifelse(mdr_shortreg_used == 3, "Don't know",
                             ifelse(mdr_shortreg_used == 0, "Not used",
-                            ifelse(mdr_shortreg_used == 1, "Shorter MDR–TB\ntreatment regimens used", NA))))
+                            ifelse(mdr_shortreg_used == 1, "Used", NA))))
 
 short_data$cat <-factor(short_data$cat)
 
@@ -3043,8 +3042,8 @@ bdq_data <- notification %>%
             select(country,
                    iso3,
                    mdrxdr_bdq_used) %>%
-            mutate(cat = ifelse(mdrxdr_bdq_used == 1, "Bedaquiline used",
-                                ifelse(mdrxdr_bdq_used == 0, "Bedaquiline not used",
+            mutate(cat = ifelse(mdrxdr_bdq_used == 1, "Used",
+                                ifelse(mdrxdr_bdq_used == 0, "Not used",
                                        ifelse(mdrxdr_bdq_used == 3, "Don't know", NA)))) %>%
 
             # drop unnecessary variables
@@ -3053,7 +3052,7 @@ bdq_data <- notification %>%
 
 bdq_data$cat <- factor(bdq_data$cat)
 
-bdq_data$cat <- factor(bdq_data$cat,levels(bdq_data$cat)[c(2,1,3)])
+bdq_data$cat <- factor(bdq_data$cat,levels(bdq_data$cat)[c(3,2,1)])
 
 # produce the map
 bdq_map<- WHOmap.print(bdq_data,
@@ -3087,8 +3086,8 @@ dlm_data <- notification %>%
             select(country,
                    iso3,
                    mdrxdr_dlm_used) %>%
-            mutate(cat = ifelse(mdrxdr_dlm_used == 1, "Delamanid used",
-                                ifelse(mdrxdr_dlm_used == 0, "Delamanid not used",
+            mutate(cat = ifelse(mdrxdr_dlm_used == 1, "Used",
+                                ifelse(mdrxdr_dlm_used == 0, "Not used",
                                        ifelse(mdrxdr_dlm_used == 3, "Don't know", NA)))) %>%
 
             # drop unnecessary variables
@@ -3096,7 +3095,7 @@ dlm_data <- notification %>%
 
 dlm_data$cat <- factor(dlm_data$cat)
 
-dlm_data$cat <- factor(dlm_data$cat,levels(dlm_data$cat)[c(2,1,3)])
+dlm_data$cat <- factor(dlm_data$cat,levels(dlm_data$cat)[c(3,2,1)])
 
 # produce the map
 dlm_map<- WHOmap.print(dlm_data,
