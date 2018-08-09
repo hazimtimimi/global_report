@@ -3385,7 +3385,7 @@ ipt_gap_plot <- ipt_gap_long %>%
 
   theme_glb.rpt() +
   scale_fill_manual("", values = c("lightblue","orange",  "lightgreen"),
-                    labels=c("Started on preventive treatment", "Detected and notified with active TB disease", "Gap in TB detection and TB prevention(b)")) +
+                    labels=c("Started on preventive treatment", "Detected and notified with active TB disease", "Gap in TB detection and TB prevention b ")) +
   labs(x="", y="Percentage(%)") +
 
   theme(legend.position="bottom",
@@ -3403,7 +3403,7 @@ ipt_gap_plot <- ipt_gap_long %>%
                  ",selected countries a "))
 
 # Add explanatory footnotes
-ipt_gap_footnote <- " a The selected countries are high TB or TB/HIV burden countries that reported on all three of the following: the number of people newly enrolled on HIV care; the number of \n      TB cases detected among people newly enrolled on HIV care; and the number of people newly enrolled on HIV care who were started on TB preventive treatment. In high \n      TB burden countries, testing for LTBI is not a requirement for initiation of TB preventive treatment, such that all those without active TB disease are eligible for TB preventive \n                              treatment.\n     (b) The gap represents people living with HIV who should have undergone complete evaluation for TB disease or TB preventive treatment."
+ipt_gap_footnote <- " a The selected countries are high TB or TB/HIV burden countries that reported on all three of the following: the number of people newly enrolled on HIV care; the number of \n      TB cases detected among people newly enrolled on HIV care; and the number of people newly enrolled on HIV care who were started on TB preventive treatment. In high \n      TB burden countries, testing for LTBI is not a requirement for initiation of TB preventive treatment, such that all those without active TB disease are eligible for TB preventive \n                              treatment.\n      b  The gap represents people living with HIV who should have undergone complete evaluation for TB disease or TB preventive treatment."
 ipt_gap_plot <- arrangeGrob(ipt_gap_plot,
                             bottom = textGrob(ipt_gap_footnote,
                                               x = 0,
@@ -3553,7 +3553,7 @@ hcw_data <- hcw_data %>%
 
 hcw_data$cat <- cut(hcw_data$nrr,
                     c(0, 1, 2, 3, Inf),
-                    c('0-0.9', '1-1.9', '2-2.9', '>=3'),
+                    c('0-0.9', '1-1.9', '2-2.9', '\u22653'),
                     right=FALSE)
 
 
@@ -3577,6 +3577,13 @@ hcw_map <- arrangeGrob(hcw_map, bottom = textGrob(hcw_foot, x = 0, hjust = -0.1,
 figsave(hcw_map,
         hcw_data,
         "f5_4_hcw_notf_rate_ratio")
+
+cairo_pdf(width = 11, 
+          height = 7,
+          bg = "white",
+          filename=paste0(figures_folder, "/Figs/","f5_4_hcw_notf_rate_ratio", Sys.Date(), ".pdf"))
+plot(hcw_map)
+dev.off()
 
 # Clean up (remove any objects with their name beginning with 'hcw')
 rm(list=ls(pattern = "^hcw"))
@@ -3657,7 +3664,7 @@ bcg_cov_data$cat <- cut(bcg_cov_data$coverage,
 
 # produce the map
 bcg_cov_map <- WHOmap.print(bcg_cov_data,
-                            paste("FIG.5.6\nCoverage of BCG vaccination,", report_year-1),
+                            paste("FIG.5.6\nCoverage of BCG vaccination,", report_year-1," a "),
                             "Percentage",
                             copyright=FALSE,
                             colors=brewer.pal(3, "Greens"),
@@ -3665,7 +3672,7 @@ bcg_cov_map <- WHOmap.print(bcg_cov_data,
 
 # Add footnote
 bcg_cov_map <- arrangeGrob(bcg_cov_map,
-                           bottom = textGrob(paste0("The target population of BCG coverage varies depending on national policy, but is typically for the number of live births in the year of reporting.",
+                           bottom = textGrob(paste0(" a The target population of BCG coverage varies depending on national policy, but is typically for the number of live births in the year of reporting.",
                                                     "\nSource: ", bcg_cov_page, ", accessed ", Sys.Date()),
                                              x = 0,
                                              hjust = -0.1,
