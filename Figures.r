@@ -1487,11 +1487,11 @@ newinc_data <- notification %>%
                        c_newinc) %>%
                 #add markers for India and other countries with pending survey resluts footnote
                 mutate(country = recode(country, "India"="India a ",
-                                                 "Mozambique"="Mozambique(b)",
-                                                 "Myanmar"="Myanmar(b)",
-                                                 "Namibia"="Namibia(b)",
-                                                 "South Africa"="South Africa(b)",
-                                                 "Viet Nam"="Viet Nam(b)"))
+                                                 "Mozambique"="Mozambique b ",
+                                                 "Myanmar"="Myanmar b ",
+                                                 "Namibia"="Namibia b ",
+                                                 "South Africa"="South Africa b ",
+                                                 "Viet Nam"="Viet Nam b "))
 
 inc_data <- estimates_epi_rawvalues %>%
             filter(year >= 2000) %>%
@@ -1522,7 +1522,7 @@ inc_plot <- inc_data %>%
             geom_line(aes(year, e_inc_100k),
                       size=1,
                       colour=standard_palette("incidence")) +
-
+            scale_x_continuous(breaks = c(2000, 2008, report_year-1)) +
             scale_y_continuous(name = "Rate per 100 000 population per year") +
             xlab("Year") +
 
@@ -1541,7 +1541,7 @@ inc_plot <- inc_data %>%
 # Add India and other countries footnotes
 inc_plot <- arrangeGrob(inc_plot,
                         bottom = textGrob(paste(" a ",
-                                                india_incidence_footnote,"\n(b)",pending_incidence_footnote),
+                                                india_incidence_footnote,"\n b ",pending_incidence_footnote),
                                           x = 0.02,
                                           just = "left",
                                           gp = gpar(fontsize = 7)))
@@ -1658,7 +1658,7 @@ coverage_plot <- coverage_data %>%
 
 # Add footnotes
 coverage_footnote <- paste(" a ",
-                           india_incidence_footnote,"\n(b)",pending_incidence_footnote)
+                           india_incidence_footnote,"\n b ",pending_incidence_footnote)
 # If there are countries with no data then mention it in the footnotes
 if (coverage_nodata_count > 0)
   {
@@ -1716,9 +1716,9 @@ gap_map <- who_bubble_map(gap_data,
                                  "(incident) TB cases and the best estimates of TB incidence, ",
                                  report_year - 1," a "),
                           bubble_colour = "purple",
-                          scale_breaks = c(100000,500000,1000000),
-                          scale_limits = c(100000,1100000),
-                          scale_labels = c("100 000","500 000","1 000 000"),
+                          scale_breaks = c(80000,500000,1000000),
+                          scale_limits = c(80000,1100000),
+                          scale_labels = c("80 000","500 000","1 000 000"),
                           bubble_label_show_number = 10)
 
 # Generate names for footnote
@@ -2447,6 +2447,7 @@ out_hiv_data <- outcomes %>%
                 filter(between(year, 2012, report_year - 2)) %>%
                 select(iso2,
                        year,
+                       country,
                        contains("tbhiv_")) %>%
 
                 # calculate global aggregates
@@ -3449,7 +3450,7 @@ prevtx_kids_data <-  estimates_ltbi %>%
 
 # We have a list of exclusions based on feedback from countries compiled by Lele
 prev_tx_footnote <- paste0("Estimated coverage was not calculated because the numerator includes contacts aged 5-7 years (DPR Korea), those aged 5-6 years (Nigeria),",
-                           "\nis predominantly contacts of household contacts (Indonesia), and includes household contacts of bacteriologically confirmed or clinically diagnosed",
+                           "\nthose were non-household contacts of TB cases (Indonesia), or those household contacts of bacteriologically confirmed or clinically diagnosed ",
                            "\nTB cases (Malawi and Phillipines).")
 
 prev_tx_footnote_countries = c("PRK", "NGA", "IDN", "MWI", "PHL")
@@ -3463,7 +3464,7 @@ prevtx_kids_data <- prevtx_kids_data %>%
 # Assign categories
 prevtx_kids_data$cat <- cut(prevtx_kids_data$e_prevtx_kids_pct,
                             c(0, 25, 50, 75, Inf),
-                            c('0-24', '25-49', '50-74', '>=75'),
+                            c('0-24', '25-49', '50-74', '\u226575'),
                             right = FALSE)
 
 
@@ -3489,6 +3490,13 @@ prevtx_kids_map <- arrangeGrob(prevtx_kids_map, bottom = textGrob(paste0(" a Chi
 figsave(prevtx_kids_map,
         prevtx_kids_data,
         "f5_3_prevtx_kids_map")
+
+cairo_pdf(width = 11, 
+          height = 7,
+          bg = "white",
+          filename=paste0(figures_folder, "/Figs/","f5_3_prevtx_kids_map", Sys.Date(), ".pdf"))
+plot(prevtx_kids_map)
+dev.off()
 
 
 # Clean up (remove any objects with their name beginning with 'prevtx_kids')
@@ -3636,7 +3644,7 @@ rm(list=ls(pattern = "^bcg_policy"))
 
 # Download the latest data from WHO immunization department
 bcg_cov_source <-"http://www.who.int/entity/immunization/monitoring_surveillance/data/coverage_series.xls"
-bcg_cov_page <- "http://apps.who.int/immunization_monitoring/globalsummary/timeseries/tscoveragebcg.html"
+bcg_cov_page <- "http://www.who.int/entity/immunization/monitoring_surveillance/data/coverage_series.xls?ua=1"
 
 download.file(bcg_cov_source,
               paste0(rdata_folder, "coverage_series", Sys.Date(), ".xls"),

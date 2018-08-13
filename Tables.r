@@ -559,8 +559,8 @@ prev_tx_table_data <- prev_tx_hb_data %>%
 
 
 # Finally we have a list of exclusions based on feedback from countries compiled by Lele
-prev_tx_footnote2 <- "** Estimated coverage was not calculated because the numerator includes contacts aged 5-7years (DPR Korea), those aged 5-6 years (Nigeria),
-is predominantly contacts of household contacts (Indonesia), and includes household contacts of bacteriologically confirmed or clinically diagnosed TB cases (Malawi and Phillipines)."
+prev_tx_footnote2 <- "** Estimated coverage was not calculated because the numerator includes contacts aged 5-7 years (DPR Korea), those aged 5-6 years (Nigeria),
+those were non-household contacts of TB cases (Indonesia), or those household contacts of bacteriologically confirmed or clinically diagnosed TB cases (Malawi and Phillipines)."
 
 prev_tx_footnote2_countries = c("DPR Korea", "Nigeria", "Indonesia", "Malawi", "Philippines")
 
