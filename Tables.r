@@ -157,6 +157,9 @@ hiv_data <- notification %>%
 
             # remove countries with no data
             filter(!(is.na(hiv_tbdetect) & is.na(hiv_reg_new2))) %>%
+  
+            #Zimbabwe only collected and reported their numerator from July 2017, so we exclude it for 2018 report,but should not do so in 2019
+            filter(country!="Zimbabwe")%>%
 
             # order by country
             arrange(country)
