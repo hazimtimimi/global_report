@@ -3504,7 +3504,8 @@ hcw_notif_hcw <-  strategy %>%
                   filter(year == report_year - 1) %>%
                   select(iso3,
                          hcw_tb_infected,
-                         hcw_tot)
+                         hcw_tot,
+                         country)
 
 # Get the total adult population aged between 15 and 64 (exclude those aged 65 and above)
 hcw_pop_adults <- estimates_population %>%
@@ -3548,7 +3549,8 @@ hcw_data <- hcw_data %>%
             mutate(nrr = ifelse(hcw_tot < 1000, NA, nrr)) %>%
 
                       select(iso3,
-                           nrr)
+                           nrr,
+                           country)
 
 
 hcw_data$cat <- cut(hcw_data$nrr,
@@ -3570,7 +3572,7 @@ hcw_map <- WHOmap.print(hcw_data,
 # Add footnote about filtering out countries
 hcw_foot <- paste(" a Data from ",
                   hcw_filtered_out,
-                  " countries were excluded where the number of health care workers reported was less than 1 000.")
+                  " countries were excluded where the number of health-care workers reported was less than 1000.")
 
 hcw_map <- arrangeGrob(hcw_map, bottom = textGrob(hcw_foot, x = 0, hjust = -0.1, vjust=0.1, gp = gpar(fontsize = 10)))
 
@@ -3673,7 +3675,7 @@ bcg_cov_map <- WHOmap.print(bcg_cov_data,
 # Add footnote
 bcg_cov_map <- arrangeGrob(bcg_cov_map,
                            bottom = textGrob(paste0(" a The target population of BCG coverage varies depending on national policy, but is typically for the number of live births in the year of reporting.",
-                                                    "\nSource: ", bcg_cov_page, ", accessed ", Sys.Date()),
+                                                    "\nSource: ", bcg_cov_page, ", accessed 9 August 2018"),
                                              x = 0,
                                              hjust = -0.1,
                                              vjust=0,
