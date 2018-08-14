@@ -231,7 +231,7 @@ inc_plot <- inc_data %>%
   
   facet_wrap( ~ entity, ncol = 4, scales="free_y") +
   scale_x_continuous(name="Year",
-                     breaks = c(2000, 2005, 2010, 2015, report_year-1)) +
+                     breaks = c(2000, 2008, report_year-1)) +
   scale_y_continuous(name = "Millions per year") +
   ggtitle(paste0("FIG.4.1\nNotifications of TB cases (new and relapse cases, all forms) (black) compared with estimated TB incident cases(green),\n2000 - ",
                  report_year-1,
@@ -858,22 +858,22 @@ rm(list=ls(pattern = "^hivstatus"))
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
-hivstatus_data <- notification %>%
+hivstatus_data <- TBHIV_for_aggregates %>%
                   filter(year >= report_year - 2) %>%
                   select(iso3,
                          country,
                          year,
-                         c_newinc,
-                         newrel_hivtest) %>%
+                         hivtest_pct_denominator,
+                         hivtest_pct_numerator) %>%
 
                   # Calculate % with known HIV status
-                  mutate(hivstatus_pct = ifelse(is.na(newrel_hivtest) | NZ(c_newinc) == 0, NA,
-                                                newrel_hivtest * 100 / c_newinc))
+                  mutate(hivstatus_pct = ifelse(is.na(hivtest_pct_numerator) | NZ(hivtest_pct_denominator) == 0, NA,
+                                                hivtest_pct_numerator * 100 / hivtest_pct_denominator))
 
 
 hivstatus_data$cat <- cut(hivstatus_data$hivstatus_pct,
                           c(0, 25, 50, 75, Inf),
-                          c('0-24', '25-49', '50-74', '>=75'),
+                          c('0-24', '25-49', '50-74', "\u226575"),
                           right=FALSE)
 
 
@@ -919,6 +919,13 @@ figsave(hivstatus_map,
                hivstatus_pct,
                cat),
         "f4_8_pct_HIV_status_map")
+
+cairo_pdf(width = 11, 
+          height = 7,
+          bg = "white",
+          filename=paste0(figures_folder, "/Figs/","f4_8_pct_HIV_status_map", Sys.Date(), ".pdf"))
+plot(hivstatus_map)
+dev.off()
 
 # Clean up (remove any objects with their name beginning with 'hivstatus')
 rm(list=ls(pattern = "^hivstatus"))
@@ -993,9 +1000,9 @@ inctbhiv_plot <- inctbhiv_data %>%
   scale_y_continuous(name = "New and relapse cases per year (millions)") +
   xlab("Year") +
 
-  ggtitle(paste0("FIG.4.9\nGlobal numbers of notified new and relapse cases a known to be HIV-positive (black),\nnumber started on antiretroviral therapy (blue) and estimated number of incident HIV-positive TB cases (red), 2004-",
+  ggtitle(paste0("FIG.4.9\nGlobal numbers of notified new and relapse cases a known to be HIV-positive (black),number started on antiretroviral therapy (blue) \nand estimated number of incident HIV-positive TB cases (red), 2004-",
                  report_year-1,
-                 ".\nShaded areas represent uncertainty bands.")) +
+                 ". Shaded areas represent uncertainty bands.")) +
 
   theme_glb.rpt()
 
@@ -1578,9 +1585,13 @@ coverage_30hbc <- country_group_membership %>%
 
 coverage_inc_country <- coverage_inc_country %>%
                         inner_join(coverage_30hbc) %>%
-                       #add marker for India footnote
-                       mutate(entity = ifelse(entity == "India", "India a ", entity))
-
+                       #add marker for India and other countries footnote
+                       mutate(entity = recode(entity, "India"="India a ",
+                                                      "Mozambique"="Mozambique b ",
+                                                      "Myanmar"="Myanmar b ",
+                                                      "Namibia"="Namibia b ",
+                                                      "South Africa"="South Africa b ",
+                                                      "Viet Nam"="Viet Nam b "))
 
 coverage_country <- notification %>%
                      filter(year == report_year - 1) %>%
@@ -1728,7 +1739,7 @@ gap_ten_countries_name_by_rank <- gap_data  %>%
 
 gap_map <- arrangeGrob(gap_map,
                        bottom = textGrob(paste0(" a The ten countries ranked in order of the size of the gap between notified cases and the best estimates of TB incidence in ",report_year-1," are \n",
-                                                sapply(gap_ten_countries_name_by_rank,paste, collapse=","),".","\n",india_incidence_footnote,"\n",pending_incidence_footnote),
+                                                sapply(gap_ten_countries_name_by_rank,paste, collapse=", "),".","\n",india_incidence_footnote,"\n",pending_incidence_footnote),
                                          x = 0,
                                          hjust = -0.1,
                                          vjust=0.4,
@@ -1879,7 +1890,7 @@ coveragehiv_country <- TBHIV_for_aggregates %>%
                               c_art_lo = newrel_art * 100  / e_inc_tbhiv_num_hi,
                               c_art_hi = newrel_art * 100  / e_inc_tbhiv_num_lo,
                               # highlight countries with no data
-                              entity = ifelse(is.na(newrel_art), paste0(entity, "*"), entity )) %>%
+                              entity = ifelse(is.na(newrel_art), paste0(entity, " a "), entity )) %>%
                        select(entity,
                               c_art,
                               c_art_lo,
@@ -1888,7 +1899,7 @@ coveragehiv_country <- TBHIV_for_aggregates %>%
 
 # Calculate how many countries highlighted as having no data
 coveragehiv_nodata_count <- coveragehiv_country %>%
-                            filter(grepl("[*]$", entity)) %>%
+                            filter(grepl("[ a ]$", entity)) %>%
                             nrow()
 
 coveragehiv_inc_region <- aggregated_estimates_epi_rawvalues %>%
@@ -1980,7 +1991,7 @@ coveragehiv_plot <- coveragehiv_data %>%
 if (coveragehiv_nodata_count > 0)
   {
   coveragehiv_plot <- arrangeGrob(coveragehiv_plot,
-                                  bottom = textGrob("* No data",
+                                  bottom = textGrob(" a  No data",
                                                     x = 0,
                                                     hjust = -0.1,
                                                     vjust=0,
@@ -2143,7 +2154,7 @@ coveragerr_plot <- coveragerr_data %>%
 if (coveragerr_nodata_count > 0)
   {
   coveragerr_plot <- arrangeGrob(coveragerr_plot,
-                                 bottom = textGrob("* No data",
+                                 bottom = textGrob("*  No data",
                                                    x = 0,
                                                    hjust = -0.1,
                                                    vjust=0,
@@ -2209,7 +2220,7 @@ drgap_ten_countries_name_by_rank <- drgap_data  %>%
 
 drgap_map <- arrangeGrob(drgap_map,
                          bottom = textGrob(paste0(" a The ten countries ranked in order of the size of the gap between the number of patients started on MDR-TB treatment and the best estimate of MDR/RR-TB \nincidence in ",report_year-1," are ",
-                                                  sapply(drgap_ten_countries_name_by_rank,paste, collapse=","),"."),
+                                                  sapply(drgap_ten_countries_name_by_rank,paste, collapse=", "),"."),
                                            x = 0,
                                            hjust = -0.1,
                                            vjust=0.4,
