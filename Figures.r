@@ -1350,6 +1350,7 @@ rr_data <- dr_derived_variables %>%
 rr_txdata <- notification %>%
              filter(year >= 2009) %>%
              select(iso2,
+                    g_whoregion,
                     year,
                     conf_mdr_tx,
                     unconf_mdr_tx,
@@ -1586,12 +1587,12 @@ coverage_30hbc <- country_group_membership %>%
 coverage_inc_country <- coverage_inc_country %>%
                         inner_join(coverage_30hbc) %>%
                        #add marker for India and other countries footnote
-                       mutate(entity = recode(entity, "India"="India a ",
-                                                      "Mozambique"="Mozambique b ",
-                                                      "Myanmar"="Myanmar b ",
-                                                      "Namibia"="Namibia b ",
-                                                      "South Africa"="South Africa b ",
-                                                      "Viet Nam"="Viet Nam b "))
+                       mutate(entity = recode(entity, "India"="India b ",
+                                                      "Mozambique"="Mozambique a ",
+                                                      "Myanmar"="Myanmar a ",
+                                                      "Namibia"="Namibia a ",
+                                                      "South Africa"="South Africa a ",
+                                                      "Viet Nam"="Viet Nam a "))
 
 coverage_country <- notification %>%
                      filter(year == report_year - 1) %>%
@@ -1669,7 +1670,7 @@ coverage_plot <- coverage_data %>%
 
 # Add footnotes
 coverage_footnote <- paste(" a ",
-                           india_incidence_footnote,"\n b ",pending_incidence_footnote)
+                           pending_incidence_footnote,"\n b ",india_incidence_footnote)
 # If there are countries with no data then mention it in the footnotes
 if (coverage_nodata_count > 0)
   {
@@ -2406,7 +2407,7 @@ txout_plot <- txout_long %>%
 			                 report_year - 2,
 			                 ",\n30 high TB burden countries, WHO regions and globally")) +
 
-			  geom_text(data=subset(txout_long,variable=="Treatment success"),aes(label = floor(value)),
+			  geom_text(data=subset(txout_long,variable=="Treatment success"),aes(label = round(value, digits = 0)),
 			            position = position_stack(reverse = TRUE), size=3,hjust=1.5,color="white")
 
 txout_plot <- arrangeGrob(txout_plot,
@@ -2544,7 +2545,7 @@ out_plot <- out_data_long %>%
 			                 report_year - 2,
 			                 " globally a ")) +
 
-			  geom_text(data=subset(out_data_long,variable=="Treatment success"),aes(label = floor(value)),
+			  geom_text(data=subset(out_data_long,variable=="Treatment success"),aes(label = round(value, digits = 0)),
 			            position = position_stack(reverse = TRUE), size=3,hjust=1.5,color="white")
 
 out_plot <- arrangeGrob(out_plot,
@@ -2845,7 +2846,7 @@ txtbhivout_plot <- txtbhivout_long %>%
 					                 report_year - 2,
 					                 ", 30 high TB/HIV burden countries, WHO regions and globally")) +
 
-					  geom_text(data=subset(txtbhivout_long,variable=="Treatment success"),aes(label = floor(value)),
+					  geom_text(data=subset(txtbhivout_long,variable=="Treatment success"),aes(label = round(value, digits = 0)),
 					            position = position_stack(reverse = TRUE), size=3,hjust=1.5,color="white")
 
 
@@ -2999,7 +3000,7 @@ txmdrout_plot <- txmdrout_long %>%
 				                 report_year - 3,
 				                 ",\n30 high MDR-TB burden countries, WHO regions and globally")) +
 
-				  geom_text(data=subset(txmdrout_long,variable=="Treatment success"),aes(label = floor(value)),
+				  geom_text(data=subset(txmdrout_long,variable=="Treatment success"),aes(label = round(value, digits = 0)),
 				            position = position_stack(reverse = TRUE), size=3,hjust=1.5,color="white")
 
 figsave(txmdrout_plot, txmdrout, "f4_26_outcomes_mdr", width=7, height=11) # Designer needs wide data; output portrait mode
@@ -3655,7 +3656,7 @@ rm(list=ls(pattern = "^bcg_policy"))
 
 # Download the latest data from WHO immunization department
 bcg_cov_source <-"http://www.who.int/entity/immunization/monitoring_surveillance/data/coverage_series.xls"
-bcg_cov_page <- "http://www.who.int/entity/immunization/monitoring_surveillance/data/coverage_series.xls?ua=1"
+bcg_cov_page <- "http://apps.who.int/immunization_monitoring/globalsummary/timeseries/tscoveragebcg.html"
 
 download.file(bcg_cov_source,
               paste0(rdata_folder, "coverage_series", Sys.Date(), ".xls"),
