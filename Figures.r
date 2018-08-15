@@ -191,7 +191,7 @@ inc_data <- aggregated_estimates_epi_rawvalues %>%
          e_inc_num_millions = e_inc_num / 1e6,
          e_inc_num_lo_millions = e_inc_num_lo / 1e6,
          e_inc_num_hi_millions = e_inc_num_hi / 1e6) %>%
-  
+
   # merge with regional names
   inner_join(who_region_names, by = "g_whoregion") %>%
   select(-g_whoregion)
@@ -228,7 +228,7 @@ inc_plot <- inc_data %>%
   geom_line(aes(year, e_inc_num_millions),
             size=1,
             colour=standard_palette("incidence")) +
-  
+
   facet_wrap( ~ entity, ncol = 4, scales="free_y") +
   scale_x_continuous(name="Year",
                      breaks = c(2000, 2008, report_year-1)) +
@@ -236,7 +236,7 @@ inc_plot <- inc_data %>%
   ggtitle(paste0("FIG.4.1\nNotifications of TB cases (new and relapse cases, all forms) (black) compared with estimated TB incident cases(green),\n2000 - ",
                  report_year-1,
                  ", globally and for WHO regions. Shaded areas represent uncertainty bands.")) +
-  
+
   theme_glb.rpt() +
   theme(legend.position="top",
         legend.title=element_blank(),
@@ -250,7 +250,7 @@ figsave(inc_plot,
                e_inc_num_millions,
                e_inc_num_lo_millions,
                e_inc_num_hi_millions,
-               entity), 
+               entity),
         "f4_1_inc_number_plot_aggregates")
 
 # Clean up (remove any objects with their name containing 'inc_')
@@ -920,7 +920,7 @@ figsave(hivstatus_map,
                cat),
         "f4_8_pct_HIV_status_map")
 
-cairo_pdf(width = 11, 
+cairo_pdf(width = 11,
           height = 7,
           bg = "white",
           filename=paste0(figures_folder, "/Figs/","f4_8_pct_HIV_status_map", Sys.Date(), ".pdf"))
@@ -1062,7 +1062,7 @@ dst_drs_data <- dr_surveillance %>%
 
 dst_data <- dst_notif_data %>%
   left_join(dst_drs_data) %>%
-  
+
   # To calculate the percentage DST coverage we need to identify the greater of the two numerators
   # Set numerator to NA if the denominator is NA for a country-year
   mutate(
@@ -1074,14 +1074,14 @@ dst_data <- dst_notif_data %>%
                                      (NZ(dst_notif_num) >= NZ(dst_drs_num)),
                                    dst_notif_num, NA )))
   ) %>%
-  
+
   # Drop unwanted variables
   select(iso3,
          year,
          g_whoregion,
          dst_num,
          dst_denom) %>%
-  
+
   # Drop rows with empty numerators
   filter(!is.na(dst_num))
 
@@ -1099,7 +1099,7 @@ dst_regional <- dst_data %>%
   summarise_at(vars(dst_num:dst_denom),
                sum,
                na.rm = TRUE) %>%
-  
+
   # merge with regional names
   inner_join(who_region_names, by = "g_whoregion") %>%
   ungroup() %>%
@@ -1107,11 +1107,11 @@ dst_regional <- dst_data %>%
 
 
 dst_agg <- rbind(dst_regional, dst_global) %>%
-  
+
   # OK, now you can calculate the percentage coverage
   mutate( dst_pcnt = dst_num * 100 / dst_denom)
-  
-  # Add a footnote call to Africa, does not need it in 2018 report, comment it out 
+
+  # Add a footnote call to Africa, does not need it in 2018 report, comment it out
   # mutate( entity = ifelse(entity == "Africa", "Africa a ", entity))
 
 # Change the order
@@ -1123,21 +1123,21 @@ dst_agg$entity <- factor(dst_agg$entity,
 dst_plot <- dst_agg %>%
   ggplot(aes(x=year, y=dst_pcnt, ymin=0)) +
   geom_line(size=1) +
-  
+
   facet_wrap( ~ entity, ncol = 4, scales="fixed") +
   scale_x_continuous(breaks = c(2009, 2013, report_year-1)) +
   scale_y_continuous(name = "Percentage of cases") +
   expand_limits(y=c(0,100)) +
   xlab("Year") +
-  
+
   ggtitle(paste0("FIG.4.10\nPercentage of all TB cases tested for RR-TB, globally and for WHO regions, 2009-",
                  report_year-1)) +
-  
+
   theme_glb.rpt() +
   theme(legend.position="top",
         legend.title=element_blank())
 
-# Add explanatory footnotes, does not need it in 2018 report, comment it out 
+# Add explanatory footnotes, does not need it in 2018 report, comment it out
 # dst_footnote <- " a The spike in coverage in the African Region in 2015 is due to the reporting of laboratory results for many cases in South Africa differentiated by treatment history."
 
 # dst_plot <- arrangeGrob(dst_plot, bottom = textGrob(dst_footnote, x = 0, hjust = -0.1, vjust=0.1, gp = gpar(fontsize = 9)))
@@ -1163,7 +1163,7 @@ dst_data <- notification %>%
          rdst_new,
          rdst_ret,
          rdst_unk) %>%
-  
+
   # Calculate coverage of DST percentages
   mutate(# numerator rdst_new + rdst_ret  (add cases with unknown treatment history)
     dst_pct = ifelse(NZ(c_notified) == 0 |
@@ -2180,7 +2180,7 @@ drgap_data <- estimates_drtb_rawvalues %>%
          year,
          e_inc_rr_num
   ) %>%
-  
+
   # Link to notifications
   inner_join(notification) %>%
   select(iso3,
@@ -2188,16 +2188,16 @@ drgap_data <- estimates_drtb_rawvalues %>%
          e_inc_rr_num,
          unconf_rrmdr_tx,
          conf_rrmdr_tx) %>%
-  
+
   # Filter out countries that have not reported anything yet for the latest year
   filter(!is.na(unconf_rrmdr_tx) | !is.na(conf_rrmdr_tx)) %>%
-  
+
   # Calculate the gap and use that for the bubble sizes
   mutate(bubble_size = e_inc_rr_num - (NZ(unconf_rrmdr_tx) + NZ(conf_rrmdr_tx))) %>%
-  
+
   # Modify long names of countries which will be shown as labels in map
   mutate(country = recode(country, "Democratic Republic of the Congo"="DR Congo")) %>%
-  
+
   # limit to the top 10 by size of gap
   top_n(10, bubble_size)
 
@@ -2217,7 +2217,7 @@ drgap_map <- who_bubble_map(drgap_data,
 # Generate names for footnote
 drgap_ten_countries_name_by_rank <- drgap_data  %>%
   arrange(desc(bubble_size))   %>%
-  select(country) 
+  select(country)
 
 drgap_map <- arrangeGrob(drgap_map,
                          bottom = textGrob(paste0(" a The ten countries ranked in order of the size of the gap between the number of patients started on MDR-TB treatment and the best estimate of MDR/RR-TB \nincidence in ",report_year-1," are ",
@@ -2225,7 +2225,7 @@ drgap_map <- arrangeGrob(drgap_map,
                                            x = 0,
                                            hjust = -0.1,
                                            vjust=0.4,
-                                           gp = gpar(fontsize = 10)))  
+                                           gp = gpar(fontsize = 10)))
 
 # Save the plot
 figsave(drgap_map,
@@ -2653,9 +2653,9 @@ txoutnum_plot_reg <- txoutnum_long %>%
                   theme_glb.rpt() +
                   scale_fill_manual("", values = outcomes_num_palette()) +
                   labs(x="", y="Number of cases (millions)") +
-  
+
                   scale_x_continuous(breaks = c(2000,2008,report_year-2)) +
-  
+
                   theme(legend.position="bottom",
                         panel.grid=element_blank()) +
                   expand_limits(c(0,0))
@@ -2670,9 +2670,9 @@ txoutnum_plot_glob <- txoutnum_long %>%
                   theme_glb.rpt() +
                   scale_fill_manual("", values = outcomes_num_palette()) +
                   labs(x="", y="Number of cases (millions)") +
-  
+
                   scale_x_continuous(breaks = c(2000,2004,2008,2012,report_year-2)) +
-  
+
                     theme(legend.position="none",
                         panel.grid=element_blank()) +
 
@@ -3129,9 +3129,109 @@ figsave(dlm_map,
 rm(list=ls(pattern = "^dlm"))
 
 
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Figure Box 4.4.1 ------
+# Contribution of public–public mix to TB case notifications in eight countries, 2012–2017
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+# Get PPM data
+ppm_data <- strategy %>%
+            select(iso2, year, country, pub_new_dx) %>%
+            filter(year >= 2012 & iso2 %in% c('AF', 'BD', 'CN', 'IN', 'ID', 'PH', 'TH', 'VN'))
 
+# Merge with notifications
+ppm_data <- notification %>%
+            select(iso2, year, c_notified) %>%
+            inner_join(ppm_data)
 
+# Calculate percent contributions
+ppm_data <- ppm_data %>%
+            mutate(public_pcnt = ifelse(!is.na(pub_new_dx) & c_notified > 0,
+                                        pub_new_dx * 100 / c_notified,
+                                        NA))
+
+# Plot as lines
+ppm_plot <- ppm_data %>%
+            ggplot(aes(x=year, y=public_pcnt, ymin=0)) +
+            geom_line(size=1) +
+
+            facet_wrap(~ country, ncol = 4, scales = "free_y") +
+
+            scale_x_continuous(name="Year",
+                               breaks = c(2012, report_year-1)) +
+
+            scale_y_continuous(name = "Contribution of public-public mix to total notifications (%)") +
+
+            ggtitle(paste0("FIG.B4.4.1\nContribution of public-public mix to TB case notifications in 8 countries, 2012-",
+                           report_year-1)) +
+
+            theme_glb.rpt() +
+            theme(legend.position="top",
+                  legend.title=element_blank(),
+                  axis.text.x = element_text(size=5))
+
+# Save the plot
+figsave(ppm_plot,
+        select(ppm_data,
+               country,
+               year,
+               public_pcnt),
+        "f4_box_4_4_1_public_public_contributions")
+
+# Clean up (remove any objects with their name beginning 'ppm_')
+rm(list=ls(pattern = "^ppm_"))
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Figure Box 4.4.2 ------
+# Contribution of public–private mix to TB case notifications in eight countries, 2012–2017
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# Get PPM data
+ppm_data <- strategy %>%
+            select(iso2, year, country, priv_new_dx) %>%
+            filter(year >= 2012 & iso2 %in% c('BD', 'ET', 'IN', 'ID', 'KE', 'MM', 'PK', 'PH'))
+
+# Merge with notifications
+ppm_data <- notification %>%
+            select(iso2, year, c_notified) %>%
+            inner_join(ppm_data)
+
+# Calculate percent contributions
+ppm_data <- ppm_data %>%
+            mutate(private_pcnt = ifelse(!is.na(priv_new_dx) & c_notified > 0,
+                                        priv_new_dx * 100 / c_notified,
+                                        NA))
+
+# Plot as lines
+ppm_plot <- ppm_data %>%
+            ggplot(aes(x=year, y=private_pcnt, ymin=0)) +
+            geom_line(size=1) +
+
+            facet_wrap(~ country, ncol = 4, scales = "free_y") +
+
+            scale_x_continuous(name="Year",
+                               breaks = c(2012, report_year-1)) +
+
+            scale_y_continuous(name = "Contribution of public-private mix to total notifications (%)") +
+
+            ggtitle(paste0("FIG.B4.4.2\nContribution of public-private mix to TB case notifications in 8 countries, 2012-",
+                           report_year-1)) +
+
+            theme_glb.rpt() +
+            theme(legend.position="top",
+                  legend.title=element_blank(),
+                  axis.text.x = element_text(size=5))
+
+# Save the plot
+figsave(ppm_plot,
+        select(ppm_data,
+               country,
+               year,
+               private_pcnt),
+        "f4_box_4_4_2_public_private_contributions")
+
+# Clean up (remove any objects with their name beginning 'ppm_')
+rm(list=ls(pattern = "^ppm_"))
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Figure Box 4.5.1  (Map) ------
@@ -3143,7 +3243,7 @@ rm(list=ls(pattern = "^dlm"))
 comm_datarequest <- data_collection %>%
   filter(datcol_year==report_year) %>%
   select(country,
-         dc_engage_community_display) 
+         dc_engage_community_display)
 
 comm_bmu <- strategy %>%
   filter(year==report_year - 1) %>%
@@ -3503,7 +3603,7 @@ figsave(prevtx_kids_map,
         prevtx_kids_data,
         "f5_3_prevtx_kids_map")
 
-cairo_pdf(width = 11, 
+cairo_pdf(width = 11,
           height = 7,
           bg = "white",
           filename=paste0(figures_folder, "/Figs/","f5_3_prevtx_kids_map", Sys.Date(), ".pdf"))
@@ -3600,7 +3700,7 @@ figsave(hcw_map,
         hcw_data,
         "f5_4_hcw_notf_rate_ratio")
 
-cairo_pdf(width = 11, 
+cairo_pdf(width = 11,
           height = 7,
           bg = "white",
           filename=paste0(figures_folder, "/Figs/","f5_4_hcw_notf_rate_ratio", Sys.Date(), ".pdf"))
