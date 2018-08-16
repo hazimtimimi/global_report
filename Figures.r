@@ -3130,7 +3130,7 @@ rm(list=ls(pattern = "^dlm"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure Box 4.4.1 ------
+# Figure Box 4.2.1 ------
 # Contribution of public–public mix to TB case notifications in eight countries, 2012–2017
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -3162,7 +3162,7 @@ ppm_plot <- ppm_data %>%
 
             scale_y_continuous(name = "Contribution of public-public mix to total notifications (%)") +
 
-            ggtitle(paste0("FIG.B4.4.1\nContribution of public-public mix to TB case notifications in 8 countries, 2012-",
+            ggtitle(paste0("FIG.B4.2.1\nContribution of public-public mix to TB case notifications in 8 countries, 2012-",
                            report_year-1)) +
 
             theme_glb.rpt() +
@@ -3176,13 +3176,13 @@ figsave(ppm_plot,
                country,
                year,
                public_pcnt),
-        "f4_box_4_4_1_public_public_contributions")
+        "f4_box_4_2_1_public_public_contributions")
 
 # Clean up (remove any objects with their name beginning 'ppm_')
 rm(list=ls(pattern = "^ppm_"))
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure Box 4.4.2 ------
+# Figure Box 4.2.2 ------
 # Contribution of public–private mix to TB case notifications in eight countries, 2012–2017
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -3214,7 +3214,7 @@ ppm_plot <- ppm_data %>%
 
             scale_y_continuous(name = "Contribution of public-private mix to total notifications (%)") +
 
-            ggtitle(paste0("FIG.B4.4.2\nContribution of public-private mix to TB case notifications in 8 countries, 2012-",
+            ggtitle(paste0("FIG.B4.2.2\nContribution of public-private mix to TB case notifications in 8 countries, 2012-",
                            report_year-1)) +
 
             theme_glb.rpt() +
@@ -3228,7 +3228,7 @@ figsave(ppm_plot,
                country,
                year,
                private_pcnt),
-        "f4_box_4_4_2_public_private_contributions")
+        "f4_box_4_2_2_public_private_contributions")
 
 # Clean up (remove any objects with their name beginning 'ppm_')
 rm(list=ls(pattern = "^ppm_"))
