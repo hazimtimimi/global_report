@@ -559,10 +559,11 @@ prev_tx_table_data <- prev_tx_hb_data %>%
 
 
 # Finally we have a list of exclusions based on feedback from countries compiled by Lele
-prev_tx_footnote2 <- "** Estimated coverage was not calculated because the numerator includes contacts aged 5-7 years (DPR Korea), those aged 5-6 years (Nigeria),
-those were non-household contacts of TB cases (Indonesia), or those household contacts of bacteriologically confirmed or clinically diagnosed TB cases (Malawi and Phillipines)."
+prev_tx_footnote2 <- "** Estimated coverage was not calculated because the numerator also included contacts aged 5 years or older (Botswana, DPR Korea and Nigeria), those who were
+\nnon-household contacts of TB cases (Indonesia and the Russian Federation), or those household contacts of clinically diagnosed TB cases (Malawi and the
+\nPhilippines)."
 
-prev_tx_footnote2_countries = c("DPR Korea", "Nigeria", "Indonesia", "Malawi", "Philippines")
+prev_tx_footnote2_countries = c("DPR Korea", "Nigeria", "Indonesia", "Malawi", "Philippines", "Botswana", "Russian Federation")
 
 # Remove the coverage calculations for the excluded countries
 prev_tx_table_data <- prev_tx_table_data %>%
@@ -572,8 +573,12 @@ prev_tx_table_data <- prev_tx_table_data %>%
 
                              e_prevtx_kids_pct_lohi = ifelse(entity %in% prev_tx_footnote2_countries,
                                                         NA,
-                                                        e_prevtx_kids_pct_lohi))
-
+                                                        e_prevtx_kids_pct_lohi),
+                             #For contries got a coverage greater than 100%, show it as >100 and delete the interval
+                             e_prevtx_kids_pct_lohi=replace(e_prevtx_kids_pct_lohi,(e_prevtx_kids_pct == 100),NA),
+                             e_prevtx_kids_pct=replace(e_prevtx_kids_pct,(e_prevtx_kids_pct == 100),">100"))
+                             #Zimbabwe only reported half year's data for 2017, remove the whole row of it after discussed with Annabel;should add back since 2018
+                             filter(country!="Zimbabwe")
 
 # Create HTML output
 prev_tx_table_html <- xtable(prev_tx_table_data)
@@ -609,13 +614,13 @@ print(prev_tx_table_html,
                                 <td rowspan='2' style='border-left: black 2px solid;'>Best estimate</td>
                                 <td rowspan='2'>Uncertainty interval</td>
                                 <td rowspan='2'>Number</td>
-                                <td colspan='2'>Coverage (%)</td>
+                                <td colspan='2'>Coverage<sup>b</sup> (%)</td>
                                 </tr>
                                 <tr>
                                 <td>Best estimate</td>
                                 <td>Uncertainty interval</td>
                                 </tr>",
-                                paste("<tr><td colspan='7'><sup>a</sup> Estimates are shown to three significant figures.<br />",
+                                paste("<tr><td colspan='7'>Blank cells indicate data not reported.<br />","<sup>a</sup> Estimates are shown to three significant figures.<br />","<sup>b</sup> Reasons for higher than expected coverage might be that the numerator did not exclude non-household contacts or children of five years and older.<br />",
                                        "* Coverage was not calculated because reported data on people living with HIV is for all enrolled in care, not just those newly enrolled in care.<br />",
                                       prev_tx_footnote2,
                                         "</td>

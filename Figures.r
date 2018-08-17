@@ -3561,11 +3561,10 @@ prevtx_kids_data <-  estimates_ltbi %>%
          newinc_con04_prevtx)
 
 # We have a list of exclusions based on feedback from countries compiled by Lele
-prev_tx_footnote <- paste0("Estimated coverage was not calculated because the numerator includes contacts aged 5-7 years (DPR Korea), those aged 5-6 years (Nigeria),",
-                           "\nthose were non-household contacts of TB cases (Indonesia), or those household contacts of bacteriologically confirmed or clinically diagnosed ",
-                           "\nTB cases (Malawi and Phillipines).")
+prev_tx_footnote <- paste0("Estimated coverage was not calculated because the numerator also included contacts aged 5 years or older (Botswana, DPR Korea and Nigeria), those who were",
+                           "\nnon-household contacts of TB cases (Indonesia and the Russian Federation), or those household contacts of clinically diagnosed TB cases (Malawi and \nthe Philippines).")
 
-prev_tx_footnote_countries = c("PRK", "NGA", "IDN", "MWI", "PHL")
+prev_tx_footnote_countries = c("PRK", "NGA", "IDN", "MWI", "PHL", "RUS", "BWA")
 
 # Remove the coverage calculations for the excluded countries
 prevtx_kids_data <- prevtx_kids_data %>%
