@@ -94,7 +94,7 @@ WHOmap.slide <- function(data, map.title="", legend.title="", low.color='#BDD7E7
 # A print-worthy WHO map
 # ----------------------------------------------------------
 
-WHOmap.print <- function(data, map.title="", legend.title="", colors=NULL, low.color='#BDD7E7',  high.color='#08519C', shapefiles.path=NULL, na.label='No data', copyright=TRUE, show=TRUE, line.color="grey50", zoom='Global') {
+WHOmap.print <- function(data, map.title="", legend.title="", background=NA, colors=NULL, low.color='#BDD7E7',  high.color='#08519C', shapefiles.path=NULL, na.label='No data', copyright=TRUE, show=TRUE, line.color="grey50", zoom='Global') {
 
   # tests to make sure inputs are right
   if(nchar(legend.title)>45) warning("You might want to try and trim your legend title a bit.")
@@ -249,6 +249,7 @@ WHOmap.print <- function(data, map.title="", legend.title="", colors=NULL, low.c
     coord_cartesian(xlim = zoomx, ylim=zoomy) + labs(title = map.title) +
 
     theme(aspect.ratio = a.ratio, plot.title=element_text(size=16, hjust=0),
+         plot.background=element_rect(fill = background),
          legend.key.size = unit(0.50, "cm"), legend.text=element_text(size=8),
          legend.position=leg.pos, legend.justification= c(0.5,1),
          legend.title=element_text(size=10, hjust=0), rect=element_blank()) +

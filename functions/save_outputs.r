@@ -47,6 +47,35 @@ figsave <- function(obj, data, name, width=11, height=7){
 }
 
 
+# For saving figures in cairo devices to sovle some symbol problems like to show >= correctly in PDF and dataset----
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+figsavecairo <- function(obj, data, name, width=11, height=7){
+  
+  
+  # save PDF in CMYK colour mode for designer
+  Cairo(width = width, 
+        height = height,
+        type="pdf",
+        bg="white",
+        colormodel="cmyk",
+        units = "in", 
+        file=paste0(figures_folder, "/Figs/",name, Sys.Date(), ".pdf"))
+  plot(obj)
+  
+  # Close the cairo device, othervise the output PDF file can not be opened as the device is still using it.
+  dev.off()
+  
+  # save data for designer. Save as xlsx file because .csv could not display >= correctly too.
+  library(xlsx)
+  write.xlsx(as.data.frame(data),
+             file=paste(figures_folder, "/FigData/", name, Sys.Date(), ".xlsx", sep=""),
+             row.names=FALSE,
+             showNA=FALSE)
+  
+}
+
+
 # For adding an x-axis to orphaned plots ----
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

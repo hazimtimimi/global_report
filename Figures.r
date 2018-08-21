@@ -341,7 +341,7 @@ agesex_agg_long$sex <- factor(agesex_agg_long$sex,
 agesex_agg_long$agegroup <- str_extract(agesex_agg_long$group, "014|1524|2534|3544|4554|5564|65")
 agesex_agg_long$agegroup <- factor(agesex_agg_long$agegroup,
                                    levels=c("014", "1524", "2534", "3544", "4554", "5564", "65"),
-                                   labels=c("0\u201314", "15\u201324", "25\u201334", "35\u201344", "45\u201354", "55\u201364", ">=65"))
+                                   labels=c("0\u201314", "15\u201324", "25\u201334", "35\u201344", "45\u201354", "55\u201364", "\u226565"))
 
 agesex_agg_long <- agesex_agg_long %>% select(-group)
 
@@ -395,7 +395,7 @@ agesex_plot <- arrangeGrob(agesex_plot, bottom = textGrob(agesex_foot, x = 0, hj
 
 
 # Save the plots
-figsave(agesex_plot, agesex_agg_long, "f4_2_agesex")
+figsavecairo(agesex_plot, agesex_agg_long, "f4_2_agesex")
 
 # Clean up (remove any objects with their name beginning with 'agesex')
 rm(list=ls(pattern = "^agesex"))
@@ -432,7 +432,7 @@ kids_data$kids_pct <- ifelse(is.na(kids_data$c_new_014) | NZ(kids_data$c_agesex_
 
 kids_data$cat <- cut(kids_data$kids_pct,
                      c(0, 2.0, 5.0, 10.0, Inf),
-                     c('0-1.9', '2-4.9', '5-9.9', '>=10'),
+                     c('0-1.9', '2-4.9', '5-9.9', '\u226510'),
                      right=FALSE)
 
 # Find the countries with empty data for latest year and see if there are data for the previous year
@@ -457,6 +457,7 @@ kids_map <- WHOmap.print(kids_data_combined,
                                 " a "),
                          "Percentage",
                          copyright=FALSE,
+                         background="White",
                          #colors=c('#edf8e9', '#bae4b3', '#74c476', '#238b45'),
                          colors=brewer.pal(4, "Blues"),
                          show=FALSE)
@@ -470,15 +471,15 @@ kids_foot <- paste(" a ",
 
 
 
-kids_map <- arrangeGrob(kids_map, bottom = textGrob(kids_foot, x = 0, hjust = -0.1, vjust=0.1, gp = gpar(fontsize = 10)))
+kids_map <- arrangeGrob(kids_map, bottom = textGrob(kids_foot, x = 0, hjust = -0.1, vjust=-1.5, gp = gpar(fontsize = 10)))
 
-figsave(kids_map,
-        select(kids_data_combined,
-               iso3,
-               country,
-               kids_pct,
-               cat),
-        "f4_3_pct_children_map")
+figsavecairo(kids_map,
+             select(kids_data_combined,
+                    iso3,
+                    country,
+                    kids_pct,
+                    cat),
+             "f4_3_pct_children_map")
 
 # Clean up (remove any objects with their name beginning with 'kids')
 rm(list=ls(pattern = "^kids"))
@@ -593,7 +594,7 @@ bacconf_plot <- bacconf_data %>%
                         legend.title=element_blank())
 
 # Add footnote
-bacconf_foot <- " a The calculation is for new pulmonary cases in years prior to 2013 based on smear results, except for the European Region\nwhere data on confirmation by culture was also available for the period 2002-2012."
+bacconf_foot <- " a The calculation is for new and relapse pulmonary cases in years prior to 2013 based on smear results, except for the European Region\nwhere data on confirmation by culture was also available for the period 2002-2012."
 
 bacconf_plot <- arrangeGrob(bacconf_plot, bottom = textGrob(bacconf_foot, x = 0, hjust = -0.1, vjust=0.1, gp = gpar(fontsize = 10)))
 
@@ -636,7 +637,7 @@ bacconf_data$bacconf_pct <- ifelse(is.na(bacconf_data$pulm_bacconf_tot) | NZ(bac
 
 bacconf_data$cat <- cut(bacconf_data$bacconf_pct,
                         c(0, 50, 65, 80, Inf),
-                        c('0-49', '50-64', '65-79', '>=80'),
+                        c('0-49', '50-64', '65-79', '\u226580'),
                         right=FALSE)
 
 
@@ -661,6 +662,7 @@ bacconf_map <- WHOmap.print(bacconf_data_combined,
                                    " a "),
                             "Percentage",
                             copyright=FALSE,
+                            background="White",
                             #colors=c('#edf8e9', '#bae4b3', '#74c476', '#238b45'),
                             colors=brewer.pal(4, "PuRd"),
                             show=FALSE)
@@ -673,17 +675,17 @@ bacconf_foot <- paste(" a ",
                       "countries.")
 
 
-bacconf_map <- arrangeGrob(bacconf_map, bottom = textGrob(bacconf_foot, x = 0, hjust = -0.1, vjust=0.1, gp = gpar(fontsize = 10)))
+bacconf_map <- arrangeGrob(bacconf_map, bottom = textGrob(bacconf_foot, x = 0, hjust = -0.1, vjust=-1.5, gp = gpar(fontsize = 10)))
 
 
 
-figsave(bacconf_map,
-        select(bacconf_data_combined,
-               iso3,
-               country,
-               bacconf_pct,
-               cat),
-        "f4_5_pct_bacconf_map")
+figsavecairo(bacconf_map,
+             select(bacconf_data_combined,
+                    iso3,
+                    country,
+                    bacconf_pct,
+                    cat),
+                    "f4_5_pct_bacconf_map")
 
 # Clean up (remove any objects with their name beginning with 'bacconf')
 rm(list=ls(pattern = "^bacconf"))
@@ -722,7 +724,7 @@ ep_data$ep_pct <- ifelse(is.na(ep_data$ep_tot) | NZ(ep_data$newrel_tot) == 0, NA
 
 ep_data$cat <- cut(ep_data$ep_pct,
                    c(0, 10, 20, 30, Inf),
-                   c('0-9.9', '10-19', '20-29', '>=30'),
+                   c('0-9.9', '10-19', '20-29', '\u226530'),
                    right=FALSE)
 
 
@@ -747,6 +749,7 @@ ep_map <- WHOmap.print(ep_data_combined,
                               " a "),
                        "Percentage",
                        copyright=FALSE,
+                       background="White",
                        colors=brewer.pal(4, "YlOrRd"),
                        show=FALSE)
 
@@ -758,17 +761,17 @@ ep_foot <- paste(" a ",
                  "countries.")
 
 
-ep_map <- arrangeGrob(ep_map, bottom = textGrob(ep_foot, x = 0, hjust = -0.1, vjust=0.1, gp = gpar(fontsize = 10)))
+ep_map <- arrangeGrob(ep_map, bottom = textGrob(ep_foot, x = 0, hjust = -0.1, vjust=-1.5, gp = gpar(fontsize = 10)))
 
 
 
-figsave(ep_map,
-        select(ep_data_combined,
-               iso3,
-               country,
-               ep_pct,
-               cat),
-        "f4_6_pct_ep_map")
+figsavecairo(ep_map,
+             select(ep_data_combined,
+                    iso3,
+                    country,
+                    ep_pct,
+                    cat),
+             "f4_6_pct_ep_map")
 
 # Clean up (remove any objects with their name beginning with 'ep')
 rm(list=ls(pattern = "^ep"))
@@ -896,6 +899,7 @@ hivstatus_map <- WHOmap.print(hivstatus_data_combined,
                         paste("FIG.4.8\nPercentage of new and relapse TB cases with documented HIV status,", report_year-1, " a "),
                            "Percentage",
                            copyright=FALSE,
+                           background="White",
                            colors=c("#bdc9e1","#74a9cf", "#2b8cbe", "#045a8d"),
                            show=FALSE)
 
@@ -909,23 +913,16 @@ hivstatus_foot <- paste(" a ",
 
 
 
-hivstatus_map <- arrangeGrob(hivstatus_map, bottom = textGrob(hivstatus_foot, x = 0, hjust = -0.1, vjust=0.1, gp = gpar(fontsize = 10)))
+hivstatus_map <- arrangeGrob(hivstatus_map, bottom = textGrob(hivstatus_foot, x = 0, hjust = -0.1, vjust=-1.5, gp = gpar(fontsize = 10)))
 
 
-figsave(hivstatus_map,
-        select(hivstatus_data_combined,
-               iso3,
-               country,
-               hivstatus_pct,
-               cat),
-        "f4_8_pct_HIV_status_map")
-
-cairo_pdf(width = 11,
-          height = 7,
-          bg = "white",
-          filename=paste0(figures_folder, "/Figs/","f4_8_pct_HIV_status_map", Sys.Date(), ".pdf"))
-plot(hivstatus_map)
-dev.off()
+figsavecairo(hivstatus_map,
+             select(hivstatus_data_combined,
+                    iso3,
+                    country,
+                    hivstatus_pct,
+                    cat),
+             "f4_8_pct_HIV_status_map")
 
 # Clean up (remove any objects with their name beginning with 'hivstatus')
 rm(list=ls(pattern = "^hivstatus"))
@@ -1174,7 +1171,7 @@ dst_data <- notification %>%
 
 dst_data$cat <- cut(dst_data$dst_pct,
                     c(0, 10, 40, 70, Inf),
-                    c('0-9.9', '10-39', '40-69', '>=70'),
+                    c('0-9.9', '10-39', '40-69', '\u226570'),
                     right=FALSE)
 
 # Find the countries with empty data for latest year and see if there are data for the previous year
@@ -1195,6 +1192,7 @@ dst_map <- WHOmap.print(dst_data_combined,
                         paste0("FIG.4.11\nPercentage of all TB cases tested for RR-TB, ", report_year-1, " a "),
                         "Percentage",
                         copyright=FALSE,
+                        background="White",
                         colors=brewer.pal(4, "YlOrBr"),
                         show=FALSE)
 
@@ -1204,16 +1202,16 @@ dst_foot <- paste(" a ",report_year - 2,"data were used for", nrow(dst_prev_year
 
 
 
-dst_map <- arrangeGrob(dst_map, bottom = textGrob(dst_foot, x = 0, hjust = -0.1, vjust=0.1, gp = gpar(fontsize = 8)))
+dst_map <- arrangeGrob(dst_map, bottom = textGrob(dst_foot, x = 0, hjust = -0.1, vjust=-1.5, gp = gpar(fontsize = 8)))
 
 
-figsave(dst_map,
-        select(dst_data_combined,
-               iso3,
-               country,
-               dst_pct,
-               cat),
-        "f4_11_dst_map")
+figsavecairo(dst_map,
+             select(dst_data_combined,
+                    iso3,
+                    country,
+                    dst_pct,
+                    cat),
+            "f4_11_dst_map")
 
 # Clean up (remove any objects with their name beginning with 'dst')
 rm(list=ls(pattern = "^dst"))
@@ -1425,7 +1423,7 @@ sldst_data <- notification %>%
 
 sldst_data$cat <- cut(sldst_data$pcnt_sldst,
                       c(0, 25, 50, 75, Inf),
-                      c('0-24', '25-49', '50-74', '>=75'),
+                      c('0-24', '25-49', '50-74', '\u226575'),
                       right=FALSE)
 
 # Find the countries with empty data for latest year and see if there are data for the previous year
@@ -1449,6 +1447,7 @@ sldst_map <- WHOmap.print(sldst_data_combined,
                                   " a "),
                                  "Percentage",
                                  copyright=FALSE,
+                                 background="White",
                                  colors=brewer.pal(4, "Blues"),
                                  show=FALSE)
 
@@ -1459,16 +1458,16 @@ sldst_foot <- paste(" a ",
                     nrow(sldst_prev_year_data),
                     "countries.")
 
-sldst_map <- arrangeGrob(sldst_map, bottom = textGrob(sldst_foot, x = 0, hjust = -0.1, vjust=0.1, gp = gpar(fontsize = 10)))
+sldst_map <- arrangeGrob(sldst_map, bottom = textGrob(sldst_foot, x = 0, hjust = -0.1, vjust=-1.5, gp = gpar(fontsize = 10)))
 
 
-figsave(sldst_map,
-        select(sldst_data_combined,
-               iso3,
-               country,
-               pcnt_sldst,
-               cat),
-        "f4_14_pct_sldst_map")
+figsavecairo(sldst_map,
+             select(sldst_data_combined,
+                    iso3,
+                    country,
+                    pcnt_sldst,
+                    cat),
+             "f4_14_pct_sldst_map")
 
 # Clean up (remove any objects with their name beginning with 'sldst')
 rm(list=ls(pattern = "^sldst"))
@@ -3263,7 +3262,7 @@ comm_data <- merge(comm_datarequest, comm_bmu, by= "country")%>%
 
 comm_data$cat <- cut(comm_data$comm_pct,
                      c(0, 25, 50, 75, 1000, Inf),
-                     c('0-24', '25-49', '50-74', '>=75','Data not requested'),
+                     c('0-24', '25-49', '50-74', '\u226575','Data not requested'),
                      right=FALSE)
 
 # produce the map
@@ -3273,16 +3272,17 @@ comm_map <- WHOmap.print(comm_data,
                                report_year-1),
                          "Percentage",
                          copyright=FALSE,
+                         background="White",
                          colors=c('#bdd7e7', '#6baed6', '#3182bd', '#08519c','#edf8e9'),
                          show=FALSE)
 comm_map <- arrangeGrob(comm_map,
                         bottom = textGrob(paste0("Data only requested from ",sum(comm_datarequest$dc_engage_community_display)," countries."),
                                           x = 0,
                                           hjust = -0.1,
-                                          vjust=0,
+                                          vjust=-1.5,
                                           gp = gpar(fontsize = 10)))
 
-figsave(comm_map,
+figsavecairo(comm_map,
         select(comm_data,
                country,
                iso3,
@@ -3561,8 +3561,8 @@ prevtx_kids_data <-  estimates_ltbi %>%
          newinc_con04_prevtx)
 
 # We have a list of exclusions based on feedback from countries compiled by Lele
-prev_tx_footnote <- paste0("Estimated coverage was not calculated because the numerator also included contacts aged 5 years or older (Botswana, DPR Korea and Nigeria), those who were",
-                           "\nnon-household contacts of TB cases (Indonesia and the Russian Federation), or those household contacts of clinically diagnosed TB cases (Malawi and \nthe Philippines).")
+prev_tx_footnote <- paste0("Estimated coverage was not calculated because the numerator also included contacts aged 5 years or older (Botswana, DPR Korea and Nigeria), \nthose who were",
+                           "non-household contacts of TB cases (Indonesia and the Russian Federation), or those household contacts of clinically diagnosed \nTB cases (Malawi and the Philippines).")
 
 prev_tx_footnote_countries = c("PRK", "NGA", "IDN", "MWI", "PHL", "RUS", "BWA")
 
@@ -3585,6 +3585,7 @@ prevtx_kids_map <- WHOmap.print(prevtx_kids_data,
                                       report_year-1),
                                 legend.title = "Coverage (%)",
                                 copyright=FALSE,
+                                background="White",
                                 colors=brewer.pal(4, "Blues"),
                                 na.label="Not estimated",
                                 show=FALSE)
@@ -3595,20 +3596,12 @@ prevtx_kids_map <- arrangeGrob(prevtx_kids_map, bottom = textGrob(paste0(" a Chi
                                                                          prev_tx_footnote),
                                                                   x = 0,
                                                                   hjust = -0.1,
-                                                                  vjust=0.1,
+                                                                  vjust=-0.2,
                                                                   gp = gpar(fontsize = 10)))
 
-figsave(prevtx_kids_map,
-        prevtx_kids_data,
-        "f5_3_prevtx_kids_map")
-
-cairo_pdf(width = 11,
-          height = 7,
-          bg = "white",
-          filename=paste0(figures_folder, "/Figs/","f5_3_prevtx_kids_map", Sys.Date(), ".pdf"))
-plot(prevtx_kids_map)
-dev.off()
-
+figsavecairo(prevtx_kids_map,
+             prevtx_kids_data,
+             "f5_3_prevtx_kids_map")
 
 # Clean up (remove any objects with their name beginning with 'prevtx_kids')
 rm(list=ls(pattern = "^prevtx_kids"))
@@ -3830,7 +3823,7 @@ ghcc_data <- report_country %>%
 
 ghcc_data$cat <- cut(ghcc_data$N,
                      c(0, 2, 10, 30, Inf),
-                     c("1", "2-9", "10-29", ">=30"),
+                     c("1", "2-9", "10-29", "\u226530"),
                      right=FALSE)
 
 
@@ -3838,6 +3831,7 @@ ghcc_map <- WHOmap.print(ghcc_data,
                          "FIG.B6.3.1\nCost per patient treated for drug-susceptible TB or MDR-TB:\ncurrent availability of unit cost data from independent costing studies, 1990-2017",
                          "Number\navailable",
                          copyright=FALSE,
+                         background = "white",
                          colors=brewer.pal(4, "Reds"),
                          show=FALSE)
 
@@ -3849,9 +3843,9 @@ ghcc_map <- arrangeGrob(ghcc_map,
                                           vjust=0,
                                           gp = gpar(fontsize = 10)))
 
-figsave(ghcc_map,
-        ghcc_data,
-        "f6_box_6_3_1_unit_cost_data_map")
+figsavecairo(ghcc_map,
+             ghcc_data,
+             "f6_box_6_3_1_unit_cost_data_map")
 
 # Clean up (remove any objects with their name beginning with 'ghcc')
 rm(list=ls(pattern = "^ghcc"))
