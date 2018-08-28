@@ -101,8 +101,8 @@ who_region_names <- get_region_names()
 
 
 # Repeated footnotes -----
-india_incidence_footnote <- "Estimates of TB incidence for India are interim in nature, pending results from the national TB prevalence survey planned for 2019/2020."
-india_mortality_footnote <- "Estimates of TB mortality for India are interim in nature, pending results from the national TB prevalence survey planned for 2019/2020."
+india_incidence_footnote <- "Estimates of TB incidence for India are interim, pending results from the national TB prevalence survey planned for 2019/2020."
+india_mortality_footnote <- "Estimates of TB mortality for India are interim, pending results from the national TB prevalence survey planned for 2019/2020."
 pending_incidence_footnote <- "Estimates of TB incidence for Eswatini, Mozambique, Myanmar, Namibia, Nepal, South Africa and Viet Nam will be reviewed after final \nresults from their respective national TB prevalence surveys are available in 2019."
 pending_mortality_footnote <- "Estimates of TB mortality for Eswatini, Mozambique, Myanmar, Namibia, Nepal, South Africa and Viet Nam will be reviewed after final \nresults from their respective national TB prevalence surveys are available in 2019."
 

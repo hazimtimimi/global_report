@@ -2858,7 +2858,7 @@ rm(list=ls(pattern = "^txtbhivout"))
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Figure 4.26   ------
-# Treatment outcomes for rifampicin-resistant TB cases started on treatment in 2015,
+# Treatment outcomes for MDR/RR-TB cases started on treatment in 2015,
 # 30 high MDR-TB burden countries, WHO regions and globally
 #
 # NOTE CHANGE FOR 2017 REPORT: SORT BY TSR, NOT COUNTRY NAME!
@@ -2866,73 +2866,75 @@ rm(list=ls(pattern = "^txtbhivout"))
 
 
 txmdrout_country  <- outcomes %>%
-					  filter(year==report_year - 3) %>%
-					  select(country,
-					         iso2,
-					         g_whoregion,
-					         contains("mdr_")) %>%
-					  # drop old cured/completed and the tsr fields
-					  select(-mdr_cur, -mdr_cmplt, -c_mdr_tsr) %>%
-					  # shorten long country names
-					  get_names_for_tables() %>%
-					  dplyr::rename(entity = country ) %>%
-					  arrange(entity)
+  filter(year==report_year - 3) %>%
+  select(country,
+         iso2,
+         g_whoregion,
+         contains("mdr_")) %>%
+  # drop old cured/completed and the tsr fields
+  select(-mdr_cur, -mdr_cmplt, -c_mdr_tsr) %>%
+  # shorten long country names
+  get_names_for_tables() %>%
+  dplyr::rename(entity = country ) %>%
+  arrange(entity) %>%
+  # add call out to countries whose MDR cohort were less than 500
+  mutate(entity = ifelse(mdr_coh < 500, paste0(entity, " a "), entity)) 
 
 # Calculate regional aggregates
 txmdrout_region <- txmdrout_country %>%
-					  group_by(g_whoregion) %>%
-					  summarise_at(vars(contains("mdr_")),
-					               sum,
-					               na.rm = TRUE) %>%
-					  # merge with regional names and simplify to match structure of country table
-					  inner_join(who_region_names, by = "g_whoregion") %>%
-					  select(-g_whoregion)
+  group_by(g_whoregion) %>%
+  summarise_at(vars(contains("mdr_")),
+               sum,
+               na.rm = TRUE) %>%
+  # merge with regional names and simplify to match structure of country table
+  inner_join(who_region_names, by = "g_whoregion") %>%
+  select(-g_whoregion)
 
 
 # Calculate global aggregate
 txmdrout_global <- txmdrout_country %>%
-					  summarise_at(vars(contains("mdr_")),
-					               sum,
-					               na.rm = TRUE) %>%
-					  # Add dummy variable and simplify to match structure of country table
-					  mutate(entity = "Global")
+  summarise_at(vars(contains("mdr_")),
+               sum,
+               na.rm = TRUE) %>%
+  # Add dummy variable and simplify to match structure of country table
+  mutate(entity = "Global")
 
 # Filter the country list down to high burden ones
 txmdrout_30hbc <- country_group_membership %>%
-                  filter(group_type == "g_hb_mdr" & group_name == 1) %>%
-                  select(iso2)
+  filter(group_type == "g_hb_mdr" & group_name == 1) %>%
+  select(iso2)
 
 txmdrout_country <- txmdrout_country %>%
-                  inner_join(txmdrout_30hbc) %>%
-                  #remove the iso2 field to match regional and countries aggregates
-                  select(-iso2,
-                         -g_whoregion)
+  inner_join(txmdrout_30hbc) %>%
+  #remove the iso2 field to match regional and countries aggregates
+  select(-iso2,
+         -g_whoregion)
 
 # Check if any of the countries have no data so that we can add a 'No data reported' option
 # (This includes countries reporting a cohort of zero as this would be a data entry error for such countries!)
 txmdrout_nodata_count <- txmdrout_country %>%
-                            filter(is.na(mdr_coh) | mdr_coh == 0) %>%
-                            nrow()
+  filter(is.na(mdr_coh) | mdr_coh == 0) %>%
+  nrow()
 
 # Calculate outcome proportions for plotting as stacked bars
 txmdrout_country <- txmdrout_country %>%
-                    calculate_outcomes_pct("mdr_")
+  calculate_outcomes_pct("mdr_")
 
 # Sort in descending order of success rate
 txmdrout_country <- txmdrout_country %>%
-                    arrange(desc(`Treatment success`))
+  arrange(desc(`Treatment success`))
 
 # Calculate outcome proportions for regional aggregates
 txmdrout_region <- txmdrout_region %>%
-                   calculate_outcomes_pct("mdr_")
+  calculate_outcomes_pct("mdr_")
 
 # Sort regions in descending order of success rate
 txmdrout_region <- txmdrout_region %>%
-                   arrange(desc(`Treatment success`))
+  arrange(desc(`Treatment success`))
 
 # Calculate outcome proportions for global aggregates
 txmdrout_global <- txmdrout_global %>%
-                   calculate_outcomes_pct("mdr_")
+  calculate_outcomes_pct("mdr_")
 
 
 
@@ -2943,19 +2945,19 @@ txmdrout_dummy1 <- data.frame(entity = "-----", coh = NA, succ = NA, fail = NA,
 
 # Had to use mutate to create the next 3 fields because data.frame converted spaces to dots. Grrr
 txmdrout_dummy1 <- txmdrout_dummy1 %>%
-                    mutate(`Treatment success` = NA,
-                           `Lost to follow-up` = NA,
-                           `Not evaluated` = NA)
+  mutate(`Treatment success` = NA,
+         `Lost to follow-up` = NA,
+         `Not evaluated` = NA)
 
 txmdrout_dummy2 <- txmdrout_dummy1 %>% mutate(entity = "------")
 
 # Add a 'no data' option so non-reporters are highlighted in the output
 # (but only if we have at least one country with no data)
 if (txmdrout_nodata_count > 0 )
-  {
+{
   txmdrout_country <- txmdrout_country %>%
-                    mutate(`No data reported` = ifelse((is.na(coh) | coh == 0) & substring(entity,1,2) != "--" ,100,0))
-
+    mutate(`No data reported` = ifelse((is.na(coh) | coh == 0) & substring(entity,1,2) != "--" ,100,0))
+  
   txmdrout_region <- txmdrout_region %>% mutate(`No data reported` = NA)
   txmdrout_global <- txmdrout_global %>% mutate(`No data reported` = NA)
   txmdrout_dummy1 <- txmdrout_dummy1 %>% mutate(`No data reported` = NA)
@@ -2968,10 +2970,10 @@ txmdrout <- rbind(txmdrout_country, txmdrout_dummy1, txmdrout_region, txmdrout_d
 
 
 txmdrout <- txmdrout %>%
-          # Keep record of current order (in reverse) so plot comes out as we want it
-          mutate(entity = factor(entity, levels=rev(entity))) %>%
-          # Drop the actual numbers and keep percentages
-          select(-coh, -succ, -fail, -died, -lost, -c_neval)
+  # Keep record of current order (in reverse) so plot comes out as we want it
+  mutate(entity = factor(entity, levels=rev(entity))) %>%
+  # Drop the actual numbers and keep percentages
+  select(-coh, -succ, -fail, -died, -lost, -c_neval)
 
 
 # Flip into long mode for stacked bar plotting
@@ -2979,28 +2981,37 @@ txmdrout_long <- melt(txmdrout, id=1)
 
 # Plot as stacked bars
 txmdrout_plot <- txmdrout_long %>%
-				  ggplot(aes(entity,
-				             value,
-				             fill = variable)) +
+  ggplot(aes(entity,
+             value,
+             fill = variable)) +
+  
+  geom_col(position = position_stack(reverse = TRUE)) +
+  coord_flip() +
+  
+  theme_glb.rpt() +
+  scale_fill_manual("", values = outcomes_palette()) +
+  labs(x="", y="Percentage of cohort (%)") +
+  
+  theme(legend.position="bottom",
+        panel.grid=element_blank()) +
+  
+  expand_limits(c(0,0)) +
+  
+  ggtitle(paste0("FIG.4.26\nTreatment outcomes for MDR/RR-TB cases\nstarted on treatment in ",
+                 report_year - 3,
+                 ",\n30 high MDR-TB burden countries, WHO regions and globally")) +
+  
+  geom_text(data=subset(txmdrout_long,variable=="Treatment success"),aes(label = round(value, digits = 0)),
+            position = position_stack(reverse = TRUE), size=3,hjust=1.5,color="white")
 
-				  geom_col(position = position_stack(reverse = TRUE)) +
-				  coord_flip() +
-
-				  theme_glb.rpt() +
-				  scale_fill_manual("", values = outcomes_palette()) +
-				  labs(x="", y="Percentage of cohort (%)") +
-
-				  theme(legend.position="bottom",
-				        panel.grid=element_blank()) +
-
-				  expand_limits(c(0,0)) +
-
-				  ggtitle(paste0("FIG.4.26\nTreatment outcomes for rifampicin-resistant TB cases\nstarted on treatment in ",
-				                 report_year - 3,
-				                 ",\n30 high MDR-TB burden countries, WHO regions and globally")) +
-
-				  geom_text(data=subset(txmdrout_long,variable=="Treatment success"),aes(label = round(value, digits = 0)),
-				            position = position_stack(reverse = TRUE), size=3,hjust=1.5,color="white")
+# Add explanatory footnotes
+txmdrout_plot <- arrangeGrob(txmdrout_plot,
+                             bottom = textGrob(paste0(" a These countries reported less than 500 MDR/RR-TB cases who started second line TB treatment in ", 
+                                                      report_year - 3, "."),
+                                               x = 0,
+                                               hjust = -0.1,
+                                               vjust=0.7,
+                                               gp = gpar(fontsize = 8)))
 
 figsave(txmdrout_plot, txmdrout, "f4_26_outcomes_mdr", width=7, height=11) # Designer needs wide data; output portrait mode
 
@@ -3255,7 +3266,7 @@ comm_bmu <- strategy %>%
                            NA,
                            bmu_community_impl * 100 / bmu))
 
-# Define countries which has not been requested for data as their persentage=1000, just to creat a new catogory
+# Define countries which has not been requested for data as their persentage=1000, just to creat a new catagory
 comm_data <- merge(comm_datarequest, comm_bmu, by= "country")%>%
   mutate(comm_pct=replace(comm_pct,(dc_engage_community_display == 0),1000))
 
