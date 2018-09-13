@@ -174,8 +174,11 @@ hiv_total <- hiv_data %>%
 hiv_data <- rbind(hiv_data, hiv_total) %>%
 
             # Calculate the percentages
-            mutate(detected_pct = display_num(hiv_tbdetect * 100 / hiv_reg_new2))
-
+            mutate(detected_pct = display_num(hiv_tbdetect * 100 / hiv_reg_new2))%>%
+            # format the data
+            mutate_at(vars(hiv_reg_new2,
+                           hiv_tbdetect),
+                           rounder)
 
 # Create HTML output
 hiv_table_html <- xtable(hiv_data)
@@ -578,7 +581,7 @@ prev_tx_table_data <- prev_tx_table_data %>%
                              e_prevtx_kids_pct_lohi=replace(e_prevtx_kids_pct_lohi,(e_prevtx_kids_pct == 100),NA),
                              e_prevtx_kids_pct=replace(e_prevtx_kids_pct,(e_prevtx_kids_pct == 100),">100"))
                              #Zimbabwe only reported half year's data for 2017, remove the whole row of it after discussed with Annabel;should add back since 2018
-                             filter(country!="Zimbabwe")
+                             filter(entity!="Zimbabwe")
 
 # Create HTML output
 prev_tx_table_html <- xtable(prev_tx_table_data)

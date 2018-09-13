@@ -50,6 +50,7 @@ figsave <- function(obj, data, name, width=11, height=7){
 # For saving figures in cairo devices to sovle some symbol problems like to show >= correctly in PDF and dataset----
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+library(Cairo)
 figsavecairo <- function(obj, data, name, width=11, height=7){
   
   

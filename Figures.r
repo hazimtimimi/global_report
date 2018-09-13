@@ -836,13 +836,13 @@ hivstatus_plot <- hivstatus_data %>%
                   facet_wrap( ~ entity, ncol = 4) +
                   ggtitle(paste0("FIG.4.7\nPercentage of new and relapse a TB cases with documented HIV status, 2004-",
                                report_year-1,
-                               ", globally and for WHO regions")) +
+                               ", globally and for WHO regions b ")) +
                   theme_glb.rpt() +
                   theme(legend.position="top",
                         legend.title=element_blank())
 
 # Add footnote
-hivstatus_foot <- " a The calculation is for all cases in years prior to 2015."
+hivstatus_foot <- " a The calculation is for all cases in years prior to 2015.\n b Countries  were  excluded  if  the  number  with  documented  HIV  status  was  not  reported  to  WHO."
 
 hivstatus_plot <- arrangeGrob(hivstatus_plot, bottom = textGrob(hivstatus_foot, x = 0, hjust = -0.1, vjust=0.1, gp = gpar(fontsize = 10)))
 
@@ -1220,7 +1220,7 @@ rm(list=ls(pattern = "^dst"))
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Figure 4.12 ------
-# Global number of MDR/RR-TB cases detected (pink) and number enrolled on MDR-TB treatment (green) 2009–2017,
+# Global number of MDR/RR-TB cases detected (green) and number enrolled on MDR-TB treatment (purple) 2009–2017,
 # compared with estimate for 2016 of the number of incident cases of MDR/RR-TB (uncertainty interval shown in blue)
 # and the number of MDR/RR-TB cases among notified pulmonary cases (uncertainty interval shown in black)
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1284,10 +1284,10 @@ rr_global <- rr_global %>%
 # Plot as lines
 rr_plot <-  rr_global %>%
             ggplot(aes(x=year, y=c_rrmdr, ymin=0)) +
-            geom_line(size=1, colour = "Pink") +
+            geom_line(size=1, colour = "Green") +
             geom_line(aes(year, enrolled),
                       size=1,
-                      colour="Green") +
+                      colour="Purple") +
 
             # Add estimated incidence
             geom_errorbar(aes(ymin=e_inc_rr_num_lo,
@@ -1310,7 +1310,7 @@ rr_plot <-  rr_global %>%
             scale_y_continuous(name = "Number of cases (thousands)") +
 
 
-            ggtitle(paste0("FIG.4.12\nGlobal number of MDR/RR-TB cases detected (pink) and number enrolled on MDR-TB treatment (green), 2009-",
+            ggtitle(paste0("FIG.4.12\nGlobal number of MDR/RR-TB cases detected (green) and number enrolled on MDR-TB treatment (purple), 2009-",
                          report_year-1,
                          ",\ncompared with estimate for ",
                           report_year-1,
@@ -1329,7 +1329,7 @@ rm(list=ls(pattern = "^rr_"))
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Figure 4.13 ------
-# Number of MDR/RR-TB cases detected (pink) and enrolled on MDR-TB treatment (green) 2009–2017,
+# Number of MDR/RR-TB cases detected (green) and enrolled on MDR-TB treatment (purple) 2009–2017,
 # 30 high MDR-TB burden countries
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -1376,10 +1376,10 @@ rr_data <- rr_data %>%
 # Plot as lines
 rr_plot <-  rr_data %>%
             ggplot(aes(x=year, y=c_rrmdr, ymin=0)) +
-            geom_line(size=1, colour = "Pink") +
+            geom_line(size=1, colour = "Green") +
             geom_line(aes(year, enrolled),
                       size=1,
-                      colour="Green") +
+                      colour="Purple") +
 
             facet_wrap( ~ country, scales="free_y", ncol = 5) +
 
@@ -1387,7 +1387,7 @@ rr_plot <-  rr_data %>%
             scale_y_continuous(name = "Number of cases") +
 
 
-            ggtitle(paste0("FIG.4.13\nNumber of MDR/RR-TB cases detected (pink) and enrolled on MDR-TB treatment\n(green), 2009-",
+            ggtitle(paste0("FIG.4.13\nNumber of MDR/RR-TB cases detected (green) and enrolled on MDR-TB treatment\n(purple), 2009-",
                          report_year-1,
                          ", 30 high MDR-TB burden countries")) +
 
@@ -1809,8 +1809,14 @@ inctbhiv_data <- estimates_epi_rawvalues %>%
                   right_join(tbhiv_data) %>%
 
                   # change to shortened country names
-                  get_names_for_tables()
-
+                  get_names_for_tables()%>%
+                  #add markers for India and other countries with pending survey resluts footnote
+                  mutate(country = recode(country, "Eswatini"="Eswatini b ",
+                                                   "Myanmar"="Myanmar b ",
+                                                   "Namibia"="Namibia b ",
+                                                   "South Africa"="South Africa b ",
+                                                   "Mozambiqu"="Mozambiqu b ",
+                                                   "India"="India c "))
 
 # Plot as lines
 inctbhiv_plot <- inctbhiv_data %>%
@@ -1842,7 +1848,7 @@ inctbhiv_plot <- inctbhiv_data %>%
                   theme(strip.text.x = element_text(size=8))  #reduce font size of labels above each panel
 
 # Add footnote
-inctbhiv_foot <- " a The calculation is for all cases in years prior to 2015."
+inctbhiv_foot <- " a The calculation is for all cases in years prior to 2015.\nb Estimates of TB incidence for Eswatini, Mozambique, Myanmar, Namibia and South Africa will be reviewed after final results \nfrom their respective national TB prevalence surveys are available in 2019.\nc Estimates of TB incidence for India are interim, pending results from the national TB prevalence survey planned for 2019/2020."
 
 inctbhiv_plot <- arrangeGrob(inctbhiv_plot, bottom = textGrob(inctbhiv_foot, x = 0, hjust = -0.1, vjust=0.1, gp = gpar(fontsize = 8)))
 
@@ -3172,7 +3178,7 @@ ppm_plot <- ppm_data %>%
 
             scale_y_continuous(name = "Contribution of public-public mix to total notifications (%)") +
 
-            ggtitle(paste0("FIG.B4.2.1\nContribution of public-public mix to TB case notifications in 8 countries, 2012-",
+            ggtitle(paste0("FIG.B4.2.1\nContribution of public-public mix to TB case notifications in eight countries, 2012-",
                            report_year-1)) +
 
             theme_glb.rpt() +
@@ -3224,7 +3230,7 @@ ppm_plot <- ppm_data %>%
 
             scale_y_continuous(name = "Contribution of public-private mix to total notifications (%)") +
 
-            ggtitle(paste0("FIG.B4.2.2\nContribution of public-private mix to TB case notifications in 8 countries, 2012-",
+            ggtitle(paste0("FIG.B4.2.2\nContribution of public-private mix to TB case notifications in eight countries, 2012-",
                            report_year-1)) +
 
             theme_glb.rpt() +
@@ -3266,7 +3272,7 @@ comm_bmu <- strategy %>%
                            NA,
                            bmu_community_impl * 100 / bmu))
 
-# Define countries which has not been requested for data as their persentage=1000, just to creat a new catagory
+# Define countries which has not been requested for data as their persentage=1000, just to creat a new category
 comm_data <- merge(comm_datarequest, comm_bmu, by= "country")%>%
   mutate(comm_pct=replace(comm_pct,(dc_engage_community_display == 0),1000))
 
@@ -3280,14 +3286,14 @@ comm_data$cat <- cut(comm_data$comm_pct,
 comm_map <- WHOmap.print(comm_data,
                          paste("Figure Box 4.5.1\nPercentage of basic management units in which there is community contribution",
                                "\nto new case finding and/or to treatment adherence support,",
-                               report_year-1),
+                               report_year-1," a "),
                          "Percentage",
                          copyright=FALSE,
                          background="White",
                          colors=c('#bdd7e7', '#6baed6', '#3182bd', '#08519c','#edf8e9'),
                          show=FALSE)
 comm_map <- arrangeGrob(comm_map,
-                        bottom = textGrob(paste0("Data only requested from ",sum(comm_datarequest$dc_engage_community_display)," countries."),
+                        bottom = textGrob(paste0(" a Data only requested from ",sum(comm_datarequest$dc_engage_community_display)," countries."),
                                           x = 0,
                                           hjust = -0.1,
                                           vjust=-1.5,
