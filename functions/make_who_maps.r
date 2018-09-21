@@ -273,6 +273,7 @@ WHOmap.print <- function(data, map.title="", legend.title="", background=NA, col
 who_bubble_map <- function(data,
                             map_title = "",
                             legend_title = "",
+                            background=NA,
                             bubble_colour = "purple",
                             bubble_alpha = 0.4,
                             border_colour = "grey50",
@@ -435,6 +436,7 @@ who_bubble_map <- function(data,
     labs(title = map_title) +
     
     theme(aspect.ratio = a.ratio,
+          plot.background=element_rect(fill = background),
           plot.title=element_text(size=16, hjust=0),
           legend.key.size = unit(0.50, "cm"),
           legend.text=element_text(size=8),

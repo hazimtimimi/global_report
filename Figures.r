@@ -59,29 +59,30 @@ cb_data_combined <- cb_data %>%
 
 # produce the map
 cb_map<- WHOmap.print(cb_data_combined,
-                      "FIG.3.1\nCountries with national case-based surveillance as of July 2018 a ",
+                      "FIG.3.1\nCountries with national case-based surveillance as of July 2018\u1d43 ",
                       legend.title = "Country response",
                       copyright=FALSE,
                       brewer.pal(3, "Blues"),
                       na.label="No response",
+                      background="White",
                       show=FALSE)
 
 # Add footnote about using earlier data for some countries
-cb_foot <- paste(" a  Responses from ",
+cb_foot <- paste("\u1d43  Responses from ",
                  report_year -1,
                  " were used for ",
                  nrow(cb_prev_year_data),
-                 "countries")
+                 "countries.")
 
 cb_map <- arrangeGrob(cb_map, bottom = textGrob(cb_foot, x = 0, hjust = -0.1, vjust=0.1, gp = gpar(fontsize = 10)))
 
 
-figsave(cb_map,
-        select(cb_data_combined,
-               iso3,
-               country,
-               cat),
-        "f3_1_casebased_map")
+figsavecairo(cb_map,
+             select(cb_data_combined,
+                    iso3,
+                    country,
+                    cat),
+             "f3_1_casebased_map")
 
 
 # Clean up (remove any objects with their name beginning with 'cb')
@@ -113,7 +114,7 @@ topinc_map <- who_bubble_map(topinc_data,
                              #Set number of countries need to be labeled with names
                              bubble_label_show_number = 8)
 # Save the plot
-figsave(topinc_map,
+figsavecairo(topinc_map,
         select(topinc_data,
                iso3,
                country,
@@ -155,7 +156,7 @@ rrnum_map <- who_bubble_map(rrnum_data,
 
 
 # Save the plot
-figsave(rrnum_map,
+figsavecairo(rrnum_map,
         select(rrnum_data,
                iso3,
                country,
@@ -243,7 +244,7 @@ inc_plot <- inc_data %>%
         axis.text.x = element_text(size=5))
 
 # Save the plot
-figsave(inc_plot,
+figsavecairo(inc_plot,
         select(inc_data,
                year,
                c_newinc_millions,
@@ -372,7 +373,7 @@ agesex_plot <- agesex_agg_long %>%
                                  labels=levels(agesex_agg_long$agegroup)) +
                 coord_flip() +
                 facet_wrap( ~ entity, ncol = 4) +
-                ggtitle(paste0("FIG.4.2\nNew and relapse TB case notification rates by age and sex a in ",
+                ggtitle(paste0("FIG.4.2\nNew and relapse TB case notification rates by age and sex\u1d43 in ",
                                 report_year - 1,
                                 ", globally and for WHO regions")) +
                 theme_glb.rpt() +
@@ -385,7 +386,7 @@ agesex_pcnt <- rounder(sum(agesex$tot_notified, na.rm=TRUE)  * 100
                        /
                        sum(notification[notification$year==report_year -1, "c_newinc"], na.rm=TRUE))
 
-agesex_foot <- paste0(" a  Countries not reporting cases in these categories are excluded. Cases included account for ",
+agesex_foot <- paste0("\u1d43  Countries not reporting cases in these categories are excluded. Cases included account for ",
                       agesex_pcnt,
                       "% of reported cases.")
 
@@ -454,7 +455,7 @@ kids_data_combined <- kids_data %>%
 kids_map <- WHOmap.print(kids_data_combined,
                          paste0("FIG.4.3\nPercentage of new and relapse TB cases that were children (aged <15), ",
                                 report_year-1,
-                                " a "),
+                                "\u1d43 "),
                          "Percentage",
                          copyright=FALSE,
                          background="White",
@@ -463,7 +464,7 @@ kids_map <- WHOmap.print(kids_data_combined,
                          show=FALSE)
 
 # Add footnote about using earlier data for some countries
-kids_foot <- paste(" a ",
+kids_foot <- paste("\u1d43 ",
                     report_year - 2,
                     "data were used for",
                     nrow(kids_prev_year_data),
@@ -587,20 +588,20 @@ bacconf_plot <- bacconf_data %>%
                   scale_y_continuous(name = "Percentage bacteriologically confirmed") +
                   expand_limits(y=c(0,100)) +
                   facet_wrap( ~ entity, ncol = 4) +
-                  ggtitle(paste0("FIG.4.4\nPercentage of new and relapse a pulmonary TB cases with bacteriological confirmation, globally and for WHO regions,\n2000-",
+                  ggtitle(paste0("FIG.4.4\nPercentage of new and relapse\u1d43 pulmonary TB cases with bacteriological confirmation, globally and for WHO regions,\n2000-",
                                report_year-1)) +
                   theme_glb.rpt() +
                   theme(legend.position="top",
                         legend.title=element_blank())
 
 # Add footnote
-bacconf_foot <- " a The calculation is for new and relapse pulmonary cases in years prior to 2013 based on smear results, except for the European Region\nwhere data on confirmation by culture was also available for the period 2002-2012."
+bacconf_foot <- "\u1d43 The calculation is for new and relapse pulmonary cases in years prior to 2013 based on smear results, except for the European Region\nwhere data on confirmation by culture was also available for the period 2002-2012."
 
 bacconf_plot <- arrangeGrob(bacconf_plot, bottom = textGrob(bacconf_foot, x = 0, hjust = -0.1, vjust=0.1, gp = gpar(fontsize = 10)))
 
 
 # Save the plot
-figsave(bacconf_plot, bacconf_data, "f4_4_bacconf_plot")
+figsavecairo(bacconf_plot, bacconf_data, "f4_4_bacconf_plot")
 
 # Clean up (remove any objects with their name beginning with 'bacconf')
 rm(list=ls(pattern = "^bacconf"))
@@ -659,7 +660,7 @@ bacconf_data_combined <- bacconf_data %>%
 bacconf_map <- WHOmap.print(bacconf_data_combined,
                             paste0("FIG.4.5\nPercentage of new and relapse pulmonary TB cases with bacteriological confirmation, ",
                                    report_year-1,
-                                   " a "),
+                                   "\u1d43 "),
                             "Percentage",
                             copyright=FALSE,
                             background="White",
@@ -668,7 +669,7 @@ bacconf_map <- WHOmap.print(bacconf_data_combined,
                             show=FALSE)
 
 # Add footnote about using earlier data for some countries
-bacconf_foot <- paste(" a ",
+bacconf_foot <- paste("\u1d43 ",
                       report_year - 2,
                       "data were used for",
                       nrow(bacconf_prev_year_data),
@@ -746,7 +747,7 @@ ep_data_combined <- ep_data %>%
 ep_map <- WHOmap.print(ep_data_combined,
                        paste0("FIG.4.6\nPercentage of extrapulmonary cases among new and relapse TB cases, ",
                               report_year-1,
-                              " a "),
+                              "\u1d43 "),
                        "Percentage",
                        copyright=FALSE,
                        background="White",
@@ -754,7 +755,7 @@ ep_map <- WHOmap.print(ep_data_combined,
                        show=FALSE)
 
 # Add footnote about using earlier data for some countries
-ep_foot <- paste(" a ",
+ep_foot <- paste("\u1d43 ",
                  report_year - 2,
                  "data were used for",
                  nrow(ep_prev_year_data),
@@ -834,21 +835,22 @@ hivstatus_plot <- hivstatus_data %>%
                   expand_limits(y=c(0,100)) +
                   #scale_x_discrete(name = "Year") +
                   facet_wrap( ~ entity, ncol = 4) +
-                  ggtitle(paste0("FIG.4.7\nPercentage of new and relapse a TB cases with documented HIV status, 2004-",
+                  ggtitle(paste0("FIG.4.7\nPercentage of new and relapse\u1d43 TB cases with documented HIV status, 2004-",
                                report_year-1,
-                               ", globally and for WHO regions b ")) +
+                               ", globally and for WHO regions\u1d47 ")) +
                   theme_glb.rpt() +
                   theme(legend.position="top",
                         legend.title=element_blank())
 
 # Add footnote
-hivstatus_foot <- " a The calculation is for all cases in years prior to 2015.\n b Countries  were  excluded  if  the  number  with  documented  HIV  status  was  not  reported  to  WHO."
+hivstatus_foot <- "\u1d43 The calculation is for all cases in years prior to 2015.\n\u1d47 Countries  were  excluded  if  the  number  with  documented  HIV  status  was  not  reported  to  WHO."
+
 
 hivstatus_plot <- arrangeGrob(hivstatus_plot, bottom = textGrob(hivstatus_foot, x = 0, hjust = -0.1, vjust=0.1, gp = gpar(fontsize = 10)))
 
 
 # Save the plot
-figsave(hivstatus_plot, hivstatus_data, "f4_7_hivstatus_plot")
+figsavecairo(hivstatus_plot, hivstatus_data, "f4_7_hivstatus_plot")
 
 # Clean up (remove any objects with their name beginning with 'hivstatus')
 rm(list=ls(pattern = "^hivstatus"))
@@ -896,7 +898,9 @@ hivstatus_data_combined <- hivstatus_data %>%
 
 # produce the map
 hivstatus_map <- WHOmap.print(hivstatus_data_combined,
-                        paste("FIG.4.8\nPercentage of new and relapse TB cases with documented HIV status,", report_year-1, " a "),
+                        paste("FIG.4.8\nPercentage of new and relapse TB cases with documented HIV status,",
+                              report_year-1,
+                              "\u1d43"),
                            "Percentage",
                            copyright=FALSE,
                            background="White",
@@ -905,7 +909,7 @@ hivstatus_map <- WHOmap.print(hivstatus_data_combined,
 
 
 # Add footnote about using earlier data for some countries
-hivstatus_foot <- paste(" a ",
+hivstatus_foot <- paste("\u1d43 ",
                         report_year - 2,
                         "data were used for",
                         nrow(hivstatus_prev_year_data),
@@ -997,7 +1001,7 @@ inctbhiv_plot <- inctbhiv_data %>%
   scale_y_continuous(name = "New and relapse cases per year (millions)") +
   xlab("Year") +
 
-  ggtitle(paste0("FIG.4.9\nGlobal numbers of notified new and relapse cases a known to be HIV-positive (black),number started on antiretroviral therapy (blue) \nand estimated number of incident HIV-positive TB cases (red), 2004-",
+  ggtitle(paste0("FIG.4.9\nGlobal numbers of notified new and relapse cases\u1d43 known to be HIV-positive (black),number started on antiretroviral therapy (blue) \nand estimated number of incident HIV-positive TB cases (red), 2004-",
                  report_year-1,
                  ". Shaded areas represent uncertainty bands.")) +
 
@@ -1005,13 +1009,13 @@ inctbhiv_plot <- inctbhiv_data %>%
 
 
 # Add footnote
-inctbhiv_foot <- " a The calculation is for all cases in years prior to 2015."
+inctbhiv_foot <- "\u1d43 The calculation is for all cases in years prior to 2015."
 
 inctbhiv_plot <- arrangeGrob(inctbhiv_plot, bottom = textGrob(inctbhiv_foot, x = 0, hjust = -0.1, vjust=0.1, gp = gpar(fontsize = 10)))
 
 
 # Save the plot
-figsave(inctbhiv_plot, inctbhiv_data, "f4_9_inctbhiv_plot_global")
+figsavecairo(inctbhiv_plot, inctbhiv_data, "f4_9_inctbhiv_plot_global")
 
 # Clean up (remove any objects with their name containing 'tbhiv')
 rm(list=ls(pattern = "tbhiv"))
@@ -1109,7 +1113,7 @@ dst_agg <- rbind(dst_regional, dst_global) %>%
   mutate( dst_pcnt = dst_num * 100 / dst_denom)
 
   # Add a footnote call to Africa, does not need it in 2018 report, comment it out
-  # mutate( entity = ifelse(entity == "Africa", "Africa a ", entity))
+  # mutate( entity = ifelse(entity == "Africa", "Africa\u1d43 ", entity))
 
 # Change the order
 dst_agg$entity <- factor(dst_agg$entity,
@@ -1135,12 +1139,12 @@ dst_plot <- dst_agg %>%
         legend.title=element_blank())
 
 # Add explanatory footnotes, does not need it in 2018 report, comment it out
-# dst_footnote <- " a The spike in coverage in the African Region in 2015 is due to the reporting of laboratory results for many cases in South Africa differentiated by treatment history."
+# dst_footnote <- "\u1d43 The spike in coverage in the African Region in 2015 is due to the reporting of laboratory results for many cases in South Africa differentiated by treatment history."
 
 # dst_plot <- arrangeGrob(dst_plot, bottom = textGrob(dst_footnote, x = 0, hjust = -0.1, vjust=0.1, gp = gpar(fontsize = 9)))
 
 # Save the plot
-figsave(dst_plot, dst_agg, "f4_10_dst_aggregates")
+figsavecairo(dst_plot, dst_agg, "f4_10_dst_aggregates")
 
 # Clean up (remove any objects with their name containing 'dst_')
 rm(list=ls(pattern = "dst_"))
@@ -1189,7 +1193,7 @@ dst_data_combined <- dst_data %>%
 
 # produce the map
 dst_map <- WHOmap.print(dst_data_combined,
-                        paste0("FIG.4.11\nPercentage of all TB cases tested for RR-TB, ", report_year-1, " a "),
+                        paste0("FIG.4.11\nPercentage of all TB cases tested for RR-TB, ", report_year-1, "\u1d43 "),
                         "Percentage",
                         copyright=FALSE,
                         background="White",
@@ -1198,7 +1202,7 @@ dst_map <- WHOmap.print(dst_data_combined,
 
 
 # Add footnote about testing and also about using earlier data for some countries
-dst_foot <- paste(" a ",report_year - 2,"data were used for", nrow(dst_prev_year_data),"countries")
+dst_foot <- paste("\u1d43 ",report_year - 2,"data were used for", nrow(dst_prev_year_data),"countries.")
 
 
 
@@ -1322,7 +1326,7 @@ rr_plot <-  rr_global %>%
                   legend.title=element_blank())
 
 # Save the plot
-figsave(rr_plot, rr_global, "f4_12_drtb_detect_enroll_global")
+figsavecairo(rr_plot, rr_global, "f4_12_drtb_detect_enroll_global")
 
 # Clean up (remove any objects with their name beginning with 'rr_')
 rm(list=ls(pattern = "^rr_"))
@@ -1398,7 +1402,7 @@ rr_plot <-  rr_data %>%
 
 
 # Save the plot
-figsave(rr_plot, rr_data, "f4_13_drtb_detect_enroll_hbc", width=7, height=11)
+figsavecairo(rr_plot, rr_data, "f4_13_drtb_detect_enroll_hbc", width=7, height=11)
 
 # Clean up (remove any objects with their name beginning with 'rr_')
 rm(list=ls(pattern = "^rr_"))
@@ -1444,7 +1448,7 @@ sldst_data_combined <- sldst_data %>%
 sldst_map <- WHOmap.print(sldst_data_combined,
                           paste0("FIG.4.14\nPercentage of MDR/RR-TB cases tested for susceptibility to second-line drugs, ",
                                     report_year-1,
-                                  " a "),
+                                  "\u1d43 "),
                                  "Percentage",
                                  copyright=FALSE,
                                  background="White",
@@ -1452,7 +1456,7 @@ sldst_map <- WHOmap.print(sldst_data_combined,
                                  show=FALSE)
 
 # Add footnote about using earlier data for some countries
-sldst_foot <- paste(" a ",
+sldst_foot <- paste("\u1d43 ",
                     report_year - 2,
                     "data were used for",
                     nrow(sldst_prev_year_data),
@@ -1493,12 +1497,12 @@ newinc_data <- notification %>%
                        country,
                        c_newinc) %>%
                 #add markers for India and other countries with pending survey resluts footnote
-                mutate(country = recode(country, "India"="India a ",
-                                                 "Mozambique"="Mozambique b ",
-                                                 "Myanmar"="Myanmar b ",
-                                                 "Namibia"="Namibia b ",
-                                                 "South Africa"="South Africa b ",
-                                                 "Viet Nam"="Viet Nam b "))
+                mutate(country = recode(country, "India"="India\u1d43 ",
+                                                 "Mozambique"="Mozambique\u1d47 ",
+                                                 "Myanmar"="Myanmar\u1d47 ",
+                                                 "Namibia"="Namibia\u1d47 ",
+                                                 "South Africa"="South Africa\u1d47 ",
+                                                 "Viet Nam"="Viet Nam\u1d47 "))
 
 inc_data <- estimates_epi_rawvalues %>%
             filter(year >= 2000) %>%
@@ -1546,15 +1550,17 @@ inc_plot <- inc_data %>%
                   strip.text.x = element_text(size=8))  #reduce font size of labels above each panel
 
 # Add India and other countries footnotes
+
+pending_incidence_footnote<- "Estimates of TB incidence for Mozambique, Myanmar, Namibia, South Africa and Viet Nam will be reviewed after final results from their \nrespective national TB prevalence surveys are available in 2019."
+
 inc_plot <- arrangeGrob(inc_plot,
-                        bottom = textGrob(paste(" a ",
-                                                india_incidence_footnote,"\n b ",pending_incidence_footnote),
+                        bottom = textGrob(paste("\u1d43 ",
+                                                india_incidence_footnote,"\n\u1d47 ",pending_incidence_footnote),
                                           x = 0.02,
                                           just = "left",
-                                          gp = gpar(fontsize = 7)))
-
+                                          gp = gpar(fontsize = 8)))
 # Save the plot
-figsave(inc_plot, inc_data, "f4_15_inc_plot_hbc", width=7, height=11)
+figsavecairo(inc_plot, inc_data, "f4_15_inc_plot_hbc", width=7, height=11)
 
 # Clean up (remove any objects with their name containing 'inc_')
 rm(list=ls(pattern = "inc_"))
@@ -1586,12 +1592,12 @@ coverage_30hbc <- country_group_membership %>%
 coverage_inc_country <- coverage_inc_country %>%
                         inner_join(coverage_30hbc) %>%
                        #add marker for India and other countries footnote
-                       mutate(entity = recode(entity, "India"="India b ",
-                                                      "Mozambique"="Mozambique a ",
-                                                      "Myanmar"="Myanmar a ",
-                                                      "Namibia"="Namibia a ",
-                                                      "South Africa"="South Africa a ",
-                                                      "Viet Nam"="Viet Nam a "))
+                       mutate(entity = recode(entity, "India"="India\u1d47 ",
+                                                      "Mozambique"="Mozambique\u1d43 ",
+                                                      "Myanmar"="Myanmar\u1d43 ",
+                                                      "Namibia"="Namibia\u1d43 ",
+                                                      "South Africa"="South Africa\u1d43 ",
+                                                      "Viet Nam"="Viet Nam\u1d43 "))
 
 coverage_country <- notification %>%
                      filter(year == report_year - 1) %>%
@@ -1668,8 +1674,10 @@ coverage_plot <- coverage_data %>%
                   coord_flip()
 
 # Add footnotes
-coverage_footnote <- paste(" a ",
-                           pending_incidence_footnote,"\n b ",india_incidence_footnote)
+pending_incidence_footnote<- "Estimates of TB incidence for Mozambique, Myanmar, Namibia, South Africa and Viet Nam will be reviewed after final results from their \nrespective national TB prevalence surveys are available in 2019."
+
+coverage_footnote <- paste("\u1d43 ",
+                           pending_incidence_footnote,"\n\u1d47 ",india_incidence_footnote)
 # If there are countries with no data then mention it in the footnotes
 if (coverage_nodata_count > 0)
   {
@@ -1685,7 +1693,7 @@ coverage_plot <- arrangeGrob(coverage_plot,
 
 
 # Save the plot
-figsave(coverage_plot, coverage_data, "f4_16_txcoverage_tb")
+figsavecairo(coverage_plot, coverage_data, "f4_16_txcoverage_tb")
 
 # Clean up (remove any objects with their name starting with 'coverage')
 rm(list=ls(pattern = "^coverage"))
@@ -1725,8 +1733,9 @@ gap_map <- who_bubble_map(gap_data,
                           paste0("FIG.4.17\n",
                                  "The ten countries with the largest gaps between notifications of new and relapse\n",
                                  "(incident) TB cases and the best estimates of TB incidence, ",
-                                 report_year - 1," a "),
+                                 report_year - 1,"\u1d43 "),
                           bubble_colour = "purple",
+                          background = "white",
                           scale_breaks = c(80000,500000,1000000),
                           scale_limits = c(80000,1100000),
                           scale_labels = c("80 000","500 000","1 000 000"),
@@ -1737,21 +1746,23 @@ gap_ten_countries_name_by_rank <- gap_data  %>%
   arrange(desc(bubble_size))   %>%
   select(country)
 
+india_incidence_footnote <- "Estimates of TB incidence for India are interim, pending results from the national TB prevalence survey planned for 2019/2020."
+pending_incidence_footnote <- "Estimates of TB incidence for South Africa will be reviewed after final results from its national TB prevalence survey is available in 2019."
+
 gap_map <- arrangeGrob(gap_map,
-                       bottom = textGrob(paste0(" a The ten countries ranked in order of the size of the gap between notified cases and the best estimates of TB incidence in ",report_year-1," are \n",
+                       bottom = textGrob(paste0("\u1d43 The ten countries ranked in order of the size of the gap between notified cases and the best estimates of TB incidence in ",report_year-1," are \n",
                                                 sapply(gap_ten_countries_name_by_rank,paste, collapse=", "),".","\n",india_incidence_footnote,"\n",pending_incidence_footnote),
                                          x = 0,
                                          hjust = -0.1,
                                          vjust=0.4,
                                          gp = gpar(fontsize = 10)))
-
 # Save the plot
-figsave(gap_map,
-        select(gap_data,
-               iso3,
-               country,
-               bubble_size),
-        "f4_17_top_10_gap_map")
+figsavecairo(gap_map,
+             select(gap_data,
+                    iso3,
+                    country,
+                    bubble_size),
+            "f4_17_top_10_gap_map")
 
 # Clean up (remove any objects with their name beginning with 'gap')
 rm(list=ls(pattern = "^gap"))
@@ -1811,12 +1822,12 @@ inctbhiv_data <- estimates_epi_rawvalues %>%
                   # change to shortened country names
                   get_names_for_tables()%>%
                   #add markers for India and other countries with pending survey resluts footnote
-                  mutate(country = recode(country, "Eswatini"="Eswatini b ",
-                                                   "Myanmar"="Myanmar b ",
-                                                   "Namibia"="Namibia b ",
-                                                   "South Africa"="South Africa b ",
-                                                   "Mozambiqu"="Mozambiqu b ",
-                                                   "India"="India c "))
+                  mutate(country = recode(country, "Eswatini"="Eswatini\u1d47 ",
+                                                   "Myanmar"="Myanmar\u1d47 ",
+                                                   "Namibia"="Namibia\u1d47 ",
+                                                   "South Africa"="South Africa\u1d47 ",
+                                                   "Mozambiqu"="Mozambiqu\u1d47 ",
+                                                   "India"="India\u1d9c "))
 
 # Plot as lines
 inctbhiv_plot <- inctbhiv_data %>%
@@ -1840,7 +1851,7 @@ inctbhiv_plot <- inctbhiv_data %>%
                               scales = "free_y",
                               ncol = 5) +
 
-                  ggtitle(paste0("FIG.4.18\nNumber of new and relapse cases a known to be HIV-positive (black) and\nnumber started on ART (blue) compared with estimated number of \nincident HIV-positive TB cases (red), 2004-",
+                  ggtitle(paste0("FIG.4.18\nNumber of new and relapse cases\u1d43 known to be HIV-positive (black) and\nnumber started on ART (blue) compared with estimated number of \nincident HIV-positive TB cases (red), 2004-",
                                report_year-1,
                                ", 30 high TB/HIV burden countries")) +
 
@@ -1848,13 +1859,23 @@ inctbhiv_plot <- inctbhiv_data %>%
                   theme(strip.text.x = element_text(size=8))  #reduce font size of labels above each panel
 
 # Add footnote
-inctbhiv_foot <- " a The calculation is for all cases in years prior to 2015.\nb Estimates of TB incidence for Eswatini, Mozambique, Myanmar, Namibia and South Africa will be reviewed after final results \nfrom their respective national TB prevalence surveys are available in 2019.\nc Estimates of TB incidence for India are interim, pending results from the national TB prevalence survey planned for 2019/2020."
+inctbhiv_foot <- "\u1d43 The calculation is for all cases in years prior to 2015."
+pending_incidence_footnote <- " Estimates of TB incidence for Eswatini, Mozambique, Myanmar, Namibia and South Africa will be reviewed after final \nresults from their respective national TB prevalence surveys are available in 2019."
+india_incidence_footnote <- " Estimates of TB incidence for India are interim, pending results from the national TB prevalence survey planned for 2019/2020."
 
-inctbhiv_plot <- arrangeGrob(inctbhiv_plot, bottom = textGrob(inctbhiv_foot, x = 0, hjust = -0.1, vjust=0.1, gp = gpar(fontsize = 8)))
+inctbhiv_plot <- arrangeGrob(inctbhiv_plot, bottom = textGrob(paste(inctbhiv_foot,
+                                                                    "\n\u1d47",
+                                                                    pending_incidence_footnote,
+                                                                    "\n\u1d9c",
+                                                                    india_incidence_footnote), 
+                                                                    x = 0, 
+                                                                    hjust = -0.1,
+                                                                    vjust=0.1, 
+                                                                    gp = gpar(fontsize = 8)))
 
 
 # Save the plot
-figsave(inctbhiv_plot, inctbhiv_data, "f4_18_inctbhiv_plot_hbc", width=7, height=11)
+figsavecairo(inctbhiv_plot, inctbhiv_data, "f4_18_inctbhiv_plot_hbc", width=7, height=11)
 
 # Clean up (remove any objects with their name containing 'tbhiv')
 rm(list=ls(pattern = "tbhiv"))
@@ -1896,7 +1917,7 @@ coveragehiv_country <- TBHIV_for_aggregates %>%
                               c_art_lo = newrel_art * 100  / e_inc_tbhiv_num_hi,
                               c_art_hi = newrel_art * 100  / e_inc_tbhiv_num_lo,
                               # highlight countries with no data
-                              entity = ifelse(is.na(newrel_art), paste0(entity, " a "), entity )) %>%
+                              entity = ifelse(is.na(newrel_art), paste0(entity, "\u1d43 "), entity )) %>%
                        select(entity,
                               c_art,
                               c_art_lo,
@@ -1905,7 +1926,7 @@ coveragehiv_country <- TBHIV_for_aggregates %>%
 
 # Calculate how many countries highlighted as having no data
 coveragehiv_nodata_count <- coveragehiv_country %>%
-                            filter(grepl("[ a ]$", entity)) %>%
+                            filter(grepl("[\u1d43 ]$", entity)) %>%
                             nrow()
 
 coveragehiv_inc_region <- aggregated_estimates_epi_rawvalues %>%
@@ -1997,7 +2018,7 @@ coveragehiv_plot <- coveragehiv_data %>%
 if (coveragehiv_nodata_count > 0)
   {
   coveragehiv_plot <- arrangeGrob(coveragehiv_plot,
-                                  bottom = textGrob(" a  No data",
+                                  bottom = textGrob("\u1d43  No data",
                                                     x = 0,
                                                     hjust = -0.1,
                                                     vjust=0,
@@ -2005,7 +2026,7 @@ if (coveragehiv_nodata_count > 0)
 }
 
 # Save the plot
-figsave(coveragehiv_plot, coveragehiv_data, "f4_19_txcoverage_tbhiv")
+figsavecairo(coveragehiv_plot, coveragehiv_data, "f4_19_txcoverage_tbhiv")
 
 # Clean up (remove any objects with their name starting with 'coveragehiv')
 rm(list=ls(pattern = "^coveragehiv"))
@@ -2168,7 +2189,7 @@ if (coveragerr_nodata_count > 0)
 }
 
 # Save the plot
-figsave(coveragerr_plot, coveragerr_data, "f4_20_txcoverage_drtb")
+figsavecairo(coveragerr_plot, coveragerr_data, "f4_20_txcoverage_drtb")
 
 # Clean up (remove any objects with their name starting with 'coveragerr')
 rm(list=ls(pattern = "^coveragerr"))
@@ -2212,8 +2233,9 @@ drgap_map <- who_bubble_map(drgap_data,
                             paste0("FIG.4.21\n",
                                    "The ten countries with the largest gaps between the number of patients started\n",
                                    "on treatment for MDR-TB and the best estimates of MDR/RR-TB incidence, ",
-                                   report_year - 1," a "),
+                                   report_year - 1,"\u1d43 "),
                             bubble_colour = "green",
+                            background = "white",
                             scale_breaks = c(7500,50000,100000),
                             scale_limits = c(7500,130000),
                             scale_labels = c("7 500","50 000","100 000"),
@@ -2225,7 +2247,7 @@ drgap_ten_countries_name_by_rank <- drgap_data  %>%
   select(country)
 
 drgap_map <- arrangeGrob(drgap_map,
-                         bottom = textGrob(paste0(" a The ten countries ranked in order of the size of the gap between the number of patients started on MDR-TB treatment and the best estimate of MDR/RR-TB \nincidence in ",report_year-1," are ",
+                         bottom = textGrob(paste0("\u1d43 The ten countries ranked in order of the size of the gap between the number of patients started on MDR-TB treatment and the best estimate of MDR/RR-TB \nincidence in ",report_year-1," are ",
                                                   sapply(drgap_ten_countries_name_by_rank,paste, collapse=", "),"."),
                                            x = 0,
                                            hjust = -0.1,
@@ -2233,7 +2255,7 @@ drgap_map <- arrangeGrob(drgap_map,
                                            gp = gpar(fontsize = 10)))
 
 # Save the plot
-figsave(drgap_map,
+figsavecairo(drgap_map,
         select(drgap_data,
                iso3,
                country,
@@ -2271,7 +2293,7 @@ txout_country  <- outcomes %>%
                   #relapse cases in the outcomes cohort
 
                   mutate(entity = ifelse(!is.na(rel_with_new_flg) & rel_with_new_flg == 0,
-                                         paste0(entity, " a "),
+                                         paste0(entity, "\u1d43 "),
                                          entity)) %>%
                   select(-rel_with_new_flg)
 
@@ -2416,13 +2438,13 @@ txout_plot <- txout_long %>%
 			            position = position_stack(reverse = TRUE), size=3,hjust=1.5,color="white")
 
 txout_plot <- arrangeGrob(txout_plot,
-                          bottom = textGrob(" a Treatment outcomes are for new cases only.",
+                          bottom = textGrob("\u1d43 Treatment outcomes are for new cases only.",
                                             x = 0,
                                             hjust = -0.1,
                                             vjust=0,
                                             gp = gpar(fontsize = 10)))
 
-figsave(txout_plot, txout, "f4_22_outcomes_tb", width=7, height=11) # Designer needs wide data; output portrait mode
+figsavecairo(txout_plot, txout, "f4_22_outcomes_tb", width=7, height=11) # Designer needs wide data; output portrait mode
 
 # Clean up (remove any objects with their name starting with 'txout')
 rm(list=ls(pattern = "^txout"))
@@ -2548,19 +2570,19 @@ out_plot <- out_data_long %>%
 
 			  ggtitle(paste0("FIG.4.23\nTreatment outcomes for new and relapse TB cases,\nnew and relapse HIV-positive TB cases,\nand MDR/RR-TB cases, 2012-",
 			                 report_year - 2,
-			                 " globally a ")) +
+			                 " globally\u1d43 ")) +
 
 			  geom_text(data=subset(out_data_long,variable=="Treatment success"),aes(label = round(value, digits = 0)),
 			            position = position_stack(reverse = TRUE), size=3,hjust=1.5,color="white")
 
 out_plot <- arrangeGrob(out_plot,
-                        bottom = textGrob(" a MDR/RR-TB annual treatment cohorts are reported one year later than other TB cohorts.",
+                        bottom = textGrob("\u1d43 MDR/RR-TB annual treatment cohorts are reported one year later than other TB cohorts.",
                                           x = 0,
                                           hjust = -0.1,
                                           vjust=0,
                                           gp = gpar(fontsize = 10)))
 
-figsave(out_plot, out_data_long, "f4_23_outcomes_tb_hiv_mdr", width=7, height=11) # Designer needs wide data; output portrait mode
+figsavecairo(out_plot, out_data_long, "f4_23_outcomes_tb_hiv_mdr", width=7, height=11) # Designer needs wide data; output portrait mode
 
 # Clean up (remove any objects with their name starting with 'out_')
 rm(list=ls(pattern = "^out_"))
@@ -2688,21 +2710,21 @@ txoutnum_plot <- arrangeGrob(txoutnum_plot_glob,
                              txoutnum_plot_reg,
                              nrow = 2,
                              ncol = 1,
-                             top = textGrob(label = paste0("FIG.4.24\nTreatment outcomes for new and relapse TB cases a (absolute numbers), 2000-",
+                             top = textGrob(label = paste0("FIG.4.24\nTreatment outcomes for new and relapse TB cases\u1d43 (absolute numbers), 2000-",
                                                            report_year-2,
                                                            ", globally\nand for WHO regions"),
                                             x = 0.02,
                                             just = "left",
                                             gp = gpar(fontsize = 10)),
 
-                             bottom = textGrob(" a Cohorts before 2012 included new cases only.",
+                             bottom = textGrob("\u1d43 Cohorts before 2012 included new cases only.",
                                                x = 0.02,
                                                just = "left",
                                                gp = gpar(fontsize = 10)))
 
 
 # Save the plot
-figsave(txoutnum_plot, txoutnum_data, "f4_24_outcomes_absolute", width=7, height=11)
+figsavecairo(txoutnum_plot, txoutnum_data, "f4_24_outcomes_absolute", width=7, height=11)
 
 # Clean up (remove any objects with their name starting 'txout')
 rm(list=ls(pattern = "^txoutnum"))
@@ -2856,7 +2878,7 @@ txtbhivout_plot <- txtbhivout_long %>%
 
 
 # Save the plot
-figsave(txtbhivout_plot, txtbhivout, "f4_25_outcomes_tbhiv", width=7, height=11) # Designer needs wide data; output portrait mode
+figsavecairo(txtbhivout_plot, txtbhivout, "f4_25_outcomes_tbhiv", width=7, height=11) # Designer needs wide data; output portrait mode
 
 # Clean up (remove any objects with their name starting with 'txtbhivout')
 rm(list=ls(pattern = "^txtbhivout"))
@@ -2884,7 +2906,7 @@ txmdrout_country  <- outcomes %>%
   dplyr::rename(entity = country ) %>%
   arrange(entity) %>%
   # add call out to countries whose MDR cohort were less than 500
-  mutate(entity = ifelse(mdr_coh < 500, paste0(entity, " a "), entity)) 
+  mutate(entity = ifelse(mdr_coh < 500, paste0(entity, "\u1d43 "), entity)) 
 
 # Calculate regional aggregates
 txmdrout_region <- txmdrout_country %>%
@@ -3012,14 +3034,14 @@ txmdrout_plot <- txmdrout_long %>%
 
 # Add explanatory footnotes
 txmdrout_plot <- arrangeGrob(txmdrout_plot,
-                             bottom = textGrob(paste0(" a These countries reported less than 500 MDR/RR-TB cases who started second line TB treatment in ", 
+                             bottom = textGrob(paste0("\u1d43 These countries reported less than 500 MDR/RR-TB cases who started second line TB treatment in ", 
                                                       report_year - 3, "."),
                                                x = 0,
                                                hjust = -0.1,
                                                vjust=0.7,
                                                gp = gpar(fontsize = 8)))
 
-figsave(txmdrout_plot, txmdrout, "f4_26_outcomes_mdr", width=7, height=11) # Designer needs wide data; output portrait mode
+figsavecairo(txmdrout_plot, txmdrout, "f4_26_outcomes_mdr", width=7, height=11) # Designer needs wide data; output portrait mode
 
 # Clean up (remove any objects with their name starting with 'txmdrout')
 rm(list=ls(pattern = "^txmdrout"))
@@ -3050,9 +3072,10 @@ short_map<- WHOmap.print(short_data,
                          copyright=FALSE,
                          colors=c("darkgreen", "lightgreen", "lightyellow"),
                          na.label="No response",
+                         background="White",
                          show=FALSE)
 
-figsave(short_map,
+figsavecairo(short_map,
         short_data,
         "f4_27_short_regimen_map")
 
@@ -3090,9 +3113,10 @@ bdq_map<- WHOmap.print(bdq_data,
                        copyright=FALSE,
                        colors=c("darkgreen", "lightgreen", "lightyellow"),
                        na.label="No response",
+                       background="White",
                        show=FALSE)
 
-figsave(bdq_map,
+figsavecairo(bdq_map,
         bdq_data,
         "f4_28_bdq_map")
 
@@ -3133,10 +3157,11 @@ dlm_map<- WHOmap.print(dlm_data,
                        copyright=FALSE,
                        colors=c("darkgreen", "lightgreen", "lightyellow"),
                        na.label="No response",
+                       background="White",
                        show=FALSE)
 
 
-figsave(dlm_map,
+figsavecairo(dlm_map,
         dlm_data,
         "f4_29_dlm_map")
 
@@ -3187,7 +3212,7 @@ ppm_plot <- ppm_data %>%
                   axis.text.x = element_text(size=5))
 
 # Save the plot
-figsave(ppm_plot,
+figsavecairo(ppm_plot,
         select(ppm_data,
                country,
                year,
@@ -3226,7 +3251,7 @@ ppm_plot <- ppm_data %>%
             facet_wrap(~ country, ncol = 4, scales = "free_y") +
 
             scale_x_continuous(name="Year",
-                               breaks = c(2012, report_year-1)) +
+                               breaks = c(2012, 2015,report_year-1)) +
 
             scale_y_continuous(name = "Contribution of public-private mix to total notifications (%)") +
 
@@ -3239,7 +3264,7 @@ ppm_plot <- ppm_data %>%
                   axis.text.x = element_text(size=5))
 
 # Save the plot
-figsave(ppm_plot,
+figsavecairo(ppm_plot,
         select(ppm_data,
                country,
                year,
@@ -3286,14 +3311,14 @@ comm_data$cat <- cut(comm_data$comm_pct,
 comm_map <- WHOmap.print(comm_data,
                          paste("Figure Box 4.5.1\nPercentage of basic management units in which there is community contribution",
                                "\nto new case finding and/or to treatment adherence support,",
-                               report_year-1," a "),
+                               report_year-1,"\u1d43 "),
                          "Percentage",
                          copyright=FALSE,
                          background="White",
                          colors=c('#bdd7e7', '#6baed6', '#3182bd', '#08519c','#edf8e9'),
                          show=FALSE)
 comm_map <- arrangeGrob(comm_map,
-                        bottom = textGrob(paste0(" a Data only requested from ",sum(comm_datarequest$dc_engage_community_display)," countries."),
+                        bottom = textGrob(paste0("\u1d43 Data only requested from ",sum(comm_datarequest$dc_engage_community_display)," countries."),
                                           x = 0,
                                           hjust = -0.1,
                                           vjust=-1.5,
@@ -3366,7 +3391,7 @@ commureport_plot_glob <- commureport_global %>%
                  report_year-1))
 
 # Save the plot
-figsave(commureport_plot_glob, commureport_global, "f4_box_4_5_2_community_indicator_reporting", width=7, height=11)
+figsavecairo(commureport_plot_glob, commureport_global, "f4_box_4_5_2_community_indicator_reporting", width=7, height=11)
 
 # Clean up (remove any objects with their name starting 'commureport')
 rm(list=ls(pattern = "^commureport"))
@@ -3418,7 +3443,7 @@ ipt_plot <- ggplot(ipt_c, aes(year, value, color=area)) + geom_line(size=1)+
   scale_y_continuous("Number of people (thousands)") +
   theme_glb.rpt() + scale_x_continuous(name="", breaks=c(min(ipt_c$year):max(ipt_c$year))) +
   scale_color_manual(values=c("#0070C0", "#77933C","orange", "red")) + guides(color = guide_legend(reverse = TRUE))+
-  ggtitle(paste("FIG.5.1\nProvision of TB preventive treatment to people newly enrolled in HIV care a , 2005", report_year-1, sep="\u2013"))+
+  ggtitle(paste("FIG.5.1\nProvision of TB preventive treatment to people newly enrolled in HIV care\u1d43 , 2005", report_year-1, sep="\u2013"))+
   annotate("text", x=2016, y=900, label="Global", size=4)+
   annotate("text", x=2016, y=350, label="South Africa", size=4)+
   annotate("text", x=2016, y=520, label="Rest of Africa", size=4)+
@@ -3429,16 +3454,14 @@ ipt_plot <- ggplot(ipt_c, aes(year, value, color=area)) + geom_line(size=1)+
 # Add footnote about including countries report data for all HIV cases;
 # This may not be needed every year,so I will just edit the footnote manullay;
 ipt_plot <- arrangeGrob(ipt_plot,
-                        bottom = textGrob(" a For seven countries, data are for people currently enrolled in HIV care:Congo,Ecuador,Grenada,\n       Kenya,Mozambique,Nepal and Ukraine.",
+                        bottom = textGrob("\u1d43 For seven countries, data are for people currently enrolled in HIV care:Congo,Ecuador,Grenada,\n       Kenya,Mozambique,Nepal and Ukraine.",
                                               x = 0,
                                               hjust = -0.1,
                                               vjust=0.1,
                                               gp = gpar(fontsize = 10)))
 
-plot(ipt_plot)
-
 # Save the plot
-figsave(ipt_plot, ipt_c, "f5_1_IPT_in_HIV_patients", width=7, height=5)
+figsavecairo(ipt_plot, ipt_c, "f5_1_IPT_in_HIV_patients", width=7, height=5)
 
 # Clean up (remove any objects with their name starting 'commureport')
 rm(list=ls(pattern = "^ipt"))
@@ -3515,7 +3538,7 @@ ipt_gap_plot <- ipt_gap_long %>%
 
   theme_glb.rpt() +
   scale_fill_manual("", values = c("lightblue","orange",  "lightgreen"),
-                    labels=c("Started on preventive treatment", "Detected and notified with active TB disease", "Gap in TB detection and TB prevention b ")) +
+                    labels=c("Started on preventive treatment", "Detected and notified with active TB disease", "Gap in TB detection and TB prevention\u1d47 ")) +
   labs(x="", y="Percentage(%)") +
 
   theme(legend.position="bottom",
@@ -3530,10 +3553,10 @@ ipt_gap_plot <- ipt_gap_long %>%
 
   ggtitle(paste0("FIG.5.2\nGaps in TB prevention and TB detection for people who were newly enrolled in HIV care in ",
                  report_year - 1,
-                 ",selected countries a "))
+                 ",selected countries\u1d43 "))
 
 # Add explanatory footnotes
-ipt_gap_footnote <- " a The selected countries are high TB or TB/HIV burden countries that reported on all three of the following: the number of people newly enrolled on HIV care; the number of \n      TB cases detected among people newly enrolled on HIV care; and the number of people newly enrolled on HIV care who were started on TB preventive treatment. In high \n      TB burden countries, testing for LTBI is not a requirement for initiation of TB preventive treatment, such that all those without active TB disease are eligible for TB preventive \n                              treatment.\n      b  The gap represents people living with HIV who should have undergone complete evaluation for TB disease or TB preventive treatment."
+ipt_gap_footnote <- "\u1d43 The selected countries are high TB or TB/HIV burden countries that reported on all three of the following: the number of people newly enrolled on HIV care; the number of \n      TB cases detected among people newly enrolled on HIV care; and the number of people newly enrolled on HIV care who were started on TB preventive treatment. In high \n      TB burden countries, testing for LTBI is not a requirement for initiation of TB preventive treatment, such that all those without active TB disease are eligible for TB preventive \n                              treatment.\n     \u1d47  The gap represents people living with HIV who should have undergone complete evaluation for TB disease or TB preventive treatment."
 ipt_gap_plot <- arrangeGrob(ipt_gap_plot,
                             bottom = textGrob(ipt_gap_footnote,
                                               x = 0,
@@ -3541,7 +3564,7 @@ ipt_gap_plot <- arrangeGrob(ipt_gap_plot,
                                               vjust=-0.7,
                                               gp = gpar(fontsize = 8)))
 
-figsave(ipt_gap_plot, ipt_gap_country, "f5_2_gaps_for_ipt_in_new_hiv_patients", width=11, height=7) # Designer needs wide data; output portrait mode
+figsavecairo(ipt_gap_plot, ipt_gap_country, "f5_2_gaps_for_ipt_in_new_hiv_patients", width=11, height=7) # Designer needs wide data; output portrait mode
 
 # Clean up (remove any objects with their name starting with 'ipt_gap')
 rm(list=ls(pattern = "^ipt_gap"))
@@ -3598,7 +3621,7 @@ prevtx_kids_data$cat <- cut(prevtx_kids_data$e_prevtx_kids_pct,
 
 # produce the map
 prevtx_kids_map <- WHOmap.print(prevtx_kids_data,
-                                paste("FIG.5.3\nCoverage of TB preventive treatment among eligible children aged under 5 years a , ",
+                                paste("FIG.5.3\nCoverage of TB preventive treatment among eligible children aged under 5 years\u1d43 , ",
                                       report_year-1),
                                 legend.title = "Coverage (%)",
                                 copyright=FALSE,
@@ -3608,7 +3631,7 @@ prevtx_kids_map <- WHOmap.print(prevtx_kids_data,
                                 show=FALSE)
 
 # add footnote
-prevtx_kids_map <- arrangeGrob(prevtx_kids_map, bottom = textGrob(paste0(" a Children aged <5 years who were household contacts of bacteriologically confirmed pulmonary TB cases.",
+prevtx_kids_map <- arrangeGrob(prevtx_kids_map, bottom = textGrob(paste0("\u1d43 Children aged <5 years who were household contacts of bacteriologically confirmed pulmonary TB cases.",
                                                                          "\n",
                                                                          prev_tx_footnote),
                                                                   x = 0,
@@ -3690,31 +3713,25 @@ hcw_data$cat <- cut(hcw_data$nrr,
 
 # produce the map
 hcw_map <- WHOmap.print(hcw_data,
-                        paste("FIG.5.4\nNotification rate ratio of TB among healthcare workers compared with the general adult population,", report_year-1," a "),
+                        paste("FIG.5.4\nNotification rate ratio of TB among healthcare workers compared with the general adult population,", report_year-1,"\u1d43"),
                         "Notification\nrate ratio",
                         copyright=FALSE,
                         colors=c('lightblue', 'orange', 'red', 'darkred'),
                         #colors=c('#edf8e9', '#bae4b3', '#74c476', '#238b45'),
+                        background="White",
                         show=FALSE)
 
 
 # Add footnote about filtering out countries
-hcw_foot <- paste(" a Data from ",
+hcw_foot <- paste("\u1d43 Data from ",
                   hcw_filtered_out,
                   " countries were excluded where the number of health-care workers reported was less than 1000.")
 
 hcw_map <- arrangeGrob(hcw_map, bottom = textGrob(hcw_foot, x = 0, hjust = -0.1, vjust=0.1, gp = gpar(fontsize = 10)))
 
-figsave(hcw_map,
+figsavecairo(hcw_map,
         hcw_data,
         "f5_4_hcw_notf_rate_ratio")
-
-cairo_pdf(width = 11,
-          height = 7,
-          bg = "white",
-          filename=paste0(figures_folder, "/Figs/","f5_4_hcw_notf_rate_ratio", Sys.Date(), ".pdf"))
-plot(hcw_map)
-dev.off()
 
 # Clean up (remove any objects with their name beginning with 'hcw')
 rm(list=ls(pattern = "^hcw"))
@@ -3740,6 +3757,7 @@ bcg_policy_map <- WHOmap.print(bcg_policy_data,
                                "Policy",
                                copyright=FALSE,
                                colors=c("darkgreen", "lightgreen", "purple"),
+                               background="White",
                                show=FALSE)
 
 # Add footnote
@@ -3750,7 +3768,7 @@ bcg_policy_map <- arrangeGrob(bcg_policy_map,
                                                vjust=0,
                                                gp = gpar(fontsize = 10)))
 
-figsave(bcg_policy_map,
+figsavecairo(bcg_policy_map,
         bcg_policy_data,
         "f5_5_BCG_policy_map")
 
@@ -3795,15 +3813,16 @@ bcg_cov_data$cat <- cut(bcg_cov_data$coverage,
 
 # produce the map
 bcg_cov_map <- WHOmap.print(bcg_cov_data,
-                            paste("FIG.5.6\nCoverage of BCG vaccination,", report_year-1," a "),
+                            paste("FIG.5.6\nCoverage of BCG vaccination,", report_year-1,"\u1d43 "),
                             "Percentage",
                             copyright=FALSE,
                             colors=brewer.pal(3, "Greens"),
+                            background="White",
                             show=FALSE)
 
 # Add footnote
 bcg_cov_map <- arrangeGrob(bcg_cov_map,
-                           bottom = textGrob(paste0(" a The target population of BCG coverage varies depending on national policy, but is typically for the number of live births in the year of reporting.",
+                           bottom = textGrob(paste0("\u1d43 The target population of BCG coverage varies depending on national policy, but is typically for the number of live births in the year of reporting.",
                                                     "\nSource: ", bcg_cov_page, ", accessed 9 August 2018"),
                                              x = 0,
                                              hjust = -0.1,
@@ -3811,7 +3830,7 @@ bcg_cov_map <- arrangeGrob(bcg_cov_map,
                                              gp = gpar(fontsize = 10)))
 
 
-figsave(bcg_cov_map,
+figsavecairo(bcg_cov_map,
         bcg_cov_data,
         "f5_6_BCG_coverage_map")
 
@@ -3848,8 +3867,8 @@ ghcc_map <- WHOmap.print(ghcc_data,
                          "FIG.B6.3.1\nCost per patient treated for drug-susceptible TB or MDR-TB:\ncurrent availability of unit cost data from independent costing studies, 1990-2017",
                          "Number\navailable",
                          copyright=FALSE,
-                         background = "white",
                          colors=brewer.pal(4, "Reds"),
+                         background="White",
                          show=FALSE)
 
 # Add footnote for the source of the data
