@@ -398,8 +398,9 @@ tsr_aggs <- outcomes %>%
                    xdr_coh,
                    xdr_succ) %>%
             group_by(year, g_whoregion) %>%
-            summarise_each(funs(sum(.,na.rm = TRUE)),
-                           new_sp_coh:xdr_succ)  %>%
+            summarise_at(vars(new_sp_coh:xdr_succ),
+                          sum,
+                         na.rm = TRUE)  %>%
 
 
             # merge with regional names
@@ -447,8 +448,9 @@ tsr_global <- outcomes %>%
                      xdr_coh,
                      xdr_succ) %>%
               group_by(year) %>%
-              summarise_each(funs(sum(.,na.rm = TRUE)),
-                             new_sp_coh:xdr_succ)  %>%
+              summarise_at(vars(new_sp_coh:xdr_succ),
+                           sum,
+                           na.rm = TRUE)  %>%
 
               mutate(entity = "Global") %>%
               ungroup()
@@ -607,7 +609,7 @@ fin_plot <- fin_aggs_long %>%
                      size=.3,
                      colour="black") +
 
-            scale_y_continuous(name = "Total budget (US$ millions constant 2017)") +
+            scale_y_continuous(name = "Total budget (US$ millions constant 2018") +
 
             facet_wrap( ~ entity, ncol = 4, scales="free_y") +
 
