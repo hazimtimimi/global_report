@@ -22,7 +22,7 @@ rm(list=ls())
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # Establish the report year
-report_year <- 2017
+report_year <- 2018
 
 # The following are convenience variables since notification and most other data sets will run up to the
 # year before the reporting year and outcomes will run up to two years before the reporting year
@@ -527,16 +527,16 @@ notif_country <- notif_country %>%
                   arrange(entity)
 
 
-
-
 # Calculate regional aggregates
 notif_region <- notif_country %>%
                 group_by(g_whoregion) %>%
-                summarise_each(funs(sum(., na.rm = TRUE)),
-                               c_notified,
-                               c_newinc,
-                               pulmonary,
-                               pulmonary_bact_conf) %>%
+                summarise_at(vars(c_notified,
+                                  c_newinc,
+                                  pulmonary,
+                                  pulmonary_bact_conf),
+                             sum,
+                             na.rm = TRUE) %>%
+
                 # get rid of pesky grouping
                 ungroup()
 
@@ -544,9 +544,11 @@ notif_region <- notif_country %>%
 notif_region <-  TBHIV_for_aggregates %>%
                   filter(year == notification_maxyear) %>%
                   group_by(g_whoregion) %>%
-                  summarise_each(funs(sum(., na.rm = TRUE)),
-                                 hivtest_pct_numerator,
-                                 hivtest_pct_denominator) %>%
+                  summarise_at(vars(hivtest_pct_numerator,
+                                    hivtest_pct_denominator),
+                               sum,
+                               na.rm = TRUE) %>%
+
                   # get rid of pesky grouping
                   ungroup() %>%
                   inner_join(notif_region, by = "g_whoregion")
@@ -571,19 +573,21 @@ notif_region <- aggregated_estimates_epi %>%
 
 # Calculate global aggregate
 notif_global <- notif_country %>%
-                summarise_each(funs(sum(., na.rm = TRUE)),
-                               c_notified,
-                               c_newinc,
-                               pulmonary,
-                               pulmonary_bact_conf) %>%
+                summarise_at(vars(c_notified,
+                                  c_newinc,
+                                  pulmonary,
+                                  pulmonary_bact_conf),
+                             sum,
+                             na.rm = TRUE) %>%
                 mutate(entity = "Global")
 
 # Get tb/hiv numerator and denominator (for funny rules...)
 notif_global <-  TBHIV_for_aggregates %>%
                   filter(year == notification_maxyear) %>%
-                  summarise_each(funs(sum(., na.rm = TRUE)),
-                                 hivtest_pct_numerator,
-                                 hivtest_pct_denominator)  %>%
+                  summarise_at(vars(hivtest_pct_numerator,
+                                    hivtest_pct_denominator),
+                               sum,
+                               na.rm = TRUE) %>%
                   mutate(entity = "Global")%>%
                   inner_join(notif_global, by = "entity") %>%
 
@@ -729,9 +733,11 @@ outcome_country <-  outcome_dr_country %>%
 # Calculate regional aggregates
 outcome_region <- outcome_country %>%
                     group_by(g_whoregion) %>%
-                    summarise_each(funs(sum(., na.rm = TRUE)),
-                                   ends_with("_coh"),
-                                   ends_with("_succ")) %>%
+                    summarise_at(vars(ends_with("_coh"),
+                                      ends_with("_succ")),
+                                 sum,
+                                 na.rm = TRUE) %>%
+
                     # add dummy variable to match structure of country table
                     mutate(rel_with_new_flg = NA)
 
@@ -746,9 +752,11 @@ outcome_region <-   aggregated_estimates_drtb_rawvalues %>%
 
 # Calculate global aggregate
 outcome_global <- outcome_country %>%
-                  summarise_each(funs(sum(., na.rm = TRUE)),
-                                 ends_with("_coh"),
-                                 ends_with("_succ")) %>%
+                  summarise_at(vars(ends_with("_coh"),
+                                    ends_with("_succ")),
+                               sum,
+                               na.rm = TRUE) %>%
+
                   # add dummy variables to match structure of country table
                   mutate(entity = "Global",
                          rel_with_new_flg = NA,
@@ -869,8 +877,11 @@ tbhiv_region <- notification %>%
                        hiv_tbdetect,
                        hiv_reg_new2) %>%
                 group_by(g_whoregion) %>%
-                summarise_each(funs(sum(., na.rm = TRUE)),
-                               contains("hiv")) %>%
+
+                summarise_at(vars(contains("hiv")),
+                             sum,
+                             na.rm = TRUE) %>%
+
                 # get rid of pesky grouping
                 ungroup()
 
@@ -878,15 +889,18 @@ tbhiv_region <- notification %>%
 tbhiv_region <- TBHIV_for_aggregates %>%
                 filter(year == notification_maxyear) %>%
                 group_by(g_whoregion) %>%
-                summarise_each(funs(sum(., na.rm = TRUE)),
-                                newrel_hivtest,
-                                newrel_hivpos,
-                                hivtest_pct_numerator,
-                                hivtest_pct_denominator,
-                                hivtest_pos_pct_numerator,
-                                hivtest_pos_pct_denominator,
-                                hiv_art_pct_numerator,
-                                hiv_art_pct_denominator) %>%
+
+                summarise_at(vars(newrel_hivtest,
+                                  newrel_hivpos,
+                                  hivtest_pct_numerator,
+                                  hivtest_pct_denominator,
+                                  hivtest_pos_pct_numerator,
+                                  hivtest_pos_pct_denominator,
+                                  hiv_art_pct_numerator,
+                                  hiv_art_pct_denominator),
+                             sum,
+                             na.rm = TRUE) %>%
+
                 # get rid of pesky grouping
                 ungroup() %>%
                 inner_join(tbhiv_region, by = "g_whoregion")
@@ -911,8 +925,11 @@ tbhiv_global <- notification %>%
                        hiv_reg_new,
                        hiv_tbdetect,
                        hiv_reg_new2) %>%
-                summarise_each(funs(sum(., na.rm = TRUE)),
-                               contains("hiv")) %>%
+
+                summarise_at(vars(contains("hiv")),
+                             sum,
+                             na.rm = TRUE) %>%
+
                 # get rid of pesky grouping
                 ungroup()%>%
                 mutate(group_name = "global")
@@ -920,15 +937,17 @@ tbhiv_global <- notification %>%
 
 tbhiv_global <- TBHIV_for_aggregates %>%
                 filter(year == notification_maxyear) %>%
-                summarise_each(funs(sum(., na.rm = TRUE)),
-                                newrel_hivtest,
-                                newrel_hivpos,
-                                hivtest_pct_numerator,
-                                hivtest_pct_denominator,
-                                hivtest_pos_pct_numerator,
-                                hivtest_pos_pct_denominator,
-                                hiv_art_pct_numerator,
-                                hiv_art_pct_denominator) %>%
+                summarise_at(vars(newrel_hivtest,
+                                  newrel_hivpos,
+                                  hivtest_pct_numerator,
+                                  hivtest_pct_denominator,
+                                  hivtest_pos_pct_numerator,
+                                  hivtest_pos_pct_denominator,
+                                  hiv_art_pct_numerator,
+                                  hiv_art_pct_denominator),
+                             sum,
+                             na.rm = TRUE) %>%
+
                 # get rid of pesky grouping
                 ungroup()%>%
                 mutate(group_name = "global") %>%
