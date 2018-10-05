@@ -164,6 +164,7 @@ inc_region <- aggregated_estimates_epi %>%
                      e_inc_tbhiv_100k, e_inc_tbhiv_100k_lo, e_inc_tbhiv_100k_hi)
 
 inc_region <- aggregated_estimates_drtb_rawvalues %>%
+              filter(year == notification_maxyear & group_type == "g_whoregion") %>%
               select(group_name,
                      e_inc_rr_num,
                      e_inc_rr_num_lo,
@@ -186,6 +187,7 @@ inc_global <- aggregated_estimates_epi %>%
                      e_inc_tbhiv_100k, e_inc_tbhiv_100k_lo, e_inc_tbhiv_100k_hi)
 
 inc_global <- aggregated_estimates_drtb_rawvalues %>%
+              filter(year == notification_maxyear & group_type == "global") %>%
               select(group_name,
                      e_inc_rr_num,
                      e_inc_rr_num_lo,
