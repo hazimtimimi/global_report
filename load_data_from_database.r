@@ -34,6 +34,7 @@ library(RODBC)
 ch <- odbcDriverConnect(connection_string)
 
 # load views into dataframes
+aggregated_estimates_agesex <- sqlFetch(ch, "estimates.view_aggregated_estimates")
 aggregated_estimates_epi   <- sqlFetch(ch, "view_TME_aggregated_estimates_epi")
 aggregated_estimates_epi_rawvalues   <- sqlFetch(ch, "view_TME_aggregated_estimates_epi_rawvalues")
 aggregated_estimates_drtb  <- sqlFetch(ch, "view_TME_aggregated_estimates_drtb")
@@ -63,13 +64,13 @@ drs_for_estimation_sldst   <- .fixnamibia(sqlFetch(ch, "view_DRS_for_estimation_
 drs_most_recent_for_estimation <- .fixnamibia(sqlFetch(ch, "view_DRS_most_recent_for_estimation"))
 
 
+estimates_agesex           <- .fixnamibia(sqlFetch(ch, "estimates.view_estimates"))
 estimates_epi              <- .fixnamibia(sqlFetch(ch, "view_TME_estimates_epi"))
 estimates_epi_rawvalues    <- .fixnamibia(sqlFetch(ch, "view_TME_estimates_epi_rawvalues"))
 estimates_drtb             <- .fixnamibia(sqlFetch(ch, "view_TME_estimates_drtb"))
 estimates_drtb_rawvalues   <- .fixnamibia(sqlFetch(ch, "view_TME_estimates_drtb_rawvalues"))
 estimates_ltbi             <- .fixnamibia(sqlFetch(ch, "view_TME_estimates_ltbi"))
 estimates_population       <- .fixnamibia(sqlFetch(ch, "view_TME_estimates_population"))
-
 
 finance                    <- .fixnamibia(sqlFetch(ch, "view_TME_master_finance"))
 finance_cleaned            <- .fixnamibia(sqlFetch(ch, "view_TME_master_finance_cleaned"))

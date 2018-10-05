@@ -20,7 +20,8 @@ source("load_data_from_database.r")
 setwd(rdata_folder)
 
 # Save the data frames
-save (aggregated_estimates_epi,
+save (aggregated_estimates_agesex,
+      aggregated_estimates_epi,
       aggregated_estimates_epi_rawvalues,
       aggregated_estimates_drtb,
       aggregated_estimates_drtb_rawvalues,
@@ -47,6 +48,7 @@ save (aggregated_estimates_epi,
       drs_for_estimation_sldst,
       drs_most_recent_for_estimation,
 
+      estimates_agesex,
       estimates_epi,
       estimates_epi_rawvalues,
       estimates_drtb,
