@@ -14,7 +14,7 @@ rm(list=ls())
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # Establish the report year
-report_year <- 2017
+report_year <- 2018
 
 # The following are convenience variables since notification and most other data sets will run up to the
 # year before the reporting year and outcomes will run up to two years before the reporting year
@@ -118,6 +118,19 @@ source(paste0(scripts_folder, "/functions/handle_NAs.r"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+#   g_income -----
+#   Recreate the old g_income variable which used to exist prior to 2017 data collection year
+#   Note that in 2017, Cook Islands and Niue did not have a g_income assignation, therefor must
+#   do a left join when combining this table with notifications, outcomes etc.
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+wb_g_income <-  country_group_membership %>%
+  filter(group_type == "g_income")  %>%
+  select(iso2, group_type, group_name) %>%
+  spread(key = group_type, value = group_name, fill = 0)
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # stop("OK, see what we have!")
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -126,19 +139,6 @@ stop("
      >>>>>>>>>>
      Stopping here so can do the rest manually!
      <<<<<<<<<<<<")
-
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#   g_income -----
-#   Recreate the old g_income variable which used to exist prior to 2017 data collection year
-#   Note that in 2017, Cook Islands and Niue did not have a g_income assignation, therefor must
-#   do a left join when combining this table with notifications, outcomes etc.
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-wb_g_income <-  country_group_membership %>%
-                 filter(group_type == "g_income")  %>%
-                 select(iso2, group_type, group_name) %>%
-                 spread(key = group_type, value = group_name, fill = 0)
-
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 #   Estimates (country-level and aggregates) -----
@@ -154,12 +154,12 @@ est_country <- estimates_epi %>%
                        e_mort_exc_tbhiv_num, e_mort_exc_tbhiv_num_lo, e_mort_exc_tbhiv_num_hi,
                        e_mort_exc_tbhiv_100k, e_mort_exc_tbhiv_100k_lo, e_mort_exc_tbhiv_100k_hi,
                        e_inc_num, e_inc_num_lo, e_inc_num_hi,
-                       e_inc_num_014, e_inc_num_014_lo, e_inc_num_014_hi,
                        e_inc_100k, e_inc_100k_lo, e_inc_100k_hi,
                        e_inc_tbhiv_100k, e_inc_tbhiv_100k_lo, e_inc_tbhiv_100k_hi,
                        e_inc_tbhiv_num, e_inc_tbhiv_num_lo, e_inc_tbhiv_num_hi,
                        c_cdr, c_cdr_lo, c_cdr_hi) %>%
                 rename(location_code = iso3)
+
 
 est_agg <-  aggregated_estimates_epi %>%
             filter(year >= 2000 & group_type %in% c("global", "g_whoregion", "g_income")) %>%
@@ -167,7 +167,6 @@ est_agg <-  aggregated_estimates_epi %>%
                    e_mort_exc_tbhiv_num, e_mort_exc_tbhiv_num_lo, e_mort_exc_tbhiv_num_hi,
                    e_mort_exc_tbhiv_100k, e_mort_exc_tbhiv_100k_lo, e_mort_exc_tbhiv_100k_hi,
                    e_inc_num, e_inc_num_lo, e_inc_num_hi,
-                   e_inc_num_014, e_inc_num_014_lo, e_inc_num_014_hi,
                    e_inc_100k, e_inc_100k_lo, e_inc_100k_hi,
                    e_inc_tbhiv_100k, e_inc_tbhiv_100k_lo, e_inc_tbhiv_100k_hi,
                    e_inc_tbhiv_num, e_inc_tbhiv_num_lo, e_inc_tbhiv_num_hi,
@@ -211,7 +210,6 @@ est_c_best <- est %>%
               select(location_code, year,
                      e_mort_exc_tbhiv_num, e_mort_exc_tbhiv_100k,
                      e_inc_num, e_inc_100k,
-                     e_inc_num_014,
                      e_inc_tbhiv_100k, e_inc_tbhiv_num,
                      c_cdr)
 
@@ -225,7 +223,6 @@ est_c_best <- est_c_best %>%
               rename(time_period = year,
                      MDG_0000000020 = e_inc_100k,
                      TB_e_inc_num = e_inc_num,
-                     TB_e_inc_num_014 = e_inc_num_014,
                      MDG_0000000017 = e_mort_exc_tbhiv_100k,
                      TB_e_mort_exc_tbhiv_num = e_mort_exc_tbhiv_num,
                      TB_e_inc_tbhiv_100k = e_inc_tbhiv_100k,
@@ -249,7 +246,6 @@ est_c_lo <- est %>%
             select(location_code, year,
                    e_mort_exc_tbhiv_num_lo, e_mort_exc_tbhiv_100k_lo,
                    e_inc_num_lo, e_inc_100k_lo,
-                   e_inc_num_014_lo,
                    e_inc_tbhiv_100k_lo, e_inc_tbhiv_num_lo,
                    c_cdr_lo)
 
@@ -263,7 +259,6 @@ est_c_lo <- est_c_lo %>%
             rename(time_period = year,
                    MDG_0000000020 = e_inc_100k_lo,
                    TB_e_inc_num = e_inc_num_lo,
-                   TB_e_inc_num_014 = e_inc_num_014_lo,
                    MDG_0000000017 = e_mort_exc_tbhiv_100k_lo,
                    TB_e_mort_exc_tbhiv_num = e_mort_exc_tbhiv_num_lo,
                    TB_e_inc_tbhiv_100k = e_inc_tbhiv_100k_lo,
@@ -283,7 +278,6 @@ est_c_lo <- est_c_lo %>%
 est_c_hi <- est %>%
             select(location_code, year,
                    e_mort_exc_tbhiv_num_hi, e_mort_exc_tbhiv_100k_hi,
-                   e_inc_num_014_hi,
                    e_inc_num_hi, e_inc_100k_hi,
                    e_inc_tbhiv_100k_hi, e_inc_tbhiv_num_hi,
                    c_cdr_hi)
@@ -298,7 +292,6 @@ est_c_hi <- est_c_hi %>%
             rename(time_period = year,
                    MDG_0000000020 = e_inc_100k_hi,
                    TB_e_inc_num = e_inc_num_hi,
-                   TB_e_inc_num_014 = e_inc_num_014_hi,
                    MDG_0000000017 = e_mort_exc_tbhiv_100k_hi,
                    TB_e_mort_exc_tbhiv_num = e_mort_exc_tbhiv_num_hi,
                    TB_e_inc_tbhiv_100k = e_inc_tbhiv_100k_hi,
@@ -322,8 +315,50 @@ est_c_hi <- est_c_hi %>%
 gho <- full_join(est_c_best, est_c_lo, by = c("location_code", "time_period", "indicator_code")) %>%
           full_join(est_c_hi, by = c("location_code", "time_period", "indicator_code"))
 
+
+# add incidence for children (age 0-14)
+est_country_014 <- estimates_agesex %>%
+            filter(year == notification_maxyear &
+                     measure == "inc" &
+                     unit == "num" &
+                     age_group == "0-14" &
+                     sex == "a") %>%
+            select(iso3,
+                   year,
+                   best, lo, hi) %>%
+            mutate(indicator_code = "TB_e_inc_num_014") %>%
+            rename(location_code = iso3,
+                   time_period = year,
+                   value = best,
+                   low = lo,
+                   high = hi)
+
+est_agg_014 <- aggregated_estimates_agesex %>%
+                filter(year == notification_maxyear &
+                         measure == "inc" &
+                         unit == "num" &
+                         age_group == "0-14" &
+                         sex == "a")  %>%
+                select(group_name,
+                       year,
+                       best, lo, hi) %>%
+                mutate(indicator_code = "TB_e_inc_num_014") %>%
+                rename(time_period = year,
+                       value = best,
+                       low = lo,
+                       high = hi) %>%
+                # convert to GHO group codes
+                inner_join(gho_group_codes, by = "group_name") %>%
+                # drop the group_name variable
+                select(-group_name)
+
+
+#combine into the mega GHO dataframe
+gho <- rbind(gho, est_country_014, est_agg_014)
+
+
 #clean up
-rm(list=c("est_c_best",  "est_c_lo", "est_c_hi", "est", "est_rr"))
+rm(list=c("est_c_best",  "est_c_lo", "est_c_hi", "est", "est_rr", "est_country_014", "est_agg_014"))
 
 
 
@@ -378,24 +413,27 @@ notif <- notif %>%
 # 1. WHO regions
 notif_agg_r <- notif %>%
                 group_by(g_whoregion, year) %>%
-                summarise_each(funs(sum(., na.rm = TRUE)),
-                               -iso3, -g_income) %>%
+                summarise_at(vars(c_newinc:new_snsuoth),
+                             sum,
+                             na.rm = TRUE) %>%
                 ungroup() %>%
                 rename(group_name = g_whoregion )
 
 # 2. WB Income groups
 notif_agg_i <- notif %>%
                 group_by(g_income, year) %>%
-                summarise_each(funs(sum(., na.rm = TRUE)),
-                               -iso3, -g_whoregion) %>%
+                summarise_at(vars(c_newinc:new_snsuoth),
+                             sum,
+                             na.rm = TRUE) %>%
                 ungroup() %>%
                 rename(group_name = g_income )
 
 # 3. Global aggregates
 notif_agg_g <- notif %>%
               group_by(year) %>%
-              summarise_each(funs(sum(., na.rm = TRUE)),
-                             -iso3, -g_whoregion, -g_income) %>%
+              summarise_at(vars(c_newinc:new_snsuoth),
+                           sum,
+                           na.rm = TRUE) %>%
               ungroup() %>%
               mutate(group_name = "global" )
 
@@ -473,24 +511,27 @@ hiv_test <- TBHIV_for_aggregates %>%
 # Regional aggregates
 hiv_test_agg_r <- hiv_test %>%
                   group_by(g_whoregion, year) %>%
-                  summarise_each(funs(sum(., na.rm = TRUE)),
-                                 contains("_pct_")) %>%
+                  summarise_at(vars(contains("_pct_")),
+                               sum,
+                               na.rm = TRUE) %>%
                   ungroup() %>%
                   rename(group_name = g_whoregion )
 
 # Income group aggregates
 hiv_test_agg_i <- hiv_test %>%
                   group_by(g_income, year) %>%
-                  summarise_each(funs(sum(., na.rm = TRUE)),
-                                 contains("_pct_")) %>%
-                  ungroup() %>%
+                  summarise_at(vars(contains("_pct_")),
+                               sum,
+                               na.rm = TRUE) %>%
+                                  ungroup() %>%
                   rename(group_name = g_income )
 
 # Global aggregate
 hiv_test_agg_g <- hiv_test %>%
                   group_by(year) %>%
-                  summarise_each(funs(sum(., na.rm = TRUE)),
-                                 contains("_pct_")) %>%
+                  summarise_at(vars(contains("_pct_")),
+                               sum,
+                               na.rm = TRUE) %>%
                   ungroup() %>%
                   mutate(group_name = "global" )
 
@@ -724,33 +765,36 @@ dst_rrmdr_country <- dst_rrmdr_country  %>%
 # A. WHO regions
 dst_rrmdr_region <- dst_rrmdr_country %>%
                     group_by(g_whoregion, year) %>%
-                    summarise_each(funs(sum(., na.rm = TRUE)),
-                                   dst_new, new_pulm_bac_conf,
-                                   dst_ret, c_ret,
-                                   c_rrmdr,
-                                   c_rrmdr_tx) %>%
+                    summarise_at(vars(dst_new, new_pulm_bac_conf,
+                                      dst_ret, c_ret,
+                                      c_rrmdr,
+                                      c_rrmdr_tx),
+                                 sum,
+                                 na.rm = TRUE) %>%
                     ungroup() %>%
                     rename(group_name = g_whoregion )
 
 # B. World Bank Income Groups
 dst_rrmdr_income <- dst_rrmdr_country %>%
                     group_by(g_income, year) %>%
-                    summarise_each(funs(sum(., na.rm = TRUE)),
-                                   dst_new, new_pulm_bac_conf,
-                                   dst_ret, c_ret,
-                                   c_rrmdr,
-                                   c_rrmdr_tx) %>%
+                    summarise_at(vars(dst_new, new_pulm_bac_conf,
+                                      dst_ret, c_ret,
+                                      c_rrmdr,
+                                      c_rrmdr_tx),
+                                 sum,
+                                 na.rm = TRUE) %>%
                     ungroup() %>%
                     rename(group_name = g_income )
 
 # C. Global aggregate
 dst_rrmdr_global <- dst_rrmdr_country %>%
                     group_by(year) %>%
-                    summarise_each(funs(sum(., na.rm = TRUE)),
-                                   dst_new, new_pulm_bac_conf,
-                                   dst_ret, c_ret,
-                                   c_rrmdr,
-                                   c_rrmdr_tx) %>%
+                    summarise_at(vars(dst_new, new_pulm_bac_conf,
+                                      dst_ret, c_ret,
+                                      c_rrmdr,
+                                      c_rrmdr_tx),
+                                 sum,
+                                 na.rm = TRUE) %>%
                     ungroup() %>%
                     mutate(group_name = "global" )
 
@@ -840,30 +884,33 @@ outcome_country <-  outcomes %>%
 # A. WHO regions
 outcome_region <- outcome_country %>%
                   group_by(g_whoregion, year) %>%
-                  summarise_each(funs(sum(., na.rm = TRUE)),
-                                 starts_with("new"), starts_with("ret"),
-                                 starts_with("hiv"), starts_with("tbhiv"),
-                                 starts_with("mdr"), starts_with("xdr")) %>%
+                  summarise_at(vars(starts_with("new"), starts_with("ret"),
+                                    starts_with("hiv"), starts_with("tbhiv"),
+                                    starts_with("mdr"), starts_with("xdr")),
+                               sum,
+                               na.rm = TRUE) %>%
                   ungroup() %>%
                   rename(group_name = g_whoregion)
 
 # B. World Bank Income Groups
 outcome_income <- outcome_country %>%
                   group_by(g_income, year) %>%
-                  summarise_each(funs(sum(., na.rm = TRUE)),
-                                 starts_with("new"), starts_with("ret"),
-                                 starts_with("hiv"), starts_with("tbhiv"),
-                                 starts_with("mdr"), starts_with("xdr")) %>%
+                  summarise_at(vars(starts_with("new"), starts_with("ret"),
+                                    starts_with("hiv"), starts_with("tbhiv"),
+                                    starts_with("mdr"), starts_with("xdr")),
+                               sum,
+                               na.rm = TRUE) %>%
                   ungroup() %>%
                   rename(group_name = g_income)
 
 # C. Global aggregate
 outcome_global <- outcome_country %>%
                   group_by(year) %>%
-                  summarise_each(funs(sum(., na.rm = TRUE)),
-                                 starts_with("new"), starts_with("ret"),
-                                 starts_with("hiv"), starts_with("tbhiv"),
-                                 starts_with("mdr"), starts_with("xdr")) %>%
+                  summarise_at(vars(starts_with("new"), starts_with("ret"),
+                                    starts_with("hiv"), starts_with("tbhiv"),
+                                    starts_with("mdr"), starts_with("xdr")),
+                               sum,
+                               na.rm = TRUE) %>%
                   ungroup() %>%
                   mutate(group_name = "global" )
 
