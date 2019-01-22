@@ -21,6 +21,7 @@ setwd(rdata_folder)
 
 # Save the data frames
 save (aggregated_estimates_agesex,
+      aggregated_estimates_agesex_rawvalues,
       aggregated_estimates_epi,
       aggregated_estimates_epi_rawvalues,
       aggregated_estimates_drtb,
@@ -49,6 +50,7 @@ save (aggregated_estimates_agesex,
       drs_most_recent_for_estimation,
 
       estimates_agesex,
+      estimates_agesex_rawvalues,
       estimates_epi,
       estimates_epi_rawvalues,
       estimates_drtb,

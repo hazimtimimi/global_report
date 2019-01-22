@@ -1006,3 +1006,56 @@ gho %>%
   filter(is.na(exclude)) %>%
   select(-exclude) %>%
   write.csv(file=paste("GHO_TB_update_",Sys.Date(),".csv",sep="") , row.names=FALSE, na="")
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+#   Sex-disaggregated incidence estimates -----
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# World HEalth Statistics 2019 report will analyse indicators by sex, so this is an
+# extra file to be used for that
+
+# Need to convert incidence numbers to rates, so calculate population denominators
+
+pop <- estimates_population %>%
+        filter(year == notification_maxyear) %>%
+        mutate(m = e_pop_m014 + e_pop_m15plus,
+               f = e_pop_f014 + e_pop_f15plus,
+               age_group = "all") %>%
+        select(iso2, year, age_group, m, f) %>%
+
+        # Convert to long format similar to disaggregated incidence estimates
+
+        gather(key = "sex", value = "population", c("m", "f"))
+
+
+# Link denominators to matching numerators
+
+estimates_sex <- estimates_agesex_rawvalues %>%
+                 inner_join(pop) %>%
+
+                 # calculate rates
+                 mutate(rate_best = display_num(best * 1e5 / population),
+                        rate_lo = display_num(lo * 1e5 /  population),
+                        rate_hi = display_num(hi * 1e5 /  population),
+                        unit = "rate") %>%
+
+                 # format for output
+                 select(country,
+                        iso2,
+                        iso3,
+                        year,
+                        measure,
+                        unit,
+                        age_group,
+                        sex,
+                        best = rate_best,
+                        lo = rate_lo,
+                        hi = rate_hi)
+
+# save to csv
+write.csv(x = estimates_sex,
+          file=paste("TB_incidence_by_sex_",Sys.Date(),".csv",sep="") ,
+          row.names=FALSE,
+          na="")
+
