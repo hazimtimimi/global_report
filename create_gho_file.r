@@ -1059,3 +1059,70 @@ write.csv(x = estimates_sex,
           row.names=FALSE,
           na="")
 
+# Now repeat the process for aggregated estimates (global and WHO regions)
+# Note -- convert population aggregates to numeric to avoid integer overflow
+#         in global aggregates.
+
+pop_region <- estimates_population %>%
+              filter(year == notification_maxyear) %>%
+              mutate(m = as.numeric(e_pop_m014 + e_pop_m15plus),
+                     f = as.numeric(e_pop_f014 + e_pop_f15plus)) %>%
+              group_by(g_whoregion, year) %>%
+              summarise_at(vars(c("m", "f")),
+                           sum,
+                           na.rm = TRUE) %>%
+              ungroup() %>%
+              mutate(age_group = "all") %>%
+              rename(group_name = g_whoregion)
+
+
+pop_global <- estimates_population %>%
+              filter(year == notification_maxyear) %>%
+              mutate(m = as.numeric(e_pop_m014 + e_pop_m15plus),
+                     f = as.numeric(e_pop_f014 + e_pop_f15plus)) %>%
+              group_by(year) %>%
+              summarise_at(vars(c("m", "f")),
+                           sum,
+                           na.rm = TRUE) %>%
+              ungroup() %>%
+              mutate(age_group = "all",
+                     group_name = "global")
+
+# Combine the aggregates
+pop_aggregate <- rbind(pop_region, pop_global)
+rm(pop_region, pop_global)
+
+# Convert to long format similar to disaggregated incidence estimates
+
+pop_aggregate <- pop_aggregate %>%
+                  gather(key = "sex", value = "population", c("m", "f"))
+
+# Link denominators to matching numerators
+
+estimates_sex_aggregate <- aggregated_estimates_agesex_rawvalues %>%
+                            inner_join(pop_aggregate) %>%
+
+                          # calculate rates
+                          mutate(rate_best = display_num(best * 1e5 / population),
+                                 rate_lo = display_num(lo * 1e5 /  population),
+                                 rate_hi = display_num(hi * 1e5 /  population),
+                                 unit = "rate") %>%
+
+                          # format for output
+                          select(group_type,
+                                 group_name,
+                                 year,
+                                 measure,
+                                 unit,
+                                 age_group,
+                                 sex,
+                                 best = rate_best,
+                                 lo = rate_lo,
+                                 hi = rate_hi)
+
+# save to csv
+write.csv(x = estimates_sex_aggregate,
+          file=paste("TB_incidence_by_sex_aggregates_",Sys.Date(),".csv",sep="") ,
+          row.names=FALSE,
+          na="")
+
