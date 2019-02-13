@@ -1126,3 +1126,60 @@ write.csv(x = estimates_sex_aggregate,
           row.names=FALSE,
           na="")
 
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+#   MDR/RR-TB treatment coverage -----
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# World HEalth Statistics 2019 report will include MDR/RR-TB treatment coverage
+# estimates. Sending file WHE team, but not yet included in GHO.
+
+
+rr_denom <- estimates_drtb_rawvalues %>%
+            filter(year == report_year - 1) %>%
+            select(country,
+                   iso3,
+                   year,
+                   e_inc_rr_num,
+                   e_inc_rr_num_lo,
+                   e_inc_rr_num_hi)
+
+rr_num <- notification %>%
+          filter(year == report_year - 1) %>%
+          mutate(rrmdr_tx = sum_of_row(.[c("unconf_rrmdr_tx", "conf_rrmdr_tx")])) %>%
+          select(iso3,
+                 year,
+                 rrmdr_tx)
+
+rr_tx_coverage <- rr_denom %>%
+                  inner_join(rr_num) %>%
+
+                  # Calculate coverage, but exclude countries where estimated RR incidence number is less than 1
+
+                  mutate(c_rr_coverage = ifelse(e_inc_rr_num > 1,
+                                                display_num(rrmdr_tx * 100 / e_inc_rr_num),
+                                                NA),
+
+                         c_rr_coverage_lo = ifelse(e_inc_rr_num_hi > 1,
+                                                   display_num(rrmdr_tx * 100  / e_inc_rr_num_hi),
+                                                   NA),
+
+                         c_rr_coverage_hi = ifelse(e_inc_rr_num_lo > 1,
+                                                   display_num(rrmdr_tx * 100  / e_inc_rr_num_lo),
+                                                   NA)) %>%
+
+                  select(country,
+                         iso3,
+                         year,
+                         c_rr_coverage,
+                         c_rr_coverage_lo,
+                         c_rr_coverage_hi) %>%
+
+                  arrange(country)
+
+# save to csv
+write.csv(x = rr_tx_coverage,
+          file=paste("RR-TB_treatment_coverage_",Sys.Date(),".csv",sep="") ,
+          row.names=FALSE,
+          na="")
+
