@@ -16,9 +16,6 @@ source("set_environment.r")
 # Load the views directly from the global TB database
 source("load_data_from_database.r")
 
-
-setwd(rdata_folder)
-
 # Save the data frames
 save (aggregated_estimates_agesex,
       aggregated_estimates_agesex_rawvalues,
@@ -77,7 +74,7 @@ save (aggregated_estimates_agesex,
       external_indicator_defs,
 
       data.date,
-      file=paste0("data_",Sys.Date(),".Rdata"))
+      file=paste0(rdata_folder, "data_",Sys.Date(),".Rdata"))
 
 # Clear the decks ----
 rm(list=ls())

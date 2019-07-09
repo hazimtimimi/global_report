@@ -137,7 +137,7 @@ rm(list=c("notifs_global", "notifs_summary", "notif_table_html", "notif_table_fi
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Table 4.2  ------
-# Number of people newly enrolled in HIV care in 2016 who were also notified as a TB case in 2016, xx high TB/HIV burden countries that reported data
+# Number of people newly enrolled in HIV care in 2018 who were also notified as a TB case in 2016, xx high TB/HIV burden countries that reported annual data
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # Get list of high-burden TB/HIV countries
@@ -157,9 +157,6 @@ hiv_data <- notification %>%
 
             # remove countries with no data
             filter(!(is.na(hiv_tbdetect) & is.na(hiv_reg_new2))) %>%
-  
-            #Zimbabwe only collected and reported their numerator from July 2017, so we exclude it for 2018 report,but should not do so in 2019
-            filter(country!="Zimbabwe")%>%
 
             # order by country
             arrange(country)
@@ -193,7 +190,7 @@ cat(paste0("<h3>Table 4.2<br />Number of people newly enrolled in HIV care in ",
           report_year - 1,
           ", ",
           nrow(hiv_data) - 1,
-          " high TB/HIV burden countries that reported data.</h3>"),
+          " high TB/HIV burden countries that reported annual data</h3>"),
     file=hiv_table_filename)
 
 
@@ -288,7 +285,9 @@ rdxpolicy_country <- strategy %>%
                             iso2,
                             g_whoregion,
                             wrd_initial_test,
-                            universal_dst) %>%
+                            universal_dst,
+                            #urine LAM added 2019 dcyear
+                            lf_urine_lam) %>%
 
                      # restrict to high burden countries, and add notification calculations
                      inner_join(rdxpolicy_notifs) %>%
@@ -303,7 +302,8 @@ rdxpolicy_country <- strategy %>%
                             pcnt_wrd,
                             universal_dst,
                             pcnt_dst,
-                            pcnt_sldst) %>%
+                            pcnt_sldst,
+                            lf_urine_lam) %>%
                       # shorten long country names
                       get_names_for_tables( col = "entity") %>%
                       # order by country name
@@ -341,14 +341,14 @@ rdxpolicy_pcnt  <- function(x, show_calc = FALSE){
 # For use by Wayne, not to be shown in report table
 rdxpolicy_g_hb_tb <- rdxpolicy_country %>%
                      filter(g_hb_tb == 1) %>%
-                     summarise_at(c("wrd_initial_test", "universal_dst"),
+                     summarise_at(c("wrd_initial_test", "universal_dst", "lf_urine_lam"),
                                   rdxpolicy_pcnt,
                                   show_calc = TRUE) %>%
                      mutate(entity="High TB burden countries")
 
 rdxpolicy_g_hb_tbhiv <- rdxpolicy_country %>%
                         filter(g_hb_tbhiv == 1) %>%
-                        summarise_at(c("wrd_initial_test", "universal_dst"),
+                        summarise_at(c("wrd_initial_test", "universal_dst", "lf_urine_lam"),
                                      rdxpolicy_pcnt,
                                      show_calc = TRUE) %>%
                         mutate(entity="High TB/HIV burden countries")
@@ -356,7 +356,7 @@ rdxpolicy_g_hb_tbhiv <- rdxpolicy_country %>%
 
 rdxpolicy_g_hb_mdr <- rdxpolicy_country %>%
                       filter(g_hb_mdr == 1) %>%
-                      summarise_at(c("wrd_initial_test", "universal_dst"),
+                      summarise_at(c("wrd_initial_test", "universal_dst", "lf_urine_lam"),
                                    rdxpolicy_pcnt,
                                    show_calc = TRUE) %>%
                       mutate(entity="High MDR burden countries")
@@ -366,7 +366,7 @@ rdxpolicy_aggs <- rbind(rdxpolicy_g_hb_tb,
                         rdxpolicy_g_hb_tbhiv,
                         rdxpolicy_g_hb_mdr) %>%
                   # reorder columns for Wayne
-                  select(entity, wrd_initial_test, universal_dst)
+                  select(entity, wrd_initial_test, universal_dst, lf_urine_lam)
 
 
 # Restrict country data to the high burden countries
@@ -403,13 +403,15 @@ print(rdxpolicy_table_html,
                                   <td>&nbsp;</td>
                                   <td>High TB burden</td>
                                   <td>High TB/HIV burden</td>
-                                  <td>High MDR-TB burden</td>                                                                    <td>National policy and algorithm indicate a WRD as the initial diagnostic test for all people presumed to have TB</td>
+                                  <td>High MDR-TB burden</td>
+                                  <td>National policy and algorithm indicate a WRD as the initial diagnostic test for all people presumed to have TB</td>
                                   <td>Percentage of notified new and relapse TB cases tested with a WRD as the initial diagnostic test</td>
                                   <td>National policy and algorithm indicate universal access to DST</td>
                                   <td>Percentage of notified bacteriologically confirmed TB cases with DST results for rifampicin <sup>b</sup></td>
                                   <td>Percentage of notified rifampicin-resistant TB cases with DST results for fluoroquinolones and second-line injectable agents</td>
+                                  <td>National policy and algorithm indicate the use of lateral flow urine lipoarabinomannan assay (LF-LAM) to assist in the detection of TB in people living with HIV</td>
                               </tr>",
-                              "<tr><td colspan='9'>Blank cells indicate data not reported. - Indicates value that cannot be calculated.<br /><sup>a</sup>The 48 countries shown in the table are the countries that are in one or more of the three lists of high TB, TB/HIV and MDR-TB burden countries (see also Chapter 2, Figure 2.2 and Table 2.4).<br /><sup>b</sup>Testing in cases with unknown previous treatment history is not included. The percentage may exceed 100% for several reasons, e.g. samples rather than cases are counted in the numerator; laboratory specimen results are not linked to the denominator data source when enumerated; or there is incomplete reporting of bacteriologically confirmed cases in the denominator. Bacteriologically confirmed extrapulmonary cases are not included in the denominator because they cannot be differentiated from clinically diagnosed ones in the way data are reported to WHO.</td>
+                              "<tr><td colspan='10'>Blank cells indicate data not reported. - Indicates value that cannot be calculated.<br /><sup>a</sup>The 48 countries shown in the table are the countries that are in one or more of the three lists of high TB, TB/HIV and MDR-TB burden countries (see also Chapter 2, Figure 2.5 and Table 2.3).<br /><sup>b</sup>Testing in cases with unknown previous treatment history is not included. The percentage may exceed 100% for several reasons, e.g. samples rather than cases are counted in the numerator; laboratory specimen results are not linked to the denominator data source when enumerated; or there is incomplete reporting of bacteriologically confirmed cases in the denominator. Bacteriologically confirmed extrapulmonary cases are not included in the denominator because they cannot be differentiated from clinically diagnosed ones in the way data are reported to WHO.</td>
                               </tr>")
                       )
       )
@@ -417,7 +419,7 @@ print(rdxpolicy_table_html,
 
 # Export the aggregate stats for Wayne to use
 write.csv(rdxpolicy_aggs,
-          file=paste0(figures_folder, "/Tables/t4_3_lab_policy_agg_for_wayne", Sys.Date(), ".csv"),
+          file=paste0(figures_folder, "/Tables/t4_3_lab_policy_aggregates_", Sys.Date(), ".csv"),
           row.names=FALSE,
           na="")
 
@@ -425,6 +427,114 @@ write.csv(rdxpolicy_aggs,
 
 # Clean up (remove any objects with their name beginning with 'rdxpolicy')
 rm(list=ls(pattern = "^rdxpolicy"))
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Table 4.5 -------
+# Quality of laboratory services, 2018
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# Get list of all high-burden countries (TB, TB/HIV, MDR-TB)
+# and re-create old group structure (one variable per high burden group)
+
+labquality_hbccodes <-  country_group_membership %>%
+                        filter(  (group_type %in% c("g_hb_tb", "g_hb_tbhiv","g_hb_mdr")) &
+                               group_name == 1) %>%
+                        select(iso2, group_type, group_name) %>%
+                        spread(key = group_type, value = group_name, fill = 0)
+
+# Get the lab variables
+labquality_data <- strategy %>%
+                   filter(year == report_year - 1) %>%
+                   select(country,
+                          iso2,
+                          nrl_iso15189,
+                          smear, smear_eqa,
+                          xpert, xpert_eqa,
+                          dst, dst_eqa_pass,
+                          sldst, sldst_eqa_pass,
+                          lpa, lpa_eqa_pass,
+                          sllpa, sllpa_eqa_pass) %>%
+
+                    # restrict to high burden countries
+                    inner_join(labquality_hbccodes)
+
+
+# Define funtion to calculate and display EQA coverage
+labquality_pcnt_eqa <- function(test, test_eqa){
+
+  ifelse(NZ(test) > 0,
+         display_num(test_eqa * 100 /test),
+         "-")
+  }
+
+
+# Calculate the EQA indicators
+labquality_data <- labquality_data %>%
+                   mutate(pcnt_smear_eqa = labquality_pcnt_eqa(smear, smear_eqa),
+                          pcnt_xpert_eqa = labquality_pcnt_eqa(xpert, xpert_eqa),
+                          pcnt_dst_eqa_pass   = labquality_pcnt_eqa(dst, dst_eqa_pass),
+                          pcnt_sldst_eqa_pass = labquality_pcnt_eqa(sldst, sldst_eqa_pass),
+                          pcnt_lpa_eqa_pass   = labquality_pcnt_eqa(lpa, lpa_eqa_pass),
+                          pcnt_sllpa_eqa_pass = labquality_pcnt_eqa(sllpa, sllpa_eqa_pass)) %>%
+
+                    # restrict to variables for the table
+                    select(entity = country,
+                           nrl_iso15189,
+                           starts_with("pcnt_")) %>%
+                    # shorten long country names
+                    get_names_for_tables( col = "entity") %>%
+                    # order by country name
+                    arrange(entity)
+
+
+# Create HTML output
+labquality_table_html <- xtable(labquality_data)
+
+labquality_table_filename <- paste0(figures_folder, "/Tables/t4_4_lab_quality", Sys.Date(), ".htm")
+
+cat(paste("<h3>Table 4.4<br />Quality of laboratory services <sup>a</sup>, ",
+          report_year-1,
+          "</h3>
+          <style>
+            table td {text-align:center;}
+            table td:first-child {text-align: left;}
+          </style>"),
+    file=labquality_table_filename)
+
+print(labquality_table_html,
+      type="html",
+      file=labquality_table_filename,
+      include.rownames=FALSE,
+      include.colnames=FALSE,
+      html.table.attributes="border='0' rules='rows' width='1100' cellpadding='5'",
+      append=TRUE,
+      add.to.row=list(pos=list(0,
+                               nrow(labquality_table_html)),
+                      command=c("
+                              <tr>
+                                  <td rowspan='2'>&nbsp;</td>
+                                  <td rowspan='2' style='border-right: black 2px solid;'>National Reference Laboratory accredited according to the ISO 15189 standard</td>
+                                  <td colspan='2' style='border-right: black 2px solid;'>Percentage of testing sites that are covered by a comprehensive EQA system</td>
+                                  <td colspan='4'>Percentage of testing sites that demonstrated proficiency by panel testing</td>
+                              </tr>
+                              <tr>
+                                  <td>Smear microscopy</td>
+                                  <td style='border-right: black 2px solid;'>Xpert MTB/Rif</td>
+                                  <td>Phenotypic DST for first-line drugs only</td>
+                                  <td>Phenotypic DST for first-line and second-line drugs</td>
+                                  <td>LPA for rifampicin and isoniazid only</td>
+                                  <td>LPA for rifampicin, isoniazid, fluroguinolones and second-line injectables</td>
+                              </tr>",
+                              "<tr><td colspan='8'>Blank cells indicate data not reported. - Indicates value that cannot be calculated.<br />
+                              <sup>a</sup>The 48 countries shown in the table are the countries that are in one or more of the three lists of high TB, TB/HIV and MDR-TB burden countries (see also Chapter 2, Figure 2.5 and Table 2.3).</td>
+                              </tr>")
+                      )
+      )
+
+# Clean up (remove any objects with their name beginning with 'labquality')
+rm(list=ls(pattern = "^labquality"))
+
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Chapter 5 ------
