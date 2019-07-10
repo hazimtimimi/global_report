@@ -60,12 +60,13 @@ library("grid")
 library("scales")
 library("xtable")
 library("stringr")
-#library("timeSeries")
 library("dplyr")
 library("tidyr")
 library("gridExtra")
 library("RColorBrewer")
 library(readxl)
+library(openxlsx)
+library(Cairo)
 
 
 # Load functions ----
