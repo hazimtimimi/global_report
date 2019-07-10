@@ -3241,8 +3241,8 @@ rm(list=ls(pattern = "^dlm"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure Box 4.2.1 ------
-# Contribution of public–public mix to TB case notifications in eight countries, 2012–2017
+# Figure Box 4.3.1 ------
+# Contribution of public–public mix to TB case notifications in eight countries, 2012–2018
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # Get PPM data
@@ -3273,7 +3273,7 @@ ppm_plot <- ppm_data %>%
 
             scale_y_continuous(name = "Contribution of public-public mix to total notifications (%)") +
 
-            ggtitle(paste0("FIG.B4.2.1\nContribution of public-public mix to TB case notifications in eight countries, 2012-",
+            ggtitle(paste0("FIG.B4.3.1\nContribution of public-public mix to TB case notifications in eight countries, 2012-",
                            report_year-1)) +
 
             theme_glb.rpt() +
@@ -3287,14 +3287,14 @@ figsavecairo(ppm_plot,
                country,
                year,
                public_pcnt),
-        "f4_box_4_2_1_public_public_contributions")
+        "f4_box_4_3_1_public_public_contributions")
 
 # Clean up (remove any objects with their name beginning 'ppm_')
 rm(list=ls(pattern = "^ppm_"))
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure Box 4.2.2 ------
-# Contribution of public–private mix to TB case notifications in eight countries, 2012–2017
+# Figure Box 4.3.2 ------
+# Contribution of public–private mix to TB case notifications in eight countries, 2012–2018
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # Get PPM data
@@ -3325,7 +3325,7 @@ ppm_plot <- ppm_data %>%
 
             scale_y_continuous(name = "Contribution of public-private mix to total notifications (%)") +
 
-            ggtitle(paste0("FIG.B4.2.2\nContribution of public-private mix to TB case notifications in eight countries, 2012-",
+            ggtitle(paste0("FIG.B4.3.2\nContribution of public-private mix to TB case notifications in eight countries, 2012-",
                            report_year-1)) +
 
             theme_glb.rpt() +
@@ -3339,15 +3339,15 @@ figsavecairo(ppm_plot,
                country,
                year,
                private_pcnt),
-        "f4_box_4_2_2_public_private_contributions")
+        "f4_box_4_3_2_public_private_contributions")
 
 # Clean up (remove any objects with their name beginning 'ppm_')
 rm(list=ls(pattern = "^ppm_"))
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure Box 4.5.1  (Map) ------
+# Figure Box 4.7.1  (Map) ------
 # Percentage of basic management units in which there is community contribution to new case finding
-# and/or to treatment adherence support, 2017
+# and/or to treatment adherence support, 2018
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # Get the variable for requesting countries for those commutnity indicator or not.
@@ -3379,7 +3379,7 @@ comm_data$cat <- cut(comm_data$comm_pct,
 
 # produce the map
 comm_map <- WHOmap.print(comm_data,
-                         paste("Figure Box 4.5.1\nPercentage of basic management units in which there is community contribution",
+                         paste("Figure Box 4.7.1\nPercentage of basic management units in which there is community contribution",
                                "\nto new case finding and/or to treatment adherence support,",
                                report_year-1,"\u1d43 "),
                          "Percentage",
@@ -3400,15 +3400,15 @@ figsavecairo(comm_map,
                iso3,
                comm_pct,
                cat),
-        "f4_box_4_5_1_pct_BMU_community_map")
+        "f4_box_4_7_1_pct_BMU_community_map")
 
 # Clean up (remove any objects with their name beginning with 'comm')
 rm(list=ls(pattern = "^comm"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure Box 4.5.2 ------
-# Number of countries reporting on WHO community engagement indicators, 2013-2017
+# Figure Box 4.7.2 ------
+# Number of countries reporting on WHO community engagement indicators, 2013-2018
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 #Before 2015, the report collection form did not include variable "community_data_available"
@@ -3451,17 +3451,17 @@ commureport_plot_glob <- commureport_global %>%
   geom_bar(stat="identity", fill="darkgreen",width = 0.5) +
   #This breaks setting need to be changed afterwards, it is simply because only 6 years data were used
   #which makes the bar too wide, to control the width, it changed X axis breaks label.
-  scale_x_continuous(breaks = c(2012,2013, 2014, 2015, 2016, report_year-1)) +
+  scale_x_continuous(breaks = c(2012,2013, 2014, 2015, 2016, 2017, report_year-1)) +
   scale_y_continuous(expand = c(0, 0), limits = c(0, 70)) +
   theme_glb.rpt() +
   labs(x="", y="Number of countries") +
   theme(panel.grid=element_blank()) +
   expand_limits(c(0,0)) +
-  ggtitle(paste0("FIG.B4.5.2\nNumber of countries reporting on WHO community engagement indicators, 2012-",
+  ggtitle(paste0("FIG.B4.7.2\nNumber of countries reporting on WHO community engagement indicators, 2012-",
                  report_year-1))
 
 # Save the plot
-figsavecairo(commureport_plot_glob, commureport_global, "f4_box_4_5_2_community_indicator_reporting", width=7, height=11)
+figsavecairo(commureport_plot_glob, commureport_global, "f4_box_4_7_2_community_indicator_reporting", width=7, height=11)
 
 # Clean up (remove any objects with their name starting 'commureport')
 rm(list=ls(pattern = "^commureport"))
