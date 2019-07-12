@@ -3913,6 +3913,143 @@ rm(list=ls(pattern = "^bcg_cov"))
 # Financing for TB prevention, diagnosis and treatment
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Figure 6.2 (Map) ---------
+# The 119 low- and middle-income countries included in analyses of TB financing, 2006–2019
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# get data from CSV file sent by Ines
+include_data <- read.csv(paste0(rdata_folder,"/include_map_2019-07-12.csv"))
+
+# merge the data with the world bank income group
+include_data <- country_group_membership %>%
+                filter(group_type=="g_income") %>%
+                select(country, iso3, group_name) %>%
+                right_join(include_data, by = "iso3")
+
+# latest year's notifications
+include_data <- notification %>%
+                filter(year==report_year - 1) %>%
+                select(iso3, c_newinc) %>%
+                inner_join(include_data, by = "iso3")
+
+
+# create the mapping variable
+# (make excluded as NA so looks better in the map)
+include_data <- include_data %>%
+                mutate(cat = ifelse(var=="Included", var, NA)) %>%
+                mutate(cat= as.factor(cat))
+
+
+# calculate number of countries included
+included_tot <- nrow(filter(include_data, var=="Included"))
+
+
+# produce the map
+include_map <- WHOmap.print(include_data,
+                            paste0("FIG.6.2\nThe ",
+                                  included_tot,
+                                  " low- and middle-income countries included in analyses of TB financing, 2006–",
+                                  report_year,"\u1d43"),
+                            na.label = "Not included",
+                            copyright=FALSE,
+                            colors=c('blue'),
+                            background="White",
+                            show=FALSE)
+
+
+# Calculate stuff for the footnote
+include_sum_not <-  include_data %>%
+                    filter(var=="Included") %>%
+                    group_by(group_name) %>%
+                    summarise_at(vars(c_newinc),
+                                 sum,
+                                 na.rm=TRUE) %>%
+                    rename(included_notified = c_newinc)
+
+
+include_counts <-   include_data %>%
+                    filter(var=="Included") %>%
+                    group_by(group_name) %>%
+                    summarise(included_number = n())
+
+include_all_counts <-   include_data %>%
+                        group_by(group_name) %>%
+                        summarise(all_number = n())
+
+included_summary <- include_all_counts %>%
+                    left_join(include_sum_not) %>%
+                    left_join(include_counts)
+
+# generate summary string for number of countries included in each category
+included_summary <- included_summary %>%
+                    mutate(countries = paste0(included_number, "/", all_number))
+
+
+# calculate share of notifications
+include_all_not <-  sum(include_data$c_newinc, na.rm = TRUE)
+
+
+included_summary <- included_summary %>%
+                    filter(group_name != "HIC") %>%
+                    mutate(share = round(included_notified * 100 / include_all_not))
+
+
+# generate list of low and middle income countries that were excluded
+exclusion_list <- include_data %>%
+                  filter(group_name != "HIC" & var == "Excluded") %>%
+                  select(country) %>%
+                  arrange(country) %>%
+                  sapply(paste, collapse=", ")
+
+exclusion_count <-include_data %>%
+                  filter(group_name != "HIC" & var == "Excluded") %>%
+                  nrow()
+
+included_footnote <- paste0("\u1d43 Countries were included in trend analyses if at least three years of high-quality finance data were available in the period 2006–",
+                            report_year,
+                            "\nLow-income (",
+                            included_summary[included_summary$group_name=="LIC", "countries"] %>% unlist(),
+                            "), ",
+                            "lower-middle income (",
+                            included_summary[included_summary$group_name=="LMC", "countries"] %>% unlist(),
+                            "), ",
+                            "and upper-middle income (",
+                            included_summary[included_summary$group_name=="UMC", "countries"] %>% unlist(),
+                            ") countries representing ",
+                            included_summary[included_summary$group_name=="LIC", "share"] %>% unlist(), "%, ",
+                            included_summary[included_summary$group_name=="LMC", "share"] %>% unlist(), "% and ",
+                            included_summary[included_summary$group_name=="UMC", "share"] %>% unlist(), "% of ",
+                            report_year - 1,
+                            " notified cases, respectively, were included.",
+                            "\nThe following ",
+                            exclusion_count,
+                            " low- and middle-income countries were excluded:\n",
+                            exclusion_list)
+
+
+# Add the footnote to the map
+include_map <- arrangeGrob(include_map,
+                           bottom=textGrob(included_footnote,
+                                           x = 0,
+                                           hjust = -0.05,
+                                           vjust = 0.4,
+                                           gp = gpar(fontsize=6)))
+
+
+# Save the plot
+figsavecairo(include_map,
+        select(include_data,
+               iso3,
+               country,
+               var),
+        "f6_2_included_map")
+
+# Clean up (remove any objects with their name beginning with 'include' or 'exclusion')
+rm(list=ls(pattern = "^include|^exclusion"))
+
+
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Figure Box 6.3.1 (Map) ---------
 # Cost per patient treated for drug-susceptible TB or MDR-TB: current availability
