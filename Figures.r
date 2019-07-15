@@ -9,6 +9,119 @@
 # options to the legends, etc. These are in script ~/functions/make_who_maps.r
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Executive summary ------
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Figure E.1 ?  ------
+# Progress towards global targets and milestones
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# UNHLM 2018-2022 targets
+# Get the notification totals starting in 2018
+unhlm_n <- notification %>%
+           filter(year >= 2018) %>%
+           select(c_newinc,
+                  c_new_014,
+                  unconf_rrmdr_tx,
+                  conf_rrmdr_tx,
+                  hiv_ipt,
+                  hiv_ipt_reg_all) %>%
+
+           # select IPT in all HIV patients in care (hiv_ipt_reg_all) if available,
+           # otherwise take IPT in HIV patients newly enrolled in care (hiv_ipt)
+           #
+           # Also, calculate total number started on MDR treatment
+           mutate(ipt = ifelse(!is.na(hiv_ipt_reg_all), hiv_ipt_reg_all, hiv_ipt),
+                  rrmdr_tx = NZ(unconf_rrmdr_tx) + NZ(conf_rrmdr_tx)) %>%
+
+           # calculate totlas
+           summarise_at(vars(c_newinc,
+                             c_new_014,
+                             rrmdr_tx,
+                             ipt),
+                        sum,
+                        na.rm=TRUE) %>%
+
+           mutate(entity="Global")
+
+# Get the preventive treatment totals starting in 2018
+unhlm_s <- strategy %>%
+           filter(year >= 2018) %>%
+           summarise_at(vars(newinc_con_prevtx,
+                             newinc_con04_prevtx),
+                        sum,
+                        na.rm=TRUE) %>%
+
+           mutate(entity="Global")
+
+# Merge the totals
+unhlm_totals <- unhlm_n %>%
+                inner_join(unhlm_s)
+
+
+# Calculate percentage completed for each target
+unhlm_pcnt <- unhlm_totals %>%
+              mutate(
+                     newinc = c_newinc * 100 / 40e6,   # 40 million notified
+                     new_014= c_new_014 * 100 / 3.5e6, # 3.5 million children notified
+                     rrmdr  = rrmdr_tx * 100 / 1.5e6,  # 1.5 million treated for drug-resistant TB
+                     prevtx_tot = (ipt + newinc_con_prevtx) * 100 / 30e6, # 30 million preventive treatment
+                     prevtx_04 = newinc_con04_prevtx * 100 / 4e6, # 4 million household contacts aged under 5 given preventive treatment
+                     prevtx_con_5p = (newinc_con_prevtx - newinc_con04_prevtx) * 100 / 20e6, # 20 million household contacts aged 5 and above given preventive treatment
+                     prevtx_hiv = ipt * 100 / 6e6  # 6 million people living with HIV given preventive treatment
+                     ) %>%
+              select(newinc,
+                     new_014,
+                     rrmdr,
+                     prevtx_tot,
+                     prevtx_04,
+                     prevtx_con_5p,
+                     prevtx_hiv
+                     ) %>%
+
+              # Switch to long format for plotting
+              gather(key = "target", value = "percent")
+
+# Plot the data
+
+unhlm_plot <- unhlm_pcnt %>%
+              ggplot(aes(x=target, y=percent)) +
+              geom_bar(stat="identity", fill="darkblue",width = 0.5) +
+              theme_glb.rpt() +
+              expand_limits(y=c(0,100)) +
+              scale_y_continuous(breaks = c(20, 40, 60 , 80, 100)) +
+              ylab("Percent achieved") +
+              scale_x_discrete(limits = c("prevtx_hiv",
+                                          "prevtx_con_5p",
+                                          "prevtx_04",
+                                          "prevtx_tot",
+                                          "rrmdr",
+                                          "new_014",
+                                          "newinc"),
+                               labels = c("6 million people living with HIV\ngiven preventive treatment",
+                                          "20 million household contacts\naged 5 and above\ngiven preventive treatment",
+                                          "4 million household contacts\naged under 5\ngiven preventive treatment",
+                                          "30 million people\ngiven preventive treatment",
+                                          "1.5 million treated\nfor drug-resistant TB",
+                                          "3.5 million children notified",
+                                          "40 million notified")) +
+              xlab("2018-2022 cumulative target") +
+              coord_flip() +
+
+              ggtitle(paste0("FIG.E.1?\nProgress towards 2018-2022 global targets and milestones, ", report_year - 1))
+
+
+figsavecairo(unhlm_plot,
+             unhlm_pcnt,
+             "fe_1_unhlm_targets")
+
+
+# Clean up (remove any objects with their name beginning with 'unhlm')
+rm(list=ls(pattern = "^unhlm"))
+
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Chapter 3 ------
 # TB disease burden
