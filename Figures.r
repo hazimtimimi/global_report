@@ -3960,40 +3960,32 @@ include_map <- WHOmap.print(include_data,
 
 
 # Calculate stuff for the footnote
-include_sum_not <-  include_data %>%
-                    filter(var=="Included") %>%
-                    group_by(group_name) %>%
-                    summarise_at(vars(c_newinc),
-                                 sum,
-                                 na.rm=TRUE) %>%
-                    rename(included_notified = c_newinc)
+include_summary <- include_data %>%
+                   filter(var=="Included") %>%
+                   group_by(group_name) %>%
+                   summarise(included_notified = sum(c_newinc, na.rm=TRUE),
+                             included_number = n())
+
+include_all_counts <- include_data %>%
+                      group_by(group_name) %>%
+                      summarise(all_number = n())
 
 
-include_counts <-   include_data %>%
-                    filter(var=="Included") %>%
-                    group_by(group_name) %>%
-                    summarise(included_number = n())
-
-include_all_counts <-   include_data %>%
-                        group_by(group_name) %>%
-                        summarise(all_number = n())
-
-included_summary <- include_all_counts %>%
-                    left_join(include_sum_not) %>%
-                    left_join(include_counts)
+include_summary <- include_all_counts %>%
+                   left_join(include_summary)
 
 # generate summary string for number of countries included in each category
-included_summary <- included_summary %>%
-                    mutate(countries = paste0(included_number, "/", all_number))
+include_summary <- include_summary %>%
+                   mutate(countries = paste0(included_number, "/", all_number))
 
 
 # calculate share of notifications
 include_all_not <-  sum(include_data$c_newinc, na.rm = TRUE)
 
 
-included_summary <- included_summary %>%
-                    filter(group_name != "HIC") %>%
-                    mutate(share = round(included_notified * 100 / include_all_not))
+include_summary <- include_summary %>%
+                   filter(group_name != "HIC") %>%
+                   mutate(share = round(included_notified * 100 / include_all_not))
 
 
 # generate list of low and middle income countries that were excluded
@@ -4007,20 +3999,20 @@ exclusion_count <-include_data %>%
                   filter(group_name != "HIC" & var == "Excluded") %>%
                   nrow()
 
-included_footnote <- paste0("\u1d43 Countries were included in trend analyses if at least three years of high-quality finance data were available in the period 2006–",
+include_footnote <- paste0("\u1d43 Countries were included in trend analyses if at least three years of high-quality finance data were available in the period 2006–",
                             report_year,
                             "\nLow-income (",
-                            included_summary[included_summary$group_name=="LIC", "countries"] %>% unlist(),
+                            include_summary[include_summary$group_name=="LIC", "countries"] %>% unlist(),
                             "), ",
                             "lower-middle income (",
-                            included_summary[included_summary$group_name=="LMC", "countries"] %>% unlist(),
+                            include_summary[include_summary$group_name=="LMC", "countries"] %>% unlist(),
                             "), ",
                             "and upper-middle income (",
-                            included_summary[included_summary$group_name=="UMC", "countries"] %>% unlist(),
+                            include_summary[include_summary$group_name=="UMC", "countries"] %>% unlist(),
                             ") countries representing ",
-                            included_summary[included_summary$group_name=="LIC", "share"] %>% unlist(), "%, ",
-                            included_summary[included_summary$group_name=="LMC", "share"] %>% unlist(), "% and ",
-                            included_summary[included_summary$group_name=="UMC", "share"] %>% unlist(), "% of ",
+                            include_summary[include_summary$group_name=="LIC", "share"] %>% unlist(), "%, ",
+                            include_summary[include_summary$group_name=="LMC", "share"] %>% unlist(), "% and ",
+                            include_summary[include_summary$group_name=="UMC", "share"] %>% unlist(), "% of ",
                             report_year - 1,
                             " notified cases, respectively, were included.",
                             "\nThe following ",
@@ -4031,7 +4023,7 @@ included_footnote <- paste0("\u1d43 Countries were included in trend analyses if
 
 # Add the footnote to the map
 include_map <- arrangeGrob(include_map,
-                           bottom=textGrob(included_footnote,
+                           bottom=textGrob(include_footnote,
                                            x = 0,
                                            hjust = -0.05,
                                            vjust = 0.4,
