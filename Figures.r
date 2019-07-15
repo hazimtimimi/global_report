@@ -127,79 +127,6 @@ rm(list=ls(pattern = "^unhlm"))
 # TB disease burden
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 3.1 (d) (Map)  ------
-# Countries with national case-based surveillance as of July 2017
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-cb_data <- strategy %>%
-           filter(year >= report_year - 2) %>%
-           select(iso3,
-                  country,
-                  year,
-                  caseb_err_nat)
-
-# Make sure all ECDC countries are marked as having case-based surveillance for all TB cases
-cb_ecdc <- data_collection %>%
-           filter(datcol_year == report_year & dc_ecdc == 1) %>%
-           select(iso3)
-
-cb_data <- cb_data %>%
-           mutate(caseb_err_nat = ifelse(iso3 %in% cb_ecdc$iso3, 42, caseb_err_nat))
-
-
-# Add classifications
-cb_data <- cb_data %>%
-           mutate(cat = ifelse(caseb_err_nat == 42, "All TB patients",
-                        ifelse(caseb_err_nat == 43, "MDR-TB patients only",
-                        ifelse(caseb_err_nat == 0,  "None", NA))))
-
-cb_data$cat <-factor(cb_data$cat, levels=c("None", "MDR-TB patients only", "All TB patients" ))
-
-
-# Find the countries with empty data for latest year and see if there are data for the previous year
-cb_prev_year_data <- cb_data %>%
-                     filter(year == report_year - 1 & is.na(caseb_err_nat)) %>%
-                     select(iso3) %>%
-                     inner_join(filter(cb_data, year == report_year - 2)) %>%
-                     filter(!is.na(caseb_err_nat))
-
-# Now combine into one dataframe, with previous data used if latest year's data are not available
-cb_data_combined <- cb_data %>%
-                    filter(year == report_year - 1) %>%
-                    anti_join(cb_prev_year_data, by= "iso3") %>%
-                    rbind(cb_prev_year_data)
-
-# produce the map
-cb_map<- WHOmap.print(cb_data_combined,
-                      "FIG.3.1\nCountries with national case-based surveillance as of July 2018\u1d43 ",
-                      legend.title = "Country response",
-                      copyright=FALSE,
-                      brewer.pal(3, "Blues"),
-                      na.label="No response",
-                      background="White",
-                      show=FALSE)
-
-# Add footnote about using earlier data for some countries
-cb_foot <- paste("\u1d43  Responses from ",
-                 report_year -1,
-                 " were used for ",
-                 nrow(cb_prev_year_data),
-                 "countries.")
-
-cb_map <- arrangeGrob(cb_map, bottom = textGrob(cb_foot, x = 0, hjust = -0.1, vjust=0.1, gp = gpar(fontsize = 10)))
-
-
-figsavecairo(cb_map,
-             select(cb_data_combined,
-                    iso3,
-                    country,
-                    cat),
-             "f3_1_casebased_map")
-
-
-# Clean up (remove any objects with their name beginning with 'cb')
-rm(list=ls(pattern = "^cb"))
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Figure 3.3  (map with bubbles) ------
@@ -3456,6 +3383,87 @@ figsavecairo(ppm_plot,
 
 # Clean up (remove any objects with their name beginning 'ppm_')
 rm(list=ls(pattern = "^ppm_"))
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Figure Box 4.4.1  (Map) ------
+# Countries with national case-based surveillance for TB
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+
+cb_data <- strategy %>%
+           filter(year >= report_year - 2) %>%
+           select(iso3,
+                  country,
+                  year,
+                  caseb_err_nat)
+
+# Make sure all ECDC countries are marked as having case-based surveillance for all TB cases
+cb_ecdc <- data_collection %>%
+           filter(datcol_year == report_year & dc_ecdc == 1) %>%
+           select(iso3)
+
+cb_data <- cb_data %>%
+           mutate(caseb_err_nat = ifelse(iso3 %in% cb_ecdc$iso3, 42, caseb_err_nat))
+
+
+# Add classifications
+cb_data <- cb_data %>%
+           mutate(cat = ifelse(caseb_err_nat == 42, "All TB patients",
+                        ifelse(caseb_err_nat == 43, "MDR-TB patients only",
+                        ifelse(caseb_err_nat == 0,  "None", NA))))
+
+cb_data$cat <-factor(cb_data$cat, levels=c("None", "MDR-TB patients only", "All TB patients" ))
+
+
+# Find the countries with empty data for latest year and see if there are data for the previous year
+cb_prev_year_data <- cb_data %>%
+                     filter(year == report_year - 1 & is.na(caseb_err_nat)) %>%
+                     select(iso3) %>%
+                     inner_join(filter(cb_data, year == report_year - 2)) %>%
+                     filter(!is.na(caseb_err_nat))
+
+# Now combine into one dataframe, with previous data used if latest year's data are not available
+cb_data_combined <- cb_data %>%
+                    filter(year == report_year - 1) %>%
+                    anti_join(cb_prev_year_data, by= "iso3") %>%
+                    rbind(cb_prev_year_data)
+
+# produce the map
+cb_map<- WHOmap.print(cb_data_combined,
+                      paste0("FIG.B4.4.1\nCountries with national case-based surveillance for TB, ",
+                             report_year - 1,
+                             "\u1d43 "),
+                      legend.title = "Country\nresponse",
+                      copyright=FALSE,
+                      brewer.pal(3, "Blues"),
+                      na.label="No response",
+                      background="White",
+                      show=FALSE)
+
+# Add footnote about using earlier data for some countries
+cb_foot <- paste("\u1d43 Responses from ",
+                 report_year -1,
+                 " were used for ",
+                 nrow(cb_prev_year_data),
+                 "countries.")
+
+cb_map <- arrangeGrob(cb_map,
+                      bottom = textGrob(cb_foot, x = 0, hjust = -0.1, vjust=0.1, gp = gpar(fontsize = 10)))
+
+
+figsavecairo(cb_map,
+             select(cb_data_combined,
+                    iso3,
+                    country,
+                    cat),
+             "fb4_box_4_4_1_casebased_map")
+
+
+# Clean up (remove any objects with their name beginning with 'cb')
+rm(list=ls(pattern = "^cb"))
+
+
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Figure Box 4.7.1  (Map) ------
