@@ -548,124 +548,131 @@ rm(list=ls(pattern = "^labquality"))
 # high TB or TB/HIV burden countries, 2017
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+# Temperorality using lastest database rather than master view database to cover latest TB/HIV data change,will change back after 2nd Snapshot
 
+notificationlatest       <- sqlFetch(ch, "dcf.latest_notification")
 
 # Get list of TB and TB/HIV high-burden countries
 prev_tx_hbccodes <-  country_group_membership %>%
-                      filter(  (group_type %in% c("g_hb_tb", "g_hb_tbhiv")) &
-                                 group_name == 1) %>%
-                      select(iso2, originalname = country) %>%
-                      distinct(iso2, originalname)
+  filter(  (group_type %in% c("g_hb_tb", "g_hb_tbhiv")) &
+             group_name == 1) %>%
+  select(iso2, originalname = country) %>%
+  distinct(iso2, originalname)
 
 
-prev_tx_data <- notification %>%
-                filter(year == report_year -1) %>%
-                select(iso2,
-                       country,
-                       g_whoregion,
-                       hiv_ipt,
-                       hiv_reg_new,
-                       hiv_ipt_reg_all,
-                       hiv_reg_all)
+prev_tx_data <- notificationlatest %>%
+  filter(year == report_year -1) %>%
+  select(iso2,
+         country,
+         hiv_ipt,
+         hiv_reg_new,
+         hiv_ipt_reg_all,
+         hiv_reg_all)%>%
+  mutate(hiv_ipt_pall = ifelse(!is.na(hiv_ipt_reg_all) & !is.na(hiv_reg_all),
+                               hiv_ipt_reg_all,
+                               hiv_ipt))
 
 # Create numerators and denominators for the IPT coverage data
-prev_tx_data <- prev_tx_data %>%
-                mutate(ipt_numerator = ifelse(!is.na(hiv_ipt_reg_all) & !is.na(hiv_reg_all),
-                                              hiv_ipt_reg_all,
-                                              hiv_ipt),
-                       ipt_denominator = ifelse(!is.na(hiv_ipt_reg_all) & !is.na(hiv_reg_all),
-                                                hiv_reg_all,
-                                                hiv_reg_new))
+#prev_tx_data <- prev_tx_data %>%
+#  mutate(ipt_numerator = ifelse(!is.na(hiv_ipt_reg_all) & !is.na(hiv_reg_all),
+#                                hiv_ipt_reg_all,
+#                                hiv_ipt),
+#         ipt_denominator = ifelse(!is.na(hiv_ipt_reg_all) & !is.na(hiv_reg_all),
+#                                  hiv_reg_all,
+#                                  hiv_reg_new))
 
 # Calculate IPT coverage, but only if a country has reported for newly enrolled patients
 prev_tx_data <- prev_tx_data %>%
-                mutate(coverage = ifelse(!is.na(hiv_ipt) & NZ(hiv_reg_new) > 0,
-                                         display_num(hiv_ipt * 100 / hiv_reg_new),
-                                         NA))
+  mutate(coverage = ifelse(!is.na(hiv_ipt) & NZ(hiv_reg_new) > 0,
+                           display_num(hiv_ipt * 100 / hiv_reg_new),
+                           NA))
 
 # Add an asterisk marker in coverage if a country reported for all enrolled in care
 prev_tx_data <- prev_tx_data %>%
-                mutate(coverage = ifelse(!is.na(hiv_ipt_reg_all) & !is.na(hiv_reg_all),
-                                         "*",
-                                         coverage)
-                       )
+  mutate(coverage = ifelse(!is.na(hiv_ipt_reg_all) & !is.na(hiv_reg_all) & is.na(hiv_reg_new)& is.na(hiv_ipt),
+                           "*",
+                           coverage)
+  )
 
 
 # Merge with the LTBI estimates
 prev_tx_data <- estimates_ltbi %>%
-                filter(year == report_year -1) %>%
-                select(iso2,
-                       e_prevtx_eligible,
-                       e_prevtx_eligible_lo,
-                       e_prevtx_eligible_hi,
-                       newinc_con04_prevtx,
-                       e_prevtx_kids_pct,
-                       e_prevtx_kids_pct_lo,
-                       e_prevtx_kids_pct_hi
-                      ) %>%
-
-                # Note the ltbi estimates have not been produced for all countries
-                right_join(prev_tx_data)
+  filter(year == report_year -1) %>%
+  select(iso2,
+         e_prevtx_eligible,
+         e_prevtx_eligible_lo,
+         e_prevtx_eligible_hi,
+         newinc_con04_prevtx,
+         ptsurvey_newinc_con04_prevtx,
+         e_prevtx_kids_pct,
+         e_prevtx_kids_pct_lo,
+         e_prevtx_kids_pct_hi) %>%
+  mutate(newinc_con04_tpt = ifelse(!is.na(newinc_con04_prevtx),
+                                   newinc_con04_prevtx,
+                                   ptsurvey_newinc_con04_prevtx)) %>%
+  # Note the ltbi estimates have not been produced for all countries
+  right_join(prev_tx_data)
 
 
 # Now produce the high burden data for the table
 
 # Merge with list of countries in HB TB or TB/HIV
 prev_tx_hb_data <- prev_tx_data %>%
-                    inner_join(prev_tx_hbccodes)
+  inner_join(prev_tx_hbccodes)
 
 
 
 # Restrict the dataframe to the variables needed for the final table, shorten country names and order by country name
 prev_tx_hb_data <- prev_tx_hb_data %>%
-                    select(entity = country,
-                           ipt_denominator,
-                           ipt_numerator,
-                           coverage,
-                           e_prevtx_eligible,
-                           e_prevtx_eligible_lo,
-                           e_prevtx_eligible_hi,
-                           newinc_con04_prevtx,
-                           e_prevtx_kids_pct,
-                           e_prevtx_kids_pct_lo,
-                           e_prevtx_kids_pct_hi)  %>%
-
-                    # shorten long country names
-                    get_names_for_tables( col = "entity") %>%
-
-                    arrange(entity)
+  select(entity = country,
+         hiv_ipt_pall,
+         hiv_reg_new,
+         hiv_ipt,
+         coverage,
+         e_prevtx_eligible,
+         e_prevtx_eligible_lo,
+         e_prevtx_eligible_hi,
+         newinc_con04_tpt,
+         e_prevtx_kids_pct,
+         e_prevtx_kids_pct_lo,
+         e_prevtx_kids_pct_hi)  %>%
+  
+  # shorten long country names
+  get_names_for_tables( col = "entity") %>%
+  
+  arrange(entity)
 
 
 # Format variables for output
 prev_tx_table_data <- prev_tx_hb_data %>%
-
-                      mutate(e_prevtx_eligible_lohi = display_intervals(e_prevtx_eligible,
-                                                                  e_prevtx_eligible_lo,
-                                                                  e_prevtx_eligible_hi),
-
-                       e_prevtx_kids_pct_lohi = display_intervals(e_prevtx_kids_pct,
-                                                                  e_prevtx_kids_pct_lo,
-                                                                  e_prevtx_kids_pct_hi)) %>%
-
-                # format and round numbers
-                mutate(ipt_numerator = rounder(ipt_numerator),
-                       ipt_denominator = rounder(ipt_denominator),
-                       newinc_con04_prevtx = rounder(newinc_con04_prevtx),
-
-                       e_prevtx_eligible = display_num(e_prevtx_eligible),
-                       e_prevtx_kids_pct = display_num(e_prevtx_kids_pct)) %>%
-
-
-                # drop the separate *_lo and *_hi variables
-                select(entity,
-                       ipt_denominator,
-                       ipt_numerator,
-                       coverage,
-                       e_prevtx_eligible,
-                       e_prevtx_eligible_lohi,
-                       newinc_con04_prevtx,
-                       e_prevtx_kids_pct,
-                       e_prevtx_kids_pct_lohi)
+  
+  mutate(e_prevtx_eligible_lohi = display_intervals(e_prevtx_eligible,
+                                                    e_prevtx_eligible_lo,
+                                                    e_prevtx_eligible_hi),
+         
+         e_prevtx_kids_pct_lohi = display_intervals(e_prevtx_kids_pct,
+                                                    e_prevtx_kids_pct_lo,
+                                                    e_prevtx_kids_pct_hi)) %>%
+  
+  # format and round numbers
+  mutate(hiv_ipt = rounder(hiv_ipt),
+         hiv_reg_new = rounder(hiv_reg_new),
+         newinc_con04_tpt = rounder(newinc_con04_tpt),
+         e_prevtx_eligible = display_num(e_prevtx_eligible),
+         e_prevtx_kids_pct = display_num(e_prevtx_kids_pct)) %>%
+  
+  
+  # drop the separate *_lo and *_hi variables
+  select(entity,
+         hiv_reg_new,
+         hiv_ipt,
+         coverage,
+         hiv_ipt_pall,
+         e_prevtx_eligible,
+         e_prevtx_eligible_lohi,
+         newinc_con04_tpt,
+         e_prevtx_kids_pct,
+         e_prevtx_kids_pct_lohi)
 
 
 
@@ -680,18 +687,18 @@ prev_tx_footnote2_countries = c("DPR Korea", "Nigeria", "Indonesia", "Malawi", "
 
 # Remove the coverage calculations for the excluded countries
 prev_tx_table_data <- prev_tx_table_data %>%
-                      mutate(e_prevtx_kids_pct = ifelse(entity %in% prev_tx_footnote2_countries,
-                                                        "**",
-                                                        e_prevtx_kids_pct),
-
-                             e_prevtx_kids_pct_lohi = ifelse(entity %in% prev_tx_footnote2_countries,
-                                                        NA,
-                                                        e_prevtx_kids_pct_lohi),
-                             #For contries got a coverage greater than 100%, show it as >100 and delete the interval
-                             e_prevtx_kids_pct_lohi=replace(e_prevtx_kids_pct_lohi,(e_prevtx_kids_pct == 100),NA),
-                             e_prevtx_kids_pct=replace(e_prevtx_kids_pct,(e_prevtx_kids_pct == 100),">100"))
-                             #Zimbabwe only reported half year's data for 2017, remove the whole row of it after discussed with Annabel;should add back since 2018
-                             filter(entity!="Zimbabwe")
+  mutate(e_prevtx_kids_pct = ifelse(entity %in% prev_tx_footnote2_countries,
+                                    "**",
+                                    e_prevtx_kids_pct),
+         
+         e_prevtx_kids_pct_lohi = ifelse(entity %in% prev_tx_footnote2_countries,
+                                         NA,
+                                         e_prevtx_kids_pct_lohi),
+         #For contries got a coverage greater than 100%, show it as >100 and delete the interval
+         e_prevtx_kids_pct_lohi=replace(e_prevtx_kids_pct_lohi,(e_prevtx_kids_pct == 100),NA),
+         e_prevtx_kids_pct=replace(e_prevtx_kids_pct,(e_prevtx_kids_pct == 100),">100"))
+#Zimbabwe only reported half year's data for 2017, remove the whole row of it after discussed with Annabel;should add back since 2018
+#filter(entity!="Zimbabwe")
 
 # Create HTML output
 prev_tx_table_html <- xtable(prev_tx_table_data)
@@ -710,39 +717,42 @@ print(prev_tx_table_html,
       file=prev_tx_table_filename,
       include.rownames=FALSE,
       include.colnames=FALSE,
-      html.table.attributes="border='0' rules='rows' width='1100' cellpadding='5'",
+      html.table.attributes="border='1' rules='all' width='1100' cellpadding='5'",
       append=TRUE,
       add.to.row=list(pos=list(0,
                                nrow(prev_tx_table_html)),
                       command=c("<tr>
                                 <td rowspan='3'></td>
-                                <td rowspan='3'>People living with HIV newly enrolled in care</td>
-                                <td colspan='2'>People living with HIV newly enrolled in care started on TB preventive treatment</td>
-                                <td colspan='2' style='border-left: black 2px solid;'>Estimated number of child contacts under 5 years of age eligible for TB preventive treatment<sup>a</sup></td>
-                                <td colspan='3'>Children under 5 years of age started on TB preventive treatment</td>
+                                <td colspan='3'>People living with HIV newly enrolled in care</td>
+                                <td rowspan='1' style='border-left: black 1px solid;'>People living with HIV currently enrolled in care</td>
+                                <td colspan='2' style='border-left: black 1px solid;'>Estimated number of child contacts under 5 years of age eligible for TB preventive treatment<sup>a</sup></td>
+                                <td colspan='3' style='border-left: black 1px solid;'>Children under 5 years of age started on TB preventive treatment</td>
                                 </tr>
                                 <tr>
                                 <td rowspan='2'>Number</td>
+                                <td rowspan='2'>Number of people started on TB preventive treatment</td>
                                 <td rowspan='2'>Coverage (%)</td>
-                                <td rowspan='2' style='border-left: black 2px solid;'>Best estimate</td>
+                                <td rowspan='2'style='border-left: black 1px solid;'>Number of people started on TB preventive treatment</td>
+                                <td rowspan='2' style='border-left: black 1px solid;'>Best estimate</td>
                                 <td rowspan='2'>Uncertainty interval</td>
-                                <td rowspan='2'>Number</td>
+                                <td rowspan='2' style='border-left: black 1px solid;'>Number</td>
                                 <td colspan='2'>Coverage<sup>b</sup> (%)</td>
                                 </tr>
                                 <tr>
                                 <td>Best estimate</td>
                                 <td>Uncertainty interval</td>
                                 </tr>",
-                                paste("<tr><td colspan='7'>Blank cells indicate data not reported.<br />","<sup>a</sup> Estimates are shown to three significant figures.<br />","<sup>b</sup> Reasons for higher than expected coverage might be that the numerator did not exclude non-household contacts or children of five years and older.<br />",
-                                       "* Coverage was not calculated because reported data on people living with HIV is for all enrolled in care, not just those newly enrolled in care.<br />",
+                                paste("<tr><td colspan='10'>Blank cells indicate data not reported.<br />","<sup>a</sup> Estimates are shown to three significant figures.<br />","<sup>b</sup> Reasons for higher than expected coverage might be that the numerator did not exclude non-household contacts or children of five years and older.<br />",
+                                      "* Coverage was not calculated because reported data on people living with HIV is for all enrolled in care, not just those newly enrolled in care.<br />",
                                       prev_tx_footnote2,
-                                        "</td>
-                                </tr>"))
-                      )
+                                      "</td>
+                                      </tr>"))
+                                )
       )
 
 # Clean up (remove any objects with their name beginning with 'prev_tx')
 rm(list=ls(pattern = "^prev_tx"))
+
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
