@@ -232,7 +232,7 @@ inc_data <- aggregated_estimates_epi_rawvalues %>%
          e_inc_num_millions = e_inc_num / 1e6,
          e_inc_num_lo_millions = e_inc_num_lo / 1e6,
          e_inc_num_hi_millions = e_inc_num_hi / 1e6) %>%
-
+  
   # merge with regional names
   inner_join(who_region_names, by = "g_whoregion") %>%
   select(-g_whoregion)
@@ -269,15 +269,15 @@ inc_plot <- inc_data %>%
   geom_line(aes(year, e_inc_num_millions),
             size=1,
             colour=standard_palette("incidence")) +
-
+  
   facet_wrap( ~ entity, ncol = 4, scales="free_y") +
   scale_x_continuous(name="Year",
-                     breaks = c(2000, 2008, report_year-1)) +
+                     breaks = c(2000, 2009, report_year-1)) +
   scale_y_continuous(name = "Millions per year") +
   ggtitle(paste0("FIG.4.1\nNotifications of TB cases (new and relapse cases, all forms) (black) compared with estimated TB incident cases (green),\n2000 - ",
                  report_year-1,
                  ", globally and for WHO regions. Shaded areas represent uncertainty bands.")) +
-
+  
   theme_glb.rpt() +
   theme(legend.position="top",
         legend.title=element_blank(),
@@ -285,14 +285,14 @@ inc_plot <- inc_data %>%
 
 # Save the plot
 figsavecairo(inc_plot,
-        select(inc_data,
-               year,
-               c_newinc_millions,
-               e_inc_num_millions,
-               e_inc_num_lo_millions,
-               e_inc_num_hi_millions,
-               entity),
-        "f4_1_inc_number_plot_aggregates")
+             select(inc_data,
+                    year,
+                    c_newinc_millions,
+                    e_inc_num_millions,
+                    e_inc_num_lo_millions,
+                    e_inc_num_hi_millions,
+                    entity),
+             "f4_1_inc_number_plot_aggregates")
 
 # Clean up (remove any objects with their name containing 'inc_')
 rm(list=ls(pattern = "inc_"))
@@ -300,23 +300,23 @@ rm(list=ls(pattern = "inc_"))
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Figure 4.2  ------
-# New and relapse TB case notification rates by age and sex in 2018,
+# New and relapse TB case notification rates and estimated TB incidence by age and sex in 2018,
 # globally and for WHO regions
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
-# Get data
+# Get data of notification
 agesex_notifs <- filter(notification, year == (report_year - 1)) %>%
-                 select(iso2,
-                        g_whoregion,
-                        newrel_m014, newrel_m1524, newrel_m2534, newrel_m3544, newrel_m4554, newrel_m5564, newrel_m65,
-                        newrel_f014, newrel_f1524, newrel_f2534, newrel_f3544, newrel_f4554, newrel_f5564, newrel_f65)
+  select(iso2,
+         g_whoregion,
+         newrel_m014, newrel_m1524, newrel_m2534, newrel_m3544, newrel_m4554, newrel_m5564, newrel_m65,
+         newrel_f014, newrel_f1524, newrel_f2534, newrel_f3544, newrel_f4554, newrel_f5564, newrel_f65)
 
 
 agesex_pop    <- filter(estimates_population, year == (report_year - 1)) %>%
-                 select(iso2,
-                        e_pop_m014, e_pop_m1524, e_pop_m2534, e_pop_m3544, e_pop_m4554, e_pop_m5564, e_pop_m65,
-                        e_pop_f014, e_pop_f1524, e_pop_f2534, e_pop_f3544, e_pop_f4554, e_pop_f5564, e_pop_f65)
+  select(iso2,
+         e_pop_m014, e_pop_m1524, e_pop_m2534, e_pop_m3544, e_pop_m4554, e_pop_m5564, e_pop_m65,
+         e_pop_f014, e_pop_f1524, e_pop_f2534, e_pop_f3544, e_pop_f4554, e_pop_f5564, e_pop_f65)
 
 agesex        <- merge(agesex_notifs, agesex_pop)
 
@@ -327,52 +327,52 @@ agesex$tot_notified <- sum_of_row(agesex[c("newrel_m1524", "newrel_m2534", "newr
                                            "newrel_f1524", "newrel_f2534", "newrel_f3544", "newrel_f4554", "newrel_f5564", "newrel_f65")] )
 
 agesex_filtered_global <- agesex %>%
-	                      filter(!is.na(tot_notified)) %>%
-	                      summarise_at(vars(newrel_m014:tot_notified),
-	                                   sum,
-	                                   na.rm = TRUE) %>%
-	                      mutate(entity = "Global")
+  filter(!is.na(tot_notified)) %>%
+  summarise_at(vars(newrel_m014:tot_notified),
+               sum,
+               na.rm = TRUE) %>%
+  mutate(entity = "Global")
 
 agesex_filtered_regional <- agesex %>%
-                      filter(!is.na(tot_notified)) %>%
-                      group_by(g_whoregion) %>%
-                      summarise_at(vars(newrel_m014:tot_notified),
-                                   sum,
-                                   na.rm = TRUE) %>%
-                      # merge with regional names
-                      inner_join(who_region_names, by = "g_whoregion") %>%
-                      select(-g_whoregion)
+  filter(!is.na(tot_notified)) %>%
+  group_by(g_whoregion) %>%
+  summarise_at(vars(newrel_m014:tot_notified),
+               sum,
+               na.rm = TRUE) %>%
+  # merge with regional names
+  inner_join(who_region_names, by = "g_whoregion") %>%
+  select(-g_whoregion)
 
 agesex_filtered_agg <- rbind(agesex_filtered_regional, agesex_filtered_global) %>%
-
-                      # Calculate rate per 100 000 population for each age/sex group
-                      mutate(m014 = newrel_m014 * 1e5 / e_pop_m014,
-                             m1524 = newrel_m1524 * 1e5 / e_pop_m1524,
-                             m2534 = newrel_m2534 * 1e5 / e_pop_m2534,
-                             m3544 = newrel_m3544 * 1e5 / e_pop_m3544,
-                             m4554 = newrel_m4554 * 1e5 / e_pop_m4554,
-                             m5564 = newrel_m5564 * 1e5 / e_pop_m5564,
-                             m65 = newrel_m65 * 1e5 / e_pop_m65,
-
-                             f014 = newrel_f014 * 1e5 / e_pop_f014,
-                             f1524 = newrel_f1524 * 1e5 / e_pop_f1524,
-                             f2534 = newrel_f2534 * 1e5 / e_pop_f2534,
-                             f3544 = newrel_f3544 * 1e5 / e_pop_f3544,
-                             f4554 = newrel_f4554 * 1e5 / e_pop_f4554,
-                             f5564 = newrel_f5564 * 1e5 / e_pop_f5564,
-                             f65 = newrel_f65 * 1e5 / e_pop_f65
-                             ) %>%
-
-                      # select only the rates
-                      select(entity,
-                             m014, m1524, m2534, m3544, m4554, m5564, m65,
-                             f014, f1524, f2534, f3544, f4554, f5564, f65)
+  
+  # Calculate rate per 100 000 population for each age/sex group
+  mutate(m014 = newrel_m014 * 1e5 / e_pop_m014,
+         m1524 = newrel_m1524 * 1e5 / e_pop_m1524,
+         m2534 = newrel_m2534 * 1e5 / e_pop_m2534,
+         m3544 = newrel_m3544 * 1e5 / e_pop_m3544,
+         m4554 = newrel_m4554 * 1e5 / e_pop_m4554,
+         m5564 = newrel_m5564 * 1e5 / e_pop_m5564,
+         m65 = newrel_m65 * 1e5 / e_pop_m65,
+         
+         f014 = newrel_f014 * 1e5 / e_pop_f014,
+         f1524 = newrel_f1524 * 1e5 / e_pop_f1524,
+         f2534 = newrel_f2534 * 1e5 / e_pop_f2534,
+         f3544 = newrel_f3544 * 1e5 / e_pop_f3544,
+         f4554 = newrel_f4554 * 1e5 / e_pop_f4554,
+         f5564 = newrel_f5564 * 1e5 / e_pop_f5564,
+         f65 = newrel_f65 * 1e5 / e_pop_f65
+  ) %>%
+  
+  # select only the rates
+  select(entity,
+         m014, m1524, m2534, m3544, m4554, m5564, m65,
+         f014, f1524, f2534, f3544, f4554, f5564, f65)
 
 
 
 # Switch to long ('tidy') format to plot
 agesex_agg_long <- agesex_filtered_agg %>%
-                   gather("group", "rate", 2:15)
+  gather("group", "rate", 2:15)
 
 
 # Extract sex and agegroup from the group field
@@ -386,55 +386,140 @@ agesex_agg_long$agegroup <- factor(agesex_agg_long$agegroup,
                                    labels=c("0\u201314", "15\u201324", "25\u201334", "35\u201344", "45\u201354", "55\u201364", "\u226565"))
 
 agesex_agg_long <- agesex_agg_long %>% select(-group)
-
-
 # Change the order
 agesex_agg_long$entity <- factor(agesex_agg_long$entity,
                                  levels = c("Africa", "The Americas", "Eastern Mediterranean", "Europe", "South-East Asia", "Western Pacific", "Global"))
 
 
 
+# Get data of estimated population
+agesex_agg_pop    <- filter(estimates_population, year == (report_year - 1)) %>%
+  select(g_whoregion,
+         e_pop_m014, e_pop_m1524, e_pop_m2534, e_pop_m3544, e_pop_m4554, e_pop_m5564, e_pop_m65,
+         e_pop_f014, e_pop_f1524, e_pop_f2534, e_pop_f3544, e_pop_f4554, e_pop_f5564, e_pop_f65)%>%
+  group_by(g_whoregion) %>%
+  summarise_at(vars(contains("e_pop_")),
+               sum,
+               na.rm = TRUE) %>%
+  # merge with regional names and simplify to match structure of country table
+  inner_join(who_region_names, by = "g_whoregion") %>%
+  select(-g_whoregion)
+
+agesex_agg_pop_global    <-agesex_agg_pop%>%
+  summarise_at(vars(contains("e_pop_")),
+               sum,
+               na.rm = TRUE)%>%
+  mutate(entity="Global")
+
+agesex_agg_pop    <- agesex_agg_pop%>%
+  rbind(agesex_agg_pop_global)
+
+agesex_agg_pop_long <- agesex_agg_pop %>%
+  gather("group", "pop", 1:14)
+
+agesex_agg_pop_long$sex <- str_extract(agesex_agg_pop_long$group, "f|m")
+agesex_agg_pop_long$sex <- factor(agesex_agg_pop_long$sex,
+                                  labels=c("Female", "Male"))
+agesex_agg_pop_long$agegroup <- str_extract(agesex_agg_pop_long$group, "014|1524|2534|3544|4554|5564|65")
+agesex_agg_pop_long$agegroup <- factor(agesex_agg_pop_long$agegroup,
+                                       labels=c("0\u201314", "15\u201324", "25\u201334", "35\u201344", "45\u201354", "55\u201364", "\u226565"))
+agesex_agg_pop_long$agegroup <- gsub("–","-",agesex_agg_pop_long$agegroup)
+
+agesex_agg_pop_long <- agesex_agg_pop_long %>% 
+  select(-group)
+
+# Get data of estimated incidence
+agesex_inc    <- filter(aggregated_estimates_agesex_rawvalues, year == (report_year - 1)) %>%
+  select(group_name,
+         age_group,
+         sex,
+         best)%>%
+  filter(age_group!= "all" & age_group!= "15plus" & age_group!= "0-4" & age_group!= "5-14",
+         sex!= "a") %>%
+  mutate(g_whoregion = group_name,
+         agegroup= recode(age_group, "65plus"="\u226565"),
+         incidence = best,
+         sex = recode(sex, "f"="Female","m"="Male"))%>%
+  # merge with regional names
+  inner_join(who_region_names, by = "g_whoregion") %>%
+  select(-g_whoregion,
+         -group_name,
+         -age_group,
+         -best)
+
+agesex_inc_global  <-agesex_inc%>%
+  group_by(sex,agegroup)%>%
+  summarise_at(vars(incidence),
+               sum,
+               na.rm = TRUE)%>%
+  mutate(entity="Global")%>%
+  ungroup()
+
+agesex_inc <- agesex_inc%>%
+  # aprrehend with global data 
+  rbind(agesex_inc_global)%>%
+  # merge with populations
+  left_join(agesex_agg_pop_long,by=c("sex","entity","agegroup"))%>%
+  # calculate incidence
+  mutate(inc100k=incidence * 1e5 / pop)
+
+agesex_inc$entity <- factor(agesex_inc$entity,
+                            levels = c("Africa", "The Americas", "Eastern Mediterranean", "Europe", "South-East Asia", "Western Pacific", "Global"))
+
+
+# merge with notifictions
+agesex_agg_long$agegroup <- gsub("–","-",agesex_agg_long$agegroup)
+agesex_agg_long <- agesex_agg_long %>%
+  left_join(agesex_inc,by=c("sex","entity","agegroup"))%>%
+  select(-incidence,
+         -pop)
+agesex_agg_long$agegroup <- factor(agesex_agg_long$agegroup,
+                                   levels=c("0-14", "15-24", "25-34", "35-44", "45-54", "55-64", "\u226565"),
+                                   labels=c("0-14", "15-24", "25-34", "35-44", "45-54", "55-64", "\u226565"))
+
 # Now plot the aggregates as pyramids
 # See first code example at https://github.com/JuanGaleano/Population-pyramids-ggplot2/blob/master/POPULATION%20PYRAMID%20GGPLOT2.R
 
 agesex_plot <- agesex_agg_long %>%
-                # Multiply all the female rates by -1
-                mutate(rate = ifelse(sex=="Female", rate * -1, rate )) %>%
-                ggplot(aes(x=agegroup, y=rate, fill=sex)) +
-                geom_bar(stat="identity",
-                         size=.3,
-                         colour="black",
-                         position="identity") +
-                scale_fill_manual(values=agesex_palette()) +
-                scale_y_continuous(name = "TB case notification rate per 100 000 population per year",
-                                   #Set labels manually to avoid showing negative numbers!
-                                   breaks=c(-200,-100,0,100,200,300),
-                                   labels=abs(c(-200,-100,0,100,200,300))) +
-                scale_x_discrete("Age group (years)",
-                                 labels=levels(agesex_agg_long$agegroup)) +
-                coord_flip() +
-                facet_wrap( ~ entity, ncol = 4) +
-                ggtitle(paste0("FIG.4.2\nNew and relapse TB case notification rates by age and sex\u1d43 in ",
-                                report_year - 1,
-                                ", globally and for WHO regions")) +
-                theme_glb.rpt() +
-                theme(legend.position="top",
-                      legend.title=element_blank())
-
+  # Multiply all the female rates by -1
+  mutate(rate = ifelse(sex=="Female", rate * -1, rate ),
+         inc100k = ifelse(sex=="Female", inc100k * -1, inc100k )) %>%
+  ggplot() +
+  geom_bar(aes(x=agegroup, y=rate, fill=sex),
+           stat="identity",
+           size=.3,
+           position="identity") +
+  scale_fill_manual(values=agesex_palette()) +
+  geom_bar(aes(x=agegroup, y=inc100k,fill=NA),
+           stat="identity",
+           size=.3,
+           colour="black",
+           position="identity") +
+  scale_y_continuous(name = "TB case notification rate and estimated incidence per 100 000 population per year",
+                     #Set labels manually to avoid showing negative numbers!
+                     breaks=c(-400,-200,0,200,400,600),
+                     labels=abs(c(-400,-200,0,200,400,600))) +
+  scale_x_discrete("Age group (years)",
+                   labels=levels(agesex_agg_long$agegroup)) +
+  coord_flip() +
+  facet_wrap( ~ entity, ncol = 4) +
+  ggtitle(paste0("FIG.4.2\nEstimated TB incidence(balck line) and TB incident case notification rates by age and sex\u1d43 (female in red; male \nin green) in ",
+                 report_year - 1,
+                 ", globally and for WHO regions")) +
+  theme_glb.rpt() +
+  theme(legend.position="right",
+        legend.title=element_blank())
 
 # Add footnote
 agesex_pcnt <- rounder(sum(agesex$tot_notified, na.rm=TRUE)  * 100
                        /
-                       sum(notification[notification$year==report_year -1, "c_newinc"], na.rm=TRUE))
+                         sum(notification[notification$year==report_year -1, "c_newinc"], na.rm=TRUE))
 
 agesex_foot <- paste0("\u1d43  Countries not reporting cases in these categories are excluded. Cases included account for ",
                       agesex_pcnt,
                       "% of reported cases.")
 
-
-
 agesex_plot <- arrangeGrob(agesex_plot, bottom = textGrob(agesex_foot, x = 0, hjust = -0.1, vjust=0.1, gp = gpar(fontsize = 10)))
-
 
 # Save the plots
 figsavecairo(agesex_plot, agesex_agg_long, "f4_2_agesex")
@@ -643,6 +728,118 @@ bacconf_plot <- arrangeGrob(bacconf_plot, bottom = textGrob(bacconf_foot, x = 0,
 
 # Save the plot
 figsavecairo(bacconf_plot, bacconf_data, "f4_4_bacconf_plot")
+
+# Clean up (remove any objects with their name beginning with 'bacconf')
+rm(list=ls(pattern = "^bacconf"))
+
+# Figure 4.4plus  ------
+# Percentage of new and relapse pulmonary TB cases with bacteriological confirmation, 2000-2018, in the 30 high TB burden countries
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+bacconf_30hbc <- country_group_membership %>%
+  filter(group_type == "g_hb_tb" & group_name == 1) %>%
+  select(iso2)
+
+bacconf_data <- notification %>%
+  filter(year >= 2000) %>%
+  select(iso2,
+         iso3,
+         year,
+         country,
+         g_whoregion,
+         # old variables pre-2013
+         new_sp,
+         new_sn,
+         new_su,
+         # new variables
+         new_labconf, new_clindx,
+         ret_rel_labconf, ret_rel_clindx) %>%
+  # restrict to the 30 high burden countries
+  inner_join(bacconf_30hbc)%>%
+  group_by(year, g_whoregion,country) %>%
+  summarise_at(vars(new_sp:ret_rel_clindx),
+               sum,
+               na.rm = TRUE) %>%
+  #calculate % of pulmonary cases with bac confirmation
+  # a bit tricky for years before 2013, so do for new only by smear only
+  mutate(bacconf_pct_numerator = ifelse(year < 2013 & g_whoregion != 'EUR',
+                                        # old variables, do for new only outside EUR
+                                        new_sp,
+                                        # new variables
+                                        (new_labconf + ret_rel_labconf)),
+         bacconf_pct_denominator = ifelse(year < 2013 & g_whoregion != 'EUR',
+                                          # old variables, do for new only outside EUR
+                                          (new_sp + new_sn + new_su),
+                                          # new variables
+                                          (new_labconf + new_clindx + ret_rel_labconf + ret_rel_clindx))) %>%
+  
+  # Adjust calculation for EUR pre-2013 (applies to years 2002 - 2012)
+  mutate(bacconf_pct_numerator = ifelse(between(year, 2002, 2012) & g_whoregion == 'EUR',
+                                        # old variables, but using new_labconf
+                                        new_labconf,
+                                        # otherwise keep calculation from previous step
+                                        bacconf_pct_numerator),
+         bacconf_pct_denominator = ifelse(between(year, 2002, 2012) & g_whoregion == 'EUR',
+                                          # old variables
+                                          (new_sp + new_sn + new_su),
+                                          # otherwise keep calculation from previous step
+                                          bacconf_pct_denominator),
+         
+         # Finally deal with EUR 2000 and 2001 numerator
+         bacconf_pct_numerator = ifelse(between(year, 2000, 2001) & g_whoregion == 'EUR',
+                                        # old variables
+                                        new_sp,
+                                        # otherwise keep calculation from previous step
+                                        bacconf_pct_numerator),
+         bacconf_pct_denominator = ifelse(between(year, 2000, 2001) & g_whoregion == 'EUR',
+                                          # old variables
+                                          (new_sp + new_sn + new_su),
+                                          # otherwise keep calculation from previous step
+                                          bacconf_pct_denominator)
+  ) %>%
+  
+  # shorten long country names
+  get_names_for_tables( col = "country")%>%
+  
+  # get rid of the oh-so-pesky grouping variables within the dataframe
+  ungroup() %>%
+  
+  # get rid of extra variables
+  select(country,
+         year,
+         bacconf_pct_numerator,
+         bacconf_pct_denominator) %>%
+  
+  # Calculate the percentages
+  mutate(bacconf_pct = bacconf_pct_numerator * 100 / bacconf_pct_denominator)
+
+# Plot as lines
+bacconf_plot <- bacconf_data %>%
+  ggplot(aes(x=year, y=bacconf_pct)) +
+  geom_line(size=1) +
+  scale_x_continuous(name="Year",
+                     breaks = c(2001, 2009, report_year-1)) +
+  scale_y_continuous(name = "Percentage bacteriologically confirmed") +
+  expand_limits(y=c(0,100)) +
+  facet_wrap( ~ country, scales="free_y",ncol = 5) +
+  ggtitle(paste0("FIG.4.4+\nPercentage of new and relapse\u1d43 pulmonary TB cases with bacteriological \nconfirmation, in the 30 high TB burden countries,2000-",
+                 report_year-1)) +
+  theme_glb.rpt() +
+  theme(legend.position="top",
+        legend.title=element_blank(),
+        strip.text.x = element_text(size=6))
+
+# Add footnote
+bacconf_foot <- "\u1d43 The calculation is for new and relapse pulmonary cases in years prior to 2013 based on \nsmear results, except for Russian Federation where data on confirmation by culture was \nalso available for the period 2002-2012."
+
+bacconf_plot <- arrangeGrob(bacconf_plot, bottom = textGrob(bacconf_foot, x = 0, hjust = -0.1, vjust=0.3, gp = gpar(fontsize = 10)))
+
+write(bacconf_foot,
+      file="footnote.xlsx",
+      append= TRUE)
+
+# Save the plot
+figsavecairo(bacconf_plot, bacconf_data, "f4_4_plus_bacconf_plot",width=7, height=11)
 
 # Clean up (remove any objects with their name beginning with 'bacconf')
 rm(list=ls(pattern = "^bacconf"))
@@ -2153,108 +2350,101 @@ rm(list=ls(pattern = "^coveragehiv"))
 
 
 coveragerr_inc_country <- estimates_drtb_rawvalues %>%
-                          filter(year == report_year - 1) %>%
-                          select(entity = country,
-                                  iso2,
-                                  e_inc_rr_num,
-                                  e_inc_rr_num_lo,
-                                  e_inc_rr_num_hi)  %>%
-                          # shorten long country names
-                          get_names_for_tables( col = "entity")
+  filter(year == report_year - 1) %>%
+  select(entity = country,
+         iso2,
+         e_rr_in_notified_labconf_pulm,
+         e_rr_in_notified_labconf_pulm_lo,
+         e_rr_in_notified_labconf_pulm_hi)  %>%
+  # shorten long country names
+  get_names_for_tables( col = "entity")
 
 # Filter the country list down to high burden ones
 coveragerr_30hbc <-  country_group_membership %>%
-                     filter(group_type == "g_hb_mdr" & group_name == 1) %>%
-                     select(iso2)
+  filter(group_type == "g_hb_mdr" & group_name == 1) %>%
+  select(iso2)
 
 
 coveragerr_inc_country <- coveragerr_inc_country %>%
-                          inner_join(coveragerr_30hbc)
+  inner_join(coveragerr_30hbc)
 
 coveragerr_country <-  notification %>%
-                       filter(year == report_year - 1) %>%
-                       select(iso2,
-                              unconf_rrmdr_tx,
-                              conf_rrmdr_tx)
-
-coveragerr_country$rrmdr_tx <- sum_of_row(coveragerr_country[c("unconf_rrmdr_tx", "conf_rrmdr_tx")] )
-
-
+  filter(year == report_year - 1) %>%
+  select(iso2,
+         conf_rrmdr_tx)
 
 coveragerr_country <- coveragerr_country %>%
-                       inner_join(coveragerr_inc_country) %>%
-                       mutate(c_rr_coverage = rrmdr_tx * 100 / e_inc_rr_num,
-                              c_rr_coverage_lo = rrmdr_tx * 100  / e_inc_rr_num_hi,
-                              c_rr_coverage_hi = rrmdr_tx * 100  / e_inc_rr_num_lo,
-                              # highlight countries with no data
-                              entity = ifelse(is.na(rrmdr_tx), paste0(entity, "*"), entity )) %>%
-                       select(entity,
-                              c_rr_coverage,
-                              c_rr_coverage_lo,
-                              c_rr_coverage_hi) %>%
-                       arrange(desc(c_rr_coverage))
+  inner_join(coveragerr_inc_country) %>%
+  mutate(c_rr_coverage = conf_rrmdr_tx * 100 / e_rr_in_notified_labconf_pulm,
+         c_rr_coverage_lo = conf_rrmdr_tx * 100  / e_rr_in_notified_labconf_pulm_hi,
+         c_rr_coverage_hi = conf_rrmdr_tx * 100  / e_rr_in_notified_labconf_pulm_lo,
+         # highlight countries with no data
+         entity = ifelse(is.na(conf_rrmdr_tx), paste0(entity, "*"), entity )) %>%
+  select(entity,
+         c_rr_coverage,
+         c_rr_coverage_lo,
+         c_rr_coverage_hi) %>%
+  arrange(desc(c_rr_coverage))
 
 # Calculate how many countries highlighted as having no data
 coveragerr_nodata_count <- coveragerr_country %>%
-                            filter(grepl("[*]$", entity)) %>%
-                            nrow()
+  filter(grepl("[*]$", entity)) %>%
+  nrow()
 
 
 coveragerr_inc_region <- aggregated_estimates_drtb_rawvalues %>%
-                          filter(year == report_year - 1 & group_type == "g_whoregion") %>%
-                          select(g_whoregion = group_name,
-                                  e_inc_rr_num,
-                                  e_inc_rr_num_lo,
-                                  e_inc_rr_num_hi)
+  filter(year == report_year - 1 & group_type == "g_whoregion") %>%
+  select(g_whoregion = group_name,
+         e_rr_in_notified_labconf_pulm,
+         e_rr_in_notified_labconf_pulm_lo,
+         e_rr_in_notified_labconf_pulm_hi)
 
 coveragerr_region <- notification %>%
-                      filter(year == report_year - 1) %>%
-                      group_by(g_whoregion) %>%
-                      summarise_at(vars(unconf_rrmdr_tx, conf_rrmdr_tx),
-                                   sum,
-                                   na.rm = TRUE) %>%
-                      mutate(rrmdr_tx = unconf_rrmdr_tx +  conf_rrmdr_tx) %>%
-
-                      # merge with estimates and calculate treatment coverage
-                      inner_join(coveragerr_inc_region) %>%
-                       mutate(c_rr_coverage = rrmdr_tx * 100 / e_inc_rr_num,
-                              c_rr_coverage_lo = rrmdr_tx * 100  / e_inc_rr_num_hi,
-                              c_rr_coverage_hi = rrmdr_tx * 100  / e_inc_rr_num_lo) %>%
-
-                      # merge with regional names and simplify
-                      inner_join(who_region_names, by = "g_whoregion") %>%
-                      select(entity,
-                              c_rr_coverage,
-                              c_rr_coverage_lo,
-                              c_rr_coverage_hi)  %>%
-                      arrange(desc(c_rr_coverage))
+  filter(year == report_year - 1) %>%
+  group_by(g_whoregion) %>%
+  summarise_at(vars(conf_rrmdr_tx),
+               sum,
+               na.rm = TRUE) %>%
+  
+  # merge with estimates and calculate treatment coverage
+  inner_join(coveragerr_inc_region) %>%
+  mutate(c_rr_coverage = conf_rrmdr_tx * 100 / e_rr_in_notified_labconf_pulm,
+         c_rr_coverage_lo = conf_rrmdr_tx * 100  / e_rr_in_notified_labconf_pulm_hi,
+         c_rr_coverage_hi = conf_rrmdr_tx * 100  / e_rr_in_notified_labconf_pulm_lo) %>%
+  
+  # merge with regional names and simplify
+  inner_join(who_region_names, by = "g_whoregion") %>%
+  select(entity,
+         c_rr_coverage,
+         c_rr_coverage_lo,
+         c_rr_coverage_hi)  %>%
+  arrange(desc(c_rr_coverage))
 
 
 coveragerr_inc_global <- aggregated_estimates_drtb_rawvalues %>%
-                         filter(year == report_year - 1 & group_type == "global") %>%
-                         select(e_inc_rr_num,
-                                e_inc_rr_num_lo,
-                                e_inc_rr_num_hi)%>%
-                         mutate(entity = "Global")
+  filter(year == report_year - 1 & group_type == "global") %>%
+  select(e_rr_in_notified_labconf_pulm,
+         e_rr_in_notified_labconf_pulm_lo,
+         e_rr_in_notified_labconf_pulm_hi)%>%
+  mutate(entity = "Global")
 
 
 coveragerr_global <- notification %>%
-                      filter(year == report_year - 1) %>%
-                      summarise_at(vars(unconf_rrmdr_tx, conf_rrmdr_tx),
-                                   sum,
-                                   na.rm = TRUE) %>%
-                      mutate(rrmdr_tx = unconf_rrmdr_tx +  conf_rrmdr_tx,
-                             entity = "Global") %>%
-
-                      # merge with estimates and calculate treatment coverage
-                      inner_join(coveragerr_inc_global) %>%
-                      mutate(c_rr_coverage = rrmdr_tx * 100 / e_inc_rr_num,
-                              c_rr_coverage_lo = rrmdr_tx * 100  / e_inc_rr_num_hi,
-                              c_rr_coverage_hi = rrmdr_tx * 100  / e_inc_rr_num_lo) %>%
-                      select(entity,
-                              c_rr_coverage,
-                              c_rr_coverage_lo,
-                              c_rr_coverage_hi)
+  filter(year == report_year - 1) %>%
+  summarise_at(vars(conf_rrmdr_tx),
+               sum,
+               na.rm = TRUE) %>%
+  mutate(entity = "Global") %>%
+  
+  # merge with estimates and calculate treatment coverage
+  inner_join(coveragerr_inc_global) %>%
+  mutate(c_rr_coverage = conf_rrmdr_tx * 100 / e_rr_in_notified_labconf_pulm,
+         c_rr_coverage_lo = conf_rrmdr_tx * 100  / e_rr_in_notified_labconf_pulm_hi,
+         c_rr_coverage_hi = conf_rrmdr_tx * 100  / e_rr_in_notified_labconf_pulm_lo) %>%
+  select(entity,
+         c_rr_coverage,
+         c_rr_coverage_lo,
+         c_rr_coverage_hi)
 
 # Create dummy records so can see a horizontal line in the output to separate countries, regions and global parts
 coveragerr_dummy1 <- data.frame(entity = "-----", c_rr_coverage = NA, c_rr_coverage_lo = 0, c_rr_coverage_hi = 100)
@@ -2272,25 +2462,25 @@ coveragerr_data$entity <- factor(coveragerr_data$entity, levels = rev(coveragerr
 
 # plot as horizontal error bars
 coveragerr_plot <- coveragerr_data %>%
-                    ggplot(aes(x=entity,
-                               y=c_rr_coverage)) +
-                    geom_point() +
-                    labs(x="",
-                         y="Treatment coverage (%)",
-                         title=paste0("FIG.4.21\nEstimated treatment coverage for MDR/RR-TB\n",
-                                     "(patients started on treatment for MDR-TB as a percentage of XXXXXX DATA AND TITLE TO BE CHANGED!) in ",
-                                     report_year - 1,
-                                     ",\n30 high MDR-TB burden countries, WHO regions and globally")) +
-                    geom_pointrange(aes(ymin=c_rr_coverage_lo,
-                                        ymax=c_rr_coverage_hi)) +
-                    theme_glb.rpt() +
-                    theme(plot.title = element_text(hjust = 0)) +
-                    expand_limits(y=0) +
-                    coord_flip()
+  ggplot(aes(x=entity,
+             y=c_rr_coverage)) +
+  geom_point() +
+  labs(x="",
+       y="Treatment coverage (%)",
+       title=paste0("FIG.4.21\nEstimated treatment coverage for MDR/RR-TB\n",
+                    "(patients started on treatment for MDR-TB as a percentage of \nthe estimated number of MDR/RR-TB cases among notified cases of bacteriologically confirmed TB) in ",
+                    report_year - 1,
+                    ",\n30 high MDR-TB burden countries, WHO regions and globally")) +
+  geom_pointrange(aes(ymin=c_rr_coverage_lo,
+                      ymax=c_rr_coverage_hi)) +
+  theme_glb.rpt() +
+  theme(plot.title = element_text(hjust = 0)) +
+  expand_limits(y=0) +
+  coord_flip()
 
 # If there are countries with no data then add a footnote
 if (coveragerr_nodata_count > 0)
-  {
+{
   coveragerr_plot <- arrangeGrob(coveragerr_plot,
                                  bottom = textGrob("*  No data",
                                                    x = 0,
@@ -3537,20 +3727,23 @@ commureport_from2013 <- strategy %>%
          country,
          bmu_ref_data,
          bmu_rxsupport_data,
+         bmu_community_impl,
          community_data_available,
          notified_ref,
          notified_ref_community,
          rxsupport_community_coh,
          rxsupport_community_succ)%>%
-  mutate(community_data_available2=ifelse((notified_ref>0 & notified_ref_community>=0) | (rxsupport_community_coh>0 & rxsupport_community_succ>=0),1,NA))
+  mutate(community_data_available2=ifelse((notified_ref>0 & notified_ref_community>=0) | (rxsupport_community_coh>0 & rxsupport_community_succ>=0),1,NA))%>%
+  mutate(bmu_community_impl2=ifelse(bmu_community_impl>0,1,NA))
 
 commureport_sumsince2013 <- commureport_from2013 %>%
   filter(year >= 2013 & year <= report_year) %>%
   select(year,
          g_whoregion,
-         community_data_available2)%>%
+         community_data_available2,
+         bmu_community_impl2)%>%
   group_by(year) %>%
-  summarise_at(vars(community_data_available2),
+  summarise_at(vars(community_data_available2,bmu_community_impl2),
                sum,
                na.rm = TRUE) %>%
   mutate(entity = "Global") %>%
@@ -3558,24 +3751,29 @@ commureport_sumsince2013 <- commureport_from2013 %>%
 
 # Also Lana said numbers has been collected in 2013(data of 2012) by herself through Email so not in the database,
 # Thus we need to creat a new row for year 2012 = 13 countries manully.
-commureport_2012 <- data.frame(year=2012, entity="Global", community_data_available2=13)
+commureport_2012 <- data.frame(year=2012, entity="Global", community_data_available2=13,bmu_community_impl2=0)
 
 commureport_global <-rbind(commureport_2012,commureport_sumsince2013)
-# After Lana comes back, I will ask her for list of those 13 countries and introduc them into the data frame.
 
 commureport_plot_glob <- commureport_global %>%
-  ggplot(aes(x=year, y=community_data_available2)) +
-  geom_bar(stat="identity", fill="darkgreen",width = 0.5) +
+  ggplot() +
+  geom_bar(mapping=aes(x=year+1, y=bmu_community_impl2),stat="identity", position = "dodge", colour = "black",fill="white",width = 0.5) +
+  geom_bar(mapping=aes(x=year+1, y=community_data_available2),stat="identity", fill="darkgreen",width = 0.5) +
   #This breaks setting need to be changed afterwards, it is simply because only 6 years data were used
   #which makes the bar too wide, to control the width, it changed X axis breaks label.
-  scale_x_continuous(breaks = c(2012,2013, 2014, 2015, 2016, 2017, report_year-1)) +
-  scale_y_continuous(expand = c(0, 0), limits = c(0, 70)) +
+  scale_x_continuous(breaks = c(2013, 2014, 2015, 2016, 2017,2018,report_year)) +
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 100)) +
   theme_glb.rpt() +
   labs(x="", y="Number of countries") +
   theme(panel.grid=element_blank()) +
   expand_limits(c(0,0)) +
-  ggtitle(paste0("FIG.B4.7.2\nNumber of countries reporting on WHO community engagement indicators, 2012-",
-                 report_year-1))
+  ggtitle(paste0("FIG.B4.7.2\nNumber of countries reporting implementing any community-based \nactivity in line with WHO community indicators\u1d43(black line) and \ncountries reporting on these indicators(green), 2013-",
+                 report_year))
+
+# Add footnote about only having data from 2015 for eligible countries
+commureport_foot <- paste("\u1d43 ","Data has been collected since 2016.")
+
+commureport_plot_glob <- arrangeGrob(commureport_plot_glob, bottom = textGrob(commureport_foot, x = 0, hjust = -0.1, vjust=-1.5, gp = gpar(fontsize = 10)))
 
 # Save the plot
 figsavecairo(commureport_plot_glob, commureport_global, "f4_box_4_7_2_community_indicator_reporting", width=7, height=11)
@@ -3594,15 +3792,34 @@ rm(list=ls(pattern = "^commureport"))
 # Provision of TB preventive treatment to people newly enrolled in HIV care, 2005–2017
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-ipt <- notification %>%
+ipt_iso3 <- notification %>%
+  filter(year == 2018) %>%
+  select(iso2,
+         iso3,
+         g_whoregion) 
+
+ipt_2018 <- notificationlatest %>%
   filter(year >= 2005) %>%
-  select(iso3,
+  select(iso2,
          country,
          year,
-         g_whoregion,
          hiv_ipt,
          hiv_ipt_reg_all) %>%
-  mutate(hiv_ipt=ifelse(!is.na(hiv_ipt),hiv_ipt,hiv_ipt_reg_all))
+  mutate(hiv_ipt_pall=ifelse(!is.na(hiv_ipt_reg_all),hiv_ipt_reg_all,hiv_ipt),
+         hiv_ipt_pnew=ifelse(!is.na(hiv_ipt),hiv_ipt,hiv_ipt_reg_all))
+
+
+ipt <- notification %>%
+  filter(year >= 2005  & year <= 2017) %>%
+  select(iso2,
+         country,
+         year,
+         hiv_ipt,
+         hiv_ipt_reg_all) %>%
+  mutate(hiv_ipt_pnew=ifelse(!is.na(hiv_ipt),hiv_ipt,hiv_ipt_reg_all),
+         hiv_ipt_pall=ifelse(!is.na(hiv_ipt_reg_all),hiv_ipt_reg_all,hiv_ipt))%>%
+  rbind(ipt_2018)%>%
+  left_join(ipt_iso3,by = "iso2")
 
 #remove data from Kenya, Zambia and Eritrea in 2016 and add data from Russia"
 #   ipt[ipt$iso3 %in% c("ZMB", "KEN", "ERI")&ipt$year==2016,"hiv_ipt"]<-NA
@@ -3616,8 +3833,8 @@ ipt <- notification %>%
 ipt$area <- ifelse(ipt$iso3 %in% c("ZAF"), "South Africa",
                    ifelse(ipt$g_whoregion=="AFR", "Rest of AFR",
                           "Rest of world"))
-ipt_b <- aggregate(ipt[5], by=list(year=ipt$year, area=ipt$area), sum, na.rm=T)
-ipt_b1 <- aggregate(ipt[5], by=list(year=ipt$year), FUN=sum, na.rm=T)
+ipt_b <- aggregate(ipt[7], by=list(year=ipt$year, area=ipt$area), sum, na.rm=T)
+ipt_b1 <- aggregate(ipt[7], by=list(year=ipt$year), FUN=sum, na.rm=T)
 ipt_b1$area <- "Global"
 ipt_b2 <- rbind(ipt_b, ipt_b1)
 library(reshape2)
@@ -3625,27 +3842,41 @@ ipt_c <- melt(ipt_b2, id=1:2)
 ipt_c$value <- ipt_c$value/1000
 ipt_c$area <- factor(ipt_c$area, levels=c( "Rest of world", "Rest of AFR", "South Africa", "Global"))
 
+ipt_d <- aggregate(ipt[4], by=list(year=ipt$year, area=ipt$area), sum, na.rm=T)
+ipt_d1 <- aggregate(ipt[4], by=list(year=ipt$year), FUN=sum, na.rm=T)
+ipt_d1$area <- "Global"
+ipt_d2 <- rbind(ipt_d, ipt_d1)
+ipt_e <- melt(ipt_d2, id=1:2)
+ipt_e$area <- factor(ipt_e$area, levels=c( "Rest of world", "Rest of AFR", "South Africa", "Global"))
+ipt_e <- ipt_e%>%
+  mutate(iptnew=value/1000)%>%
+  select(iptnew)
+ipt_f <- cbind(ipt_c, ipt_e)
 
-ipt_plot <- ggplot(ipt_c, aes(year, value, color=area)) + geom_line(size=1)+
+
+#New version as dashed line for 2005-2016,solid line for 2017-2018, plus dashed for global data 2017-2018
+ipt_plot <- ggplot() + 
+  geom_line(data=subset(ipt_f,year <= 2016),aes(year, iptnew, color=area), size=1,linetype="dashed")+
+  geom_line(data=subset(ipt_f,year>2015),aes(year, value, color=area), size=1)+
+  geom_line(data=subset(ipt_f,area=="Global"),aes(year, iptnew, color=area), size=1,linetype="dashed")+
   scale_y_continuous("Number of people (thousands)") +
   theme_glb.rpt() + scale_x_continuous(name="", breaks=c(min(ipt_c$year):max(ipt_c$year))) +
   scale_color_manual(values=c("#0070C0", "#77933C","orange", "red")) + guides(color = guide_legend(reverse = TRUE))+
-  ggtitle(paste("FIG.5.1\nProvision of TB preventive treatment to people newly enrolled in HIV care\u1d43 , 2005", report_year-1, sep="\u2013"))+
-  annotate("text", x=2016, y=900, label="Global", size=4)+
-  annotate("text", x=2016, y=350, label="South Africa", size=4)+
-  annotate("text", x=2016, y=520, label="Rest of Africa", size=4)+
-  annotate("text", x=2016, y=120, label="Rest of World", size=4)+
+  ggtitle(paste("FIG.5.1 \nProvision of TB preventive treatment to people enrolled in HIV care\u1d43 , 2005", report_year-1, sep="\u2013"))+
+  annotate("text", x=2016, y=1200, label="Global", size=4)+
+  annotate("text", x=2016, y=300, label="South Africa", size=4)+
+  annotate("text", x=2016, y=600, label="Rest of Africa", size=4)+
+  annotate("text", x=2016, y=200, label="Rest of World", size=4)+
   theme(legend.position="none")
-
 
 # Add footnote about including countries report data for all HIV cases;
 # This may not be needed every year,so I will just edit the footnote manullay;
 ipt_plot <- arrangeGrob(ipt_plot,
-                        bottom = textGrob("\u1d43 For seven countries, data are for people currently enrolled in HIV care:Congo,Ecuador,Grenada,\n       Kenya,Mozambique,Nepal and Ukraine.",
-                                              x = 0,
-                                              hjust = -0.1,
-                                              vjust=0.1,
-                                              gp = gpar(fontsize = 10)))
+                        bottom = textGrob("\u1d43 Prior to 2017, data were collected for PLHIV newly enrolled in HIV care shown by dotted lines. \nThe Solid lines include data for PLHIV currently enrolled in HIV care receiving TPT since 2017.",
+                                          x = 0,
+                                          hjust = -0.1,
+                                          vjust=0.1,
+                                          gp = gpar(fontsize = 10)))
 
 # Save the plot
 figsavecairo(ipt_plot, ipt_c, "f5_1_IPT_in_HIV_patients", width=7, height=5)
