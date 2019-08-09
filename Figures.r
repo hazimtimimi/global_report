@@ -1693,67 +1693,67 @@ rm(list=ls(pattern = "inc_"))
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 coverage_inc_country <- estimates_epi_rawvalues %>%
-                         filter(year == report_year - 1) %>%
-                         select(entity = country,
-                                iso2,
-                                e_inc_num,
-                                e_inc_num_lo,
-                                e_inc_num_hi) %>%
-                         # shorten long country names
-                         get_names_for_tables( col = "entity")
+  filter(year == report_year - 1) %>%
+  select(entity = country,
+         iso2,
+         e_inc_num,
+         e_inc_num_lo,
+         e_inc_num_hi) %>%
+  # shorten long country names
+  get_names_for_tables( col = "entity")
 
 # Filter the country list down to high burden ones
 coverage_30hbc <- country_group_membership %>%
-                  filter(group_type == "g_hb_tb" & group_name == 1) %>%
-                  select(iso2)
+  filter(group_type == "g_hb_tb" & group_name == 1) %>%
+  select(iso2)
 
 coverage_inc_country <- coverage_inc_country %>%
-                        inner_join(coverage_30hbc) %>%
-                       #add marker for India and other countries footnote
-                       mutate(entity = recode(entity, "India"="India\u1d47 ",
-                                                      "Mozambique"="Mozambique\u1d43 ",
-                                                      "South Africa"="South Africa\u1d43 "))
+  inner_join(coverage_30hbc) %>%
+  #add marker for India and other countries footnote
+  mutate(entity = recode(entity, "India"="India\u1d47 ",
+                         "Mozambique"="Mozambique\u1d43 ",
+                         "South Africa"="South Africa\u1d43 "))
 
 coverage_country <- notification %>%
-                     filter(year == report_year - 1) %>%
-                     select(iso2,
-                            c_newinc) %>%
-                     inner_join(coverage_inc_country) %>%
-                     select(-iso2) %>%
-                     mutate(c_cdr = c_newinc * 100 / e_inc_num,
-                            c_cdr_lo = c_newinc * 100  / e_inc_num_hi,
-                            c_cdr_hi = c_newinc * 100  / e_inc_num_lo,
-                            # highlight countries with no data
-                            entity = ifelse(is.na(c_newinc), paste0(entity, "*"), entity )) %>%
-                     select(entity,
-                            c_cdr,
-                            c_cdr_lo,
-                            c_cdr_hi) %>%
-                     arrange(desc(c_cdr))
+  filter(year == report_year - 1) %>%
+  select(iso2,
+         c_newinc) %>%
+  inner_join(coverage_inc_country) %>%
+  select(-iso2) %>%
+  mutate(c_cdr = c_newinc * 100 / e_inc_num,
+         c_cdr_lo = c_newinc * 100  / e_inc_num_hi,
+         c_cdr_hi = c_newinc * 100  / e_inc_num_lo,
+         # highlight countries with no data
+         entity = ifelse(is.na(c_newinc), paste0(entity, "*"), entity )) %>%
+  select(entity,
+         c_cdr,
+         c_cdr_lo,
+         c_cdr_hi) %>%
+  arrange(desc(c_cdr))
 
 # Calculate how many countries highlighted as having no data
 coverage_nodata_count <- coverage_country %>%
-                          filter(grepl("[*]$", entity)) %>%
-                          nrow()
+  filter(grepl("[*]$", entity)) %>%
+  nrow()
 
 coverage_region <- aggregated_estimates_epi_rawvalues %>%
-                   filter(year == report_year - 1 & group_type == "g_whoregion") %>%
-                   select(g_whoregion = group_name,
-                          c_cdr,
-                          c_cdr_lo,
-                          c_cdr_hi) %>%
-                   # merge with regional names and simplify to match structure of country table
-                   inner_join(who_region_names, by = "g_whoregion") %>%
-                   select(-g_whoregion) %>%
-                   arrange(desc(c_cdr))
+  filter(year == report_year - 1 & group_type == "g_whoregion") %>%
+  select(g_whoregion = group_name,
+         c_cdr,
+         c_cdr_lo,
+         c_cdr_hi) %>%
+  # merge with regional names and simplify to match structure of country table
+  inner_join(who_region_names, by = "g_whoregion") %>%
+  select(-g_whoregion) %>%
+  arrange(desc(c_cdr))
 
 coverage_global <- aggregated_estimates_epi_rawvalues %>%
-                   filter(year == report_year - 1 & group_type == "global") %>%
-                   select(c_cdr,
-                          c_cdr_lo,
-                          c_cdr_hi) %>%
-                   # Add dummy variable to match structure of country table
-                   mutate(entity = "Global")
+  filter(year == report_year - 1 & group_type == "global") %>%
+  select(c_cdr,
+         c_cdr_lo,
+         c_cdr_hi) %>%
+  # Add dummy variable to match structure of country table
+  mutate(entity = "Global")
 
 # Create dummy records so can see a horizontal line in the output to separate countries, regions and global parts
 coverage_dummy1 <- data.frame(entity = "-----", c_cdr = NA, c_cdr_lo = 0, c_cdr_hi = 100)
@@ -1773,32 +1773,30 @@ coverage_data$entity <- factor(coverage_data$entity, levels = rev(coverage_data$
 
 # plot as horizontal error bars
 coverage_plot <- coverage_data %>%
-                  ggplot(aes(x=entity,
-                             y=c_cdr)) +
-                  geom_point() +
-                  labs(x="",
-                       y="Treatment coverage (%)",
-                       title=paste0("FIG.4.17\nEstimated TB treatment coverage (new and relapse patients as a percentage of estimated TB incidence)\n in ",
-                                   report_year - 1,
-                                   ", 30 high TB burden countries, WHO regions and globally")) +
-                  geom_pointrange(aes(ymin=c_cdr_lo,
-                                      ymax=c_cdr_hi)) +
-                  theme_glb.rpt() +
-                  theme(plot.title = element_text(hjust = 0)) +
-                  expand_limits(y=0) +
-                  coord_flip()
+  ggplot(aes(x=entity,
+             y=c_cdr)) +
+  geom_point() +
+  labs(x="",
+       y="Treatment coverage (%)",
+       title=paste0("FIG.4.17\nEstimated TB treatment coverage (new and relapse patients as a percentage of estimated TB incidence)\n in ",
+                    report_year - 1,
+                    ", 30 high TB burden countries, WHO regions and globally")) +
+  geom_pointrange(aes(ymin=c_cdr_lo,
+                      ymax=c_cdr_hi)) +
+  theme_glb.rpt() +
+  theme(plot.title = element_text(hjust = 0)) +
+  expand_limits(y=0) +
+  coord_flip()
 
 # Add footnotes
-pending_incidence_footnote<- "Estimates of TB incidence for Mozambique, Myanmar, Namibia, South Africa and Viet Nam will be reviewed after final results from their \nrespective national TB prevalence surveys are available in 2019."
-
 coverage_footnote <- paste("\u1d43 ",
                            pending_incidence_footnote,"\n\u1d47 ",india_incidence_footnote)
 # If there are countries with no data then mention it in the footnotes
 if (coverage_nodata_count > 0)
-  {
+{
   coverage_footnote <- paste("* No data\n",
                              coverage_footnote)
-  }
+}
 
 coverage_plot <- arrangeGrob(coverage_plot,
                              bottom = textGrob(coverage_footnote,
@@ -1825,20 +1823,20 @@ gap_data <- estimates_epi_rawvalues %>%
          year,
          e_inc_num
   ) %>%
-
+  
   # Link to notifications
   inner_join(notification) %>%
   select(iso3,
          country,
          e_inc_num,
          c_newinc) %>%
-
+  
   # Calculate the gap and use that for the bubble sizes
   mutate(bubble_size = e_inc_num - c_newinc) %>%
-
+  
   # Modify long names of countries which will be shown as labels in map
   mutate(country = recode(country, "Democratic Republic of the Congo"="DR Congo","United Republic of Tanzania"="UR Tanzania")) %>%
-
+  
   # limit to the top 10 by size of gap
   top_n(10, bubble_size)
 
@@ -1851,18 +1849,15 @@ gap_map <- who_bubble_map(gap_data,
                                  report_year - 1,"\u1d43 "),
                           bubble_colour = "purple",
                           background = "white",
-                          scale_breaks = c(80000,500000,1000000),
-                          scale_limits = c(80000,1100000),
-                          scale_labels = c("80 000","500 000","1 000 000"),
+                          scale_breaks = c(70000,500000,1000000),
+                          scale_limits = c(70000,1100000),
+                          scale_labels = c("70 000","500 000","1 000 000"),
                           bubble_label_show_number = 10)
 
 # Generate names for footnote
 gap_ten_countries_name_by_rank <- gap_data  %>%
   arrange(desc(bubble_size))   %>%
   select(country)
-
-india_incidence_footnote <- "Estimates of TB incidence for India are interim, pending results from the national TB prevalence survey planned for 2019/2020."
-pending_incidence_footnote <- "Estimates of TB incidence for South Africa will be reviewed after final results from its national TB prevalence survey is available in 2020."
 
 gap_map <- arrangeGrob(gap_map,
                        bottom = textGrob(paste0("\u1d43 The ten countries ranked in order of the size of the gap between notified cases and the best estimates of TB incidence in ",report_year-1," are \n",
@@ -1877,10 +1872,11 @@ figsavecairo(gap_map,
                     iso3,
                     country,
                     bubble_size),
-            "f4_18_top_10_gap_map")
+             "f4_18_top_10_gap_map")
 
 # Clean up (remove any objects with their name beginning with 'gap')
 rm(list=ls(pattern = "^gap"))
+
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -2321,7 +2317,7 @@ drgap_data <- estimates_drtb_rawvalues %>%
          year,
          e_inc_rr_num
   ) %>%
-
+  
   # Link to notifications
   inner_join(notification) %>%
   select(iso3,
@@ -2329,16 +2325,16 @@ drgap_data <- estimates_drtb_rawvalues %>%
          e_inc_rr_num,
          unconf_rrmdr_tx,
          conf_rrmdr_tx) %>%
-
+  
   # Filter out countries that have not reported anything yet for the latest year
   filter(!is.na(unconf_rrmdr_tx) | !is.na(conf_rrmdr_tx)) %>%
-
+  
   # Calculate the gap and use that for the bubble sizes
   mutate(bubble_size = e_inc_rr_num - (NZ(unconf_rrmdr_tx) + NZ(conf_rrmdr_tx))) %>%
-
+  
   # Modify long names of countries which will be shown as labels in map
   mutate(country = recode(country, "Democratic Republic of the Congo"="DR Congo")) %>%
-
+  
   # limit to the top 10 by size of gap
   top_n(10, bubble_size)
 
@@ -2351,9 +2347,9 @@ drgap_map <- who_bubble_map(drgap_data,
                                    report_year - 1,"\u1d43 "),
                             bubble_colour = "green",
                             background = "white",
-                            scale_breaks = c(7500,50000,100000),
-                            scale_limits = c(7500,130000),
-                            scale_labels = c("7 500","50 000","100 000"),
+                            scale_breaks = c(5000,50000,100000),
+                            scale_limits = c(5000,130000),
+                            scale_labels = c("5 000","50 000","100 000"),
                             bubble_label_show_number = 10)
 
 # Generate names for footnote
@@ -2371,11 +2367,11 @@ drgap_map <- arrangeGrob(drgap_map,
 
 # Save the plot
 figsavecairo(drgap_map,
-        select(drgap_data,
-               iso3,
-               country,
-               bubble_size),
-        "f4_22_top_10_dr_gap_map")
+             select(drgap_data,
+                    iso3,
+                    country,
+                    bubble_size),
+             "f4_22_top_10_dr_gap_map")
 
 # Clean up (remove any objects with their name beginning with 'drgap')
 rm(list=ls(pattern = "^drgap"))
