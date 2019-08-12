@@ -2130,7 +2130,8 @@ inctbhiv_data <- estimates_epi_rawvalues %>%
                   # change to shortened country names
                   get_names_for_tables()%>%
                   #add markers for India and other countries with pending survey resluts footnote
-                  mutate(country = recode(country, "South Africa"="South Africa\u1d47 ",
+                  mutate(country = recode(country, "Eswatini"="Eswatini\u1d47 ",
+                                                   "South Africa"="South Africa\u1d47 ",
                                                    "Mozambique"="Mozambique\u1d47 ",
                                                    "India"="India\u1d9c "))
 
@@ -2167,7 +2168,7 @@ inctbhiv_plot <- inctbhiv_data %>%
 
 # Add footnote
 inctbhiv_foot <- "\u1d43 The calculation is for all cases in years prior to 2015."
-pending_incidence_footnote <- " Estimates of TB incidence for Mozambique and South Africa will be reviewed after final \nresults from their respective national TB prevalence surveys are available in 2020."
+pending_incidence_footnote <- " Estimates of TB incidence for Eswatini, Mozambique and South Africa will be reviewed after final \nresults from their respective national TB prevalence surveys are available in 2020."
 india_incidence_footnote <- " Estimates of TB incidence for India are interim, pending results from the national TB prevalence survey planned for 2019/2020."
 
 inctbhiv_plot <- arrangeGrob(inctbhiv_plot, bottom = textGrob(paste(inctbhiv_foot,
@@ -2467,7 +2468,7 @@ coveragerr_plot <- coveragerr_data %>%
   geom_point() +
   labs(x="",
        y="Treatment coverage (%)",
-       title=paste0("FIG.4.21\nEstimated treatment coverage for MDR/RR-TB\n",
+       title=paste0("FIG.4.21\nEstimated treatment coverage for MDR/RR-TB",
                     "(patients started on treatment for MDR-TB as a percentage of \nthe estimated number of MDR/RR-TB cases among notified cases of bacteriologically confirmed TB) in ",
                     report_year - 1,
                     ",\n30 high MDR-TB burden countries, WHO regions and globally")) +
@@ -3643,7 +3644,7 @@ figsavecairo(cb_map,
                     iso3,
                     country,
                     cat),
-             "fb4_box_4_4_1_casebased_map")
+             "f4_box_4_4_1_casebased_map")
 
 
 # Clean up (remove any objects with their name beginning with 'cb')
@@ -3792,34 +3793,16 @@ rm(list=ls(pattern = "^commureport"))
 # Provision of TB preventive treatment to people newly enrolled in HIV care, 2005–2017
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-ipt_iso3 <- notification %>%
-  filter(year == 2018) %>%
-  select(iso2,
-         iso3,
-         g_whoregion) 
-
-ipt_2018 <- notificationlatest %>%
+ipt <- notification %>%
   filter(year >= 2005) %>%
-  select(iso2,
+  select(iso3,
          country,
          year,
+         g_whoregion,
          hiv_ipt,
          hiv_ipt_reg_all) %>%
   mutate(hiv_ipt_pall=ifelse(!is.na(hiv_ipt_reg_all),hiv_ipt_reg_all,hiv_ipt),
          hiv_ipt_pnew=ifelse(!is.na(hiv_ipt),hiv_ipt,hiv_ipt_reg_all))
-
-
-ipt <- notification %>%
-  filter(year >= 2005  & year <= 2017) %>%
-  select(iso2,
-         country,
-         year,
-         hiv_ipt,
-         hiv_ipt_reg_all) %>%
-  mutate(hiv_ipt_pnew=ifelse(!is.na(hiv_ipt),hiv_ipt,hiv_ipt_reg_all),
-         hiv_ipt_pall=ifelse(!is.na(hiv_ipt_reg_all),hiv_ipt_reg_all,hiv_ipt))%>%
-  rbind(ipt_2018)%>%
-  left_join(ipt_iso3,by = "iso2")
 
 #remove data from Kenya, Zambia and Eritrea in 2016 and add data from Russia"
 #   ipt[ipt$iso3 %in% c("ZMB", "KEN", "ERI")&ipt$year==2016,"hiv_ipt"]<-NA
@@ -3842,8 +3825,8 @@ ipt_c <- melt(ipt_b2, id=1:2)
 ipt_c$value <- ipt_c$value/1000
 ipt_c$area <- factor(ipt_c$area, levels=c( "Rest of world", "Rest of AFR", "South Africa", "Global"))
 
-ipt_d <- aggregate(ipt[4], by=list(year=ipt$year, area=ipt$area), sum, na.rm=T)
-ipt_d1 <- aggregate(ipt[4], by=list(year=ipt$year), FUN=sum, na.rm=T)
+ipt_d <- aggregate(ipt[5], by=list(year=ipt$year, area=ipt$area), sum, na.rm=T)
+ipt_d1 <- aggregate(ipt[5], by=list(year=ipt$year), FUN=sum, na.rm=T)
 ipt_d1$area <- "Global"
 ipt_d2 <- rbind(ipt_d, ipt_d1)
 ipt_e <- melt(ipt_d2, id=1:2)
@@ -4066,7 +4049,7 @@ rm(list=ls(pattern = "^prevtx_kids"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 5.5 (Map) ---------
+# Figure 5.4 (Map) ---------
 # Notification rate ratio of TB among healthcare workers compared with the general population, 2017
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -4131,7 +4114,7 @@ hcw_data$cat <- cut(hcw_data$nrr,
 
 # produce the map
 hcw_map <- WHOmap.print(hcw_data,
-                        paste("FIG.5.5\nNotification rate ratio of TB among healthcare workers compared with the general adult population,", report_year-1,"\u1d43"),
+                        paste("FIG.5.4\nNotification rate ratio of TB among healthcare workers compared with the general adult population,", report_year-1,"\u1d43"),
                         "Notification\nrate ratio",
                         copyright=FALSE,
                         colors=brewer.pal(4, "Reds"),
@@ -4149,14 +4132,14 @@ hcw_map <- arrangeGrob(hcw_map, bottom = textGrob(hcw_foot, x = 0, hjust = -0.1,
 
 figsavecairo(hcw_map,
         hcw_data,
-        "f5_5_hcw_notf_rate_ratio")
+        "f5_4_hcw_notf_rate_ratio")
 
 # Clean up (remove any objects with their name beginning with 'hcw')
 rm(list=ls(pattern = "^hcw"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 5.6 (Map) ---------
+# Figure 5.5 (Map) ---------
 # BCG vaccination policy by country
 # Get data from
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -4189,14 +4172,14 @@ bcg_policy_map <- arrangeGrob(bcg_policy_map,
 
 figsavecairo(bcg_policy_map,
         bcg_policy_data,
-        "f5_6_BCG_policy_map")
+        "f5_5_BCG_policy_map")
 
 # Clean up (remove any objects with their name beginning with 'bcg_policy')
 rm(list=ls(pattern = "^bcg_policy"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 5.7 (Map) ---------
+# Figure 5.6 (Map) ---------
 # Coverage of BCG vaccination, 2017
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -4235,7 +4218,7 @@ bcg_cov_data$cat <- cut(bcg_cov_data$coverage,
 
 # produce the map
 bcg_cov_map <- WHOmap.print(bcg_cov_data,
-                            paste("FIG.5.7\nCoverage of BCG vaccination,", report_year-1,"\u1d43 "),
+                            paste("FIG.5.6\nCoverage of BCG vaccination,", report_year-1,"\u1d43 "),
                             "Percentage",
                             copyright=FALSE,
                             colors=brewer.pal(3, "Greens"),
@@ -4257,10 +4240,31 @@ bcg_cov_map <- arrangeGrob(bcg_cov_map,
 
 figsavecairo(bcg_cov_map,
         bcg_cov_data,
-        "f5_7_BCG_coverage_map")
+        "f5_6_BCG_coverage_map")
 
 # Clean up (remove any objects with their name beginning with 'bcg_cov')
 rm(list=ls(pattern = "^bcg_cov"))
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Figure box 5.1.1 ------
+# Use of rifapentine for LTBI treatment by July 2019
+# Codes getting from Dennis, data from Sanofi as external csv file
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+require (ggplot2)
+require (whomap)
+
+rifapentine <- read.csv(rdata_folder, "rifapentine.map.GTBR2019.csv")
+
+rifapentine$rfp_used_by_jun2019[is.na(rifapentine$rfp_used_by_jun2019) & rifapentine$rfp_used_trials==1]<-2
+
+rifapentine$var <- factor(rifapentine$rfp_used_by_jun2019,
+                          levels = c(2,1),
+                          labels = c("used in trials only","used"))
+
+whomap(X=rifapentine, Z=scale_fill_brewer("", palette="Reds")) + labs(title="Use of rifapentine in LTBI treatment regimens by July 2019\nwhite=not known to be used") + theme(plot.title=element_text(size=20), legend.position="top") + annotate("text", x = +40, y = -60, label = paste("Currently registered for use in China Hong Kong SAR, India, Indonesia, Mongolia, Philippines,\nThailand, South Africa and the United States of America [Source: Sanofi, July 2019]")) 
+
+ggsave("f5_box_5_1_rifapentine_map.pdf", width=16, height=8)
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
