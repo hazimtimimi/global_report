@@ -156,7 +156,7 @@ hiv_data <- notification %>%
                    ) %>%
 
             # remove countries with no data
-            filter(!(is.na(hiv_tbdetect) & is.na(hiv_reg_new2))) %>%
+            filter(!(is.na(hiv_tbdetect) | is.na(hiv_reg_new2))) %>%
 
             # order by country
             arrange(country)
@@ -430,7 +430,7 @@ rm(list=ls(pattern = "^rdxpolicy"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Table 4.5 -------
+# Table 4.4 -------
 # Quality of laboratory services, 2018
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -527,7 +527,7 @@ print(labquality_table_html,
                                   <td>LPA for rifampicin, isoniazid, fluroguinolones and second-line injectables</td>
                               </tr>",
                               "<tr><td colspan='8'>Blank cells indicate data not reported. - Indicates value that cannot be calculated.<br />
-                              <sup>a</sup>The 48 countries shown in the table are the countries that are in one or more of the three lists of high TB, TB/HIV and MDR-TB burden countries (see also Chapter 2, Figure 2.5 and Table 2.3).</td>
+                              <sup>a</sup>The 48 countries shown in the table are the countries that are in one or more of the three lists of high TB, TB/HIV and MDR-TB burden countries (see also Chapter 2, Figure 2.5 and Table 2.4).</td>
                               </tr>")
                       )
       )
@@ -548,10 +548,6 @@ rm(list=ls(pattern = "^labquality"))
 # high TB or TB/HIV burden countries, 2017
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-# Temperorality using lastest database rather than master view database to cover latest TB/HIV data change,will change back after 2nd Snapshot
-
-notificationlatest       <- sqlFetch(ch, "dcf.latest_notification")
-
 # Get list of TB and TB/HIV high-burden countries
 prev_tx_hbccodes <-  country_group_membership %>%
   filter(  (group_type %in% c("g_hb_tb", "g_hb_tbhiv")) &
@@ -560,7 +556,7 @@ prev_tx_hbccodes <-  country_group_membership %>%
   distinct(iso2, originalname)
 
 
-prev_tx_data <- notificationlatest %>%
+prev_tx_data <- notification %>%
   filter(year == report_year -1) %>%
   select(iso2,
          country,
