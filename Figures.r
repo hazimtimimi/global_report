@@ -1364,7 +1364,12 @@ rm(list=ls(pattern = "tbhiv"))
 
 # This one is a bit of a mess. For years up to 2014 (i.e. reporting year 2015),
 # we took the highest value of DST coverage in the surveillance or notification pages.
-# For years 2015 onwards (2016 data collection year onwards) we only use the notification value
+# For years 2015-2016 (2016 data collection year onwards) we only use the notification value
+# For years 2018 onwards (2019 data collection year onwards) we will use indicator from dr_surveillance to exclude ep cases; 
+# These indicators(pulm_labconf_new, pulm_labconf_ret, r_rlt_new, r_rlt_ret) are collected starting from 2018
+# but in 2018, South Africa reported an unreasonablely low number for r_rlt_new 
+# which would affect the graphic for Africa, to avoid this, still use notification data for South Africa for year 2017.
+
 
 dst_notif_data <- notification %>%
   filter(year >= 2009) %>%
@@ -1385,15 +1390,22 @@ dst_notif_data <- notification %>%
   )
 
 dst_drs_data <- dr_surveillance %>%
-  filter(year >= 2009 & year < 2015) %>%
+  filter(year >= 2009) %>%
   select(year,
          iso3,
          dst_rlt_new,
-         dst_rlt_ret) %>%
+         dst_rlt_ret,
+         pulm_labconf_new,
+         pulm_labconf_ret,
+         r_rlt_new,
+         r_rlt_ret) %>%
   mutate(
     # numerator
-    dst_drs_num = ifelse(is.na(dst_rlt_new) & is.na(dst_rlt_ret), NA,
-                         (NZ(dst_rlt_new) + NZ(dst_rlt_ret)))
+    dst_drs_num = ifelse(year < 2015,ifelse(is.na(dst_rlt_new) & is.na(dst_rlt_ret), NA,
+                                            (NZ(dst_rlt_new) + NZ(dst_rlt_ret))),
+                         ifelse(year >= 2017, NZ(r_rlt_new) + NZ(r_rlt_ret), NA)),
+    # denominator
+    dst_drs_denom = ifelse(year >= 2017, NZ(pulm_labconf_new) + NZ(pulm_labconf_ret), NA)
   )
 
 # Link the two data sets
@@ -1404,13 +1416,18 @@ dst_data <- dst_notif_data %>%
   # To calculate the percentage DST coverage we need to identify the greater of the two numerators
   # Set numerator to NA if the denominator is NA for a country-year
   mutate(
-    dst_num = ifelse(NZ(dst_denom) == 0, NA,
-                     ifelse((is.na(dst_notif_num) & !is.na(dst_drs_num)) |
-                              (NZ(dst_drs_num) >= NZ(dst_notif_num)),
-                            dst_drs_num,
-                            ifelse((!is.na(dst_notif_num) & is.na(dst_drs_num)) |
-                                     (NZ(dst_notif_num) >= NZ(dst_drs_num)),
-                                   dst_notif_num, NA )))
+    dst_num = ifelse(year == 2017 & iso3 == "ZAF", dst_notif_num,
+                     ifelse(year >= 2017, dst_drs_num,
+                            ifelse(NZ(dst_denom) == 0, NA,
+                                   ifelse((is.na(dst_notif_num) & !is.na(dst_drs_num)) |
+                                            (NZ(dst_drs_num) >= NZ(dst_notif_num)),
+                                          dst_drs_num,
+                                          ifelse((!is.na(dst_notif_num) & is.na(dst_drs_num)) |
+                                                   (NZ(dst_notif_num) >= NZ(dst_drs_num)),
+                                                 dst_notif_num, NA))))),
+    dst_denom = ifelse(year == 2017 & iso3 == "ZAF", dst_denom,
+                       ifelse(year >= 2017, dst_drs_denom, dst_denom))
+    
   ) %>%
   
   # Drop unwanted variables
@@ -1420,8 +1437,8 @@ dst_data <- dst_notif_data %>%
          dst_num,
          dst_denom) %>%
   
-  # Drop rows with empty numerators
-  filter(!is.na(dst_num))
+  # Drop rows with empty numerators or denominator
+  filter(!is.na(dst_num) | !is.na(dst_denom))
 
 
 dst_global <- dst_data %>%
@@ -1477,9 +1494,9 @@ dst_plot <- dst_agg %>%
         legend.title=element_blank())
 
 # Add explanatory footnotes
-dst_footnote <- "\u1d43 Among new laboratory confirmed and retreatment cases; test results in cases with unknown previous history are not included.\n\u1d47 The increase in the African Region from 2014 to 2015 was due to a big increase in reporting of laboratory results for cases in South Africa in 2015."
+dst_footnote <- "\u1d43 Among new laboratory confirmed and retreatment cases; test results in cases with unknown previous history are not included; data prior to 2017 included extra-pulmonary cases.\n\u1d47 The increase in the African Region from 2014 to 2015 was due to a big increase in reporting of laboratory results for cases in South Africa in 2015."
 
-dst_plot <- arrangeGrob(dst_plot, bottom = textGrob(dst_footnote, x = 0, hjust = -0.1, vjust=0.1, gp = gpar(fontsize = 9)))
+dst_plot <- arrangeGrob(dst_plot, bottom = textGrob(dst_footnote, x = 0, hjust = 0, vjust=0.1, gp = gpar(fontsize = 9)))
 
 # Save the plot
 figsavecairo(dst_plot, dst_agg, "f4_11_dst_aggregates")
@@ -1489,33 +1506,35 @@ rm(list=ls(pattern = "dst_"))
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Figure 4.12  (Map) ------
-# Percentage of bacteriologically confirmed TB cases tested for RR-TB, 2017
+# Percentage of bacteriologically confirmed TB cases tested for RR-TB, 2018
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+# Using indicator in dr_surveillance started collecting from 2017 to only include pulmonary cases, but per Katherine's reuqest, 
+# don't add the word "pulmonary" to the title.
 
-dst_data <- notification %>%
+dst_data <- dr_surveillance %>%
   filter(year >= report_year - 2) %>%
-  select(iso3,
+  select(year,
          country,
-         year,
-         new_labconf,
-         c_ret,
-         rdst_new,
-         rdst_ret) %>%
+         iso3,
+         pulm_labconf_new,
+         pulm_labconf_ret,
+         r_rlt_new,
+         r_rlt_ret) %>%
   
   # Calculate coverage of DST percentages
   mutate(# percent DST among lab-confirmed cases is a bit of a fudge:
     # numerator rdst_new + rdst_ret  (ignore cases with unknown treatment history)
     # denominator is a bit of a fudge: new_labconf + c_ret
-    dst_pct = ifelse((NZ(new_labconf) + NZ(c_ret)) == 0 |
-                       is.na(rdst_new) & is.na(rdst_ret), NA,
-                     (NZ(rdst_new) + NZ(rdst_ret)) * 100 /
-                       (NZ(new_labconf) + NZ(c_ret)))
+    dst_pct = ifelse((NZ(pulm_labconf_new) + NZ(pulm_labconf_ret)) == 0 |
+                       is.na(r_rlt_new) & is.na(r_rlt_ret), NA,
+                     (NZ(r_rlt_new) + NZ(r_rlt_ret)) * 100 /
+                       (NZ(pulm_labconf_new) + NZ(pulm_labconf_ret)))
   )
 
 dst_data$cat <- cut(dst_data$dst_pct,
                     c(0, 10, 40, 70, Inf),
-                    c('0-9.9', '10-39', '40-69', 'u226570'),
+                    c('0-9.9', '10-39', '40-69', '\u226570'),
                     right=FALSE)
 
 # Find the countries with empty data for latest year and see if there are data for the previous year
@@ -2486,16 +2505,16 @@ coveragerr_plot <- coveragerr_data %>%
   geom_point() +
   labs(x="",
        y="Treatment coverage (%)",
-       title=paste0("Figure 4.21\nEstimated treatment coverage for MDR/RR-TB\n",
-                    "(patients started on treatment for MDR-TB as a percentage of the estimated incidence of MDR/RR-TB) in ",
+       title=paste0("Figure 4.21\nEstimated treatment coverage for MDR/RR-TB (patients started on treatment for MDR-TB as a percentage \nof the estimated incidence of MDR/RR-TB) in ",
                     report_year - 1,
-                    ",\n30 high MDR-TB burden countries, WHO regions and globally")) +
+                    ",30 high MDR-TB burden countries, WHO regions and globally\u1d43")) +
   geom_pointrange(aes(ymin=c_rr_coverage_lo,
                       ymax=c_rr_coverage_hi)) +
   theme_glb.rpt() +
   theme(plot.title = element_text(hjust = 0)) +
   expand_limits(y=0) +
   coord_flip()
+
 
 # If there are countries with no data then add a footnote
 if (coveragerr_nodata_count > 0)
@@ -2507,6 +2526,14 @@ if (coveragerr_nodata_count > 0)
                                                    vjust=0,
                                                    gp = gpar(fontsize = 10)))
 }
+
+# Add a footnote for over 100% coverage
+
+coveragerr_plot <- arrangeGrob(coveragerr_plot, bottom = textGrob(paste0("\u1d43 Reasons for a higher than expected coverage(even exceeding 100%) might be that the numerator included empirical treatment of TB patients considered at risk of \nhaving MDR/RR-TB but for whom a laboratory-confirmed diagnosis was missing, incomplete reporting of laboratory data, or enrolment of ‘waiting lists’ of people \nwith MDR/RR-TB who were detected before ", report_year-1, "."),
+                                                              x = 0,
+                                                              hjust = -0.1,
+                                                              vjust=0.3,
+                                                              gp = gpar(fontsize = 9)))
 
 # Save the plot
 figsavecairo(coveragerr_plot, coveragerr_data, "f4_21_txcoverage_drtb")
@@ -4259,7 +4286,7 @@ rm(list=ls(pattern = "^bcg_cov"))
 require (ggplot2)
 require (whomap)
 
-rifapentine <- read.csv(rdata_folder, "rifapentine.map.GTBR2019.csv")
+rifapentine <- read.csv("C:/Users/yinyinx/Desktop/rifapentine.map.GTBR2019-0813.csv")
 
 rifapentine$rfp_used_by_jun2019[is.na(rifapentine$rfp_used_by_jun2019) & rifapentine$rfp_used_trials==1]<-2
 
@@ -4267,9 +4294,34 @@ rifapentine$var <- factor(rifapentine$rfp_used_by_jun2019,
                           levels = c(2,1),
                           labels = c("used in trials only","used"))
 
-whomap(X=rifapentine, Z=scale_fill_brewer("", palette="Reds")) + labs(title="Use of rifapentine in LTBI treatment regimens by July 2019\nwhite=not known to be used") + theme(plot.title=element_text(size=20), legend.position="top") + annotate("text", x = +40, y = -60, label = paste("Currently registered for use in China Hong Kong SAR, India, Indonesia, Mongolia, Philippines,\nThailand, South Africa and the United States of America [Source: Sanofi, July 2019]")) 
+rifapentine_data <- rifapentine%>%
+  mutate(cat=var)%>%
+  select(-rfp_used_by_jun2019,
+         -rfp_used_trials,
+         -rfp_registered_by_jul_2019,
+         -var)
 
-ggsave("f5_box_5_1_rifapentine_map.pdf", width=16, height=8)
+rifapentine_map <- WHOmap.print(rifapentine_data,
+                                paste("FIG.B5.1\nUse of rifapentine in LTBI treatment regimens by July 2019\u1d43"),
+                                copyright=FALSE,
+                                colors=c("mistyrose","salmon"),
+                                background="White",
+                                show=FALSE)
+
+# Add footnote
+rifapentine_map <- arrangeGrob(rifapentine_map,
+                               bottom = textGrob("\u1d43 Currently registered for use in China Hong Kong SAR, India, Indonesia, Mongolia, Philippines,\nThailand, South Africa and the United States of America [Source: Sanofi, July 2019]",
+                                                 x = 0,
+                                                 hjust = -0.2,
+                                                 vjust=-1,
+                                                 gp = gpar(fontsize = 10)))
+
+figsavecairo(rifapentine_map,
+             rifapentine_data,
+             "f5_box_5_1_rifapentine_map",
+             width=11, height=7)
+
+rm(list=ls(pattern = "^rifapentine"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
