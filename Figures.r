@@ -292,6 +292,7 @@ figsavecairo(inc_plot,
                     e_inc_num_lo_millions,
                     e_inc_num_hi_millions,
                     entity),
+             NA,
              "f4_1_inc_number_plot_aggregates")
 
 # Clean up (remove any objects with their name containing 'inc_')
@@ -522,7 +523,7 @@ agesex_foot <- paste0("\u1d43  Countries not reporting cases in these categories
 agesex_plot <- arrangeGrob(agesex_plot, bottom = textGrob(agesex_foot, x = 0, hjust = -0.1, vjust=0.1, gp = gpar(fontsize = 10)))
 
 # Save the plots
-figsavecairo(agesex_plot, agesex_agg_long, "f4_2_agesex")
+figsavecairo(agesex_plot, agesex_agg_long,agesex_foot, "f4_2_agesex")
 
 # Clean up (remove any objects with their name beginning with 'agesex')
 rm(list=ls(pattern = "^agesex"))
@@ -606,6 +607,7 @@ figsavecairo(kids_map,
                     country,
                     kids_pct,
                     cat),
+             kids_foot,
              "f4_3_pct_children_map")
 
 # Clean up (remove any objects with their name beginning with 'kids')
@@ -727,7 +729,7 @@ bacconf_plot <- arrangeGrob(bacconf_plot, bottom = textGrob(bacconf_foot, x = 0,
 
 
 # Save the plot
-figsavecairo(bacconf_plot, bacconf_data, "f4_4_bacconf_plot")
+figsavecairo(bacconf_plot, bacconf_data,bacconf_foot, "f4_4_bacconf_plot")
 
 # Clean up (remove any objects with their name beginning with 'bacconf')
 rm(list=ls(pattern = "^bacconf"))
@@ -839,7 +841,7 @@ write(bacconf_foot,
       append= TRUE)
 
 # Save the plot
-figsavecairo(bacconf_plot, bacconf_data, "f4_4_plus_bacconf_plot",width=7, height=11)
+figsavecairo(bacconf_plot, bacconf_data, bacconf_foot, "f4_4_plus_bacconf_plot",width=7, height=11)
 
 # Clean up (remove any objects with their name beginning with 'bacconf')
 rm(list=ls(pattern = "^bacconf"))
@@ -1508,7 +1510,7 @@ dst_footnote <- "\u1d43 Among new laboratory confirmed and retreatment cases; te
 dst_plot <- arrangeGrob(dst_plot, bottom = textGrob(dst_footnote, x = 0, hjust = 0, vjust=0.1, gp = gpar(fontsize = 9)))
 
 # Save the plot
-figsavecairo(dst_plot, dst_agg, "f4_11_dst_aggregates")
+figsavecairo(dst_plot, dst_agg, dst_footnote,"f4_11_dst_aggregates")
 
 # Clean up (remove any objects with their name containing 'dst_')
 rm(list=ls(pattern = "dst_"))
@@ -1587,6 +1589,7 @@ figsavecairo(dst_map,
                     country,
                     dst_pct,
                     cat),
+             dst_foot,
              "f4_12_dst_map")
 
 # Clean up (remove any objects with their name beginning with 'dst')
@@ -1684,7 +1687,7 @@ rr_plot <-  rr_global %>%
                   legend.title=element_blank())
 
 # Save the plot
-figsavecairo(rr_plot, rr_global, "f4_13_drtb_detect_enroll_global")
+figsavecairo(rr_plot, rr_global,NA, "f4_13_drtb_detect_enroll_global")
 
 # Clean up (remove any objects with their name beginning with 'rr_')
 rm(list=ls(pattern = "^rr_"))
@@ -1760,7 +1763,7 @@ rr_plot <-  rr_data %>%
 
 
 # Save the plot
-figsavecairo(rr_plot, rr_data, "f4_14_drtb_detect_enroll_hbc", width=7, height=11)
+figsavecairo(rr_plot, rr_data,NA,"f4_14_drtb_detect_enroll_hbc", width=7, height=11)
 
 # Clean up (remove any objects with their name beginning with 'rr_')
 rm(list=ls(pattern = "^rr_"))
@@ -1829,6 +1832,7 @@ figsavecairo(sldst_map,
                     country,
                     pcnt_sldst,
                     cat),
+             sldst_foot,
              "f4_15_pct_sldst_map")
 
 # Clean up (remove any objects with their name beginning with 'sldst')
@@ -1908,14 +1912,16 @@ inc_plot <- inc_data %>%
 
 pending_incidence_footnote<- "Estimates of TB incidence for Mozambique and South Africa will be reviewed after final results from their \nrespective national TB prevalence surveys are available in 2020."
 
+inc_foot <- paste("\u1d43 ",
+                  india_incidence_footnote,"\n\u1d47 ",pending_incidence_footnote)
+
 inc_plot <- arrangeGrob(inc_plot,
-                        bottom = textGrob(paste("\u1d43 ",
-                                                india_incidence_footnote,"\n\u1d47 ",pending_incidence_footnote),
+                        bottom = textGrob(inc_foot,
                                           x = 0.02,
                                           just = "left",
                                           gp = gpar(fontsize = 6)))
 # Save the plot
-figsavecairo(inc_plot, inc_data, "f4_16_inc_plot_hbc", width=7.5, height=11)
+figsavecairo(inc_plot, inc_data, inc_foot,"f4_16_inc_plot_hbc", width=7.5, height=11)
 
 # Clean up (remove any objects with their name containing 'inc_')
 rm(list=ls(pattern = "inc_"))
@@ -2043,7 +2049,7 @@ coverage_plot <- arrangeGrob(coverage_plot,
 
 
 # Save the plot
-figsavecairo(coverage_plot, coverage_data, "f4_17_txcoverage_tb")
+figsavecairo(coverage_plot, coverage_data,coverage_footnote, "f4_17_txcoverage_tb")
 
 # Clean up (remove any objects with their name starting with 'coverage')
 rm(list=ls(pattern = "^coverage"))
@@ -2096,9 +2102,11 @@ gap_ten_countries_name_by_rank <- gap_data  %>%
   arrange(desc(bubble_size))   %>%
   select(country)
 
+gap_foot <- paste0("\u1d43 The ten countries ranked in order of the size of the gap between notified cases and the best estimates of TB incidence in ",report_year-1," are \n",
+                   sapply(gap_ten_countries_name_by_rank,paste, collapse=", "),".","\n",india_incidence_footnote,"\n",pending_incidence_footnote)
+
 gap_map <- arrangeGrob(gap_map,
-                       bottom = textGrob(paste0("\u1d43 The ten countries ranked in order of the size of the gap between notified cases and the best estimates of TB incidence in ",report_year-1," are \n",
-                                                sapply(gap_ten_countries_name_by_rank,paste, collapse=", "),".","\n",india_incidence_footnote,"\n",pending_incidence_footnote),
+                       bottom = textGrob(gap_foot,
                                          x = 0,
                                          hjust = -0.1,
                                          vjust=0.4,
@@ -2109,6 +2117,7 @@ figsavecairo(gap_map,
                     iso3,
                     country,
                     bubble_size),
+             gap_foot,
              "f4_18_top_10_gap_map")
 
 # Clean up (remove any objects with their name beginning with 'gap')
@@ -2211,19 +2220,21 @@ inctbhiv_foot <- "\u1d43 The calculation is for all cases in years prior to 2015
 pending_incidence_footnote <- " Estimates of TB incidence for Eswatini, Mozambique and South Africa will be reviewed after final \nresults from their respective national TB prevalence surveys are available in 2020."
 india_incidence_footnote <- " Estimates of TB incidence for India are interim, pending results from the national TB prevalence survey planned for 2019/2020."
 
-inctbhiv_plot <- arrangeGrob(inctbhiv_plot, bottom = textGrob(paste(inctbhiv_foot,
-                                                                    "\n\u1d47",
-                                                                    pending_incidence_footnote,
-                                                                    "\n\u1d9c",
-                                                                    india_incidence_footnote),
-                                                                    x = 0,
-                                                                    hjust = -0.1,
-                                                                    vjust=0.1,
-                                                                    gp = gpar(fontsize = 6)))
+inctbhiv_foot <- paste(inctbhiv_foot,
+                       "\n\u1d47",
+                       pending_incidence_footnote,
+                       "\n\u1d9c",
+                       india_incidence_footnote)
+  
+inctbhiv_plot <- arrangeGrob(inctbhiv_plot, bottom = textGrob(inctbhiv_foot,
+                                                              x = 0,
+                                                              hjust = -0.1,
+                                                              vjust=0.1,
+                                                              gp = gpar(fontsize = 6)))
 
 
 # Save the plot
-figsavecairo(inctbhiv_plot, inctbhiv_data, "f4_19_inctbhiv_plot_hbc", width=7, height=11)
+figsavecairo(inctbhiv_plot, inctbhiv_data,inctbhiv_foot, "f4_19_inctbhiv_plot_hbc",  width=7, height=11)
 
 # Clean up (remove any objects with their name containing 'tbhiv')
 rm(list=ls(pattern = "tbhiv"))
@@ -2362,11 +2373,12 @@ coveragehiv_plot <- coveragehiv_data %>%
                     expand_limits(y=0) +
                     coord_flip()
 
+
 # If there are countries with no data then add a footnote
 if (coveragehiv_nodata_count > 0)
-  {
+  {coveragehiv_foot <- "\u1d43  No data"
   coveragehiv_plot <- arrangeGrob(coveragehiv_plot,
-                                  bottom = textGrob("\u1d43  No data",
+                                  bottom = textGrob(coveragehiv_foot,
                                                     x = 0,
                                                     hjust = -0.1,
                                                     vjust=0,
@@ -2374,7 +2386,7 @@ if (coveragehiv_nodata_count > 0)
 }
 
 # Save the plot
-figsavecairo(coveragehiv_plot, coveragehiv_data, "f4_20_txcoverage_tbhiv")
+figsavecairo(coveragehiv_plot, coveragehiv_data, coveragehiv_foot, "f4_20_txcoverage_tbhiv")
 
 # Clean up (remove any objects with their name starting with 'coveragehiv')
 rm(list=ls(pattern = "^coveragehiv"))
@@ -2524,28 +2536,34 @@ coveragerr_plot <- coveragerr_data %>%
   expand_limits(y=0) +
   coord_flip()
 
-
 # If there are countries with no data then add a footnote
 if (coveragerr_nodata_count > 0)
 {
-  coveragerr_plot <- arrangeGrob(coveragerr_plot,
-                                 bottom = textGrob("* No data",
-                                                   x = 0,
-                                                   hjust = -0.1,
-                                                   vjust=0,
-                                                   gp = gpar(fontsize = 10)))
+  coveragerr_nodata_foot <- "* No data"
 }
 
-# Add a footnote for over 100% coverage
 
-coveragerr_plot <- arrangeGrob(coveragerr_plot, bottom = textGrob(paste0("\u1d43 Reasons for a higher than expected coverage(even exceeding 100%) might be that the numerator included empirical treatment of TB patients considered at risk of \nhaving MDR/RR-TB but for whom a laboratory-confirmed diagnosis was missing, incomplete reporting of laboratory data, or enrolment of ‘waiting lists’ of people \nwith MDR/RR-TB who were detected before ", report_year-1, "."),
-                                                              x = 0,
-                                                              hjust = -0.1,
-                                                              vjust=0.3,
-                                                              gp = gpar(fontsize = 9)))
+# Add a footnote for over 100% coverage if there are such countries
+if (as.numeric(any(coveragerr_data$c_rr_coverage>100)))
+{
+  coveragerr_over100_foot <- paste0("\u1d43 Reasons for a higher than expected coverage(even exceeding 100%) might be that the numerator included empirical treatment of TB patients considered at risk of \nhaving MDR/RR-TB but for whom a laboratory-confirmed diagnosis was missing, incomplete reporting of laboratory data, or enrolment of ‘waiting lists’ of people \nwith MDR/RR-TB who were detected before ", report_year-1, "." )
+}
+
+coveragerr_foot <- ifelse(coveragerr_nodata_count > 0 & as.numeric(any(coveragerr_data$c_rr_coverage>100)),
+                          paste0(coveragerr_nodata_foot,coveragerr_over100_foot),
+                          ifelse (coveragerr_nodata_count > 0 & !as.numeric(any(coveragerr_data$c_rr_coverage>100)),
+                                  coveragerr_nodata_foot,
+                                  ifelse (as.numeric(any(coveragerr_data$c_rr_coverage>100)) & coveragerr_nodata_count == 0,
+                                          coveragerr_over100_foot, "")))
+
+coveragerr_plot <- arrangeGrob(coveragerr_plot, bottom = textGrob(coveragerr_foot,
+                                                                  x = 0,
+                                                                  hjust = -0.1,
+                                                                  vjust=0.3,
+                                                                  gp = gpar(fontsize = 9)))
 
 # Save the plot
-figsavecairo(coveragerr_plot, coveragerr_data, "f4_21_txcoverage_drtb")
+figsavecairo(coveragerr_plot, coveragerr_data, coveragerr_foot, "f4_21_txcoverage_drtb")
 
 # Clean up (remove any objects with their name starting with 'coveragerr')
 rm(list=ls(pattern = "^coveragerr"))
@@ -2602,9 +2620,10 @@ drgap_ten_countries_name_by_rank <- drgap_data  %>%
   arrange(desc(bubble_size))   %>%
   select(country)
 
+drgap_foot <- paste0("\u1d43 The ten countries ranked in order of the size of the gap between the number of patients started on MDR-TB treatment and the best estimate of MDR/RR-TB \nincidence in ",report_year-1," are ", sapply(drgap_ten_countries_name_by_rank,paste, collapse=", "),".")
+
 drgap_map <- arrangeGrob(drgap_map,
-                         bottom = textGrob(paste0("\u1d43 The ten countries ranked in order of the size of the gap between the number of patients started on MDR-TB treatment and the best estimate of MDR/RR-TB \nincidence in ",report_year-1," are ",
-                                                  sapply(drgap_ten_countries_name_by_rank,paste, collapse=", "),"."),
+                         bottom = textGrob(drgap_foot,
                                            x = 0,
                                            hjust = -0.1,
                                            vjust=0.4,
@@ -2616,6 +2635,7 @@ figsavecairo(drgap_map,
                     iso3,
                     country,
                     bubble_size),
+             drgap_foot,
              "f4_22_top_10_dr_gap_map")
 
 # Clean up (remove any objects with their name beginning with 'drgap')
@@ -2790,14 +2810,16 @@ txout_plot <- txout_long %>%
 			  geom_text(data=subset(txout_long,variable=="Treatment success"),aes(label = round(value, digits = 0)),
 			            position = position_stack(reverse = TRUE), size=3,hjust=1.5,color="white")
 
+txout_foot <- "\u1d43 Treatment outcomes are for new cases only."
+
 txout_plot <- arrangeGrob(txout_plot,
-                          bottom = textGrob("\u1d43 Treatment outcomes are for new cases only.",
+                          bottom = textGrob(txout_foot,
                                             x = 0,
                                             hjust = -0.1,
                                             vjust=0,
                                             gp = gpar(fontsize = 10)))
 
-figsavecairo(txout_plot, txout, "f4_23_outcomes_tb", width=7, height=11) # Designer needs wide data; output portrait mode
+figsavecairo(txout_plot, txout,txout_foot, "f4_23_outcomes_tb", width=7, height=11) # Designer needs wide data; output portrait mode
 
 # Clean up (remove any objects with their name starting with 'txout')
 rm(list=ls(pattern = "^txout"))
@@ -2930,14 +2952,16 @@ out_plot <- out_data_long %>%
 			  geom_text(data=subset(out_data_long,variable=="Treatment success"),aes(label = round(value, digits = 0)),
 			            position = position_stack(reverse = TRUE), size=3,hjust=1.5,color="white")
 
+out_foot <- "\u1d43 MDR/RR-TB annual treatment cohorts are reported one year later than other TB cohorts."
+  
 out_plot <- arrangeGrob(out_plot,
-                        bottom = textGrob("\u1d43 MDR/RR-TB annual treatment cohorts are reported one year later than other TB cohorts.",
+                        bottom = textGrob(out_foot,
                                           x = 0,
                                           hjust = -0.1,
                                           vjust=0,
                                           gp = gpar(fontsize = 10)))
 
-figsavecairo(out_plot, out_data_long, "f4_24_outcomes_tb_hiv_mdr", width=7, height=11) # Designer needs wide data; output portrait mode
+figsavecairo(out_plot, out_data_long, out_foot, "f4_24_outcomes_tb_hiv_mdr", width=7, height=11) # Designer needs wide data; output portrait mode
 
 # Clean up (remove any objects with their name starting with 'out_')
 rm(list=ls(pattern = "^out_"))
@@ -3060,6 +3084,7 @@ txoutnum_plot_glob <- txoutnum_long %>%
 
                   expand_limits(c(0,0))
 
+txoutnum_foot <- "\u1d43 Cohorts before 2012 included new cases only."
 
 txoutnum_plot <- arrangeGrob(txoutnum_plot_glob,
                              txoutnum_plot_reg,
@@ -3072,14 +3097,14 @@ txoutnum_plot <- arrangeGrob(txoutnum_plot_glob,
                                             just = "left",
                                             gp = gpar(fontsize = 10)),
 
-                             bottom = textGrob("\u1d43 Cohorts before 2012 included new cases only.",
+                             bottom = textGrob(txoutnum_foot,
                                                x = 0.02,
                                                just = "left",
                                                gp = gpar(fontsize = 10)))
 
 
 # Save the plot
-figsavecairo(txoutnum_plot, txoutnum_data, "f4_25_outcomes_absolute", width=7, height=11)
+figsavecairo(txoutnum_plot, txoutnum_data, txoutnum_foot, "f4_25_outcomes_absolute", width=7, height=11)
 
 # Clean up (remove any objects with their name starting 'txout')
 rm(list=ls(pattern = "^txoutnum"))
@@ -3231,7 +3256,7 @@ txtbhivout_plot <- txtbhivout_long %>%
 
 
 # Save the plot
-figsavecairo(txtbhivout_plot, txtbhivout, "f4_26_outcomes_tbhiv", width=7, height=11) # Designer needs wide data; output portrait mode
+figsavecairo(txtbhivout_plot, txtbhivout, NA, "f4_26_outcomes_tbhiv", width=7, height=11) # Designer needs wide data; output portrait mode
 
 # Clean up (remove any objects with their name starting with 'txtbhivout')
 rm(list=ls(pattern = "^txtbhivout"))
@@ -3384,15 +3409,17 @@ txmdrout_plot <- txmdrout_long %>%
             position = position_stack(reverse = TRUE), size=3,hjust=1.5,color="white")
 
 # Add explanatory footnotes
+txmdrout_foot <- paste0("\u1d43 These countries reported less than 500 MDR/RR-TB cases who started second line TB treatment in ",
+                        report_year - 3, ".")
+
 txmdrout_plot <- arrangeGrob(txmdrout_plot,
-                             bottom = textGrob(paste0("\u1d43 These countries reported less than 500 MDR/RR-TB cases who started second line TB treatment in ",
-                                                      report_year - 3, "."),
+                             bottom = textGrob(txmdrout_foot,
                                                x = 0,
                                                hjust = -0.1,
                                                vjust=0.7,
                                                gp = gpar(fontsize = 8)))
 
-figsavecairo(txmdrout_plot, txmdrout, "f4_27_outcomes_mdr", width=7, height=11) # Designer needs wide data; output portrait mode
+figsavecairo(txmdrout_plot, txmdrout, txmdrout_foot, "f4_27_outcomes_mdr", width=7, height=11) # Designer needs wide data; output portrait mode
 
 # Clean up (remove any objects with their name starting with 'txmdrout')
 rm(list=ls(pattern = "^txmdrout"))
@@ -3428,6 +3455,7 @@ short_map<- WHOmap.print(short_data,
 
 figsavecairo(short_map,
         short_data,
+        NA,
         "f4_28_short_regimen_map")
 
 
@@ -3469,6 +3497,7 @@ bdq_map<- WHOmap.print(bdq_data,
 
 figsavecairo(bdq_map,
         bdq_data,
+        NA,
         "f4_29_bdq_map")
 
 
@@ -3514,6 +3543,7 @@ dlm_map<- WHOmap.print(dlm_data,
 
 figsavecairo(dlm_map,
         dlm_data,
+        NA,
         "f4_30_dlm_map")
 
 
@@ -3568,6 +3598,7 @@ figsavecairo(ppm_plot,
                country,
                year,
                public_pcnt),
+        NA,
         "f4_box_4_3_1_public_public_contributions")
 
 # Clean up (remove any objects with their name beginning 'ppm_')
@@ -3620,6 +3651,7 @@ figsavecairo(ppm_plot,
                country,
                year,
                private_pcnt),
+        NA,
         "f4_box_4_3_2_public_private_contributions")
 
 # Clean up (remove any objects with their name beginning 'ppm_')
@@ -3698,6 +3730,7 @@ figsavecairo(cb_map,
                     iso3,
                     country,
                     cat),
+             cb_foot,
              "f4_box_4_4_1_casebased_map")
 
 
@@ -3749,8 +3782,10 @@ comm_map <- WHOmap.print(comm_data,
                          background="White",
                          colors=c('#bdd7e7', '#6baed6', '#3182bd', '#08519c','#edf8e9'),
                          show=FALSE)
+comm_foot <- paste0("\u1d43 Data only requested from ",sum(comm_datarequest$dc_engage_community_display)," countries.")
+
 comm_map <- arrangeGrob(comm_map,
-                        bottom = textGrob(paste0("\u1d43 Data only requested from ",sum(comm_datarequest$dc_engage_community_display)," countries."),
+                        bottom = textGrob(comm_foot,
                                           x = 0,
                                           hjust = -0.1,
                                           vjust=-1.5,
@@ -3762,6 +3797,7 @@ figsavecairo(comm_map,
                iso3,
                comm_pct,
                cat),
+        comm_foot,
         "f4_box_4_6_1_pct_BMU_community_map")
 
 # Clean up (remove any objects with their name beginning with 'comm')
@@ -3831,7 +3867,7 @@ commureport_foot <- paste("\u1d43 ","Data has been collected since 2016.")
 commureport_plot_glob <- arrangeGrob(commureport_plot_glob, bottom = textGrob(commureport_foot, x = 0, hjust = -0.1, vjust=-1.5, gp = gpar(fontsize = 10)))
 
 # Save the plot
-figsavecairo(commureport_plot_glob, commureport_global, "f4_box_4_6_2_community_indicator_reporting", width=7, height=11)
+figsavecairo(commureport_plot_glob, commureport_global, commureport_foot, "f4_box_4_6_2_community_indicator_reporting", width=7, height=11)
 
 # Clean up (remove any objects with their name starting 'commureport')
 rm(list=ls(pattern = "^commureport"))
