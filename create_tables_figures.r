@@ -154,4 +154,5 @@ write.xlsx(as.data.frame(Footlist),
            showNA=FALSE,
            colWidths="auto",
            firstActiveRow=2)
+rm(footfiles,Footlist)
 
