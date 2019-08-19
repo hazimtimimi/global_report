@@ -847,7 +847,7 @@ rm(list=ls(pattern = "^bacconf"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 4.5  (Map) ------
+# Figure 4.10  (Map) ------
 # Percentage of new and relapse TB casestested using a WHO-recommended rapid diagnostic as
 # the initial diagnostic test, 2018
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -884,8 +884,8 @@ wrd_data <- notification %>%
 
 
 wrd_data$cat <- cut(wrd_data$wrd_pcnt,
-                    c(0, 25, 50, 75, Inf),
-                    c('0-24', '25-49', '50-75', '\u226575'),
+                    c(0, 25, 50, 75, 90, Inf),
+                    c('0-24', '25-49', '50-75', '76-90','\u226590'),
                     right=FALSE)
 
 
@@ -902,24 +902,29 @@ wrd_data_combined <- wrd_data %>%
   anti_join(wrd_prev_year_data, by= "iso3") %>%
   rbind(wrd_prev_year_data)
 
+# Caculating how many countries have reach the target of 90%
+wrd_target90 <- wrd_data_combined%>%
+                filter(wrd_pcnt >= 90)
 
 # produce the map
 wrd_map <- WHOmap.print(wrd_data_combined,
-                        paste0("FIG.4.5\nPercentage of new and relapse TB cases tested using a WHO-recommended rapid diagnostic\nas the initial diagnostic test, ",
+                        paste0("FIG.4.10\nPercentage of new and relapse TB cases tested using a WHO-recommended rapid diagnostic\nas the initial diagnostic test, ",
                                report_year-1,
                                "\u1d43 "),
                         "Percentage",
                         copyright=FALSE,
                         background="White",
-                        colors=brewer.pal(4, "YlOrRd"),
+                        colors=brewer.pal(5, "YlOrRd"),
                         show=FALSE)
 
-# Add footnote about using earlier data for some countries
+# Add footnote about using earlier data for some countries and for reaching target of 90% 
 wrd_foot <- paste("\u1d43 ",
                   report_year - 2,
                   "data were used for",
                   nrow(wrd_prev_year_data),
-                  "countries.")
+                  "countries.",
+                  nrow(wrd_target90),
+                  " countries have met the target of 90% required for this indicator as in Table 2.2.")
 
 
 wrd_map <- arrangeGrob(wrd_map, bottom = textGrob(wrd_foot, x = 0, hjust = -0.1, vjust=-1.5, gp = gpar(fontsize = 10)))
@@ -934,7 +939,8 @@ figsavecairo(wrd_map,
                     wrd_pcnt_de,
                     wrd_pcnt,
                     cat),
-             "f4_5_pct_wrd_map")
+             wrd_foot,
+             "f4_10_pct_wrd_map")
 
 # Clean up (remove any objects with their name beginning with 'wrd')
 rm(list=ls(pattern = "^wrd"))
@@ -942,7 +948,7 @@ rm(list=ls(pattern = "^wrd"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 4.6  (map) ------
+# Figure 4.5  (map) ------
 # Percentage of new and relapse pulmonary TB cases with bacteriological confirmation, 2018
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -993,7 +999,7 @@ bacconf_data_combined <- bacconf_data %>%
 
 # produce the map
 bacconf_map <- WHOmap.print(bacconf_data_combined,
-                            paste0("FIG.4.6\nPercentage of new and relapse pulmonary TB cases with bacteriological confirmation, ",
+                            paste0("FIG.4.5\nPercentage of new and relapse pulmonary TB cases with bacteriological confirmation, ",
                                    report_year-1,
                                    "\u1d43 "),
                             "Percentage",
@@ -1021,7 +1027,8 @@ figsavecairo(bacconf_map,
                     country,
                     bacconf_pct,
                     cat),
-                    "f4_6_pct_bacconf_map")
+             bacconf_foot,
+             "f4_5_pct_bacconf_map")
 
 # Clean up (remove any objects with their name beginning with 'bacconf')
 rm(list=ls(pattern = "^bacconf"))
@@ -1030,7 +1037,7 @@ rm(list=ls(pattern = "^bacconf"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 4.7  (Map) ------
+# Figure 4.6  (Map) ------
 # Percentage of extrapulmonary cases among new and relapse TB cases, 2018
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -1082,7 +1089,7 @@ ep_data_combined <- ep_data %>%
 
 # produce the map
 ep_map <- WHOmap.print(ep_data_combined,
-                       paste0("FIG.4.7\nPercentage of extrapulmonary cases among new and relapse TB cases, ",
+                       paste0("FIG.4.6\nPercentage of extrapulmonary cases among new and relapse TB cases, ",
                               report_year-1,
                               "\u1d43 "),
                        "Percentage",
@@ -1109,7 +1116,8 @@ figsavecairo(ep_map,
                     country,
                     ep_pct,
                     cat),
-             "f4_7_pct_ep_map")
+             ep_foot,
+             "f4_6_pct_ep_map")
 
 # Clean up (remove any objects with their name beginning with 'ep')
 rm(list=ls(pattern = "^ep"))
@@ -1118,7 +1126,7 @@ rm(list=ls(pattern = "^ep"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 4.8  ------
+# Figure 4.7  ------
 # Percentage of new and relapse TB cases with documented HIV status, 2004-2018 globally and for WHO regions
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -1172,7 +1180,7 @@ hivstatus_plot <- hivstatus_data %>%
                   expand_limits(y=c(0,100)) +
                   #scale_x_discrete(name = "Year") +
                   facet_wrap( ~ entity, ncol = 4) +
-                  ggtitle(paste0("FIG.4.8\nPercentage of new and relapse\u1d43 TB cases with documented HIV status, 2004-",
+                  ggtitle(paste0("FIG.4.7\nPercentage of new and relapse\u1d43 TB cases with documented HIV status, 2004-",
                                report_year-1,
                                ", globally and for WHO regions\u1d47 ")) +
                   theme_glb.rpt() +
@@ -1187,7 +1195,7 @@ hivstatus_plot <- arrangeGrob(hivstatus_plot, bottom = textGrob(hivstatus_foot, 
 
 
 # Save the plot
-figsavecairo(hivstatus_plot, hivstatus_data, "f4_8_hivstatus_plot")
+figsavecairo(hivstatus_plot, hivstatus_data, hivstatus_foot, "f4_7_hivstatus_plot")
 
 # Clean up (remove any objects with their name beginning with 'hivstatus')
 rm(list=ls(pattern = "^hivstatus"))
@@ -1195,7 +1203,7 @@ rm(list=ls(pattern = "^hivstatus"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 4.9  (map) ------
+# Figure 4.8  (map) ------
 # Percentage of new and relapse TB cases with documented HIV status, 2017
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -1235,7 +1243,7 @@ hivstatus_data_combined <- hivstatus_data %>%
 
 # produce the map
 hivstatus_map <- WHOmap.print(hivstatus_data_combined,
-                        paste("FIG.4.9\nPercentage of new and relapse TB cases with documented HIV status,",
+                        paste("FIG.4.8\nPercentage of new and relapse TB cases with documented HIV status,",
                               report_year-1,
                               "\u1d43"),
                            "Percentage",
@@ -1263,7 +1271,8 @@ figsavecairo(hivstatus_map,
                     country,
                     hivstatus_pct,
                     cat),
-             "f4_9_pct_HIV_status_map")
+             hivstatus_foot,
+             "f4_8_pct_HIV_status_map")
 
 # Clean up (remove any objects with their name beginning with 'hivstatus')
 rm(list=ls(pattern = "^hivstatus"))
@@ -1273,7 +1282,7 @@ rm(list=ls(pattern = "^hivstatus"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 4.10   ------
+# Figure 4.9   ------
 # Global numbers of notified new and relapse cases known to be HIV-positive, number started on ART
 # and estimated number of incident HIV-positive TB cases, 2004-2018
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1338,7 +1347,7 @@ inctbhiv_plot <- inctbhiv_data %>%
   scale_y_continuous(name = "New and relapse cases per year (millions)") +
   xlab("Year") +
 
-  ggtitle(paste0("FIG.4.10\nGlobal numbers of notified new and relapse cases\u1d43 known to be HIV-positive (black), number started on antiretroviral therapy (blue)\nand estimated number of incident HIV-positive TB cases (red), 2004-",
+  ggtitle(paste0("FIG.4.9\nGlobal numbers of notified new and relapse cases\u1d43 known to be HIV-positive (black), number started on antiretroviral therapy (blue)\nand estimated number of incident HIV-positive TB cases (red), 2004-",
                  report_year-1,
                  ". Shaded areas represent uncertainty bands.")) +
 
@@ -1352,7 +1361,7 @@ inctbhiv_plot <- arrangeGrob(inctbhiv_plot, bottom = textGrob(inctbhiv_foot, x =
 
 
 # Save the plot
-figsavecairo(inctbhiv_plot, inctbhiv_data, "f4_10_inctbhiv_plot_global")
+figsavecairo(inctbhiv_plot, inctbhiv_data, inctbhiv_foot, "f4_9_inctbhiv_plot_global")
 
 # Clean up (remove any objects with their name containing 'tbhiv')
 rm(list=ls(pattern = "tbhiv"))
