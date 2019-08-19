@@ -117,6 +117,7 @@ if(!(file.path(figures_folder, "FigData") %in% list.dirs(figures_folder, recursi
   dir.create(file.path(figures_folder, "Figs"))
   dir.create(file.path(figures_folder, "CPFigs"))
   dir.create(file.path(figures_folder, "Tables"))
+  dir.create(file.path(figures_folder, "Footnotes"))
 }
 
 
@@ -137,3 +138,20 @@ source(file.path(scripts_folder, "profile_figures.r"))
 
 # Create the HTML file with headline statistics
 rmarkdown::render(input = "create_headline_stats.Rmd", output_dir = figures_folder, output_file = "headline_statistics.htm")
+
+# Merge every footnote file in the footnote folder into one list file
+
+setwd(footnotes_folder)
+footfiles <- list.files(footnotes_folder, pattern="*.xlsx")
+
+require(purrr)
+Footlist <- footfiles %>% 
+            map_dfr(read.xlsx)  
+
+write.xlsx(as.data.frame(Footlist),
+           file=paste(figures_folder, "/Footnotes/", "Footnote List", Sys.Date(), ".xlsx", sep=""),
+           row.names=FALSE,
+           showNA=FALSE,
+           colWidths="auto",
+           firstActiveRow=2)
+
