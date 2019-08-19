@@ -3899,20 +3899,20 @@ ipt_plot <- ggplot() +
 
 # Add footnote about including countries report data for all HIV cases;
 # This may not be needed every year,so I will just edit the footnote manullay;
+ipt_foot <- "\u1d43 Prior to 2017, data were collected for PLHIV newly enrolled in HIV care(dotted lines). \nIn 2017 and 2018, data were also collected for PLHIV currently enrolled in HIV care(solid lines)."
+
 ipt_plot <- arrangeGrob(ipt_plot,
-                        bottom = textGrob("\u1d43 Prior to 2017, data were collected for PLHIV newly enrolled in HIV care(dotted lines). \nIn 2017 and 2018, data were also collected for PLHIV currently enrolled in HIV care(solid lines).",
+                        bottom = textGrob(ipt_foot,
                                           x = 0,
                                           hjust = -0.1,
                                           vjust=0.1,
                                           gp = gpar(fontsize = 10)))
 
 # Save the plot
-figsavecairo(ipt_plot, ipt_c, "f5_1_IPT_in_HIV_patients", width=7, height=5)
+figsavecairo(ipt_plot, ipt_c,ipt_foot, "f5_1_IPT_in_HIV_patients", width=7, height=5)
 
 # Clean up (remove any objects with their name starting 'commureport')
 rm(list=ls(pattern = "^ipt"))
-
-
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Figure 5.2   ------
@@ -4010,10 +4010,11 @@ ipt_gap_plot <- arrangeGrob(ipt_gap_plot,
                                               vjust=-0.7,
                                               gp = gpar(fontsize = 8)))
 
-figsavecairo(ipt_gap_plot, ipt_gap_country, "f5_2_gaps_for_ipt_in_new_hiv_patients", width=11, height=7) # Designer needs wide data; output portrait mode
+figsavecairo(ipt_gap_plot, ipt_gap_country, ipt_gap_footnote, "f5_2_gaps_for_ipt_in_new_hiv_patients", width=11, height=7) # Designer needs wide data; output portrait mode
 
 # Clean up (remove any objects with their name starting with 'ipt_gap')
 rm(list=ls(pattern = "^ipt_gap"))
+
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Figure 5.3 (Map) -------
@@ -4065,8 +4066,9 @@ prevtx_kids_map <- WHOmap.print(prevtx_kids_data,
                                 show=FALSE)
 
 # add footnote
-prevtx_kids_map <- arrangeGrob(prevtx_kids_map, bottom = textGrob(paste0("\u1d43 Children aged <5 years who were household contacts of bacteriologically confirmed pulmonary TB cases."
-                                                                  ),
+prevtx_kids_foot <- "\u1d43 Children aged <5 years who were household contacts of bacteriologically confirmed pulmonary TB cases."
+
+prevtx_kids_map <- arrangeGrob(prevtx_kids_map, bottom = textGrob(prevtx_kids_foot,
                                                                   x = 0,
                                                                   hjust = -0.1,
                                                                   vjust=-0.2,
@@ -4074,6 +4076,7 @@ prevtx_kids_map <- arrangeGrob(prevtx_kids_map, bottom = textGrob(paste0("\u1d43
 
 figsavecairo(prevtx_kids_map,
              prevtx_kids_data,
+             prevtx_kids_foot,
              "f5_3_prevtx_kids_map")
 
 # Clean up (remove any objects with their name beginning with 'prevtx_kids')
@@ -4164,6 +4167,7 @@ hcw_map <- arrangeGrob(hcw_map, bottom = textGrob(hcw_foot, x = 0, hjust = -0.1,
 
 figsavecairo(hcw_map,
         hcw_data,
+        hcw_foot,
         "f5_4_hcw_notf_rate_ratio")
 
 # Clean up (remove any objects with their name beginning with 'hcw')
@@ -4195,8 +4199,9 @@ bcg_policy_map <- WHOmap.print(bcg_policy_data,
                                show=FALSE)
 
 # Add footnote
+bcg_policy_foot <- "\nSource: The BCG World Atlas 2nd Edition, http://www.bcgatlas.org/, accessed 19 July 2018"
 bcg_policy_map <- arrangeGrob(bcg_policy_map,
-                             bottom = textGrob("\nSource: The BCG World Atlas 2nd Edition, http://www.bcgatlas.org/, accessed 19 July 2018",
+                             bottom = textGrob(bcg_policy_foot,
                                                x = 0,
                                                hjust = -0.1,
                                                vjust=0,
@@ -4204,6 +4209,7 @@ bcg_policy_map <- arrangeGrob(bcg_policy_map,
 
 figsavecairo(bcg_policy_map,
         bcg_policy_data,
+        bcg_policy_foot,
         "f5_5_BCG_policy_map")
 
 # Clean up (remove any objects with their name beginning with 'bcg_policy')
@@ -4258,12 +4264,14 @@ bcg_cov_map <- WHOmap.print(bcg_cov_data,
                             show=FALSE)
 
 # Add footnote
+bcg_cov_foot <- paste0("\u1d43 The target population of BCG coverage varies depending on national policy, but is typically for the number of live births in the year of reporting.",
+                       "\nSource: ",
+                       bcg_cov_page,
+                       ", accessed ",
+                       format(Sys.Date(), "%d %B %Y"))
+  
 bcg_cov_map <- arrangeGrob(bcg_cov_map,
-                           bottom = textGrob(paste0("\u1d43 The target population of BCG coverage varies depending on national policy, but is typically for the number of live births in the year of reporting.",
-                                                    "\nSource: ",
-                                                    bcg_cov_page,
-                                                    ", accessed ",
-                                                    format(Sys.Date(), "%d %B %Y")),
+                           bottom = textGrob(bcg_cov_foot,
                                              x = 0,
                                              hjust = -0.1,
                                              vjust=0,
@@ -4272,6 +4280,7 @@ bcg_cov_map <- arrangeGrob(bcg_cov_map,
 
 figsavecairo(bcg_cov_map,
         bcg_cov_data,
+        bcg_cov_foot,
         "f5_6_BCG_coverage_map")
 
 # Clean up (remove any objects with their name beginning with 'bcg_cov')
@@ -4309,8 +4318,10 @@ rifapentine_map <- WHOmap.print(rifapentine_data,
                                 show=FALSE)
 
 # Add footnote
+rifapentine_foot <- "\u1d43 Currently registered for use in China Hong Kong SAR, India, Indonesia, Mongolia, Philippines,\nThailand, South Africa and the United States of America [Source: Sanofi, July 2019]"
+
 rifapentine_map <- arrangeGrob(rifapentine_map,
-                               bottom = textGrob("\u1d43 Currently registered for use in China Hong Kong SAR, India, Indonesia, Mongolia, Philippines,\nThailand, South Africa and the United States of America [Source: Sanofi, July 2019]",
+                               bottom = textGrob(rifapentine_foot,
                                                  x = 0,
                                                  hjust = -0.2,
                                                  vjust=-1,
@@ -4318,11 +4329,11 @@ rifapentine_map <- arrangeGrob(rifapentine_map,
 
 figsavecairo(rifapentine_map,
              rifapentine_data,
+             rifapentine_foot,
              "f5_box_5_1_rifapentine_map",
              width=11, height=7)
 
 rm(list=ls(pattern = "^rifapentine"))
-
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Chapter 6 ------
