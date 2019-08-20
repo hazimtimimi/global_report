@@ -504,7 +504,7 @@ agesex_plot <- agesex_agg_long %>%
                    labels=levels(agesex_agg_long$agegroup)) +
   coord_flip() +
   facet_wrap( ~ entity, ncol = 4) +
-  ggtitle(paste0("FIG.4.2\nEstimated TB incidence(black line) and TB incident case notification rates by age and sex\u1d43 (female in red; male \nin green) in ",
+  ggtitle(paste0("FIG.4.2\nEstimated TB incidence (black line) and TB incident case notification rates by age and sex\u1d43 (female in red; male \nin green) in ",
                  report_year - 1,
                  ", globally and for WHO regions")) +
   theme_glb.rpt() +
@@ -832,7 +832,7 @@ bacconf_plot <- bacconf_data %>%
         strip.text.x = element_text(size=6))
 
 # Add footnote
-bacconf_foot <- "\u1d43 The calculation is for new and relapse pulmonary cases in years prior to 2013 based on \nsmear results, except for Russian Federation where data on confirmation by culture was \nalso available for the period 2002-2012."
+bacconf_foot <- "\u1d43 The calculation is for new and relapse pulmonary cases in years prior to 2013 based on \nsmear results, except for the Russian Federation where data on confirmation by culture \nwas also available for the period 2002-2012."
 
 bacconf_plot <- arrangeGrob(bacconf_plot, bottom = textGrob(bacconf_foot, x = 0, hjust = -0.1, vjust=0.3, gp = gpar(fontsize = 10)))
 
@@ -926,7 +926,7 @@ wrd_foot <- paste("\u1d43 ",
                   nrow(wrd_prev_year_data),
                   "countries.",
                   nrow(wrd_target90),
-                  " countries have met the target of 90% required for this indicator as in Table 2.2.")
+                  "countries have met the target of 90% required for this indicator as in Table 2.2.")
 
 
 wrd_map <- arrangeGrob(wrd_map, bottom = textGrob(wrd_foot, x = 0, hjust = -0.1, vjust=-1.5, gp = gpar(fontsize = 10)))
@@ -1245,7 +1245,7 @@ hivstatus_data_combined <- hivstatus_data %>%
 
 # produce the map
 hivstatus_map <- WHOmap.print(hivstatus_data_combined,
-                        paste("FIG.4.8\nPercentage of new and relapse TB cases with documented HIV status,",
+                        paste("FIG.4.8\nPercentage of new and relapse TB cases with documented HIV status, ",
                               report_year-1,
                               "\u1d43"),
                            "Percentage",
@@ -1505,7 +1505,7 @@ dst_plot <- dst_agg %>%
         legend.title=element_blank())
 
 # Add explanatory footnotes
-dst_footnote <- "\u1d43 Among new laboratory confirmed and retreatment cases; test results in cases with unknown previous history are not included; data prior to 2017 included extra-pulmonary cases.\n\u1d47 The increase in the African Region from 2014 to 2015 was due to a big increase in reporting of laboratory results for cases in South Africa in 2015."
+dst_footnote <- "\u1d43 Among new laboratory confirmed and retreatment cases; test results in cases with unknown previous history are not included; data prior to 2017 included extrapulmonary TB cases.\n\u1d47 The increase in the African Region from 2014 to 2015 was due to a large increase in reporting of laboratory results for cases in South Africa in 2015."
 
 dst_plot <- arrangeGrob(dst_plot, bottom = textGrob(dst_footnote, x = 0, hjust = 0, vjust=0.1, gp = gpar(fontsize = 9)))
 
@@ -1955,7 +1955,8 @@ coverage_inc_country <- coverage_inc_country %>%
   #add marker for India and other countries footnote
   mutate(entity = recode(entity, "India"="India\u1d47 ",
                          "Mozambique"="Mozambique\u1d43 ",
-                         "South Africa"="South Africa\u1d43 "))
+                         "South Africa"="South Africa\u1d43 ",
+                         "Lesotho"="Lesotho\u1d43 "))
 
 coverage_country <- notification %>%
   filter(year == report_year - 1) %>%
@@ -2032,8 +2033,11 @@ coverage_plot <- coverage_data %>%
   coord_flip()
 
 # Add footnotes
+coverage_pending_incidence_footnote <- "Estimates of TB incidence for Lesotho, Mozambique, and South Africa will be reviewed after final \nresults from their respective national TB prevalence surveys are available in 2020."
+
+
 coverage_footnote <- paste("\u1d43 ",
-                           pending_incidence_footnote,"\n\u1d47 ",india_incidence_footnote)
+                           coverage_pending_incidence_footnote,"\n\u1d47 ",india_incidence_footnote)
 # If there are countries with no data then mention it in the footnotes
 if (coverage_nodata_count > 0)
 {
@@ -2102,8 +2106,10 @@ gap_ten_countries_name_by_rank <- gap_data  %>%
   arrange(desc(bubble_size))   %>%
   select(country)
 
+gap_India_SF_foot <- "Estimates of TB incidence for India are interim, pending results from the national TB prevalence survey planned for 2019/2020. Estimate of \nTB incidence for South Africa will be reviewed after final result from its national TB prevalence survey is available in 2020."
+
 gap_foot <- paste0("\u1d43 The ten countries ranked in order of the size of the gap between notified cases and the best estimates of TB incidence in ",report_year-1," are \n",
-                   sapply(gap_ten_countries_name_by_rank,paste, collapse=", "),".","\n",india_incidence_footnote,"\n",pending_incidence_footnote)
+                   sapply(gap_ten_countries_name_by_rank,paste, collapse=", "),".","\n",gap_India_SF_foot)
 
 gap_map <- arrangeGrob(gap_map,
                        bottom = textGrob(gap_foot,
@@ -2181,6 +2187,7 @@ inctbhiv_data <- estimates_epi_rawvalues %>%
                   #add markers for India and other countries with pending survey resluts footnote
                   mutate(country = recode(country, "Eswatini"="Eswatini\u1d47 ",
                                                    "South Africa"="South Africa\u1d47 ",
+                                                   "Lesotho"="Lesotho\u1d47 ",
                                                    "Mozambique"="Mozambique\u1d47 ",
                                                    "India"="India\u1d9c "))
 
@@ -2217,7 +2224,7 @@ inctbhiv_plot <- inctbhiv_data %>%
 
 # Add footnote
 inctbhiv_foot <- "\u1d43 The calculation is for all cases in years prior to 2015."
-pending_incidence_footnote <- " Estimates of TB incidence for Eswatini, Mozambique and South Africa will be reviewed after final \nresults from their respective national TB prevalence surveys are available in 2020."
+pending_incidence_footnote <- " Estimates of TB incidence for Eswatini, Lesotho, Mozambique and South Africa will be reviewed after final \nresults from their respective national TB prevalence surveys are available in 2020."
 india_incidence_footnote <- " Estimates of TB incidence for India are interim, pending results from the national TB prevalence survey planned for 2019/2020."
 
 inctbhiv_foot <- paste(inctbhiv_foot,
