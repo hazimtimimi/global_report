@@ -343,9 +343,35 @@ adappt_temp <-
 adappt_temp$mdr_tx <- sum_of_row(adappt_temp[c("unconf_rrmdr_tx", "conf_rrmdr_tx")])
 
 adappt_data <-
-   rbind(get_vars_and_aggregates(adappt_temp, "mdr_tx", starting_year = notification_maxyear))
+  adappt_data %>%
+  rbind(get_vars_and_aggregates(adappt_temp, "mdr_tx", starting_year = notification_maxyear))
 
 rm(adappt_temp)
+
+# calculate the male:female ratio for notified cases
+# Get data and aggregates but don;t melt into long format
+adappt_temp <-
+  notification %>%
+  get_vars_and_aggregates(vars = c("newrel_f014", "newrel_f15plus", "newrel_fu", "newrel_m014", "newrel_m15plus", "newrel_mu"),
+                          starting_year = notification_maxyear,
+                          flg_long = FALSE)
+
+adappt_temp$sum_f <- sum_of_row(adappt_temp[c("newrel_f014", "newrel_f15plus", "newrel_fu")])
+adappt_temp$sum_m <- sum_of_row(adappt_temp[c("newrel_m014", "newrel_m15plus", "newrel_mu")])
+
+adappt_temp <-
+  adappt_temp %>%
+  mutate(value = ifelse(NZ(sum_f) == 0, NA, round(sum_m / sum_f, 1)),
+         indicator_code = "m_f_ratio") %>%
+  select(indicator_code, location_code, year, value)
+
+adappt_data <-
+  adappt_data %>%
+  rbind(adappt_temp)
+
+rm(adappt_temp)
+
+
 
 # Calculate percentages
 
@@ -519,6 +545,6 @@ adappt_locations <-
 
   # save to CSV
   write.csv(file = paste("adappt_location_",Sys.Date(),".csv",sep="") ,
-            quote = FALSE,
+            quote = 3,
             row.names = FALSE,
             na = "")

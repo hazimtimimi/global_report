@@ -161,7 +161,7 @@ get_external_indicators <- function(df,
 
 
 
-get_vars_and_aggregates <- function(df, vars, starting_year = 2000, ending_year = NA) {
+get_vars_and_aggregates <- function(df, vars, starting_year = 2000, ending_year = NA, flg_long = TRUE) {
 
 # Get the variables listed in vars and calculate simple sum by WHO region and globally
 # Will only work if df contains iso3 and g_whoregion variables
@@ -217,13 +217,16 @@ if (!is.na(ending_year)) {
   # combine country and aggregates
   output <- rbind(output_country, output_agg)
 
-  # melt into long format
-  output <-
-    output %>%
-    gather(key="indicator_code",
-           value="value",
-           -location_code,
-           -year)
+  if (flg_long==TRUE) {
+
+    # melt into long format
+    output <-
+      output %>%
+      gather(key="indicator_code",
+             value="value",
+             -location_code,
+             -year)
+  }
 
   return(output)
 
