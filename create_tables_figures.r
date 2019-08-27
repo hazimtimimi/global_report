@@ -156,3 +156,5 @@ write.xlsx(as.data.frame(Footlist),
            firstActiveRow=2)
 rm(footfiles,Footlist)
 
+# Reset the working directory
+source("set_environment.r")
