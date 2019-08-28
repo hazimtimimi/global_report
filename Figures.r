@@ -2968,7 +2968,7 @@ out_plot <- arrangeGrob(out_plot,
                                           vjust=0,
                                           gp = gpar(fontsize = 10)))
 
-figsavecairo(out_plot, out_data_long, out_foot, "f4_26_outcomes_tb_hiv_mdr", width=7, height=11) # Designer needs wide data; output portrait mode
+figsavecairo(out_plot, out_data, out_foot, "f4_26_outcomes_tb_hiv_mdr", width=7, height=11) # Designer needs wide data; output portrait mode
 
 # Clean up (remove any objects with their name starting with 'out_')
 rm(list=ls(pattern = "^out_"))
