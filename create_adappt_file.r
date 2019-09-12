@@ -57,9 +57,9 @@ if (use_live_db==TRUE){
 
 
 
-# Create output folder (only if it doesn't yet exist), and move to it
+# Create output folder (only if it doesn't yet exist)
 dir.create(adappt_folder, showWarnings = FALSE, recursive = TRUE)
-setwd(adappt_folder)
+
 
 
 
@@ -100,6 +100,19 @@ stop("
 #   Not the most elegant way, but having this explicit helps
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+# Late in profile production was asked to change case fatality ratio to be shown as %
+# I didn;t change the database so easiest way here is to create a new varibale and use that
+# in the data sent to Adappt
+
+
+estimates_epi$c_cfr_pct <- estimates_epi$cfr * 100
+estimates_epi$c_cfr_pct_lo <- estimates_epi$cfr_lo * 100
+estimates_epi$c_cfr_pct_hi <- estimates_epi$cfr_hi * 100
+
+aggregated_estimates_epi$c_cfr_pct <- aggregated_estimates_epi$cfr * 100
+aggregated_estimates_epi$c_cfr_pct_lo <- aggregated_estimates_epi$cfr_lo * 100
+aggregated_estimates_epi$c_cfr_pct_hi <- aggregated_estimates_epi$cfr_hi * 100
+
 
 adappt_est <-
         get_estimates(estimates_epi,"e_mort_exc_tbhiv_num") %>%
@@ -110,7 +123,7 @@ adappt_est <-
   rbind(get_estimates(estimates_epi,"e_inc_100k")) %>%
   rbind(get_estimates(estimates_epi,"e_inc_tbhiv_num")) %>%
   rbind(get_estimates(estimates_epi,"e_inc_tbhiv_100k")) %>%
-  rbind(get_estimates(estimates_epi,"cfr", starting_year = notification_maxyear)) %>%
+  rbind(get_estimates(estimates_epi,"c_cfr_pct", starting_year = notification_maxyear)) %>%
   rbind(get_estimates(estimates_epi,"c_cdr", starting_year = notification_maxyear)) %>%
   rbind(get_estimates(estimates_drtb,"e_inc_rr_num", starting_year = notification_maxyear)) %>%
   rbind(get_estimates(estimates_drtb,"e_inc_rr_100k", starting_year = notification_maxyear)) %>%
@@ -127,7 +140,7 @@ adappt_est <-
   rbind(get_estimates(aggregated_estimates_epi,"e_inc_100k")) %>%
   rbind(get_estimates(aggregated_estimates_epi,"e_inc_tbhiv_num")) %>%
   rbind(get_estimates(aggregated_estimates_epi,"e_inc_tbhiv_100k")) %>%
-  rbind(get_estimates(aggregated_estimates_epi,"cfr", starting_year = notification_maxyear)) %>%
+  rbind(get_estimates(aggregated_estimates_epi,"c_cfr_pct", starting_year = notification_maxyear)) %>%
   rbind(get_estimates(aggregated_estimates_epi,"c_cdr", starting_year = notification_maxyear)) %>%
   rbind(get_estimates(aggregated_estimates_drtb,"e_inc_rr_num", starting_year = notification_maxyear)) %>%
   rbind(get_estimates(aggregated_estimates_drtb,"e_inc_rr_100k", starting_year = notification_maxyear)) %>%
@@ -333,7 +346,6 @@ adappt_data <-
 
 
 
-
 # Calculate sum for MDR cases put on treatment
 adappt_temp <-
   notification %>%
@@ -347,30 +359,6 @@ adappt_data <-
   rbind(get_vars_and_aggregates(adappt_temp, "mdr_tx", starting_year = notification_maxyear))
 
 rm(adappt_temp)
-
-# calculate the male:female ratio for notified cases
-# Get data and aggregates but don;t melt into long format
-adappt_temp <-
-  notification %>%
-  get_vars_and_aggregates(vars = c("newrel_f014", "newrel_f15plus", "newrel_fu", "newrel_m014", "newrel_m15plus", "newrel_mu"),
-                          starting_year = notification_maxyear,
-                          flg_long = FALSE)
-
-adappt_temp$sum_f <- sum_of_row(adappt_temp[c("newrel_f014", "newrel_f15plus", "newrel_fu")])
-adappt_temp$sum_m <- sum_of_row(adappt_temp[c("newrel_m014", "newrel_m15plus", "newrel_mu")])
-
-adappt_temp <-
-  adappt_temp %>%
-  mutate(value = ifelse(NZ(sum_f) == 0, NA, round(sum_m / sum_f, 1)),
-         indicator_code = "m_f_ratio") %>%
-  select(indicator_code, location_code, year, value)
-
-adappt_data <-
-  adappt_data %>%
-  rbind(adappt_temp)
-
-rm(adappt_temp)
-
 
 
 # Calculate percentages
@@ -401,6 +389,16 @@ adappt_calc <-
                 denominator_vars = "c_newinc",
                 starting_year = notification_maxyear,
                 output_var_name = "c_014_pct")) %>%
+  rbind(get_pct(notification,
+                numerator_vars = c("newrel_f15plus", "newrel_fu"),
+                denominator_vars = "c_newinc",
+                starting_year = notification_maxyear,
+                output_var_name = "c_women_pct")) %>%
+  rbind(get_pct(notification,
+                numerator_vars = c("newrel_m15plus", "newrel_mu"),
+                denominator_vars = "c_newinc",
+                starting_year = notification_maxyear,
+                output_var_name = "c_men_pct")) %>%
 
   # TB.HIV
   #
@@ -512,39 +510,85 @@ adappt_output <-
   rbind(adappt_est)
 
 
-# save to csv
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+#   Exclude disbanded entities -----
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+
+# restrict data to the 216 countries and areas from whom we collected data
+# in 2019 (this deals with Serbia & Montenegro, Netherlands Antilles etc)
+
+adappt_location_list <-
+  data_collection %>%
+  filter(datcol_year == report_year) %>%
+  select(location_code = iso3)
+
+# And don't forget to add the codes for WHO regions and globally
+# Create a list of the regiona and aggregate names
+group_codes <- read.table(textConnection("
+location_code,g_whoregion,location_name, show_flag
+global,,Global,
+AFR,,WHO African Region,
+AMR,,WHO/PAHO Region of the Americas,
+EMR,,WHO Eastern Mediterranean Region,
+EUR,,WHO European Region,
+SEA,,WHO South-East Asia Region,
+WPR,,WHO Western Pacific Region,"), header=TRUE, sep=",", as.is = TRUE)
+closeAllConnections()
+
+#Add the group location codes to the adappt list
+
+adappt_location_list <-
+  select(group_codes, location_code) %>%
+  rbind(adappt_location_list)
+
+
+adappt_output <-
+  adappt_output %>%
+  filter(location_code %in% adappt_location_list$location_code)
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+#   Save final dataset to CSV -----
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
 write.csv(x = adappt_output,
-          file = paste("adappt_TB_data_",Sys.Date(),".csv",sep="") ,
+          file = paste(adappt_folder, "adappt_TB_data_",Sys.Date(),".csv",sep="") ,
           quote = FALSE,
           row.names = FALSE,
           na = "")
 
 
 
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+#   Produce and save location codes -----
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+
 
 # Produce a list of location names
-#
-# Create a list of the regiona and aggregate names
-# create lookup table to change our database regional and world bank group codes to the ones used by GHO
-group_codes <- read.table(textConnection("
-location_code,g_whoregion,location_name
-global,,Global
-AFR,,WHO African Region
-AMR,,WHO/PAHO Region of the Americas
-EMR,,WHO Eastern Mediterranean Region
-EUR,,WHO European Region
-SEA,,WHO South-East Asia Region
-WPR,,WHO Western Pacific Region"), header=TRUE, sep=",", as.is = TRUE)
-closeAllConnections()
 
 # Combine with official country names
 adappt_locations <-
   report_country %>%
-  select(location_code = iso3, g_whoregion, location_name = country) %>%
-  rbind(group_codes) %>%
+  mutate(show_flag = ifelse(g_whostatus == "M", TRUE, NA)) %>%
+  select(location_code = iso3,
+         g_whoregion,
+         location_name = country,
+         show_flag) %>%
+  # restrict to countries reporting during the latest data collection round
+  filter(location_code %in% adappt_location_list$location_code) %>%
+  rbind(group_codes)
 
-  # save to CSV
-  write.csv(file = paste("adappt_location_",Sys.Date(),".csv",sep="") ,
-            quote = 3,
-            row.names = FALSE,
-            na = "")
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+#   Save location list and names to CSV -----
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+write.csv(x = adappt_locations,
+          file = paste(adappt_folder, "adappt_location_",Sys.Date(),".csv",sep="") ,
+          quote = 3,
+          row.names = FALSE,
+          na = "")
