@@ -381,7 +381,7 @@ rdxpolicy_table_html <- xtable(rdxpolicy_hbcs)
 
 rdxpolicy_table_filename <- paste0(figures_folder, "/Tables/t4_3_lab_policy", Sys.Date(), ".htm")
 
-cat(paste("<h3>Table 4.3<br />National policies and their implementation to increase access to rapid TB testing and universal DST <sup>a</sup>, ",
+cat(paste("<h3>Table 4.3<br />National policies to increase access to rapid TB testing and universal DST and their implementation<sup>a</sup>, ",
           report_year-1,
           "</h3>
           <style>
@@ -411,7 +411,7 @@ print(rdxpolicy_table_html,
                                   <td>Percentage of notified rifampicin-resistant TB cases with DST results for fluoroquinolones and second-line injectable agents</td>
                                   <td>National policy and algorithm indicate the use of lateral flow urine lipoarabinomannan assay (LF-LAM) to assist in the detection of TB in people living with HIV</td>
                               </tr>",
-                              "<tr><td colspan='10'>Blank cells indicate data not reported. - Indicates value that cannot be calculated.<br /><sup>a</sup>The 48 countries shown in the table are the countries that are in one or more of the three lists of high TB, TB/HIV and MDR-TB burden countries (see also Chapter 2, Figure 2.5 and Table 2.4).<br /><sup>b</sup>Testing in cases with unknown previous treatment history is not included. The percentage may exceed 100% for several reasons, e.g. samples rather than cases are counted in the numerator; laboratory specimen results are not linked to the denominator data source when enumerated; or there is incomplete reporting of bacteriologically confirmed cases in the denominator. Bacteriologically confirmed extrapulmonary cases are not included in the denominator because they cannot be differentiated from clinically diagnosed ones in the way data are reported to WHO.</td>
+                              "<tr><td colspan='10'>Blank cells indicate data not reported. - Indicates value that cannot be calculated. WRD, WHO-recommended rapid diagnostic. DST, drug susceptibility testing.<br /><sup>a</sup>The 48 countries shown in the table are the countries that are in one or more of the three lists of high TB, TB/HIV and MDR-TB burden countries (see also Chapter 2, Figure 2.5 and Table 2.4).<br /><sup>b</sup>Testing in cases with unknown previous treatment history is not included. The percentage may exceed 100% for several reasons, e.g. samples rather than cases are counted in the numerator; laboratory specimen results are not linked to the denominator data source when enumerated; or there is incomplete reporting of bacteriologically confirmed cases in the denominator. Bacteriologically confirmed extrapulmonary cases are not included in the denominator because they cannot be differentiated from clinically diagnosed ones in the way data are reported to WHO.</td>
                               </tr>")
                       )
       )
@@ -515,7 +515,7 @@ print(labquality_table_html,
                               <tr>
                                   <td rowspan='2'>&nbsp;</td>
                                   <td rowspan='2' style='border-right: black 2px solid;'>National Reference Laboratory accredited according to the ISO 15189 standard</td>
-                                  <td colspan='2' style='border-right: black 2px solid;'>Percentage of testing sites that are covered by a comprehensive EQA system</td>
+                                  <td colspan='2' style='border-right: black 2px solid;'>Percentage of testing sites covered by a comprehensive EQA system</td>
                                   <td colspan='4'>Percentage of testing sites that demonstrated proficiency by panel testing</td>
                               </tr>
                               <tr>
@@ -526,7 +526,7 @@ print(labquality_table_html,
                                   <td>LPA for rifampicin and isoniazid only</td>
                                   <td>LPA for rifampicin, isoniazid, fluroguinolones and second-line injectables</td>
                               </tr>",
-                              "<tr><td colspan='8'>Blank cells indicate data not reported. - Indicates value that cannot be calculated.<br />
+                              "<tr><td colspan='8'>Blank cells indicate data not reported. - Indicates value that cannot be calculated. DST, drug susceptibility testing. EQA, external quality assurance. LPA, line probe assay.<br />
                               <sup>a</sup>The 48 countries shown in the table are the countries that are in one or more of the three lists of high TB, TB/HIV and MDR-TB burden countries (see also Chapter 2, Figure 2.5 and Table 2.4).</td>
                               </tr>")
                       )
