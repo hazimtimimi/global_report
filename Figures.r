@@ -496,7 +496,7 @@ agesex_plot <- agesex_agg_long %>%
            size=.3,
            colour="black",
            position="identity") +
-  scale_y_continuous(name = "TB case notification rate and estimated incidence per 100 000 population per year",
+  scale_y_continuous(name = "Rate per 100 000 population per year",
                      #Set labels manually to avoid showing negative numbers!
                      breaks=c(-400,-200,0,200,400,600),
                      labels=abs(c(-400,-200,0,200,400,600))) +
@@ -905,7 +905,7 @@ wrd_target90 <- wrd_data_combined%>%
 
 # produce the map
 wrd_map <- WHOmap.print(wrd_data_combined,
-                        paste0("FIG.4.12\nPercentage of new and relapse TB cases tested using a WHO-recommended rapid diagnostic\nas the initial diagnostic test, ",
+                        paste0("FIG.4.12\nPercentage of new and relapse TB cases initially tested using a WHO-recommended rapid diagnostic\n test, ",
                                report_year-1),
                         "Percentage",
                         copyright=FALSE,
@@ -3424,7 +3424,7 @@ rm(list=ls(pattern = "^txmdrout"))
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Figure 4.30  (map) ------
-# Countries that had used shorter MDR–TB treatment regimens by the end of 2018
+# Countries that used shorter MDR–TB treatment regimens by the end of 2018
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 short_data <- notification %>%
@@ -3442,7 +3442,7 @@ short_data$cat <- factor(short_data$cat,levels = rev(levels(short_data$cat)))
 
 # produce the map
 short_map<- WHOmap.print(short_data,
-                         paste0("FIG.4.30\nCountries that had used shorter MDR–TB treatment regimens by the end of ", report_year - 1),
+                         paste0("FIG.4.30\nCountries that used shorter MDR–TB treatment regimens by the end of ", report_year - 1),
                          legend.title = "Country \nresponse",
                          copyright=FALSE,
                          colors=c("darkgreen", "lightgreen", "white"),
@@ -3461,7 +3461,7 @@ rm(list=ls(pattern = "^short"))
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Figure 4.31  (map) ------
-# Countries that had used bedaquiline for the treatment of M/XDR–TB as part of expanded access,
+# Countries that used bedaquiline for the treatment of M/XDR–TB as part of expanded access,
 # compassionate use or under normal programmatic conditions by the end of 2018
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -3484,7 +3484,7 @@ bdq_data$cat <- factor(bdq_data$cat,levels(bdq_data$cat)[c(3,2,1)])
 
 # produce the map
 bdq_map<- WHOmap.print(bdq_data,
-                       paste0("FIG.4.31\nCountries that had used bedaquiline for the treatment of MDR/XDR–TB as part of expanded access,\ncompassionate use or under normal programmatic conditions by the end of ", report_year - 1),
+                       paste0("FIG.4.31\nCountries that used bedaquiline for the treatment of MDR/XDR–TB as part of expanded access,\ncompassionate use or under normal programmatic conditions by the end of ", report_year - 1),
                        legend.title = "Country \nresponse",
                        copyright=FALSE,
                        colors=c("darkgreen", "lightgreen", "white"),
@@ -3506,7 +3506,7 @@ rm(list=ls(pattern = "^bdq"))
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Figure 4.32  (map) ------
-# Countries that had used delamanid for the treatment of M/XDR–TB as part of expanded access,
+# Countries that used delamanid for the treatment of M/XDR–TB as part of expanded access,
 # compassionate use or under normal programmatic conditions by the end of 2018
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -3529,7 +3529,7 @@ dlm_data$cat <- factor(dlm_data$cat,levels(dlm_data$cat)[c(3,2,1)])
 
 # produce the map
 dlm_map<- WHOmap.print(dlm_data,
-                       paste0("FIG.4.32\nCountries that had used delamanid for the treatment of MDR/XDR–TB as part of expanded access,\ncompassionate use or under normal programmatic conditions by the end of ", report_year - 1),
+                       paste0("FIG.4.32\nCountries that used delamanid for the treatment of MDR/XDR–TB as part of expanded access,\ncompassionate use or under normal programmatic conditions by the end of ", report_year - 1),
                        legend.title = "Country \nresponse",
                        copyright=FALSE,
                        colors=c("darkgreen", "lightgreen", "white"),
