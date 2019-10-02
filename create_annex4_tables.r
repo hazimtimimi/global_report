@@ -22,7 +22,7 @@ rm(list=ls())
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # Establish the report year
-report_year <- 2018
+report_year <- 2019
 
 # The following are convenience variables since notification and most other data sets will run up to the
 # year before the reporting year and outcomes will run up to two years before the reporting year
@@ -466,7 +466,12 @@ notif_country <-  notification %>%
                          new_labconf,
                          new_clindx,
                          ret_rel_labconf,
-                         ret_rel_clindx) %>%
+                         ret_rel_clindx,
+                         c_new_014,
+                         newrel_f15plus,
+                         newrel_fu,
+                         newrel_m15plus,
+                         newrel_mu) %>%
 
                   # calculate % with rapid daignostics (only done at country level)
                   mutate(pct_rdx = ifelse(c_newinc > 0,
@@ -523,7 +528,12 @@ notif_country <- notif_country %>%
                          pct_rdx,
                          pct_hivtest,
                          pulmonary,
-                         pulmonary_bact_conf) %>%
+                         pulmonary_bact_conf,
+                         c_new_014,
+                         newrel_f15plus,
+                         newrel_fu,
+                         newrel_m15plus,
+                         newrel_mu) %>%
 
                   # sort by country name
                   arrange(entity)
@@ -535,7 +545,12 @@ notif_region <- notif_country %>%
                 summarise_at(vars(c_notified,
                                   c_newinc,
                                   pulmonary,
-                                  pulmonary_bact_conf),
+                                  pulmonary_bact_conf,
+                                  c_new_014,
+                                  newrel_f15plus,
+                                  newrel_fu,
+                                  newrel_m15plus,
+                                  newrel_mu),
                              sum,
                              na.rm = TRUE) %>%
 
@@ -578,7 +593,12 @@ notif_global <- notif_country %>%
                 summarise_at(vars(c_notified,
                                   c_newinc,
                                   pulmonary,
-                                  pulmonary_bact_conf),
+                                  pulmonary_bact_conf,
+                                  c_new_014,
+                                  newrel_f15plus,
+                                  newrel_fu,
+                                  newrel_m15plus,
+                                  newrel_mu),
                              sum,
                              na.rm = TRUE) %>%
                 mutate(entity = "Global")
@@ -634,7 +654,12 @@ notif_kosovo <- notif_kosovo %>%
                        pct_rdx = NA,
                        pct_hivtest = NA,
                        pulmonary = NA,
-                       pulmonary_bact_conf = NA)
+                       pulmonary_bact_conf = NA,
+                       c_new_014 = NA,
+                       newrel_f15plus = NA,
+                       newrel_fu = NA,
+                       newrel_m15plus = NA,
+                       newrel_mu = NA)
 
 # Create a Serbia (without Kosovo) dataset
 notif_serbia <- filter(notif_country, entity=="Serbia")
@@ -684,6 +709,44 @@ notif_table <- notif_table %>%
                        # and variable for blank columns
                        blank = "")
 
+# Calculate % women, % men and then to avoid accumulation of rounding errors and questions about why rounded
+# percentages don't add up to 100, calculate % children as 100 - %men - %women. Yeah, bit of a bodge, but easier
+# to implement in SQL and JS than faffing about redistributing residuals ...
+
+notif_table$c_tot_agesex <- notif_table %>%
+                            select(c_new_014,
+                                  newrel_f15plus,
+                                  newrel_fu,
+                                  newrel_m15plus,
+                                  newrel_mu) %>%
+                            sum_of_row()
+
+notif_table$c_women <- notif_table %>%
+                        select(newrel_f15plus,
+                              newrel_fu) %>%
+                        sum_of_row()
+
+notif_table$c_men <- notif_table %>%
+                        select(newrel_m15plus,
+                              newrel_mu) %>%
+                        sum_of_row()
+
+
+notif_table <- notif_table %>%
+                mutate(pct_women = ifelse(c_tot_agesex > 0,
+                                           display_cap_pct(c_women, c_tot_agesex),
+                                           NA),
+                       pct_men = ifelse(c_tot_agesex > 0,
+                                           display_cap_pct(c_men, c_tot_agesex),
+                                           NA)) %>%
+                # now do the fudge for children
+                mutate(pct_children = ifelse(pct_women != "" & pct_men != "",
+                                             100 - as.numeric(pct_women) - as.numeric(pct_men),
+                                             NA)) %>%
+                # this next bit is necessary to avoid a false 0%
+                mutate(pct_children = ifelse(pct_children == 0 & c_new_014 > 0,
+                                             "<1",
+                                             pct_children))
 
 # Insert "blank" placeholders for use in the output spreadsheet before writing out to CSV
 # dplyr's select statement won't repeat the blanks, hence use subset() from base r instead
@@ -693,7 +756,7 @@ subset(notif_table,
        select=c("entity", "blank",
                 "c_notified", "blank",
                 "c_newinc", "blank",
-                "pct_rdx", "pct_hivtest", "pct_pulm", "pct_pulm_bact_conf")) %>%
+                "pct_rdx", "pct_hivtest", "pct_pulm", "pct_pulm_bact_conf", "pct_children", "pct_women", "pct_men")) %>%
         write.csv(file="notif_table.csv", row.names=FALSE, na="")
 
 # Don't leave any mess behind!
