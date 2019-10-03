@@ -895,20 +895,11 @@ tbhiv_30hbc <-  country_group_membership %>%
 
 
 # Get country data
-tbhiv_country <- notification %>%
+tbhiv_country <- TBHIV_for_aggregates %>%
                  filter(year == notification_maxyear) %>%
 
                  # restrict to high burden countries
                  inner_join(tbhiv_30hbc, by = "iso2") %>%
-                 select(iso2,
-                        hiv_ipt,
-                        hiv_reg_new,
-                        hiv_tbdetect,
-                        hiv_reg_new2)
-
-# link to HIV testing numerators and denominators
-tbhiv_country <- TBHIV_for_aggregates %>%
-                 filter(year == notification_maxyear) %>%
                  select(iso2,
                         newrel_hivtest,
                         newrel_hivpos,
@@ -917,9 +908,11 @@ tbhiv_country <- TBHIV_for_aggregates %>%
                         hivtest_pos_pct_numerator,
                         hivtest_pos_pct_denominator,
                         hiv_art_pct_numerator,
-                        hiv_art_pct_denominator) %>%
-                 inner_join(tbhiv_country, by = "iso2")
-
+                        hiv_art_pct_denominator,
+                        hiv_ipt_pct_numerator,
+                        hiv_ipt_pct_denominator,
+                        hiv_tbdetect_pct_numerator,
+                        hiv_tbdetect_pct_denominator)
 
 # link to estimates
 tbhiv_country <- estimates_epi_rawvalues %>%
@@ -934,23 +927,6 @@ tbhiv_country <- estimates_epi_rawvalues %>%
                  arrange(entity)
 
 # Get regional aggregates
-tbhiv_region <- notification %>%
-                filter(year == notification_maxyear) %>%
-                select(g_whoregion,
-                       hiv_ipt,
-                       hiv_reg_new,
-                       hiv_tbdetect,
-                       hiv_reg_new2) %>%
-                group_by(g_whoregion) %>%
-
-                summarise_at(vars(contains("hiv")),
-                             sum,
-                             na.rm = TRUE) %>%
-
-                # get rid of pesky grouping
-                ungroup()
-
-
 tbhiv_region <- TBHIV_for_aggregates %>%
                 filter(year == notification_maxyear) %>%
                 group_by(g_whoregion) %>%
@@ -962,13 +938,16 @@ tbhiv_region <- TBHIV_for_aggregates %>%
                                   hivtest_pos_pct_numerator,
                                   hivtest_pos_pct_denominator,
                                   hiv_art_pct_numerator,
-                                  hiv_art_pct_denominator),
+                                  hiv_art_pct_denominator,
+                                  hiv_ipt_pct_numerator,
+                                  hiv_ipt_pct_denominator,
+                                  hiv_tbdetect_pct_numerator,
+                                  hiv_tbdetect_pct_denominator),
                              sum,
                              na.rm = TRUE) %>%
 
                 # get rid of pesky grouping
-                ungroup() %>%
-                inner_join(tbhiv_region, by = "g_whoregion")
+                ungroup()
 
 # merge with regional names and estimates
 tbhiv_region <- aggregated_estimates_epi_rawvalues %>%
@@ -984,22 +963,6 @@ tbhiv_region <- aggregated_estimates_epi_rawvalues %>%
 
 
 # Get global aggregate
-tbhiv_global <- notification %>%
-                filter(year == notification_maxyear) %>%
-                select(hiv_ipt,
-                       hiv_reg_new,
-                       hiv_tbdetect,
-                       hiv_reg_new2) %>%
-
-                summarise_at(vars(contains("hiv")),
-                             sum,
-                             na.rm = TRUE) %>%
-
-                # get rid of pesky grouping
-                ungroup()%>%
-                mutate(group_name = "global")
-
-
 tbhiv_global <- TBHIV_for_aggregates %>%
                 filter(year == notification_maxyear) %>%
                 summarise_at(vars(newrel_hivtest,
@@ -1009,14 +972,17 @@ tbhiv_global <- TBHIV_for_aggregates %>%
                                   hivtest_pos_pct_numerator,
                                   hivtest_pos_pct_denominator,
                                   hiv_art_pct_numerator,
-                                  hiv_art_pct_denominator),
+                                  hiv_art_pct_denominator,
+                                  hiv_ipt_pct_numerator,
+                                  hiv_ipt_pct_denominator,
+                                  hiv_tbdetect_pct_numerator,
+                                  hiv_tbdetect_pct_denominator),
                              sum,
                              na.rm = TRUE) %>%
 
                 # get rid of pesky grouping
                 ungroup()%>%
-                mutate(group_name = "global") %>%
-                inner_join(tbhiv_global, by = "group_name")
+                mutate(group_name = "global")
 
 # merge with estimates
 tbhiv_global <- aggregated_estimates_epi_rawvalues %>%
@@ -1062,10 +1028,10 @@ tbhiv_table <- tbhiv_table %>%
                      pct_estimated_art_hi = display_cap_pct(hiv_art_pct_numerator, e_inc_tbhiv_num_lo),
 
                      # % HIV-positive newly enrolled provided preventive therapy
-                     pct_ipt = display_cap_pct(hiv_ipt, hiv_reg_new),
+                     pct_ipt = display_cap_pct(hiv_ipt_pct_numerator, hiv_ipt_pct_denominator),
 
                      # % HIV-positive newly enrolled cases also notified with TB in same year
-                     pct_tbdetect = display_cap_pct(hiv_tbdetect, hiv_reg_new2)) %>%
+                     pct_tbdetect = display_cap_pct(hiv_tbdetect_pct_numerator, hiv_tbdetect_pct_denominator)) %>%
 
               select(entity,
                      e_inc_tbhiv_num,
