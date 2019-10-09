@@ -51,14 +51,6 @@ get_estimates_agesex <- function(df,
                          "iso3",
                          "group_name")
 
-  # Temp fix -- the aggregate view curently doesn't have a risk_factor field, so fudge one
-
-  if(location_var == "group_name") {
-
-    df$risk_factor <- "all"
-
-  }
-
   output <-
     df %>%
       filter(year == starting_year &
@@ -166,7 +158,7 @@ get_vars_and_aggregates <- function(df, vars, starting_year = 2000, ending_year 
 # Get the variables listed in vars and calculate simple sum by WHO region and globally
 # Will only work if df contains iso3 and g_whoregion variables
 
-  # Adandon function if the dataframe doesn't have  iso3 and g_whoregion fields
+  # Abandon function if the dataframe doesn't have  iso3 and g_whoregion fields
   if (!("iso3" %in% names(df) & "g_whoregion" %in% names(df))) return(NULL)
 
   output_country <-

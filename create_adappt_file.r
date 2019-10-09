@@ -156,18 +156,23 @@ adappt_est <-
   rbind(get_estimates_agesex(estimates_agesex, sex_filter = "m", output_var_name = "e_inc_num_m")) %>%
   rbind(get_estimates_agesex(estimates_agesex, age_group_filter = "0-14", output_var_name = "e_inc_num_014")) %>%
   rbind(get_estimates_agesex(estimates_agesex, age_group_filter = "15plus", output_var_name = "e_inc_num_15plus")) %>%
-  rbind(get_estimates_agesex(estimates_agesex, risk_factor_filter = "alc", output_var_name = "e_inc_num_alc")) %>%
-  rbind(get_estimates_agesex(estimates_agesex, risk_factor_filter = "dia", output_var_name = "e_inc_num_dia")) %>%
+  rbind(get_estimates_agesex(estimates_agesex, age_group_filter = "15plus", risk_factor_filter = "alc", output_var_name = "e_inc_num_alc")) %>%
+  rbind(get_estimates_agesex(estimates_agesex, age_group_filter = "15plus", risk_factor_filter = "dia", output_var_name = "e_inc_num_dia")) %>%
   rbind(get_estimates_agesex(estimates_agesex, risk_factor_filter = "hiv", output_var_name = "e_inc_num_hiv")) %>%
-  rbind(get_estimates_agesex(estimates_agesex, risk_factor_filter = "smk", output_var_name = "e_inc_num_smk")) %>%
+  rbind(get_estimates_agesex(estimates_agesex, age_group_filter = "15plus", risk_factor_filter = "smk", output_var_name = "e_inc_num_smk")) %>%
   rbind(get_estimates_agesex(estimates_agesex, risk_factor_filter = "und", output_var_name = "e_inc_num_und")) %>%
 
-  # and now add the same indicators for aggregates (except for risk factors)
+  # and now add the same indicators for aggregates
 
   rbind(get_estimates_agesex(aggregated_estimates_agesex, sex_filter = "f", output_var_name = "e_inc_num_f")) %>%
   rbind(get_estimates_agesex(aggregated_estimates_agesex, sex_filter = "m", output_var_name = "e_inc_num_m")) %>%
   rbind(get_estimates_agesex(aggregated_estimates_agesex, age_group_filter = "0-14", output_var_name = "e_inc_num_014")) %>%
   rbind(get_estimates_agesex(aggregated_estimates_agesex, age_group_filter = "15plus", output_var_name = "e_inc_num_15plus")) %>%
+  rbind(get_estimates_agesex(aggregated_estimates_agesex, age_group_filter = "15plus", risk_factor_filter = "alc", output_var_name = "e_inc_num_alc")) %>%
+  rbind(get_estimates_agesex(aggregated_estimates_agesex, age_group_filter = "15plus", risk_factor_filter = "dia", output_var_name = "e_inc_num_dia")) %>%
+  rbind(get_estimates_agesex(aggregated_estimates_agesex, risk_factor_filter = "hiv", output_var_name = "e_inc_num_hiv")) %>%
+  rbind(get_estimates_agesex(aggregated_estimates_agesex, age_group_filter = "15plus", risk_factor_filter = "smk", output_var_name = "e_inc_num_smk")) %>%
+  rbind(get_estimates_agesex(aggregated_estimates_agesex, risk_factor_filter = "und", output_var_name = "e_inc_num_und")) %>%
 
   # and now add catastrophic cost survey results for countries that have them
 
@@ -335,6 +340,7 @@ adappt_data <-
   rbind(get_vars_and_aggregates(estimates_population, "e_pop_num" , starting_year = notification_maxyear, ending_year = notification_maxyear ))
 
 
+
 # Convert budget total and e_pop_num to millions; show numbers < 1 million to one decimal place
 adappt_data <-
   adappt_data %>%
@@ -369,9 +375,10 @@ adappt_calc <-
                 denominator_vars = "c_newinc",
                 starting_year = notification_maxyear,
                 output_var_name = "c_rdx_pct") %>%
-  rbind(get_pct(notification,
-                numerator_vars = "newrel_hivtest",
-                denominator_vars = "c_newinc",
+  # for HIV testing use TBHIV_for_aggregates dataset
+  rbind(get_pct(TBHIV_for_aggregates,
+                numerator_vars = "hivtest_pct_numerator",
+                denominator_vars = "hivtest_pct_denominator",
                 starting_year = notification_maxyear,
                 output_var_name = "c_hivtest_pct")) %>%
   rbind(get_pct(notification,
@@ -384,19 +391,15 @@ adappt_calc <-
                 denominator_vars = c("new_labconf", "new_clindx", "ret_rel_labconf", "ret_rel_clindx"),
                 starting_year = notification_maxyear,
                 output_var_name = "c_pulm_labconf_pct")) %>%
-  rbind(get_pct(notification,
-                numerator_vars = "c_new_014",
-                denominator_vars = "c_newinc",
-                starting_year = notification_maxyear,
-                output_var_name = "c_014_pct")) %>%
+
   rbind(get_pct(notification,
                 numerator_vars = c("newrel_f15plus", "newrel_fu"),
-                denominator_vars = "c_newinc",
+                denominator_vars = c("c_new_014", "newrel_f15plus", "newrel_fu", "newrel_m15plus", "newrel_mu"),
                 starting_year = notification_maxyear,
                 output_var_name = "c_women_pct")) %>%
   rbind(get_pct(notification,
                 numerator_vars = c("newrel_m15plus", "newrel_mu"),
-                denominator_vars = "c_newinc",
+                denominator_vars = c("c_new_014", "newrel_f15plus", "newrel_fu", "newrel_m15plus", "newrel_mu"),
                 starting_year = notification_maxyear,
                 output_var_name = "c_men_pct")) %>%
 
@@ -414,9 +417,9 @@ adappt_calc <-
                 output_var_name = "c_art_pct")) %>%
 
   # preventive therapy
-  rbind(get_pct(notification,
-                numerator_vars = "hiv_ipt",
-                denominator_vars = "hiv_reg_new",
+  rbind(get_pct(TBHIV_for_aggregates,
+                numerator_vars = "hiv_ipt_pct_numerator",
+                denominator_vars = "hiv_ipt_pct_denominator",
                 starting_year = notification_maxyear,
                 output_var_name = "c_prevtx_hiv_pct")) %>%
 
@@ -459,7 +462,6 @@ adappt_calc <-
                 output_var_name = "c_mdr_tsr") %>%  filter(year == (outcome_maxyear - 1) )) %>%
 
   # Finance
-  # (need to remove aggregates!)
   rbind(get_pct(budget_expenditure,
                 numerator_vars = "cf_tot_domestic",
                 denominator_vars = "budget_tot",
@@ -475,6 +477,55 @@ adappt_calc <-
                 denominator_vars = "budget_tot",
                 starting_year = report_year,
                 output_var_name = "c_f_unfunded_pct"))
+
+
+# To avoid accumulation of rounding errors and questions about why rounded
+# percentages don't add up to 100, calculate % children as 100 - %men - %women. Yeah, bit of a bodge, but easier
+# to implement in SQL and JS than faffing about redistributing residuals ...
+# Now, because I have data in long format have to jump through a couple of hoops.
+
+adappt_temp_women <-
+  filter(adappt_calc, indicator_code=="c_women_pct") %>%
+  select(location_code, year, c_women_pct = value)
+
+adappt_temp_men <-
+  filter(adappt_calc, indicator_code=="c_men_pct")%>%
+   select(location_code, year, c_men_pct = value)
+
+adappt_temp_kids <-
+  adappt_temp_women %>%
+  inner_join(adappt_temp_men) %>%
+  mutate(c_014_pct = ifelse(c_women_pct != "" & c_men_pct != "",
+                           100 - as.numeric(c_women_pct) - as.numeric(c_men_pct),
+                           NA))
+
+# this next bit is necessary to avoid a false 0%
+adappt_temp_kids_num <-
+  notification %>%
+  filter(year == notification_maxyear) %>%
+  select(location_code = iso3,
+         year,
+         c_new_014)
+
+adappt_temp_kids <-
+  adappt_temp_kids %>%
+  left_join(adappt_temp_kids_num) %>%
+  mutate(value = ifelse(c_014_pct == 0 & c_new_014 > 0,
+                           "<1",
+                           c_014_pct),
+         indicator_code = "c_014_pct") %>%
+  select(indicator_code,
+         location_code,
+         year,
+         value)
+
+adappt_calc <-
+  adappt_calc %>%
+  rbind(adappt_temp_kids)
+
+rm(list=ls(pattern = "^adappt_temp"))
+
+
 
 # Calculate case notification rate
 adappt_temp <-
@@ -495,16 +546,52 @@ rm(adappt_temp)
 
 
 
-# Remove aggregates for finance -- to be done when aggregates are available
-# xx <-
-#   xx %>%
-#   filter( !(indicator_code %in% c("budget_tot", "c_f_domestic_pct", "c_f_international_pct", "c_f_unfunded_pct") &
-#            location_code %in% c("AFR", "AMR", "EMR", "EUR", "SEA", "WPR", "global")))
+# Need to replace aggregate budgets and percentages with cleaned version in dataset aggregated_finance_estimates
+
+
+# First, remove the aggregate finance from the earlier datasets
+adappt_data <-
+  adappt_data %>%
+  filter( !(indicator_code %in% c("budget_tot", "c_f_domestic_pct", "c_f_international_pct", "c_f_unfunded_pct") &
+           location_code %in% c("AFR", "AMR", "EMR", "EUR", "SEA", "WPR", "global")))
+
+adappt_calc <-
+  adappt_calc %>%
+  filter( !(indicator_code %in% c("budget_tot", "c_f_domestic_pct", "c_f_international_pct", "c_f_unfunded_pct") &
+           location_code %in% c("AFR", "AMR", "EMR", "EUR", "SEA", "WPR", "global")))
+
+
+# Now get the cleaned aggregates
+
+adappt_fin_agg <-
+  aggregated_finance_estimates %>%
+  filter(year == report_year) %>%
+  mutate(c_f_domestic_pct = display_cap_pct(domestic_funding, budget_total),
+         c_f_international_pct = display_cap_pct(international_funding, budget_total),
+         c_f_unfunded_pct = display_cap_pct(unfunded_gap, budget_total)) %>%
+
+  # Convert aggregate budget total to millions
+  mutate(budget_total = ifelse(budget_total > 1e6,
+                               round(budget_total / 1e6, 0),
+                               round(budget_total / 1e6, 1))) %>%
+
+  select(location_code = group_name,
+         year,
+         c_f_domestic_pct,
+         c_f_international_pct,
+         c_f_unfunded_pct,
+         budget_total) %>%
+
+  # melt into long format
+  gather(key="indicator_code",
+         value="value",
+         -location_code,
+         -year)
 
 
 # Combine files with value only and add empty lo, hi fields and then combine with the estimates file
 adappt_output <-
-  rbind(adappt_calc, adappt_data, adappt_sdg) %>%
+  rbind(adappt_calc, adappt_data, adappt_sdg, adappt_fin_agg) %>%
   mutate(lo = NA,
          hi = NA) %>%
   rbind(adappt_est)
