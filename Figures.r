@@ -114,9 +114,9 @@ unhlm_plot <- unhlm_pcnt %>%
               ggtitle(paste0("FIG.E.1?\nProgress towards 2018-2022 global targets and milestones, ", report_year - 1))
 
 
-figsavecairo(unhlm_plot,
-             unhlm_pcnt,
-             "fe_1_unhlm_targets")
+figsavecairo(obj=unhlm_plot,
+             data=unhlm_pcnt,
+             name="fe_1_unhlm_targets")
 
 
 # Clean up (remove any objects with their name beginning with 'unhlm')
@@ -232,7 +232,7 @@ inc_data <- aggregated_estimates_epi_rawvalues %>%
          e_inc_num_millions = e_inc_num / 1e6,
          e_inc_num_lo_millions = e_inc_num_lo / 1e6,
          e_inc_num_hi_millions = e_inc_num_hi / 1e6) %>%
-  
+
   # merge with regional names
   inner_join(who_region_names, by = "g_whoregion") %>%
   select(-g_whoregion)
@@ -269,7 +269,7 @@ inc_plot <- inc_data %>%
   geom_line(aes(year, e_inc_num_millions),
             size=1,
             colour=standard_palette("incidence")) +
-  
+
   facet_wrap( ~ entity, ncol = 4, scales="free_y") +
   scale_x_continuous(name="Year",
                      breaks = c(2000, 2009, report_year-1)) +
@@ -277,7 +277,7 @@ inc_plot <- inc_data %>%
   ggtitle(paste0("FIG.4.1\nNotifications of TB cases (new and relapse cases, all forms) (black) compared with estimated TB incident cases (green),\n2000-",
                  report_year-1,
                  ", globally and for WHO regions. Shaded areas represent uncertainty bands.")) +
-  
+
   theme_glb.rpt() +
   theme(legend.position="top",
         legend.title=element_blank(),
@@ -345,7 +345,7 @@ agesex_filtered_regional <- agesex %>%
   select(-g_whoregion)
 
 agesex_filtered_agg <- rbind(agesex_filtered_regional, agesex_filtered_global) %>%
-  
+
   # Calculate rate per 100 000 population for each age/sex group
   mutate(m014 = newrel_m014 * 1e5 / e_pop_m014,
          m1524 = newrel_m1524 * 1e5 / e_pop_m1524,
@@ -354,7 +354,7 @@ agesex_filtered_agg <- rbind(agesex_filtered_regional, agesex_filtered_global) %
          m4554 = newrel_m4554 * 1e5 / e_pop_m4554,
          m5564 = newrel_m5564 * 1e5 / e_pop_m5564,
          m65 = newrel_m65 * 1e5 / e_pop_m65,
-         
+
          f014 = newrel_f014 * 1e5 / e_pop_f014,
          f1524 = newrel_f1524 * 1e5 / e_pop_f1524,
          f2534 = newrel_f2534 * 1e5 / e_pop_f2534,
@@ -363,7 +363,7 @@ agesex_filtered_agg <- rbind(agesex_filtered_regional, agesex_filtered_global) %
          f5564 = newrel_f5564 * 1e5 / e_pop_f5564,
          f65 = newrel_f65 * 1e5 / e_pop_f65
   ) %>%
-  
+
   # select only the rates
   select(entity,
          m014, m1524, m2534, m3544, m4554, m5564, m65,
@@ -426,7 +426,7 @@ agesex_agg_pop_long$agegroup <- factor(agesex_agg_pop_long$agegroup,
                                        labels=c("0\u201314", "15\u201324", "25\u201334", "35\u201344", "45\u201354", "55\u201364", "\u226565"))
 agesex_agg_pop_long$agegroup <- gsub("–","-",agesex_agg_pop_long$agegroup)
 
-agesex_agg_pop_long <- agesex_agg_pop_long %>% 
+agesex_agg_pop_long <- agesex_agg_pop_long %>%
   select(-group)
 
 # Get data of estimated incidence
@@ -457,7 +457,7 @@ agesex_inc_global  <-agesex_inc%>%
   ungroup()
 
 agesex_inc <- agesex_inc%>%
-  # aprrehend with global data 
+  # aprrehend with global data
   rbind(agesex_inc_global)%>%
   # merge with populations
   left_join(agesex_agg_pop_long,by=c("sex","entity","agegroup"))%>%
@@ -773,7 +773,7 @@ bacconf_data <- notification %>%
                                           (new_sp + new_sn + new_su),
                                           # new variables
                                           (new_labconf + new_clindx + ret_rel_labconf + ret_rel_clindx))) %>%
-  
+
   # Adjust calculation for EUR pre-2013 (applies to years 2002 - 2012)
   mutate(bacconf_pct_numerator = ifelse(between(year, 2002, 2012) & g_whoregion == 'EUR',
                                         # old variables, but using new_labconf
@@ -785,7 +785,7 @@ bacconf_data <- notification %>%
                                           (new_sp + new_sn + new_su),
                                           # otherwise keep calculation from previous step
                                           bacconf_pct_denominator),
-         
+
          # Finally deal with EUR 2000 and 2001 numerator
          bacconf_pct_numerator = ifelse(between(year, 2000, 2001) & g_whoregion == 'EUR',
                                         # old variables
@@ -798,19 +798,19 @@ bacconf_data <- notification %>%
                                           # otherwise keep calculation from previous step
                                           bacconf_pct_denominator)
   ) %>%
-  
+
   # shorten long country names
   get_names_for_tables( col = "country")%>%
-  
+
   # get rid of the oh-so-pesky grouping variables within the dataframe
   ungroup() %>%
-  
+
   # get rid of extra variables
   select(country,
          year,
          bacconf_pct_numerator,
          bacconf_pct_denominator) %>%
-  
+
   # Calculate the percentages
   mutate(bacconf_pct = bacconf_pct_numerator * 100 / bacconf_pct_denominator)
 
@@ -860,7 +860,7 @@ wrd_data <- notification %>%
          newinc_rdx,
          rdxsurvey_newinc,
          rdxsurvey_newinc_rdx) %>%
-  
+
   # calculate the percentage for each country depending on data availability
   mutate(wrd_pcnt_nu = ifelse(rdx_data_available == 60 & NZ(c_newinc) > 0,
                              newinc_rdx,
@@ -1368,9 +1368,9 @@ rm(list=ls(pattern = "tbhiv"))
 # This one is a bit of a mess. For years up to 2014 (i.e. reporting year 2015),
 # we took the highest value of DST coverage in the surveillance or notification pages.
 # For years 2015-2016 (2016 data collection year onwards) we only use the notification value
-# For years 2018 onwards (2019 data collection year onwards) we will use indicator from dr_surveillance to exclude ep cases; 
+# For years 2018 onwards (2019 data collection year onwards) we will use indicator from dr_surveillance to exclude ep cases;
 # These indicators(pulm_labconf_new, pulm_labconf_ret, r_rlt_new, r_rlt_ret) are collected starting from 2018
-# but in 2018, South Africa reported an unreasonablely low number for r_rlt_new 
+# but in 2018, South Africa reported an unreasonablely low number for r_rlt_new
 # which would affect the graphic for Africa, to avoid this, still use notification data for South Africa for year 2017.
 
 
@@ -1415,7 +1415,7 @@ dst_drs_data <- dr_surveillance %>%
 
 dst_data <- dst_notif_data %>%
   left_join(dst_drs_data) %>%
-  
+
   # To calculate the percentage DST coverage we need to identify the greater of the two numerators
   # Set numerator to NA if the denominator is NA for a country-year
   mutate(
@@ -1430,16 +1430,16 @@ dst_data <- dst_notif_data %>%
                                                  dst_notif_num, NA))))),
     dst_denom = ifelse(year == 2017 & iso3 == "ZAF", dst_denom,
                        ifelse(year >= 2017, dst_drs_denom, dst_denom))
-    
+
   ) %>%
-  
+
   # Drop unwanted variables
   select(iso3,
          year,
          g_whoregion,
          dst_num,
          dst_denom) %>%
-  
+
   # Drop rows with empty numerators or denominator
   filter(!is.na(dst_num) | !is.na(dst_denom))
 
@@ -1457,7 +1457,7 @@ dst_regional <- dst_data %>%
   summarise_at(vars(dst_num:dst_denom),
                sum,
                na.rm = TRUE) %>%
-  
+
   # merge with regional names
   inner_join(who_region_names, by = "g_whoregion") %>%
   ungroup() %>%
@@ -1465,10 +1465,10 @@ dst_regional <- dst_data %>%
 
 
 dst_agg <- rbind(dst_regional, dst_global) %>%
-  
+
   # OK, now you can calculate the percentage coverage
   mutate( dst_pcnt = dst_num * 100 / dst_denom) %>%
-  
+
   # Add a footnote call to Africa
   mutate( entity = ifelse(entity == "Africa", "Africa\u1d47", entity))
 
@@ -1481,16 +1481,16 @@ dst_agg$entity <- factor(dst_agg$entity,
 dst_plot <- dst_agg %>%
   ggplot(aes(x=year, y=dst_pcnt, ymin=0)) +
   geom_line(size=1) +
-  
+
   facet_wrap( ~ entity, ncol = 4, scales="fixed") +
   scale_x_continuous(breaks = c(2009, 2014, report_year-1)) +
   scale_y_continuous(name = "Percentage of tested") +
   expand_limits(y=c(0,100)) +
   xlab("Year") +
-  
+
   ggtitle(paste0("Figure 4.13\nPercentage of bacteriologically confirmed TB cases tested for RR-TB\u1d43, globally and for WHO regions, 2009-",
                  report_year-1)) +
-  
+
   theme_glb.rpt() +
   theme(legend.position="top",
         legend.title=element_blank())
@@ -1511,7 +1511,7 @@ rm(list=ls(pattern = "dst_"))
 # Percentage of bacteriologically confirmed TB cases tested for RR-TB, 2018
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-# Using indicator in dr_surveillance started collecting from 2017 to only include pulmonary cases, but per Katherine's reuqest, 
+# Using indicator in dr_surveillance started collecting from 2017 to only include pulmonary cases, but per Katherine's reuqest,
 # don't add the word "pulmonary" to the title.
 
 dst_data <- dr_surveillance %>%
@@ -1523,7 +1523,7 @@ dst_data <- dr_surveillance %>%
          pulm_labconf_ret,
          r_rlt_new,
          r_rlt_ret) %>%
-  
+
   # Calculate coverage of DST percentages
   mutate(# percent DST among lab-confirmed cases is a bit of a fudge:
     # numerator rdst_new + rdst_ret  (ignore cases with unknown treatment history)
@@ -1638,7 +1638,7 @@ rr_global_inc <- aggregated_estimates_drtb_rawvalues %>%
                   mutate(e_inc_rr_num    = e_inc_rr_num    / 1000,
                          e_inc_rr_num_lo = e_inc_rr_num_lo / 1000,
                          e_inc_rr_num_hi = e_inc_rr_num_hi / 1000)
-                        
+
 
 rr_global <- rr_global %>%
              left_join(rr_global_inc)
@@ -2060,20 +2060,20 @@ gap_data <- estimates_epi_rawvalues %>%
          year,
          e_inc_num
   ) %>%
-  
+
   # Link to notifications
   inner_join(notification) %>%
   select(iso3,
          country,
          e_inc_num,
          c_newinc) %>%
-  
+
   # Calculate the gap and use that for the bubble sizes
   mutate(bubble_size = e_inc_num - c_newinc) %>%
-  
+
   # Modify long names of countries which will be shown as labels in map
   mutate(country = recode(country, "Democratic Republic of the Congo"="DR Congo","United Republic of Tanzania"="UR Tanzania")) %>%
-  
+
   # limit to the top 10 by size of gap
   top_n(10, bubble_size)
 
@@ -2222,7 +2222,7 @@ inctbhiv_foot <- paste(inctbhiv_foot,
                        pending_incidence_footnote,
                        "\n\u1d9c",
                        india_incidence_footnote)
-  
+
 inctbhiv_plot <- arrangeGrob(inctbhiv_plot, bottom = textGrob(inctbhiv_foot,
                                                               x = 0,
                                                               hjust = -0.1,
@@ -2460,13 +2460,13 @@ coveragerr_region <- notification %>%
                sum,
                na.rm = TRUE) %>%
   mutate(rrmdr_tx = unconf_rrmdr_tx +  conf_rrmdr_tx) %>%
-  
+
   # merge with estimates and calculate treatment coverage
   inner_join(coveragerr_inc_region) %>%
   mutate(c_rr_coverage = rrmdr_tx * 100 / e_inc_rr_num,
          c_rr_coverage_lo = rrmdr_tx * 100  / e_inc_rr_num_hi,
          c_rr_coverage_hi = rrmdr_tx * 100  / e_inc_rr_num_lo) %>%
-  
+
   # merge with regional names and simplify
   inner_join(who_region_names, by = "g_whoregion") %>%
   select(entity,
@@ -2491,7 +2491,7 @@ coveragerr_global <- notification %>%
                na.rm = TRUE) %>%
   mutate(rrmdr_tx = unconf_rrmdr_tx +  conf_rrmdr_tx,
          entity = "Global") %>%
-  
+
   # merge with estimates and calculate treatment coverage
   inner_join(coveragerr_inc_global) %>%
   mutate(c_rr_coverage = rrmdr_tx * 100 / e_inc_rr_num,
@@ -2577,7 +2577,7 @@ drgap_data <- estimates_drtb_rawvalues %>%
          year,
          e_inc_rr_num
   ) %>%
-  
+
   # Link to notifications
   inner_join(notification) %>%
   select(iso3,
@@ -2585,16 +2585,16 @@ drgap_data <- estimates_drtb_rawvalues %>%
          e_inc_rr_num,
          unconf_rrmdr_tx,
          conf_rrmdr_tx) %>%
-  
+
   # Filter out countries that have not reported anything yet for the latest year
   filter(!is.na(unconf_rrmdr_tx) | !is.na(conf_rrmdr_tx)) %>%
-  
+
   # Calculate the gap and use that for the bubble sizes
   mutate(bubble_size = e_inc_rr_num - (NZ(unconf_rrmdr_tx) + NZ(conf_rrmdr_tx))) %>%
-  
+
   # Modify long names of countries which will be shown as labels in map
   mutate(country = recode(country, "Democratic Republic of the Congo"="DR Congo")) %>%
-  
+
   # limit to the top 10 by size of gap
   top_n(10, bubble_size)
 
@@ -2950,7 +2950,7 @@ out_plot <- out_data_long %>%
 			            position = position_stack(reverse = TRUE), size=3,hjust=1.5,color="white")
 
 out_foot <- "\u1d43 Outcomes for MDR/RR-TB annual treatment cohorts are reported one year later than other TB cohorts."
-  
+
 out_plot <- arrangeGrob(out_plot,
                         bottom = textGrob(out_foot,
                                           x = 0,
@@ -3924,7 +3924,7 @@ ipt_f <- cbind(ipt_c, ipt_e)
 
 
 #New version as dashed line for 2005-2016,solid line for 2017-2018, plus dashed for global data 2017-2018
-ipt_plot <- ggplot() + 
+ipt_plot <- ggplot() +
   geom_line(data=subset(ipt_f,year <= 2016),aes(year, iptnew, color=area), size=1,linetype="dashed")+
   geom_line(data=subset(ipt_f,year>2015),aes(year, value, color=area), size=1)+
   geom_line(data=subset(ipt_f,area=="Global"),aes(year, iptnew, color=area), size=1,linetype="dashed")+
@@ -4310,7 +4310,7 @@ bcg_cov_foot <- paste0("\u1d43 The target population of BCG coverage varies depe
                        bcg_cov_page,
                        ", accessed ",
                        format(Sys.Date(), "%d %B %Y"))
-  
+
 bcg_cov_map <- arrangeGrob(bcg_cov_map,
                            bottom = textGrob(bcg_cov_foot,
                                              x = 0,
