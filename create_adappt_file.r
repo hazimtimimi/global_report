@@ -284,38 +284,38 @@ rm(adappt_temp)
 adappt_sdg <-
   # Here are the indicators for which we only want the latest available year
   # % below poverty line
-        get_external_indicators(external_indicator_data, indicator_filter = "SI_POV_DAY1") %>%
+        get_external_indicators(external_indicator_data, indicator_filter = "SI_POV_DAY1", round_sig_fig=2) %>%
   # social protection
-  rbind(get_external_indicators(external_indicator_data, indicator_filter = "per_allsp.cov_pop_tot")) %>%
+  rbind(get_external_indicators(external_indicator_data, indicator_filter = "per_allsp.cov_pop_tot", round_sig_fig=2)) %>%
   # HIV prevalence
-  rbind(get_external_indicators(external_indicator_data, indicator_filter = "SH.DYN.AIDS.ZS")) %>%
+  rbind(get_external_indicators(external_indicator_data, indicator_filter = "SH.DYN.AIDS.ZS", round_sig_fig=2)) %>%
   # UHC index
   rbind(get_external_indicators(external_indicator_data, indicator_filter = "UHC_INDEX_REPORTED")) %>%
   # access to clean fuel
-  rbind(get_external_indicators(external_indicator_data, indicator_filter = "EG.CFT.ACCS.ZS")) %>%
+  rbind(get_external_indicators(external_indicator_data, indicator_filter = "EG.CFT.ACCS.ZS", round_sig_fig=2)) %>%
   # GINI index
-  rbind(get_external_indicators(external_indicator_data, indicator_filter = "SI.POV.GINI")) %>%
+  rbind(get_external_indicators(external_indicator_data, indicator_filter = "SI.POV.GINI", round_sig_fig=2)) %>%
   # urban population in slums
-  rbind(get_external_indicators(external_indicator_data, indicator_filter = "EN.POP.SLUM.UR.ZS")) %>%
+  rbind(get_external_indicators(external_indicator_data, indicator_filter = "EN.POP.SLUM.UR.ZS", round_sig_fig=2)) %>%
 
   # And here are the indicators for which we only want all years
   # undernourishment
-  rbind(get_external_indicators(external_indicator_data, indicator_filter = "SN.ITK.DEFC.ZS", flg_latest_year = FALSE)) %>%
+  rbind(get_external_indicators(external_indicator_data, indicator_filter = "SN.ITK.DEFC.ZS", flg_latest_year = FALSE, round_sig_fig=2)) %>%
   # diabetes, female and male separately
-  rbind(get_external_indicators(external_indicator_data, indicator_filter = "NCD_GLUC_04FMLE", flg_latest_year = FALSE)) %>%
-  rbind(get_external_indicators(external_indicator_data, indicator_filter = "NCD_GLUC_04MLE", flg_latest_year = FALSE)) %>%
+  rbind(get_external_indicators(external_indicator_data, indicator_filter = "NCD_GLUC_04FMLE", flg_latest_year = FALSE, round_sig_fig=2)) %>%
+  rbind(get_external_indicators(external_indicator_data, indicator_filter = "NCD_GLUC_04MLE", flg_latest_year = FALSE, round_sig_fig=2)) %>%
   # alcohol, female and male separately
-  rbind(get_external_indicators(external_indicator_data, indicator_filter = "SA_0000001462FMLE", flg_latest_year = FALSE)) %>%
-  rbind(get_external_indicators(external_indicator_data, indicator_filter = "SA_0000001462MLE", flg_latest_year = FALSE)) %>%
+  rbind(get_external_indicators(external_indicator_data, indicator_filter = "SA_0000001462FMLE", flg_latest_year = FALSE, round_sig_fig=2)) %>%
+  rbind(get_external_indicators(external_indicator_data, indicator_filter = "SA_0000001462MLE", flg_latest_year = FALSE, round_sig_fig=2)) %>%
   # smoking, female and male separately
-  rbind(get_external_indicators(external_indicator_data, indicator_filter = "SH.PRV.SMOK.FE", flg_latest_year = FALSE)) %>%
-  rbind(get_external_indicators(external_indicator_data, indicator_filter = "SH.PRV.SMOK.MA", flg_latest_year = FALSE)) %>%
+  rbind(get_external_indicators(external_indicator_data, indicator_filter = "SH.PRV.SMOK.FE", flg_latest_year = FALSE, round_sig_fig=2)) %>%
+  rbind(get_external_indicators(external_indicator_data, indicator_filter = "SH.PRV.SMOK.MA", flg_latest_year = FALSE, round_sig_fig=2)) %>%
   # health expenditure per capita
-  rbind(get_external_indicators(external_indicator_data, indicator_filter = "SH.XPD.CHEX.PP.CD", flg_latest_year = FALSE)) %>%
+  rbind(get_external_indicators(external_indicator_data, indicator_filter = "SH.XPD.CHEX.PP.CD", flg_latest_year = FALSE, round_whole_digit=TRUE)) %>%
   # > 10% total expenditure on health
-  rbind(get_external_indicators(external_indicator_data, indicator_filter = "FINPROTECTION_CATA_TOT_10_POP", flg_latest_year = FALSE)) %>%
+  rbind(get_external_indicators(external_indicator_data, indicator_filter = "FINPROTECTION_CATA_TOT_10_POP", flg_latest_year = FALSE, round_sig_fig=2)) %>%
   # GDP per capita
-  rbind(get_external_indicators(external_indicator_data, indicator_filter = "NY.GDP.PCAP.PP.KD", flg_latest_year = FALSE))
+  rbind(get_external_indicators(external_indicator_data, indicator_filter = "NY.GDP.PCAP.PP.KD", flg_latest_year = FALSE, round_whole_digit=TRUE))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

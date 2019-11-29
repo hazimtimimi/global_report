@@ -106,7 +106,9 @@ get_catatrophic_costs <- function(df,
 get_external_indicators <- function(df,
                                     indicator_filter = "all",
                                     flg_latest_year = TRUE,
-                                    output_var_name = NA) {
+                                    output_var_name = NA,
+                                    round_sig_fig = NA,
+                                    round_whole_digit = FALSE) {
 
 # Get external (SDG) data, by default only for the latest year available
 # treat differently again.
@@ -141,6 +143,22 @@ get_external_indicators <- function(df,
       filter(year == ref_year) %>%
       # remove the ref_year variable from the output
       select(-ref_year)
+  }
+
+  # Round to specified number of significant figures
+  if (!is.na(round_sig_fig)){
+
+    output <-
+      output %>%
+      mutate(value = signif(value, round_sig_fig))
+  }
+
+  # Round to nearest whole number if requested
+  if (round_whole_digit == TRUE){
+
+    output <-
+      output %>%
+      mutate(value = round(value, digits=0))
   }
 
 
