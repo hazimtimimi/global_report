@@ -2,6 +2,9 @@
 # Script to produce CSV files to be imported into the WHO Global Health Observatory
 #
 # Hazim Timimi, November 2016
+#
+# Note -- this script needs serious refactoring, e.g. by using the functions
+# in /functions/get_long_data.r used by  create_adappt_file.r
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
@@ -14,7 +17,7 @@ rm(list=ls())
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # Establish the report year
-report_year <- 2018
+report_year <- 2019
 
 # The following are convenience variables since notification and most other data sets will run up to the
 # year before the reporting year and outcomes will run up to two years before the reporting year
@@ -180,19 +183,19 @@ est_agg <-  aggregated_estimates_epi %>%
 est <- rbind(est_country, est_agg)
 rm(est_country, est_agg)
 
-# Combine country-level and aggregate MDR/RR in notified estimates because subsequent operations
+# Combine country-level and aggregate MDR/RR incidence estimates because subsequent operations
 # are identical
 
 est_rr_country <- estimates_drtb %>%
                   filter(year == notification_maxyear) %>%
                     select(iso3, year,
-                           e_rr_in_notified_pulm, e_rr_in_notified_pulm_lo, e_rr_in_notified_pulm_hi) %>%
+                           e_inc_rr_num, e_inc_rr_num_lo, e_inc_rr_num_hi) %>%
                     rename(location_code = iso3)
 
 est_rr_agg <-  aggregated_estimates_drtb %>%
                 filter(year == notification_maxyear) %>%
                 select(group_name, year,
-                       e_rr_in_notified_pulm, e_rr_in_notified_pulm_lo, e_rr_in_notified_pulm_hi) %>%
+                       e_inc_rr_num, e_inc_rr_num_lo, e_inc_rr_num_hi) %>%
                 # convert to GHO group codes
                 inner_join(gho_group_codes, by = "group_name") %>%
                 # drop the group_name variable
@@ -214,7 +217,7 @@ est_c_best <- est %>%
                      c_cdr)
 
 est_c_best <- est_rr %>%
-              select(location_code, year, e_rr_in_notified_pulm) %>%
+              select(location_code, year, e_inc_rr_num) %>%
               right_join(est_c_best, by = c("location_code", "year"))
 
 
@@ -228,7 +231,7 @@ est_c_best <- est_c_best %>%
                      TB_e_inc_tbhiv_100k = e_inc_tbhiv_100k,
                      TB_e_inc_tbhiv_num = e_inc_tbhiv_num,
                      TB_1 = c_cdr,
-                     TB_e_rr_in_notified_pulm = e_rr_in_notified_pulm)
+                     TB_e_inc_rr_num = e_inc_rr_num)
 
 # melt into long table needed by GHO.
 # The key/value fields are called "indicator_code" and "value". Exclude location_code and time_period from the melting, so they appear in the final output to provide the reference key (syntax is a little bit confusing ....)
@@ -250,7 +253,7 @@ est_c_lo <- est %>%
                    c_cdr_lo)
 
 est_c_lo <- est_rr %>%
-            select(location_code, year, e_rr_in_notified_pulm_lo) %>%
+            select(location_code, year, e_inc_rr_num_lo) %>%
             right_join(est_c_lo, by = c("location_code", "year"))
 
 
@@ -264,7 +267,7 @@ est_c_lo <- est_c_lo %>%
                    TB_e_inc_tbhiv_100k = e_inc_tbhiv_100k_lo,
                    TB_e_inc_tbhiv_num = e_inc_tbhiv_num_lo,
                    TB_1 = c_cdr_lo,
-                   TB_e_rr_in_notified_pulm = e_rr_in_notified_pulm_lo)
+                   TB_e_inc_rr_num = e_inc_rr_num_lo)
 
 
 # melt into long table needed by GHO.
@@ -283,7 +286,7 @@ est_c_hi <- est %>%
                    c_cdr_hi)
 
 est_c_hi <- est_rr %>%
-            select(location_code, year, e_rr_in_notified_pulm_hi) %>%
+            select(location_code, year, e_inc_rr_num_hi) %>%
             right_join(est_c_hi, by = c("location_code", "year"))
 
 
@@ -297,7 +300,7 @@ est_c_hi <- est_c_hi %>%
                    TB_e_inc_tbhiv_100k = e_inc_tbhiv_100k_hi,
                    TB_e_inc_tbhiv_num = e_inc_tbhiv_num_hi,
                    TB_1 = c_cdr_hi,
-                   TB_e_rr_in_notified_pulm = e_rr_in_notified_pulm_hi)
+                   TB_e_inc_rr_num = e_inc_rr_num_hi)
 
 
 # melt into long table needed by GHO.
@@ -671,13 +674,15 @@ dst_rrmdr_country <- notification %>%
 # B. Combine with routine surveillance
 dst_rrmdr_country <- dr_surveillance %>%
                       select(iso3, year,
+                             r_rlt_new, pulm_labconf_new,
+                             r_rlt_ret, pulm_labconf_ret,
                              dst_rlt_new, xpert_new,
                              dst_rlt_ret, xpert_ret) %>%
                       inner_join(dst_rrmdr_country, by = c("iso3", "year"))
 
 
 # Calculate new pulmonary bacteriologically-confirmed patients, total number tested and total number started on treatment for years before 2015
-# For 2015 onwards calculate % testing out of all notified patients
+# For 2018 onwards calculate % using the variables in dr_surveillance
 
 dst_rrmdr_country <- within(dst_rrmdr_country, {
 
@@ -695,9 +700,9 @@ dst_rrmdr_country <- within(dst_rrmdr_country, {
                               new_bc,
                               new_pulm_bac_conf)   # for EUR contries pre-2013
 
-  # And here comes the change for 2015 -- use all new notified cases as the denominator
-  new_pulm_bac_conf <- ifelse(year >= 2015,
-                              c_newunk,
+  # And here comes the change for 2018 onwards, using the dr_surveillance variables
+  new_pulm_bac_conf <- ifelse(year >= 2018,
+                              pulm_labconf_new,
                               new_pulm_bac_conf)
 
 
@@ -724,11 +729,20 @@ dst_rrmdr_country <- within(dst_rrmdr_country, {
                            sum_of_row(dst_rrmdr_country[c("dst_rlt_new","xpert_new")]))
   )
 
-  # And here comes the change for 2015 -- much simpler approach
-  dst_new <- ifelse(year >= 2015,
-                    rdst_new,
+  # And here comes the change for 2018 onwards, using the dr_surveillance variables
+  dst_new <- ifelse(year >= 2018,
+                    r_rlt_new,
                     dst_new)
 
+
+
+  # Number of previously pulmonary bacteriologically-confirmed patients
+  # For years prior to 2017 we just used to use c_ret
+  # For 2018 onwards use the dr_surveillance variables
+
+  ret_pulm_bac_conf <- ifelse(year >= 2018,
+                              pulm_labconf_ret,
+                              c_ret)
 
 
   # previously treated cases tested for RR/MDR, including molecular diagnostics
@@ -739,9 +753,9 @@ dst_rrmdr_country <- within(dst_rrmdr_country, {
                            sum_of_row(dst_rrmdr_country[c("dst_rlt_ret","xpert_ret")]))
   )
 
-  # And here comes the change for 2015 -- much simpler approach
-  dst_ret <- ifelse(year >= 2015,
-                    rdst_ret,
+  # And here comes the change for 2018 onwards, using the dr_surveillance variables
+  dst_ret <- ifelse(year >= 2018,
+                    r_rlt_ret,
                     dst_ret)
 
 
@@ -755,7 +769,7 @@ dst_rrmdr_country <- within(dst_rrmdr_country, {
 dst_rrmdr_country <- dst_rrmdr_country  %>%
                       select(iso3, year, g_whoregion, g_income,
                              dst_new, new_pulm_bac_conf,
-                             dst_ret, c_ret,
+                             dst_ret, ret_pulm_bac_conf,
                              c_rrmdr,
                              c_rrmdr_tx)
 
@@ -766,7 +780,7 @@ dst_rrmdr_country <- dst_rrmdr_country  %>%
 dst_rrmdr_region <- dst_rrmdr_country %>%
                     group_by(g_whoregion, year) %>%
                     summarise_at(vars(dst_new, new_pulm_bac_conf,
-                                      dst_ret, c_ret,
+                                      dst_ret, ret_pulm_bac_conf,
                                       c_rrmdr,
                                       c_rrmdr_tx),
                                  sum,
@@ -778,7 +792,7 @@ dst_rrmdr_region <- dst_rrmdr_country %>%
 dst_rrmdr_income <- dst_rrmdr_country %>%
                     group_by(g_income, year) %>%
                     summarise_at(vars(dst_new, new_pulm_bac_conf,
-                                      dst_ret, c_ret,
+                                      dst_ret, ret_pulm_bac_conf,
                                       c_rrmdr,
                                       c_rrmdr_tx),
                                  sum,
@@ -790,7 +804,7 @@ dst_rrmdr_income <- dst_rrmdr_country %>%
 dst_rrmdr_global <- dst_rrmdr_country %>%
                     group_by(year) %>%
                     summarise_at(vars(dst_new, new_pulm_bac_conf,
-                                      dst_ret, c_ret,
+                                      dst_ret, ret_pulm_bac_conf,
                                       c_rrmdr,
                                       c_rrmdr_tx),
                                  sum,
@@ -827,13 +841,13 @@ dst_rrmdr <- within(dst_rrmdr, {
   TB_c_dst_rlt_new_pct <- display_cap_pct(dst_new, new_pulm_bac_conf)
 
   # % of previously treated cases tested
-  TB_c_dst_rlt_ret_pct <- display_cap_pct(dst_ret, c_ret)
+  TB_c_dst_rlt_ret_pct <- display_cap_pct(dst_ret, ret_pulm_bac_conf)
 })
 
 
 # Remove unneeded variables and change remaining variable names to GHO versions
 dst_rrmdr <- dst_rrmdr %>%
-              select(-dst_new, -new_pulm_bac_conf, -dst_ret, -c_ret) %>%
+              select(-dst_new, -new_pulm_bac_conf, -dst_ret, -ret_pulm_bac_conf) %>%
               rename(time_period = year,
                      TB_rr_mdr = c_rrmdr,
                      TB_c_mdr_tx = c_rrmdr_tx)
