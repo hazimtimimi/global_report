@@ -679,3 +679,212 @@ write.csv(x = adappt_locations,
           quote = 3,
           row.names = FALSE,
           na = "")
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+#   Data disaggregated by age and sex -----
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# Get the incidence estimates
+adappt_agesex_agg <-
+  aggregated_estimates_agesex %>%
+  filter(measure == "inc" &
+           unit == "num" &
+           risk_factor== "all" &
+           sex %in% c("m", "f") &
+           year == notification_maxyear) %>%
+  select(location_code = group_name,
+         year,
+         age_group,
+         sex,
+         e_inc_num = best)
+
+
+adappt_agesex_country <-
+  estimates_agesex %>%
+  filter(measure == "inc" &
+           unit == "num" &
+           risk_factor== "all" &
+           sex %in% c("m", "f") &
+           year == notification_maxyear) %>%
+  select(location_code = iso3,
+         year,
+         age_group,
+         sex,
+         e_inc_num = best)
+
+adappt_agesex_inc <- rbind(adappt_agesex_country, adappt_agesex_agg)
+
+rm(adappt_agesex_agg, adappt_agesex_country)
+
+# Get the notifications
+
+agesex_vars <- c("newrel_m04", "newrel_m514", "newrel_m014",
+                 "newrel_m1524", "newrel_m2534", "newrel_m3544",
+                 "newrel_m4554", "newrel_m5564", "newrel_m65",
+                 "newrel_m15plus",
+                 "newrel_f04", "newrel_f514", "newrel_f014",
+                 "newrel_f1524", "newrel_f2534", "newrel_f3544",
+                 "newrel_f4554", "newrel_f5564", "newrel_f65",
+                 "newrel_f15plus"
+                 )
+
+adappt_agesex_notifs <-
+  get_vars_and_aggregates(df = notification,
+                          vars = agesex_vars,
+                          starting_year = notification_maxyear,
+                          ending_year = notification_maxyear,
+                          flg_long = FALSE)
+
+# Identify entities that don't have disaggegregated age groups for adults, only the 15 plus group
+
+adappt_agesex_notifs <-
+  adappt_agesex_notifs %>%
+  mutate(flg_15plus_only = ifelse(is.na(newrel_m1524) &
+                                    is.na(newrel_m2534) &
+                                    is.na(newrel_m2534) &
+                                    is.na(newrel_m3544) &
+                                    is.na(newrel_m4554) &
+                                    is.na(newrel_m5564) &
+                                    is.na(newrel_m65) &
+                                    is.na(newrel_f1524) &
+                                    is.na(newrel_f2534) &
+                                    is.na(newrel_f3544) &
+                                    is.na(newrel_f4554) &
+                                    is.na(newrel_f5564) &
+                                    is.na(newrel_f65) &
+                                    (
+                                    !is.na(newrel_m15plus) | !is.na(newrel_f15plus)
+                                    ),
+                                  TRUE,
+                                  FALSE
+                                    ))
+
+# Identify entities that don't have disaggegregated age groups for children, only the 0-14  group
+adappt_agesex_notifs <-
+  adappt_agesex_notifs %>%
+  mutate(flg_014_only = ifelse(is.na(newrel_m04) &
+                                is.na(newrel_m514) &
+                                is.na(newrel_f04) &
+                                is.na(newrel_f514) &
+                                (
+                                !is.na(newrel_m014) | !is.na(newrel_f014)
+                                ),
+                              TRUE,
+                              FALSE
+                                ))
+
+# Flip to long format. Need to vary the operation based on whether we have disaggregated adults and children
+# notifications or not
+
+# 1. Fully disaggregated
+
+addapt_agesex_notifs_disag <-
+  adappt_agesex_notifs %>%
+  filter(flg_15plus_only == FALSE & flg_014_only == FALSE) %>%
+  # drop unnecessary fields
+  select(-contains("15plus"), -contains("014")) %>%
+  # rename the 65 age group to 65plus
+  rename(newrel_m65plus = newrel_m65,
+         newrel_f65plus = newrel_f65) %>%
+
+  # now switch to long format
+  pivot_longer(cols = starts_with("newrel_"),
+             names_to = c("sex", "age_group"),
+             # thanks to Hadley, help on pivot_longer icludes
+             # and example of doing this with TB variables!
+             names_pattern = "newrel_(.)(.*)",
+             values_to = "notifs")
+
+# 2. CHildren disaggregated, adults aggregated
+#  (For 2019 report these were Gambia, Mozambique, Niue and Senegal)
+
+addapt_agesex_notifs_adultsagg <-
+  adappt_agesex_notifs %>%
+  filter(flg_15plus_only == TRUE & flg_014_only == FALSE) %>%
+  # drop unnecessary fields
+  select(-contains("014"),
+         -contains("1524"),
+         -contains("2534"),
+         -contains("3544"),
+         -contains("4554"),
+         -contains("5564"),
+         -contains("65"),
+         -contains("flg")) %>%
+
+  # now switch to long format
+  pivot_longer(cols = starts_with("newrel_"),
+             names_to = c("sex", "age_group"),
+             # thanks to Hadley, help on pivot_longer icludes
+             # and example of doing this with TB variables!
+             names_pattern = "newrel_(.)(.*)",
+             values_to = "notifs")
+
+
+# 3. CHildren aggregated, adults disaggregated
+#  (For 2019 report these were Algeria, Turkmenistan and Yemen)
+
+addapt_agesex_notifs_kidsagg <-
+  adappt_agesex_notifs %>%
+  filter(flg_15plus_only == FALSE & flg_014_only == TRUE) %>%
+  # drop unnecessary fields
+  select(-contains("04"),
+         -contains("514"),
+         -contains("15plus"),
+         -contains("flg")) %>%
+  # rename the 65 age group to 65plus
+  rename(newrel_m65plus = newrel_m65,
+         newrel_f65plus = newrel_f65)  %>%
+
+  # now switch to long format
+  pivot_longer(cols = starts_with("newrel_"),
+             names_to = c("sex", "age_group"),
+             # thanks to Hadley, help on pivot_longer icludes
+             # and example of doing this with TB variables!
+             names_pattern = "newrel_(.)(.*)",
+             values_to = "notifs")
+
+# 4. Children and adults disaggregated -- no entities with this combination in 2019 report
+
+# Combine the long datasets
+
+adappt_agesex_notifs <- rbind(addapt_agesex_notifs_disag,
+                              addapt_agesex_notifs_adultsagg,
+                              addapt_agesex_notifs_kidsagg)
+
+# clean uo
+rm(addapt_agesex_notifs_disag, addapt_agesex_notifs_adultsagg,addapt_agesex_notifs_kidsagg)
+
+# Tweak strings in age_group for the notifications so they match those of the estimates
+
+str_replace_pattern <- c("04" = "0-4",
+                         "514" = "5-14",
+                         "014" = "0-14",
+                         "1524" = "15-24",
+                         "2534" = "25-34",
+                         "3544" = "35-44",
+                         "4554" = "45-54",
+                         "5564" = "55-64")
+
+adappt_agesex_notifs <-
+  adappt_agesex_notifs %>%
+  mutate(age_group = str_replace_all(age_group, str_replace_pattern))
+
+# Now join notifications to estimates -- an inner join should restrict estimates
+# to the reported notification age groups
+
+adappt_agesex <-
+  adappt_agesex_notifs %>%
+  inner_join(adappt_agesex_inc, by = c("location_code", "year", "age_group", "sex"))
+
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+#   Save the disaggregation by age and sex to CSV -----
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+write.csv(x = adappt_agesex,
+          file = paste(adappt_folder, "adappt_agesex_",Sys.Date(),".csv",sep="") ,
+          quote = 3,
+          row.names = FALSE,
+          na = "")
