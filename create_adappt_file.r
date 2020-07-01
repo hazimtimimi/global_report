@@ -337,14 +337,14 @@ adappt_data <-
                                                 "all_conf_xdr",
                                                 "conf_xdr_tx"), starting_year = notification_maxyear )) %>%
   rbind(get_vars_and_aggregates(budget_expenditure, "budget_tot" , starting_year = report_year )) %>%
-  rbind(get_vars_and_aggregates(estimates_population, "e_pop_num" , starting_year = notification_maxyear, ending_year = notification_maxyear ))
+  rbind(get_vars_and_aggregates(estimates_population, "e_pop_num" , ending_year = notification_maxyear ))
 
 
 
-# Convert budget total and e_pop_num to millions; show numbers < 1 million to one decimal place
+# Convert budget total to millions; show numbers < 1 million to one decimal place
 adappt_data <-
   adappt_data %>%
-  mutate(value = ifelse(indicator_code %in% c("budget_tot", "e_pop_num"),
+  mutate(value = ifelse(indicator_code %in% c("budget_tot"),
                         ifelse(value > 1e6,
                                round(value / 1e6, 0),
                                round(value / 1e6, 1)),
@@ -614,14 +614,14 @@ adappt_location_list <-
 # And don't forget to add the codes for WHO regions and globally
 # Create a list of the regiona and aggregate names
 group_codes <- read.table(textConnection("
-location_code,g_whoregion,location_name, show_flag
-global,,Global,
-AFR,,WHO African Region,
-AMR,,WHO/PAHO Region of the Americas,
-EMR,,WHO Eastern Mediterranean Region,
-EUR,,WHO European Region,
-SEA,,WHO South-East Asia Region,
-WPR,,WHO Western Pacific Region,"), header=TRUE, sep=",", as.is = TRUE)
+location_code,g_whoregion,location_name, location_name_FR, location_name_ES, location_name_RU, show_flag
+global,,Global, Global, Mundial, Глобальный,
+AFR,,Africa, Afrique, África, Африка,
+AMR,,Americas, Amériques, Las Américas, Америка,
+EMR,,Eastern Mediterranean, Méditerranée orientale, Mediterráneo oriental, Восточное Средиземноморье,
+EUR,,Europe, Europe, Europa, Европа,
+SEA,,South-East Asia, Asie du Sud-Est, Asia Sudoriental, Юго-Восточная Азия,
+WPR,,Western Pacific, Pacifique occidental, Pacífico occidental, Западная часть Тихого океана, "), header=TRUE, sep=",", as.is = TRUE)
 closeAllConnections()
 
 #Add the group location codes to the adappt list
@@ -663,6 +663,9 @@ adappt_locations <-
   select(location_code = iso3,
          g_whoregion,
          location_name = country,
+         location_name_FR = country_FR,
+         location_name_ES = country_ES,
+         location_name_RU = country_RU,
          show_flag) %>%
   # restrict to countries reporting during the latest data collection round
   filter(location_code %in% adappt_location_list$location_code) %>%
@@ -678,7 +681,12 @@ write.csv(x = adappt_locations,
           file = paste(adappt_folder, "adappt_location_",Sys.Date(),".csv",sep="") ,
           quote = 3,
           row.names = FALSE,
-          na = "")
+          na = "",
+          fileEncoding = "UTF-8")
+
+# And, of course, this doesn't workproperly for the Russian text when run on Windows, grrrr....
+# So instead I created the CSV directly using SQL-Server Management Studio. and script at
+# ~/OneOffQueries/adappt_locations.sql
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
