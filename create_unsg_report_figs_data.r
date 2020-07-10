@@ -4,19 +4,22 @@
 # Code also contains exploratory queries on the data and some is to be used
 # for the report text.
 #
-# This script takes most recent data directly from the data collection tables rather
-# than the data snapshots because it evolved before the first snapshot and is not
-# tied to the timetable of the 2020 global TB report.
+# Really I should have done this in RMarkdown, but life got in the way ....
+#
+# This script used to take most recent data directly from the data collection tables rather
+# than the data snapshots because it evolved before the first snapshot was taken
 #
 # In earlier iterations it relied heavily on carrying over data from the previous year
-# for countries that had not yet reported. By the time the final figures were produce
-# for the report very few countries accounting for a small fraction of global totals had
-# not yet reported and had their data carried forward.
+# for countries that had not yet reported. The final version doesn't (it uses reported data)
+# but I kept the code in which is now bypassed if flg_carry_forward is set to FALSE.
 #
 # Hazim Timimi, May - July 2020
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 source("set_environment.r")
+
+# Decide whether or not to carry forward data from 2018 when 2019 data are missing
+flg_carry_forward <- FALSE
 
 # load packages ----
 library(RODBC)
@@ -27,7 +30,7 @@ library(ggplot2)
 # Define functions ----
 
 
-  carry_forward <- function(df, var_name, data_year = 2019, flg_zeros = FALSE){
+carry_forward <- function(df, var_name, data_year = 2019, flg_zeros = FALSE){
 
   # Carry reported numbers over from a previous year to the next year if data were missing
   # in that next year
@@ -136,7 +139,7 @@ sum_of_row <- function(x) {
   return(summed)
 }
 
-# Get data on impact of COVID-19 n TB services -----
+# Get data on impact of COVID-19 on TB services -----
 
 sql <- "WITH HBC AS (
 	SELECT	iso2, group_name
@@ -144,7 +147,7 @@ sql <- "WITH HBC AS (
 	WHERE	group_type = 'g_hb_tb'
 	)
 
-SELECT	dcf.latest_strategy.iso2,
+SELECT	view_TME_master_covid_unhlm.iso2,
 		ISNULL(group_name, 0) AS hbc,
 		service_changes,
 		opd_visits_down_ds,
@@ -165,18 +168,15 @@ SELECT	dcf.latest_strategy.iso2,
 		ntp_periph_reassigned,
 		budget_reallocated, other_reallocation
 
-FROM	dcf.latest_strategy
+FROM	view_TME_master_covid_unhlm
 			LEFT OUTER JOIN HBC ON
-				dcf.latest_strategy.iso2 = HBC.iso2"
+				view_TME_master_covid_unhlm.iso2 = HBC.iso2"
 
 ch <- odbcDriverConnect(connection_string)
 
 responses <- sqlQuery(ch, sql, stringsAsFactors = FALSE)
 
 close(ch)
-
-
-
 
 # pivot long and calculate counts for each possible value
 
@@ -309,32 +309,9 @@ write.csv(responses_wide_hbc,
 sql <- "SELECT	iso2, year, c_newinc, c_new_014,
 		ISNULL(unconf_mdr_tx,0) + ISNULL(conf_mdr_tx,0) +
 		ISNULL(unconf_rrmdr_tx,0) + ISNULL(conf_rrmdr_tx, 0) AS dr_tx,
-		NULL AS rrmdr_014_tx
-FROM	view_TME_master_notification
-WHERE	year BETWEEN 2015 AND 2017
-
-/* grab 2018 mdr treatment among kids from the dcf view */
-UNION ALL
-SELECT	view_TME_master_notification.iso2, view_TME_master_notification.year,
-		view_TME_master_notification.c_newinc, view_TME_master_notification.c_new_014,
-		ISNULL(unconf_mdr_tx,0) + ISNULL(conf_mdr_tx,0) + ISNULL(view_TME_master_notification.unconf_rrmdr_tx,0) +
-		ISNULL(view_TME_master_notification.conf_rrmdr_tx, 0) AS dr_tx,
-		dcf.latest_notification.rrmdr_014_tx_2018 AS rrmdr_014_tx
-FROM	view_TME_master_notification
-			INNER JOIN dcf.latest_notification ON
-				view_TME_master_notification.iso2 = dcf.latest_notification.iso2
-WHERE	view_TME_master_notification.year = 2018
-
-/* add dcf data for latest year */
-UNION ALL
-SELECT	iso2, year, c_newinc,c_new_014,
-		CASE WHEN COALESCE(unconf_rrmdr_tx,conf_rrmdr_tx) IS NOT NULL
-				THEN ISNULL(unconf_rrmdr_tx,0) + ISNULL(conf_rrmdr_tx, 0)
-			ELSE NULL
-		END AS dr_tx,
 		rrmdr_014_tx
-FROM	dcf.latest_notification
-
+FROM	view_TME_master_notification
+WHERE	year BETWEEN 2015 AND 2019
 ORDER BY iso2, year;"
 
 ch <- odbcDriverConnect(connection_string)
@@ -372,15 +349,18 @@ notifs %>%
   arrange(country) %>%
   select(country)
 
+tx_cf <- tx
 
+if (flg_carry_forward) {
 
+  # Find countries with empty data for latest year and see if there are data for the previous year
+  # do for  c_newinc, c_new_014 and dr_tx (but not rrmdr_014_tx)
 
-# Find countries with empty data for latest year and see if there are data for the previous year
-# do for  c_newinc, c_new_014 and dr_tx (but not rrmdr_014_tx)
+  tx_cf <- carry_forward(tx, var_name = "c_newinc")
+  tx_cf <- carry_forward(tx_cf, var_name = "c_new_014")
+  tx_cf <- carry_forward(tx_cf, var_name = "dr_tx")
 
-tx_cf <- carry_forward(tx, var_name = "c_newinc")
-tx_cf <- carry_forward(tx_cf, var_name = "c_new_014")
-tx_cf <- carry_forward(tx_cf, var_name = "dr_tx")
+}
 
 # Calculate global totals
 tx_cf_global <- tx_cf %>%
@@ -413,7 +393,8 @@ plot_notifs <- tx_cf_global %>%
   scale_x_continuous(name="", breaks = c(2015, 2016, 2017, 2018, 2019)) +
 
   # display y-axis scale im millions
-  scale_y_continuous(name = "Millions", labels = function(i){round(i/1e6)}) +
+  scale_y_continuous(name = "Millions", labels = function(i){round(i/1e6)},
+                     limits = c(0,8e6)) +
 
   scale_fill_manual("",
                     breaks = c("c_new_15plus", "c_new_014" ),
@@ -492,18 +473,7 @@ FROM	view_TME_master_notification
 			INNER JOIN view_TME_master_strategy ON
 				view_TME_master_notification.iso2 = view_TME_master_strategy.iso2 AND
 				view_TME_master_notification.year = view_TME_master_strategy.year
-WHERE	view_TME_master_notification.year BETWEEN 2015 AND 2018
-
-UNION ALL
-SELECT	dcf.latest_notification.iso2, dcf.latest_notification.year,
-		COALESCE(hiv_ipt_reg_all, hiv_ipt) AS hiv_ipt,
-		newinc_con04_prevtx,
-		NULL AS newinc_con5plus_prevtx,
-		newinc_con_prevtx
-FROM	dcf.latest_notification
-			INNER JOIN dcf.latest_strategy ON
-				dcf.latest_notification.iso2 = dcf.latest_strategy.iso2
-
+WHERE	view_TME_master_notification.year BETWEEN 2015 AND 2019
 ORDER BY iso2, year;"
 
 ch <- odbcDriverConnect(connection_string)
@@ -512,31 +482,41 @@ prevtx <- sqlQuery(ch, sql, stringsAsFactors = FALSE)
 
 close(ch)
 
-# Find countries with empty data for latest year and see if there are data for the previous year
-# do for  hiv_ipt, newinc_con04_prevtx and newinc_con_prevtx
+prevtx_cf <- prevtx
 
-prevtx_cf <- carry_forward(prevtx, var_name = "hiv_ipt")
-prevtx_cf <- carry_forward(prevtx_cf, var_name = "newinc_con04_prevtx")
-prevtx_cf <- carry_forward(prevtx_cf, var_name = "newinc_con_prevtx")
+if (flg_carry_forward){
+
+  # Find countries with empty data for latest year and see if there are data for the previous year
+  # do for  hiv_ipt, newinc_con04_prevtx and newinc_con_prevtx
+
+  prevtx_cf <- carry_forward(prevtx, var_name = "hiv_ipt")
+  prevtx_cf <- carry_forward(prevtx_cf, var_name = "newinc_con04_prevtx")
+  prevtx_cf <- carry_forward(prevtx_cf, var_name = "newinc_con_prevtx")
+
+}
+
+
+# Calculate "adult" fraction
+# Watch out because sometimes only some variables carried forward from the previous year resulting
+# in strange number combinations
+prevtx_cf <- prevtx_cf %>%
+  mutate(prevtx_5plus = ifelse(newinc_con_prevtx > 0 & newinc_con04_prevtx > 0,
+                                  newinc_con_prevtx - newinc_con04_prevtx,
+                                  newinc_con_prevtx)) %>%
+  # Convert negative prevtx_5plus casued by weird combination of carry overs to zero
+  mutate(prevtx_5plus = ifelse(prevtx_5plus < 0 , 0, prevtx_5plus)) %>%
+  # deal with 2017 variable
+  mutate(prevtx_5plus = ifelse(year == 2017 ,
+                                  newinc_con5plus_prevtx,
+                                  prevtx_5plus)) %>%
+  select(-newinc_con5plus_prevtx)
+
 
 # Calculate global totals
 prevtx_cf_global <- prevtx_cf %>%
   group_by(year) %>%
-  summarise_at(c("hiv_ipt", "newinc_con04_prevtx", "newinc_con_prevtx", "newinc_con5plus_prevtx"), sum, na.rm=TRUE) %>%
+  summarise_at(c("hiv_ipt", "newinc_con04_prevtx", "prevtx_5plus"), sum, na.rm=TRUE) %>%
   ungroup()
-
-
-# Calculate "adult" fraction
-prevtx_cf_global <- prevtx_cf_global %>%
-  mutate(prevtx_5plus = ifelse(newinc_con_prevtx > 0 & newinc_con04_prevtx > 0,
-                                  newinc_con_prevtx - newinc_con04_prevtx,
-                                  newinc_con_prevtx)) %>%
-  # deal with 2017 variable
-  mutate(prevtx_5plus = ifelse(newinc_con5plus_prevtx > 0 ,
-                                  newinc_con5plus_prevtx,
-                                  prevtx_5plus)) %>%
-  select(-newinc_con5plus_prevtx, -newinc_con_prevtx)
-
 
 
 # Plot TPT data as stacked bar chart ----
@@ -558,7 +538,8 @@ plot_tpt <- prevtx_cf_global %>%
   scale_x_continuous(name="", breaks = c(2015, 2016, 2017, 2018, 2019)) +
 
   # display y-axis scale im millions
-  scale_y_continuous(name = "Millions", labels = function(i){round(i/1e6)}) +
+  scale_y_continuous(name = "Millions", labels = function(i){round(i/1e6)},
+                     limits = c(0,3e6)) +
 
   #ggtitle(label = "Provision of TB Preventive Treatment") +
 
@@ -689,14 +670,22 @@ ggsave(file = paste0(unsg_report_folder, "research_", Sys.Date(), ".png"),
        width=11, height=7)
 
 
-# Print summary stats for use in report ----
+# Print summary stats for use in report and save as CSVs ----
 print(tx_cf_global)
 print(prevtx_cf_global)
 
+write.csv(tx_cf_global,
+          file = paste0(unsg_report_folder, "tx_cf_global_", Sys.Date(), ".csv"),
+          na = "",
+          row.names = FALSE)
+
+write.csv(prevtx_cf_global,
+          file = paste0(unsg_report_folder, "prevtx_cf_global_", Sys.Date(), ".csv"),
+          na = "",
+          row.names = FALSE)
 
 # Get answers to question 5.2 ----
 # (whether country has updated its targets in line with UNHLM global targets)
-
 
 sql <- "WITH HBC AS (
 	SELECT	iso2, group_name
@@ -704,13 +693,13 @@ sql <- "WITH HBC AS (
 	WHERE	group_type = 'g_hb_tb'
 	)
 
-SELECT	dcf.latest_strategy.iso2,
+SELECT	view_TME_master_covid_unhlm.iso2,
         group_name,
 		    nsp_updated_unhlm
 
-FROM	dcf.latest_strategy
+FROM	view_TME_master_covid_unhlm
 			LEFT OUTER JOIN HBC ON
-				dcf.latest_strategy.iso2 = HBC.iso2"
+				view_TME_master_covid_unhlm.iso2 = HBC.iso2"
 
 ch <- odbcDriverConnect(connection_string)
 
@@ -735,10 +724,7 @@ sql <- "WITH HBC AS (
 notifs AS (
 	SELECT	iso2, year, new_labconf, ret_rel_labconf, new_clindx, ret_rel_clindx, c_newinc
 	FROM	view_TME_master_notification
-	WHERE	year = 2018
-	UNION ALL
-	SELECT	iso2, year, new_labconf, ret_rel_labconf, new_clindx, ret_rel_clindx, NULL AS c_newinc
-	FROM	dcf.latest_notification
+	WHERE	year BETWEEN 2018 AND 2019
 	),
 inc AS (
   SELECT iso2, year, e_inc_num
@@ -764,20 +750,34 @@ notifs$numerator <- sum_of_row(notifs[c("new_labconf", "ret_rel_labconf")])
 notifs$denominator <- sum_of_row(notifs[c("new_labconf", "new_clindx", "ret_rel_labconf", "ret_rel_clindx")])
 
 # Calculate and display aggregates on bac-confirmation ----
-notifs %>%
+pulm_labconf <- notifs %>%
   group_by(year) %>%
   summarise_at(vars(numerator:denominator), sum,na.rm = TRUE) %>%
   ungroup() %>%
   mutate(c_pulm_labconf_pct = round(numerator * 100 / denominator))
 
 # MDR HBC, also estimate CDR
-notifs %>%
+pulm_labconf_hbmdr <- notifs %>%
   filter(group_name == 1) %>%
   group_by(year) %>%
   summarise_at(vars(c_newinc:denominator), sum,na.rm = TRUE) %>%
   ungroup() %>%
   mutate(c_pulm_labconf_pct = round(numerator * 100 / denominator),
-         cdr = round(c_newinc * 100 / e_inc_num))
+         cdr = ifelse(e_inc_num > 0, round(c_newinc * 100 / e_inc_num), NA))
+
+print(pulm_labconf)
+print(pulm_labconf_hbmdr)
+
+write.csv(pulm_labconf,
+          file = paste0(unsg_report_folder, "pulm_labconf_", Sys.Date(), ".csv"),
+          na = "",
+          row.names = FALSE)
+
+write.csv(pulm_labconf_hbmdr,
+          file = paste0(unsg_report_folder, "pulm_labconf_hbmdr_", Sys.Date(), ".csv"),
+          na = "",
+          row.names = FALSE)
+
 
 # Get data on DST ----
 sql <- "WITH HBC AS (
@@ -788,10 +788,7 @@ sql <- "WITH HBC AS (
 dst AS (
 	SELECT	iso2, year, r_rlt_new, r_rlt_ret, pulm_labconf_new, pulm_labconf_ret
 	FROM	view_TME_master_dr_surveillance
-	WHERE	year = 2018 AND all_areas_covered = 1
-	UNION ALL
-	SELECT	iso2, year, r_rlt_new, r_rlt_ret, pulm_labconf_new, pulm_labconf_ret
-	FROM	dcf.latest_notification
+	WHERE	year >= 2018 AND all_areas_covered = 1
 	)
 
 SELECT group_name, dst.*
@@ -807,15 +804,16 @@ close(ch)
 
 
 # Calculate and display aggregates on DST ----
-dst %>%
+dst_global <- dst %>%
   group_by(year) %>%
   summarise_at(vars(r_rlt_new:pulm_labconf_ret), sum,na.rm = TRUE) %>%
   ungroup() %>%
   mutate(c_rdst_new_pct = round(r_rlt_new * 100 / pulm_labconf_new),
          c_rdst_ret_pct = round(r_rlt_ret * 100 / pulm_labconf_ret),
          c_rdst_pct = round( (r_rlt_new + r_rlt_ret) * 100 / (pulm_labconf_new + pulm_labconf_ret)))
+
 # MDR HBC
-dst %>%
+dst_hbmdr <- dst %>%
   filter(group_name == 1) %>%
   group_by(year) %>%
   summarise_at(vars(r_rlt_new:pulm_labconf_ret), sum,na.rm = TRUE) %>%
@@ -823,6 +821,20 @@ dst %>%
   mutate(c_rdst_new_pct = round(r_rlt_new * 100 / pulm_labconf_new),
          c_rdst_ret_pct = round(r_rlt_ret * 100 / pulm_labconf_ret),
          c_rdst_pct = round( (r_rlt_new + r_rlt_ret) * 100 / (pulm_labconf_new + pulm_labconf_ret)))
+
+print(dst_global)
+print(dst_hbmdr)
+
+write.csv(dst_global,
+          file = paste0(unsg_report_folder, "dst_global_", Sys.Date(), ".csv"),
+          na = "",
+          row.names = FALSE)
+
+write.csv(dst_hbmdr,
+          file = paste0(unsg_report_folder, "dst_hbmdr_", Sys.Date(), ".csv"),
+          na = "",
+          row.names = FALSE)
+
 
 # Get data on treatment success ----
 sql <- "WITH HBC AS (
@@ -833,10 +845,7 @@ sql <- "WITH HBC AS (
 succ AS (
 	SELECT	iso2, year, mdr_succ, mdr_coh
 	FROM	view_TME_master_outcomes
-	WHERE	year = 2016
-	UNION ALL
-	SELECT	iso2, year, mdr_succ, mdr_coh
-	FROM	dcf.latest_mdr_xdr_outcomes
+	WHERE	year BETWEEN 2016 and 2017
 	)
 
 SELECT group_name, succ.*
@@ -852,47 +861,75 @@ close(ch)
 
 
 # Calculate and display aggregates on treatment success ----
-succ %>%
+mdr_tx_succ_global <- succ %>%
   group_by(year) %>%
   summarise_at(vars(mdr_succ:mdr_coh), sum,na.rm = TRUE) %>%
   ungroup() %>%
   mutate(c_mdr_tsr = round(mdr_succ * 100 / mdr_coh))
+
+
 # MDR HBC
-succ %>%
+mdr_tx_succ_hbmdr <- succ %>%
   filter(group_name == 1) %>%
   group_by(year) %>%
   summarise_at(vars(mdr_succ:mdr_coh), sum,na.rm = TRUE) %>%
   ungroup() %>%
   mutate(c_mdr_tsr = round(mdr_succ * 100 / mdr_coh))
 
+print(mdr_tx_succ_global)
+print(mdr_tx_succ_hbmdr)
+
+write.csv(mdr_tx_succ_global,
+          file = paste0(unsg_report_folder, "mdr_tx_succ_global_", Sys.Date(), ".csv"),
+          na = "",
+          row.names = FALSE)
+
+write.csv(mdr_tx_succ_hbmdr,
+          file = paste0(unsg_report_folder, "mdr_tx_succ_hbmdr_", Sys.Date(), ".csv"),
+          na = "",
+          row.names = FALSE)
+
+
 
 # text on increased notifications in India and Indonesia ----
+
 sql <- "SELECT iso2, year, c_newinc
 FROM view_TME_master_notification
-WHERE year = 2017 AND iso2 IN ('ID','IN')
-UNION ALL
-SELECT iso2, year, c_newinc
-FROM dcf.latest_notification
-WHERE iso2 IN ('ID','IN')
-ORDER BY iso2, year"
+WHERE year IN (2017, 2019) AND iso2 IN ('ID','IN')
+ORDER BY iso2, year;"
 
 ch <- odbcDriverConnect(connection_string)
 notifs <- sqlQuery(ch, sql, stringsAsFactors = FALSE)
 close(ch)
 
 # IN changes
-notifs %>%
+IN_changes <- notifs %>%
   filter(iso2=="IN") %>%
   mutate(prev = lag(c_newinc)) %>%
   mutate( diff = c_newinc - prev,
           diff_pct = (c_newinc - prev) * 100 / prev)
 
 # ID changes
-notifs %>%
+ID_changes <- notifs %>%
   filter(iso2=="ID") %>%
   mutate(prev = lag(c_newinc)) %>%
   mutate( diff = c_newinc - prev,
           diff_pct = (c_newinc - prev) * 100 / prev)
+
+print(IN_changes)
+print(ID_changes)
+
+write.csv(IN_changes,
+          file = paste0(unsg_report_folder, "IN_changes_", Sys.Date(), ".csv"),
+          na = "",
+          row.names = FALSE)
+
+write.csv(ID_changes,
+          file = paste0(unsg_report_folder, "ID_changes_", Sys.Date(), ".csv"),
+          na = "",
+          row.names = FALSE)
+
+
 
 # text on absolute numbers enrolled on MDR treatment ----
 sql <- "WITH tx_17 AS (
@@ -901,15 +938,20 @@ SELECT iso2, CASE WHEN COALESCE(unconf_rrmdr_tx,conf_rrmdr_tx) IS NOT NULL
 			ELSE NULL
 		END AS dr_tx_17
 FROM view_TME_master_notification
-WHERE year = 2017)
+WHERE year = 2017),
 
-SELECT tx_17.iso2, dr_tx_17,
-CASE WHEN COALESCE(unconf_rrmdr_tx,conf_rrmdr_tx) IS NOT NULL
+tx_19 AS (
+SELECT iso2, CASE WHEN COALESCE(unconf_rrmdr_tx,conf_rrmdr_tx) IS NOT NULL
 				THEN ISNULL(unconf_rrmdr_tx,0) + ISNULL(conf_rrmdr_tx, 0)
 			ELSE NULL
 		END AS dr_tx_19, rrmdr_014_tx
-FROM tx_17 INNER JOIN dcf.latest_notification ON
-  tx_17.iso2 = dcf.latest_notification.iso2
+FROM view_TME_master_notification
+WHERE year = 2019)
+
+SELECT tx_17.iso2, dr_tx_17, dr_tx_19, rrmdr_014_tx
+
+FROM tx_17 INNER JOIN tx_19 ON
+  tx_17.iso2 = tx_19.iso2
 ORDER BY tx_17.iso2;"
 
 ch <- odbcDriverConnect(connection_string)
@@ -918,10 +960,83 @@ close(ch)
 
 # Get the top 5 with the largest change
 
-notifs %>% mutate(delta = dr_tx_19 - dr_tx_17) %>%
+delta_top5_drtx <- notifs %>%
+  mutate(delta = dr_tx_19 - dr_tx_17) %>%
   arrange(desc(delta)) %>%
   head(5) %>%
   mutate(pct = delta * 100 / dr_tx_17)
 
 # Look at global total in 2019
-notifs %>% summarise_at(vars(dr_tx_17:rrmdr_014_tx), sum, na.rm = TRUE)
+drtx_global<- notifs %>%
+  summarise_at(vars(dr_tx_17:rrmdr_014_tx), sum, na.rm = TRUE)
+
+print(delta_top5_drtx)
+print(drtx_global)
+
+write.csv(delta_top5_drtx,
+          file = paste0(unsg_report_folder, "delta_top5_drtx_", Sys.Date(), ".csv"),
+          na = "",
+          row.names = FALSE)
+
+write.csv(drtx_global,
+          file = paste0(unsg_report_folder, "drtx_global_", Sys.Date(), ".csv"),
+          na = "",
+          row.names = FALSE)
+
+
+# Text on number of countries in each region with TPT coverage >= 75% for children aged 0-4 ----
+sql <- " SELECT g_whoregion, count(country) AS countries
+  FROM view_TME_estimates_ltbi
+  where year = 2019 and e_prevtx_kids_pct >= 75.00
+  group by g_whoregion
+  order by g_whoregion;"
+
+ch <- odbcDriverConnect(connection_string)
+tpt_regions <- sqlQuery(ch, sql, stringsAsFactors = FALSE)
+close(ch)
+
+print(tpt_regions)
+
+# Text on SOuth Africa's share of global TPT numbers for PLHIV
+
+prevtx_cf_ZA <- prevtx_cf %>%
+  filter(iso2 == "ZA" & year %in% c(2018, 2019)) %>%
+  select(iso2, year, hiv_ipt_ZA = hiv_ipt) %>%
+  inner_join(prevtx_cf_global, by = "year") %>%
+  mutate(hiv_ipt_share = hiv_ipt_ZA / hiv_ipt) %>%
+  select(iso2, year, hiv_ipt_ZA, hiv_ipt, hiv_ipt_share)
+
+print(prevtx_cf_ZA)
+
+write.csv(prevtx_cf_ZA,
+          file = paste0(unsg_report_folder, "prevtx_cf_ZA_", Sys.Date(), ".csv"),
+          na = "",
+          row.names = FALSE)
+
+
+# Text on number of  adult houshold contacts on TPT and fraction of global total ----
+
+sql <- "select iso2, g_whoregion FROM view_TME_master_report_country"
+
+ch <- odbcDriverConnect(connection_string)
+regions <- sqlQuery(ch, sql, stringsAsFactors = FALSE)
+close(ch)
+
+prevtx_cf_region <- prevtx_cf %>%
+  filter(year == 2019) %>%
+  inner_join(regions, by = "iso2") %>%
+  select(g_whoregion, iso2, newinc_con04_prevtx, prevtx_5plus) %>%
+  group_by(g_whoregion) %>%
+  summarise_at(vars(newinc_con04_prevtx: prevtx_5plus), sum,na.rm = TRUE) %>%
+  ungroup()
+
+prevtx_cf_global_2019_tot <- prevtx_cf_global %>% filter(year == 2019) %>% select(prevtx_5plus)
+
+prevtx_cf_region$proportion <- prevtx_cf_region$prevtx_5plus / prevtx_cf_global_2019_tot$prevtx_5plus
+
+print(prevtx_cf_region)
+
+write.csv(prevtx_cf_region,
+          file = paste0(unsg_report_folder, "prevtx_cf_region_", Sys.Date(), ".csv"),
+          na = "",
+          row.names = FALSE)
