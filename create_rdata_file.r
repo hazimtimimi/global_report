@@ -44,7 +44,9 @@ save (aggregated_estimates_agesex,
       drs_for_estimation_new,
       drs_for_estimation_ret,
       drs_for_estimation_sldst,
+
       drs_most_recent_for_estimation,
+      drs_most_recent_for_estimation_inh,
 
       estimates_agesex,
       estimates_agesex_rawvalues,
@@ -72,6 +74,8 @@ save (aggregated_estimates_agesex,
 
       external_indicator_data,
       external_indicator_defs,
+
+      covid_unhlm,
 
       data.date,
       file=paste0(rdata_folder, "data_",Sys.Date(),".Rdata"))

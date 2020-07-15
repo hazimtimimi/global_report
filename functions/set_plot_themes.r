@@ -32,7 +32,7 @@ theme_glb.rpt <- function(base_size=10, base_family="") {
 
 # Standard colours used by Sue
 
-standard_palette <- function(type){
+palette_standard <- function(type){
 
   switch(type,
         "incidence" = "#91A93E",        # green
@@ -46,7 +46,7 @@ standard_palette <- function(type){
 # Palette for treatment outcomes ----
 # (adapted from colourblind-friendly palettes at http://www.cookbook-r.com/Graphs/Colors_(ggplot2)/)
 
-outcomes_palette <- function() {
+palette_outcomes <- function() {
 
    # colours used in 2016
    # c("#009E73",   # Success (green)
@@ -71,7 +71,7 @@ outcomes_palette <- function() {
 # Alternative palette for treatment outcomes absolute numbers --
 # (adapted from colourblind-friendly palettes at http://www.cookbook-r.com/Graphs/Colors_(ggplot2)/)
 
-outcomes_num_palette <- function() {
+palette_outcomes_num <- function() {
 
   c("Treatment success"               = "#009E73",  # Success (green)
     "Failure/Died/Lost to follow-up"  = "#D55E00",  # Failure or others (red)
@@ -83,7 +83,7 @@ outcomes_num_palette <- function() {
 
 # Palette for age/sex pyramids ----
 
-agesex_palette <- function() {
+palette_agesex <- function() {
 
  c("Female" = "#EE1D23",  # Females (red used by Sue in 2017)
    "Male"   = "#00AAAD"   # Males   (turquoise used by Sue in 2017)

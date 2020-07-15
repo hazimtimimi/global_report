@@ -13,7 +13,7 @@
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Table 4.1  ------
-# Notifications of TB, TB/HIV and MDR/RR-TB cases, globally and for WHO regions, 2016
+# Notifications of TB, TB/HIV, MDR/RR-TB and XDR-TB cases, globally and for WHO regions, report_year-1
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
@@ -97,7 +97,7 @@ digits(notif_table_html) <- 0
 
 notif_table_filename <- paste0(figures_folder, "/Tables/t4_1_notifs_summary", Sys.Date(), ".htm")
 
-cat(paste("<h3>Table 4.1<br />Notifications of TB, HIV-positive TB and MDR/RR-TB cases, globally and for WHO regions,",
+cat(paste("<h3>Table 4.1<br />Notifications of TB, HIV-positive TB, MDR/RR-TB and XDR-TB cases, globally and for WHO regions,",
           report_year-1,
           "</h3>"),
     file=notif_table_filename)
@@ -135,9 +135,11 @@ print(notif_table_html,
 rm(list=c("notifs_global", "notifs_summary", "notif_table_html", "notif_table_filename"))
 
 
+
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Table 4.2  ------
-# Number of people newly enrolled in HIV care in 2018 who were also notified as a TB case in 2016, xx high TB/HIV burden countries that reported annual data
+# Number of people newly enrolled in HIV care in report_year-1 who were also notified as a TB case in report_year-1,
+# xx high TB/HIV burden countries that reported annual data
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # Get list of high-burden TB/HIV countries
@@ -157,6 +159,9 @@ hiv_data <- notification %>%
 
             # remove countries with no data
             filter(!(is.na(hiv_tbdetect) | is.na(hiv_reg_new2))) %>%
+
+            # shorten long country names
+            get_names_for_tables() %>%
 
             # order by country
             arrange(country)
@@ -215,9 +220,11 @@ print(hiv_table_html,
 # Clean up (remove any objects with their name beginning with 'hiv')
 rm(list=ls(pattern = "^hiv"))
 
+
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Table 4.3  ------
-# National policies and their implementation to increase access to rapid TB testing and universal DST, 2016
+# National policies to increase access to rapid TB testing and universal DST, and their implementation,
+# report_year-1
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # Get list of all high-burden countries (TB, TB/HIV, MDR-TB)
@@ -230,26 +237,44 @@ rdxpolicy_hbccodes <-  country_group_membership %>%
                        spread(key = group_type, value = group_name, fill = 0)
 
 
-# Grab a few of the notification variables to calculate coverage of DST
+# Grab a few of the notification and dr_surveillance variables to calculate coverage of DST
+rdxpolicy_dst <-  dr_surveillance %>%
+                  filter(year >= report_year - 1) %>%
+                  select(iso2,
+                         pulm_labconf_new,
+                         pulm_labconf_ret,
+                         r_rlt_new,
+                         r_rlt_ret,
+                         rr_new,
+                         rr_ret,
+                         rr_dst_rlt_fq) %>%
+
+                  # restrict to high burden countries
+                  inner_join(rdxpolicy_hbccodes) %>%
+
+                  # Calculate percent DST and percent RR cases with tests for FQ
+                  mutate(
+                    pcnt_dst = ifelse((NZ(pulm_labconf_new) + NZ(pulm_labconf_ret)) == 0 |
+                                       is.na(r_rlt_new) & is.na(r_rlt_ret), NA,
+                                     display_num((NZ(r_rlt_new) + NZ(r_rlt_ret)) * 100 /
+                                       (NZ(pulm_labconf_new) + NZ(pulm_labconf_ret)))  ),
+
+                    pcnt_fqdst = ifelse( (NZ(rr_new) + NZ(rr_ret)) > 0,
+                                            display_num(rr_dst_rlt_fq * 100 / (NZ(rr_new) + NZ(rr_ret))), NA)
+                  )
+
+
 
 rdxpolicy_notifs <- notification %>%
                     filter(year == report_year - 1) %>%
                     select(iso2,
 
-                           new_labconf,
-                           c_ret,
                            c_newinc,
 
                            rdx_data_available,
                            newinc_rdx,
                            rdxsurvey_newinc,
-                           rdxsurvey_newinc_rdx,
-
-                           rdst_new,
-                           rdst_ret,
-
-                           conf_rrmdr,
-                           rr_sldst) %>%
+                           rdxsurvey_newinc_rdx) %>%
 
                     # restrict to high burden countries
                     inner_join(rdxpolicy_hbccodes) %>%
@@ -258,25 +283,7 @@ rdxpolicy_notifs <- notification %>%
                     mutate(pcnt_wrd = ifelse(rdx_data_available == 60 & NZ(c_newinc) > 0,
                                              display_num(newinc_rdx * 100 /c_newinc),
                                       ifelse(rdx_data_available == 61 & NZ(rdxsurvey_newinc) > 0,
-                                             display_num(rdxsurvey_newinc_rdx * 100 /rdxsurvey_newinc), "-")),
-
-                           # percent DST among lab-confirmed cases is a bit of a fudge:
-                           # numerator rdst_new + rdst_ret  (ignore cases with unknown treatment history)
-                           # denominator is a bit of a fudge: new_labconf + c_ret
-                           # Can sometimes get numerator > denominator so display ">100" in those cases
-                           pcnt_dst = ifelse( (NZ(rdst_new) + NZ(rdst_ret)) > (NZ(new_labconf) + NZ(c_ret)),
-                                              ">100",
-                                      ifelse(NZ(new_labconf) + NZ(c_ret) > 0 & !
-                                               (is.na(rdst_new) & is.na(rdst_ret)),
-                                             display_num((NZ(rdst_new) + NZ(rdst_ret)) * 100 /
-                                                           (NZ(new_labconf) + NZ(c_ret))),
-                                             "-")),
-
-                           pcnt_sldst = ifelse(NZ(conf_rrmdr)> 0 & !is.na(rr_sldst),
-                                               display_num(rr_sldst * 100 / conf_rrmdr), "-")
-
-                           )
-
+                                             display_num(rdxsurvey_newinc_rdx * 100 /rdxsurvey_newinc), "-")) )
 
 
 rdxpolicy_country <- strategy %>%
@@ -289,7 +296,8 @@ rdxpolicy_country <- strategy %>%
                             #urine LAM added 2019 dcyear
                             lf_urine_lam) %>%
 
-                     # restrict to high burden countries, and add notification calculations
+                     # restrict to high burden countries, and add DRS abd notification calculations
+                     inner_join(rdxpolicy_dst) %>%
                      inner_join(rdxpolicy_notifs) %>%
 
                      # restrict to variables for the table
@@ -302,7 +310,7 @@ rdxpolicy_country <- strategy %>%
                             pcnt_wrd,
                             universal_dst,
                             pcnt_dst,
-                            pcnt_sldst,
+                            pcnt_fqdst,
                             lf_urine_lam) %>%
                       # shorten long country names
                       get_names_for_tables( col = "entity") %>%
@@ -381,7 +389,7 @@ rdxpolicy_table_html <- xtable(rdxpolicy_hbcs)
 
 rdxpolicy_table_filename <- paste0(figures_folder, "/Tables/t4_3_lab_policy", Sys.Date(), ".htm")
 
-cat(paste("<h3>Table 4.3<br />National policies to increase access to rapid TB testing and universal DST and their implementation<sup>a</sup>, ",
+cat(paste("<h3>Table 4.3<br />National policies to increase access to rapid TB testing and universal DST, and their implementation<sup>a</sup>, ",
           report_year-1,
           "</h3>
           <style>
@@ -407,8 +415,8 @@ print(rdxpolicy_table_html,
                                   <td>National policy and algorithm indicate a WRD as the initial diagnostic test for all people presumed to have TB</td>
                                   <td>Percentage of notified new and relapse TB cases tested with a WRD as the initial diagnostic test</td>
                                   <td>National policy and algorithm indicate universal access to DST</td>
-                                  <td>Percentage of notified bacteriologically confirmed TB cases with DST results for rifampicin <sup>b</sup></td>
-                                  <td>Percentage of notified rifampicin-resistant TB cases with DST results for fluoroquinolones and second-line injectable agents</td>
+                                  <td>Percentage of notified bacteriologically confirmed pulmonary TB cases with DST results for rifampicin <sup>b</sup></td>
+                                  <td>Percentage of notified rifampicin-resistant TB cases with DST results for fluoroquinolones</td>
                                   <td>National policy and algorithm indicate the use of lateral flow urine lipoarabinomannan assay (LF-LAM) to assist in the detection of TB in people living with HIV</td>
                               </tr>",
                               "<tr><td colspan='10'>Blank cells indicate data not reported. - Indicates value that cannot be calculated. WRD, WHO-recommended rapid diagnostic. DST, drug susceptibility testing.<br /><sup>a</sup>The 48 countries shown in the table are the countries that are in one or more of the three lists of high TB, TB/HIV and MDR-TB burden countries (see also Chapter 2, Figure 2.5 and Table 2.4).<br /><sup>b</sup>Testing in cases with unknown previous treatment history is not included. The percentage may exceed 100% for several reasons, e.g. samples rather than cases are counted in the numerator; laboratory specimen results are not linked to the denominator data source when enumerated; or there is incomplete reporting of bacteriologically confirmed cases in the denominator. Bacteriologically confirmed extrapulmonary cases are not included in the denominator because they cannot be differentiated from clinically diagnosed ones in the way data are reported to WHO.</td>
@@ -431,7 +439,7 @@ rm(list=ls(pattern = "^rdxpolicy"))
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Table 4.4 -------
-# Quality of laboratory services, 2018
+# Quality of laboratory services, report_year-1
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # Get list of all high-burden countries (TB, TB/HIV, MDR-TB)
@@ -545,7 +553,7 @@ rm(list=ls(pattern = "^labquality"))
 # Table 5.1 -------
 # TB preventive treatment for people living with HIV and children under
 # 5 years of age who were household contacts of a bacteriologically confirmed pulmonary TB case,
-# high TB or TB/HIV burden countries, 2017
+# high TB or TB/HIV burden countries, report_year-1
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # Get list of TB and TB/HIV high-burden countries
@@ -563,7 +571,7 @@ prev_tx_data <- notification %>%
          hiv_ipt,
          hiv_reg_new,
          hiv_ipt_reg_all)
-  
+
 # Create numerators and denominators for the IPT coverage data
 #prev_tx_data <- prev_tx_data %>%
 #  mutate(ipt_numerator = ifelse(!is.na(hiv_ipt_reg_all) & !is.na(hiv_reg_all),
@@ -625,36 +633,36 @@ prev_tx_hb_data <- prev_tx_hb_data %>%
          e_prevtx_kids_pct,
          e_prevtx_kids_pct_lo,
          e_prevtx_kids_pct_hi)  %>%
-  
+
   # shorten long country names
   get_names_for_tables( col = "entity") %>%
-  
+
   arrange(entity)
 
 # Format variables for output
 prev_tx_table_data <- prev_tx_hb_data %>%
-  
+
   mutate(e_prevtx_eligible_lohi = display_intervals(e_prevtx_eligible,
                                                     e_prevtx_eligible_lo,
                                                     e_prevtx_eligible_hi),
-         
+
          e_prevtx_kids_pct_lohi = display_intervals(e_prevtx_kids_pct,
                                                     e_prevtx_kids_pct_lo,
                                                     e_prevtx_kids_pct_hi)) %>%
-  
+
   # format and round numbers,add call out for Russian footnote and for data comes from survey(CAR in 2018)
   mutate(hiv_ipt = rounder(hiv_ipt),
          hiv_reg_new = rounder(hiv_reg_new),
          hiv_ipt_reg_all = rounder(hiv_ipt_reg_all),
          newinc_con04_tpt = rounder(newinc_con04_tpt),
          newinc_con04_tpt = ifelse(!is.na(ptsurvey_newinc_con04_prevtx),
-                                   paste0(ptsurvey_newinc_con04_prevtx, "<sup>d</sup>"),
+                                   paste0(ptsurvey_newinc_con04_prevtx, " d"),
                                    newinc_con04_tpt),
          e_prevtx_eligible = display_num(e_prevtx_eligible),
          e_prevtx_kids_pct = display_num(e_prevtx_kids_pct),
-         entity = recode(entity, "Russian Federation"= "Russian Federation<sup>d</sup>")) %>%
-  
-  
+         entity = recode(entity, "Russian Federation"= "Russian Federation d")) %>%
+
+
   # drop the separate *_lo and *_hi variables
   select(entity,
          hiv_reg_new,
@@ -680,7 +688,7 @@ prev_tx_table_data <- prev_tx_table_data %>%
 #filter(entity!="Zimbabwe")
 
 # Create HTML output
-prev_tx_table_html <- xtable(prev_tx_table_data) 
+prev_tx_table_html <- xtable(prev_tx_table_data)
 prev_tx_table_filename <- paste0(figures_folder, "/Tables/t5_1_prev_tx", Sys.Date(), ".htm")
 
 cat(paste("<h3>Table 5.1<br />TB preventive treatment for people living with HIV and children",
@@ -740,7 +748,7 @@ rm(list=ls(pattern = "^prev_tx"))
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Table A1.1  ------
-# Reporting of data in the 2018 round of global TB data collection
+# Reporting of data in the report_year round of global TB data collection
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 reporting_countries <- data_collection %>%

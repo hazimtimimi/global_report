@@ -62,7 +62,10 @@ drs                        <- .fixnamibia(sqlFetch(ch, "view_TME_master_drs"))
 drs_for_estimation_new     <- .fixnamibia(sqlFetch(ch, "view_DRS_for_estimation_new"))
 drs_for_estimation_ret     <- .fixnamibia(sqlFetch(ch, "view_DRS_for_estimation_ret"))
 drs_for_estimation_sldst   <- .fixnamibia(sqlFetch(ch, "view_DRS_for_estimation_sldst"))
+
 drs_most_recent_for_estimation <- .fixnamibia(sqlFetch(ch, "view_DRS_most_recent_for_estimation"))
+drs_most_recent_for_estimation_inh  <- .fixnamibia(sqlFetch(ch, "dbo.view_DRS_most_recent_for_estimation_INH"))
+
 
 
 estimates_agesex           <- .fixnamibia(sqlFetch(ch, "estimates.view_estimates"))
@@ -92,6 +95,10 @@ TBHIV_for_aggregates       <- .fixnamibia(sqlFetch(ch, "view_TME_master_TBHIV_fo
 # external data views
 external_indicator_data    <- .fixnamibia(sqlFetch(ch, "external_indicators.view_indicator_data"))
 external_indicator_defs    <- sqlFetch(ch, "external_indicators.view_indicator_definition")
+
+# One-off view for 2020 data collection on impact of COVID-19 on TB services and on
+# country reponses to targets set by the 2018 UN High-Level Meeting on TB
+covid_unhlm                <- .fixnamibia(sqlFetch(ch, "view_TME_master_covid_unhlm"))
 
 close(ch)
 

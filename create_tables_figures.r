@@ -19,7 +19,7 @@ rm(list=ls())
 
 # Establish the report year ----
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-report_year <- 2019
+report_year <- 2020
 
 # Kill any attempt at using factors, unless we explicitly want them!
 options(stringsAsFactors=FALSE)
@@ -145,8 +145,8 @@ setwd(footnotes_folder)
 footfiles <- list.files(footnotes_folder, pattern="*.xlsx")
 
 require(purrr)
-Footlist <- footfiles %>% 
-            map_dfr(read.xlsx)  
+Footlist <- footfiles %>%
+            map_dfr(read.xlsx)
 
 write.xlsx(as.data.frame(Footlist),
            file=paste(figures_folder, "/Footnotes/", "Footnote List", Sys.Date(), ".xlsx", sep=""),
