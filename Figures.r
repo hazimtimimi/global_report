@@ -154,12 +154,12 @@ topinc_map <- who_bubble_map(topinc_data,
                              #Set number of countries need to be labeled with names
                              bubble_label_show_number = 8)
 # Save the plot
-figsavecairo(topinc_map,
-        select(topinc_data,
-               iso3,
-               country,
-               bubble_size),
-        "f3_3_inc_bubble_map")
+figsavecairo(obj = topinc_map,
+            data = select(topinc_data,
+                   iso3,
+                   country,
+                   bubble_size),
+            name = "f3_3_inc_bubble_map")
 
 # Clean up (remove any objects with their name beginning with 'topinc')
 rm(list=ls(pattern = "^topinc"))
@@ -196,12 +196,12 @@ rrnum_map <- who_bubble_map(rrnum_data,
 
 
 # Save the plot
-figsavecairo(rrnum_map,
-        select(rrnum_data,
-               iso3,
-               country,
-               bubble_size),
-        "f3_32_rr_inc_bubble_map")
+figsavecairo(obj = rrnum_map,
+            data = select(rrnum_data,
+                   iso3,
+                   country,
+                   bubble_size),
+            name = "f3_32_rr_inc_bubble_map")
 
 # Clean up (remove any objects with their name beginning with 'rrnum')
 rm(list=ls(pattern = "^rrnum"))
@@ -1987,12 +1987,20 @@ coverage_30hbc <- country_group_membership %>%
   select(iso2)
 
 coverage_inc_country <- coverage_inc_country %>%
-  inner_join(coverage_30hbc) %>%
-  #add marker for India and other countries footnote
-  mutate(entity = recode(entity, "India"="India\u1d47 ",
+  inner_join(coverage_30hbc)
+
+
+#add marker for India and other countries footnote -- this step fails when
+# coverage_inc_country has no rows (i.e. before estimates are available)
+# Hence the conditional statement
+
+if (nrow(coverage_inc_country) > 0) {
+coverage_inc_country <- coverage_inc_country %>%
+   mutate(entity = recode(entity, "India"="India\u1d47 ",
                          "Mozambique"="Mozambique\u1d43 ",
                          "South Africa"="South Africa\u1d43 ",
                          "Lesotho"="Lesotho\u1d43 "))
+}
 
 coverage_country <- notification %>%
   filter(year == report_year - 1) %>%
@@ -2597,9 +2605,13 @@ if (coveragerr_nodata_count > 0)
 
 
 # Add a footnote for over 100% coverage if there are such countries
-if (as.numeric(any(coveragerr_data$c_rr_coverage>100)))
-{
-  coveragerr_over100_foot <- paste0("\u1d43 Reasons for a higher than expected coverage (even exceeding 100%) include that the numerator included empirical treatment of TB patients considered at risk of \nhaving MDR/RR-TB but for whom a laboratory-confirmed diagnosis was missing, incomplete reporting of laboratory data, duplicated case reporting, or enrolment of ‘waiting lists’ of people \nwith MDR/RR-TB who were detected before ", report_year-1, "." )
+# Need a second conditional otherwise the code fails when there are no
+# records as happens before estimates are available
+if (nrow(coveragerr_country) > 0) {
+  if (as.numeric(any(coveragerr_data$c_rr_coverage>100)))
+  {
+    coveragerr_over100_foot <- paste0("\u1d43 Reasons for a higher than expected coverage (even exceeding 100%) include that the numerator included empirical treatment of TB patients considered at risk of \nhaving MDR/RR-TB but for whom a laboratory-confirmed diagnosis was missing, incomplete reporting of laboratory data, duplicated case reporting, or enrolment of ‘waiting lists’ of people \nwith MDR/RR-TB who were detected before ", report_year-1, "." )
+  }
 }
 
 coveragerr_foot <- ifelse(coveragerr_nodata_count > 0 & as.numeric(any(coveragerr_data$c_rr_coverage>100)),
