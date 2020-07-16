@@ -567,14 +567,14 @@ ggsave(file = paste0(unsg_report_folder, "TPT_", Sys.Date(), ".png"),
 # Create finance charts
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-# get the finance data from file ----
+# get the finance data ----
 # actually just enter it here manually
 
-year <- c(2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019)
-domestic <- c(4.296433143, 4.547460182, 4.766996349, 4.885291145, 5.049376563, 4.667652842, 4.576674045, 5.19538412, 5.4, 5.9)
-international <- c(0.651843925, 0.722705294, 0.800041564, 0.945082637, 0.792551052, 0.866998227, 0.991011602, 1.061385761, 0.9837094, 0.911351988)
+year <- c(2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020)
+domestic <- c(4.296433143, 4.547460182, 4.766996349, 4.885291145, 5.049376563, 4.7, 4.5, 5.0, 5.1, 5.1, 5.5)
+international <- c(0.651843925, 0.722705294, 0.800041564, 0.945082637, 0.792551052, 0.9, 1.0, 1.1, 1.0, 0.9, 1.0 )
 
-research <- c(0.643, 0.675, 0.639, 0.686, 0.674, 0.621, 0.726, 0.772, 0.906, NA)
+research <- c(0.643, 0.675, 0.639, 0.686, 0.674, 0.621, 0.726, 0.772, 0.906, NA, NA)
 
 tb_funding <- data.frame(year, domestic, international)
 tb_research <- data.frame(year, research)
@@ -594,7 +594,7 @@ plot_funding <- tb_funding %>%
 
   geom_col(position = position_stack(reverse = TRUE)) +
 
-  scale_x_continuous(name="", breaks = c(2015, 2016, 2017, 2018, 2019)) +
+  scale_x_continuous(name="", breaks = seq(2015, 2020, by = 1)) +
 
   scale_y_continuous(name = "Billions (constant 2019 US$)",
                      labels = round,
