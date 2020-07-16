@@ -434,7 +434,8 @@ plot_dr_tx <- tx_cf_global %>%
   scale_x_continuous(name="", breaks = c(2015, 2016, 2017, 2018, 2019)) +
 
   # display y-axis scale im thousands
-  scale_y_continuous(name = "Thousands", labels = function(i){round(i/1e3)}) +
+  scale_y_continuous(name = "Thousands", labels = function(i){round(i/1e3)},
+                     limits = c(0,2e5)) +
 
   #ggtitle(label = "Enrollment on MDR treatment") +
 
