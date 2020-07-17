@@ -2,17 +2,17 @@
 # Tables in the global report
 # Called from create_tables_figures.r which sets up the necessary dependencies
 # Tom Hiatt
-# 6 July 2012, updated July 2017
+# Originally created July 2012
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Chapter 4 ------
+# Chapter 5 ------
 # Diagnosis and treatment of TB, HIV-associated TB and drug-resistant TB
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Table 4.1  ------
+# Table 5.1  ------
 # Notifications of TB, TB/HIV, MDR/RR-TB and XDR-TB cases, globally and for WHO regions, report_year-1
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -95,9 +95,9 @@ notif_table_html <- xtable(notifs_summary)
 
 digits(notif_table_html) <- 0
 
-notif_table_filename <- paste0(figures_folder, "/Tables/t4_1_notifs_summary", Sys.Date(), ".htm")
+notif_table_filename <- paste0(figures_folder, "/Tables/t5_1_notifs_summary", Sys.Date(), ".htm")
 
-cat(paste("<h3>Table 4.1<br />Notifications of TB, HIV-positive TB, MDR/RR-TB and XDR-TB cases, globally and for WHO regions,",
+cat(paste("<h3>Table 5.1<br />Notifications of TB, HIV-positive TB, MDR/RR-TB and XDR-TB cases, globally and for WHO regions,",
           report_year-1,
           "</h3>"),
     file=notif_table_filename)
@@ -137,7 +137,7 @@ rm(list=c("notifs_global", "notifs_summary", "notif_table_html", "notif_table_fi
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Table 4.2  ------
+# Table 5.2  ------
 # Number of people newly enrolled in HIV care in report_year-1 who were also notified as a TB case in report_year-1,
 # xx high TB/HIV burden countries that reported annual data
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -187,9 +187,9 @@ hiv_table_html <- xtable(hiv_data)
 
 digits(hiv_table_html) <- 0
 
-hiv_table_filename <- paste0(figures_folder, "/Tables/t4_2_tb_in_hiv", Sys.Date(), ".htm")
+hiv_table_filename <- paste0(figures_folder, "/Tables/t5_2_tb_in_hiv", Sys.Date(), ".htm")
 
-cat(paste0("<h3>Table 4.2<br />Number of people newly enrolled in HIV care in ",
+cat(paste0("<h3>Table 5.2<br />Number of people newly enrolled in HIV care in ",
           report_year - 1,
           " who were also notified as a TB case in ",
           report_year - 1,
@@ -222,7 +222,7 @@ rm(list=ls(pattern = "^hiv"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Table 4.3  ------
+# Table 5.3  ------
 # National policies to increase access to rapid TB testing and universal DST, and their implementation,
 # report_year-1
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -387,9 +387,9 @@ rdxpolicy_hbcs <- rdxpolicy_country %>%
 # Create HTML output
 rdxpolicy_table_html <- xtable(rdxpolicy_hbcs)
 
-rdxpolicy_table_filename <- paste0(figures_folder, "/Tables/t4_3_lab_policy", Sys.Date(), ".htm")
+rdxpolicy_table_filename <- paste0(figures_folder, "/Tables/t5_3_lab_policy", Sys.Date(), ".htm")
 
-cat(paste("<h3>Table 4.3<br />National policies to increase access to rapid TB testing and universal DST, and their implementation<sup>a</sup>, ",
+cat(paste("<h3>Table 5.3<br />National policies to increase access to rapid TB testing and universal DST, and their implementation<sup>a</sup>, ",
           report_year-1,
           "</h3>
           <style>
@@ -438,7 +438,7 @@ rm(list=ls(pattern = "^rdxpolicy"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Table 4.4 -------
+# Table 5.4 -------
 # Quality of laboratory services, report_year-1
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -499,9 +499,9 @@ labquality_data <- labquality_data %>%
 # Create HTML output
 labquality_table_html <- xtable(labquality_data)
 
-labquality_table_filename <- paste0(figures_folder, "/Tables/t4_4_lab_quality", Sys.Date(), ".htm")
+labquality_table_filename <- paste0(figures_folder, "/Tables/t5_4_lab_quality", Sys.Date(), ".htm")
 
-cat(paste("<h3>Table 4.4<br />Quality of laboratory services <sup>a</sup>, ",
+cat(paste("<h3>Table 5.4<br />Quality of laboratory services <sup>a</sup>, ",
           report_year-1,
           "</h3>
           <style>
@@ -545,12 +545,12 @@ rm(list=ls(pattern = "^labquality"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Chapter 5 ------
+# Chapter 6 ------
 # TB prevention services
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Table 5.1 -------
+# Table 6.1 -------
 # TB preventive treatment for people living with HIV and children under
 # 5 years of age who were household contacts of a bacteriologically confirmed pulmonary TB case,
 # high TB or TB/HIV burden countries, report_year-1
@@ -689,9 +689,9 @@ prev_tx_table_data <- prev_tx_table_data %>%
 
 # Create HTML output
 prev_tx_table_html <- xtable(prev_tx_table_data)
-prev_tx_table_filename <- paste0(figures_folder, "/Tables/t5_1_prev_tx", Sys.Date(), ".htm")
+prev_tx_table_filename <- paste0(figures_folder, "/Tables/t6_1_prev_tx", Sys.Date(), ".htm")
 
-cat(paste("<h3>Table 5.1<br />TB preventive treatment for people living with HIV and children",
+cat(paste("<h3>Table 6.1<br />TB preventive treatment for people living with HIV and children",
           "under 5 years of age who were household contacts of a bacteriologically confirmed pulmonary TB case,",
           "high TB or TB/HIV burden countries,",
           report_year-1,
