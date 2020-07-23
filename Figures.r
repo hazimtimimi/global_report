@@ -3019,7 +3019,7 @@ rm(list=ls(pattern = "^txout"))
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Figure 5.28   ------
 # Treatment success rate for new and relapse TB cases in children aged 0-14 years in report_year-2,
-# 30 high TB burden countries, WHO regions and globally
+# XX high TB burden countries, WHO regions and globally
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 txout_014_country  <- outcomes %>%
@@ -3070,6 +3070,8 @@ txout_014_country <- txout_014_country %>%
   mutate(c_tsr_014 = ifelse(NZ(newrel_014_coh) > 0,
                             newrel_014_succ * 100/ newrel_014_coh,
                             NA)) %>%
+  # Remove countries that have not reported outcomes for childre
+  filter(!is.na(c_tsr_014)) %>%
   arrange(desc(c_tsr_014))
 
 txout_014_region <- txout_014_region %>%
@@ -3088,74 +3090,61 @@ txout_014_dummy1 <- data.frame(entity = "-----", newrel_014_coh = NA, newrel_014
 
 txout_014_dummy2 <- txout_014_dummy1 %>% mutate(entity = "------")
 
-# Add a 'no data' option so non-reporters are highlighted in the output
-# (but only if we have at least one country with no data)
-
-if (txout_014_country %>% filter(is.na(c_tsr_014)) %>%  nrow() > 0 )
-  {
-  txout_014_country <- txout_014_country %>%
-                    mutate(`No data reported` = ifelse(is.na(c_tsr_014) & substring(entity,1,2) != "--" ,100,0))
-
-  txout_014_region <- txout_014_region %>% mutate(`No data reported` = NA)
-  txout_014_global <- txout_014_global %>% mutate(`No data reported` = NA)
-  txout_014_dummy1 <- txout_014_dummy1 %>% mutate(`No data reported` = NA)
-  txout_014_dummy2 <- txout_014_dummy2 %>% mutate(`No data reported` = NA)
-  }
-
 # Create combined table in order of countries then regional and global estimates
 txout_014 <- rbind(txout_014_country, txout_014_dummy1, txout_014_region, txout_014_dummy2, txout_014_global)
 
 txout_014 <- txout_014 %>%
   # Keep record of current order (in reverse) so plot comes out as we want it
   mutate(entity = factor(entity, levels=rev(entity))) %>%
-  # Drop the actual numbers and keep percentages, and rename c_tsr_014
-  mutate(`Treatment success` = c_tsr_014) %>%
+  # Drop the actual numbers and keep percentages
   select(-newrel_014_coh,
-         -newrel_014_succ,
-         -c_tsr_014)
+         -newrel_014_succ)
 
-# Flip into long mode for stacked bar plotting
-txout_014_long <- melt(txout_014, id=1)
+# Plot as simple bars
+txout_014_plot <- txout_014 %>%
+
+  ggplot(aes(x = entity, y = c_tsr_014)) +
+
+  geom_bar(stat = "identity", fill = "#008670") +
+
+  coord_flip() +
+
+  theme_glb.rpt() +
+
+  scale_y_continuous(name = "Percentage of cohort",
+                     limits = c(0,100)) +
 
 
-# stacking order changed with upgrade of ggplot to version 2.2. GRRRRRRRR
-# Why GRRRRRR? Because, of course, this broke existing code that was working!
-# Finally figured out the solution -- use geom_col with the following parameter
-# geom_col(position = position_stack(reverse = TRUE))
-#
-# It also helped to have a named list for the colour palette.
-# See http://ggplot2.tidyverse.org/reference/geom_bar.html  and
-#     http://ggplot2.tidyverse.org/reference/scale_manual.html
+  labs(x="") +
 
-# Plot as stacked bars
-txout_014_plot <- txout_014_long %>%
-			  ggplot(aes(entity,
-			             value,
-			             fill = variable)) +
+  ggtitle(paste0("FIG.5.28\nTreatment success rate for new and relapse TB cases in",
+                 "\nchildren aged 0-14 years in ",
+                 report_year - 2,
+                 ",\n",
+                 nrow(txout_014_country),
+                 " high TB burden countries\u1d43, WHO regions and globally")) +
 
-			  geom_col(position = position_stack(reverse = TRUE)) +
-			  coord_flip() +
+  geom_text(aes(label = round(c_tsr_014, digits = 0)),
+            position = position_stack(reverse = TRUE), size=3,hjust=1.5,color="white")
 
-			  theme_glb.rpt() +
-			  scale_fill_manual("", values = palette_outcomes()) +
-			  labs(x="", y="Percentage of cohort") +
 
-			  theme(legend.position="bottom",
-			        panel.grid=element_blank()) +
+txout_014_foot <- paste("\u1d43 The remaining",
+                        30 - nrow(txout_014_country),
+                        "high TB burden countries were not able to report outcomes in children.")
 
-			  ggtitle(paste0("FIG.5.28\nTreatment success rate for new and relapse TB cases in",
-			                 "\nchildren aged 0-14 years in ",
-			                 report_year - 2,
-			                 ",\n30 high TB burden countries, WHO regions and globally")) +
+txout_014_plot <- arrangeGrob(txout_014_plot,
+                        bottom = textGrob(txout_014_foot,
+                                          x = 0,
+                                          hjust = -0.1,
+                                          vjust=0,
+                                          gp = gpar(fontsize = 8)))
 
-			  geom_text(data=subset(txout_014_long,variable=="Treatment success"),aes(label = round(value, digits = 0)),
-			            position = position_stack(reverse = TRUE), size=3,hjust=1.5,color="white")
 
 figsavecairo(obj = txout_014_plot,
              data = txout_014,
              name = "f5_28_outcomes_children",
              width = 7,
-             height = 11) # Designer needs wide data; output portrait mode
+             height = 11)
 
 # Clean up (remove any objects with their name starting with 'txout_014')
 rm(list=ls(pattern = "^txout_014"))
