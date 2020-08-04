@@ -415,7 +415,13 @@ ggsave(file = paste0(unsg_report_folder, "notifications_", Sys.Date(), ".png"),
        plot = plot_notifs,
        width=11, height=7)
 
-
+# Save data to csv for the designer
+tx_cf_global %>%
+  #drop the mdr columns
+  select(-starts_with("rrmdr")) %>%
+  write.csv(file = paste0(unsg_report_folder, "notifications_", Sys.Date(), ".csv"),
+          na = "",
+          row.names = FALSE)
 
 # Plot enrollment on MDR treatment as stacked bar chart ----
 plot_dr_tx <- tx_cf_global %>%
@@ -455,6 +461,16 @@ plot_dr_tx <- tx_cf_global %>%
 ggsave(file = paste0(unsg_report_folder, "MDR_", Sys.Date(), ".png"),
        plot = plot_dr_tx,
        width=11, height=7)
+
+
+# Save data to csv for the designer
+tx_cf_global %>%
+  #drop the notification columns
+  select(-starts_with("c_new")) %>%
+  write.csv(file = paste0(unsg_report_folder, "MDR_", Sys.Date(), ".csv"),
+          na = "",
+          row.names = FALSE)
+
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Create TPT charts
@@ -561,6 +577,13 @@ plot_tpt <- prevtx_cf_global %>%
 ggsave(file = paste0(unsg_report_folder, "TPT_", Sys.Date(), ".png"),
        plot = plot_tpt,
        width=11, height=7)
+
+
+# Save data to csv for the designer
+write.csv(prevtx_cf_global,
+          file = paste0(unsg_report_folder, "TPT_", Sys.Date(), ".csv"),
+          na = "",
+          row.names = FALSE)
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
