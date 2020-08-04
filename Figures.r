@@ -4514,14 +4514,14 @@ prevtx_kids_data <-  estimates_ltbi %>%
 
 # Assign categories
 prevtx_kids_data$cat <- cut(prevtx_kids_data$e_prevtx_kids_pct,
-                            c(0, 25, 50, 75, Inf),
-                            c('0-24', '25-49', '50-74', '\u226575'),
+                            c(0, 25, 50, 90, Inf),
+                            c('0-24', '25-49', '50-89', '\u226590'),
                             right = FALSE)
 
 
 # produce the map
 prevtx_kids_map <- WHOmap.print(prevtx_kids_data,
-                                paste("FIG.6.4\nCoverage of TB preventive treatment among eligible children aged under 5 years\u1d43 , ",
+                                paste("FIG.6.4\nCoverage of TB preventive treatment among eligible children aged under 5 years\u1d43,",
                                       report_year-1),
                                 legend.title = "Coverage (%)",
                                 copyright=FALSE,
