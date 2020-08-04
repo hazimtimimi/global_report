@@ -3768,7 +3768,7 @@ rm(list=ls(pattern = "^txmdrout"))
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Figure 5.33  (map) ------
-# Countries that used shorter MDR–TB treatment regimens by the end of report_year-1
+# Countries that used shorter MDR-TB treatment regimens by the end of report_year-1
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 short_data <- notification %>%
@@ -3786,7 +3786,7 @@ short_data$cat <- factor(short_data$cat,levels = rev(levels(short_data$cat)))
 
 # produce the map
 short_map<- WHOmap.print(short_data,
-                         paste0("FIG.5.33\nCountries that used shorter MDR–TB treatment regimens by the end of ", report_year - 1),
+                         paste0("FIG.5.33\nCountries that used shorter MDR-TB treatment regimens by the end of ", report_year - 1),
                          legend.title = "Country \nresponse",
                          copyright=FALSE,
                          colors=c("darkgreen", "lightgreen", "white"),
