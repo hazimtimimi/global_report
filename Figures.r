@@ -305,23 +305,23 @@ rm(list=ls(pattern = "inc_"))
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
-# Get data of notification
+# Get notifications by age and sex
 agesex_notifs <- filter(notification, year == (report_year - 1)) %>%
   select(iso2,
          g_whoregion,
          newrel_m014, newrel_m1524, newrel_m2534, newrel_m3544, newrel_m4554, newrel_m5564, newrel_m65,
          newrel_f014, newrel_f1524, newrel_f2534, newrel_f3544, newrel_f4554, newrel_f5564, newrel_f65)
 
-
+# Get population by age and sex
 agesex_pop    <- filter(estimates_population, year == (report_year - 1)) %>%
   select(iso2,
          e_pop_m014, e_pop_m1524, e_pop_m2534, e_pop_m3544, e_pop_m4554, e_pop_m5564, e_pop_m65,
          e_pop_f014, e_pop_f1524, e_pop_f2534, e_pop_f3544, e_pop_f4554, e_pop_f5564, e_pop_f65)
 
-agesex        <- merge(agesex_notifs, agesex_pop)
+agesex <- merge(agesex_notifs, agesex_pop)
 
 
-# Drop numbers from countries who didn't report cases in the 10-year age intervals for ages 15 and above
+# Drop numbers from countries which didn't report cases in the 10-year age intervals for ages 15 and above
 
 agesex$tot_notified <- sum_of_row(agesex[c("newrel_m1524", "newrel_m2534", "newrel_m3544", "newrel_m4554", "newrel_m5564", "newrel_m65",
                                            "newrel_f1524", "newrel_f2534", "newrel_f3544", "newrel_f4554", "newrel_f5564", "newrel_f65")] )
@@ -331,7 +331,7 @@ agesex_filtered_global <- agesex %>%
   summarise_at(vars(newrel_m014:tot_notified),
                sum,
                na.rm = TRUE) %>%
-  mutate(entity = "Global")
+  mutate(group_name = "global")
 
 agesex_filtered_regional <- agesex %>%
   filter(!is.na(tot_notified)) %>%
@@ -339,13 +339,13 @@ agesex_filtered_regional <- agesex %>%
   summarise_at(vars(newrel_m014:tot_notified),
                sum,
                na.rm = TRUE) %>%
-  # merge with regional names
-  inner_join(who_region_names, by = "g_whoregion") %>%
-  select(-g_whoregion)
+  rename(group_name = g_whoregion)
 
-agesex_filtered_agg <- rbind(agesex_filtered_regional, agesex_filtered_global) %>%
+agesex_filtered_agg <- rbind(agesex_filtered_regional, agesex_filtered_global)
 
-  # Calculate rate per 100 000 population for each age/sex group
+# Calculate rate per 100 000 population for each age/sex group
+agesex_filtered_agg <- agesex_filtered_agg %>%
+
   mutate(m014 = newrel_m014 * 1e5 / e_pop_m014,
          m1524 = newrel_m1524 * 1e5 / e_pop_m1524,
          m2534 = newrel_m2534 * 1e5 / e_pop_m2534,
@@ -361,146 +361,120 @@ agesex_filtered_agg <- rbind(agesex_filtered_regional, agesex_filtered_global) %
          f4554 = newrel_f4554 * 1e5 / e_pop_f4554,
          f5564 = newrel_f5564 * 1e5 / e_pop_f5564,
          f65 = newrel_f65 * 1e5 / e_pop_f65
-  ) %>%
+  )
 
-  # select only the rates
-  select(entity,
-         m014, m1524, m2534, m3544, m4554, m5564, m65,
-         f014, f1524, f2534, f3544, f4554, f5564, f65)
-
-
-
-# Switch to long ('tidy') format to plot
+# Convert case notification rates to long format
 agesex_agg_long <- agesex_filtered_agg %>%
-  gather("group", "rate", 2:15)
+
+  select(group_name,
+         m014, m1524, m2534, m3544, m4554, m5564, m65,
+         f014, f1524, f2534, f3544, f4554, f5564, f65) %>%
+
+  pivot_longer(cols = 2:15,
+               names_to = c("sex", "age_group"),
+               names_pattern = "(.)(.*)",
+               values_to = "cnr")
 
 
-# Extract sex and agegroup from the group field
-agesex_agg_long$sex <- str_extract(agesex_agg_long$group, "f|m")
-agesex_agg_long$sex <- factor(agesex_agg_long$sex,
-                              levels=c("f", "m"),
-                              labels=c("Female", "Male"))
-agesex_agg_long$agegroup <- str_extract(agesex_agg_long$group, "014|1524|2534|3544|4554|5564|65")
-agesex_agg_long$agegroup <- factor(agesex_agg_long$agegroup,
-                                   levels=c("014", "1524", "2534", "3544", "4554", "5564", "65"),
-                                   labels=c("0\u201314", "15\u201324", "25\u201334", "35\u201344", "45\u201354", "55\u201364", "\u226565"))
+# Convert population estimates to long format
+agesex_agg_pop_long <- agesex_filtered_agg %>%
 
-agesex_agg_long <- agesex_agg_long %>% select(-group)
-# Change the order
-agesex_agg_long$entity <- factor(agesex_agg_long$entity,
-                                 levels = c("Africa", "The Americas", "Eastern Mediterranean", "Europe", "South-East Asia", "Western Pacific", "Global"))
+  select(group_name, starts_with("e_pop_")) %>%
+
+  pivot_longer(cols = 2:15,
+               names_to = c("sex", "age_group"),
+               names_pattern = "e_pop_(.)(.*)",
+               values_to = "pop")
 
 
+# Get aggregated data of estimated incidence by age and sex
+# (This is already in long format)
+agesex_agg_inc    <- aggregated_estimates_agesex_rawvalues %>%
 
-# Get data of estimated population
-agesex_agg_pop    <- filter(estimates_population, year == (report_year - 1)) %>%
-  select(g_whoregion,
-         e_pop_m014, e_pop_m1524, e_pop_m2534, e_pop_m3544, e_pop_m4554, e_pop_m5564, e_pop_m65,
-         e_pop_f014, e_pop_f1524, e_pop_f2534, e_pop_f3544, e_pop_f4554, e_pop_f5564, e_pop_f65)%>%
-  group_by(g_whoregion) %>%
-  summarise_at(vars(contains("e_pop_")),
-               sum,
-               na.rm = TRUE) %>%
-  # merge with regional names and simplify to match structure of country table
-  inner_join(who_region_names, by = "g_whoregion") %>%
-  select(-g_whoregion)
+  filter(year == (report_year - 1) &
+           measure == "inc" &
+           unit == "num" &
+           sex != "a" &
+           age_group %in% c("0-14", "15-24", "25-34", "35-44", "45-54", "55-64", "65plus") &
+           risk_factor == "all" ) %>%
 
-agesex_agg_pop_global    <-agesex_agg_pop%>%
-  summarise_at(vars(contains("e_pop_")),
-               sum,
-               na.rm = TRUE)%>%
-  mutate(entity="Global")
-
-agesex_agg_pop    <- agesex_agg_pop%>%
-  rbind(agesex_agg_pop_global)
-
-agesex_agg_pop_long <- agesex_agg_pop %>%
-  gather("group", "pop", 1:14)
-
-agesex_agg_pop_long$sex <- str_extract(agesex_agg_pop_long$group, "f|m")
-agesex_agg_pop_long$sex <- factor(agesex_agg_pop_long$sex,
-                                  labels=c("Female", "Male"))
-agesex_agg_pop_long$agegroup <- str_extract(agesex_agg_pop_long$group, "014|1524|2534|3544|4554|5564|65")
-agesex_agg_pop_long$agegroup <- factor(agesex_agg_pop_long$agegroup,
-                                       labels=c("0\u201314", "15\u201324", "25\u201334", "35\u201344", "45\u201354", "55\u201364", "\u226565"))
-agesex_agg_pop_long$agegroup <- gsub("–","-",agesex_agg_pop_long$agegroup)
-
-agesex_agg_pop_long <- agesex_agg_pop_long %>%
-  select(-group)
-
-# Get data of estimated incidence
-agesex_inc    <- filter(aggregated_estimates_agesex_rawvalues, year == (report_year - 1)) %>%
   select(group_name,
          age_group,
          sex,
-         best)%>%
-  filter(age_group!= "all" & age_group!= "15plus" & age_group!= "0-4" & age_group!= "5-14",
-         sex!= "a") %>%
-  mutate(g_whoregion = group_name,
-         agegroup= recode(age_group, "65plus"="\u226565"),
-         incidence = best,
-         sex = recode(sex, "f"="Female","m"="Male"))%>%
-  # merge with regional names
-  inner_join(who_region_names, by = "g_whoregion") %>%
-  select(-g_whoregion,
-         -group_name,
-         -age_group,
-         -best)
+         inc_num = best) %>%
 
-agesex_inc_global  <-agesex_inc%>%
-  group_by(sex,agegroup)%>%
-  summarise_at(vars(incidence),
-               sum,
-               na.rm = TRUE)%>%
-  mutate(entity="Global")%>%
-  ungroup()
-
-agesex_inc <- agesex_inc%>%
-  # aprrehend with global data
-  rbind(agesex_inc_global)%>%
-  # merge with populations
-  left_join(agesex_agg_pop_long,by=c("sex","entity","agegroup"))%>%
-  # calculate incidence
-  mutate(inc100k=incidence * 1e5 / pop)
-
-agesex_inc$entity <- factor(agesex_inc$entity,
-                            levels = c("Africa", "The Americas", "Eastern Mediterranean", "Europe", "South-East Asia", "Western Pacific", "Global"))
+  # Match format of age_group with that for notifications and population
+  mutate(age_group = str_remove(age_group,"-")) %>%
+  mutate(age_group = ifelse(age_group=="65plus", "65", age_group))
 
 
-# merge with notifictions
-agesex_agg_long$agegroup <- gsub("–","-",agesex_agg_long$agegroup)
-agesex_agg_long <- agesex_agg_long %>%
-  left_join(agesex_inc,by=c("sex","entity","agegroup"))%>%
-  select(-incidence,
-         -pop)
-agesex_agg_long$agegroup <- factor(agesex_agg_long$agegroup,
-                                   levels=c("0-14", "15-24", "25-34", "35-44", "45-54", "55-64", "\u226565"),
+# Merge incidence estimates with population estimates
+agesex_agg_inc <- agesex_agg_inc %>%
+
+  inner_join(agesex_agg_pop_long, by=c("group_name", "sex", "age_group")) %>%
+
+  # calculate the incidence rate for each agesex combination
+  mutate(inc_100k = inc_num * 1e5 / pop) %>%
+
+  # keep the incidence rate only
+  select(-inc_num, -pop)
+
+
+# Merge notifications and incidence rates
+agesex_to_plot <- agesex_agg_long %>%
+  inner_join(agesex_agg_inc, by=c("group_name", "sex", "age_group"))
+
+
+agesex_to_plot$age_group <- factor(agesex_to_plot$age_group,
+                                   levels=c("014", "1524", "2534", "3544", "4554", "5564", "65"),
                                    labels=c("0-14", "15-24", "25-34", "35-44", "45-54", "55-64", "\u226565"))
+
+agesex_to_plot$sex <- factor(agesex_to_plot$sex,
+                             levels = c("f", "m"),
+                             labels=c("Female", "Male"))
+
+# Merge with regional names
+
+agesex_to_plot <- agesex_to_plot %>%
+
+  left_join(who_region_names, by = c("group_name" = "g_whoregion")) %>%
+  mutate(entity = ifelse( group_name == "global", "Global", entity)) %>%
+
+  # get rid of unneeded variables
+  select(-group_name)
+
 
 # Now plot the aggregates as pyramids
 # See first code example at https://github.com/JuanGaleano/Population-pyramids-ggplot2/blob/master/POPULATION%20PYRAMID%20GGPLOT2.R
 
-agesex_plot <- agesex_agg_long %>%
+agesex_plot <- agesex_to_plot %>%
+
   # Multiply all the female rates by -1
-  mutate(rate = ifelse(sex=="Female", rate * -1, rate ),
-         inc100k = ifelse(sex=="Female", inc100k * -1, inc100k )) %>%
+  mutate(cnr = ifelse(sex == "Female", cnr * -1, cnr ),
+         inc_100k = ifelse(sex == "Female", inc_100k * -1, inc_100k )) %>%
+
   ggplot() +
-  geom_bar(aes(x=agegroup, y=rate, fill=sex),
+
+  geom_bar(aes(x=age_group, y=cnr, fill=sex),
            stat="identity",
            size=.3,
            position="identity") +
+
   scale_fill_manual(values=palette_agesex()) +
-  geom_bar(aes(x=agegroup, y=inc100k,fill=NA),
+
+  geom_bar(aes(x=age_group, y=inc_100k, fill=NA),
            stat="identity",
            size=.3,
            colour="black",
            position="identity") +
+
   scale_y_continuous(name = "Rate per 100 000 population per year",
                      labels = abs) +
 
-  scale_x_discrete("Age group (years)",
-                   labels=levels(agesex_agg_long$agegroup)) +
+  scale_x_discrete(name = "Age group (years)") +
+
   coord_flip() +
+
   facet_wrap( ~ entity, ncol = 4, scales = "free_x") +
   ggtitle(paste0("FIG.5.3\nEstimated TB incidence (black outline) and new and relapse TB case notification rates by age and sex\u1d43 (female in red; male \nin turquoise) in ",
                  report_year - 1,
@@ -522,7 +496,7 @@ agesex_plot <- arrangeGrob(agesex_plot, bottom = textGrob(agesex_foot, x = 0, hj
 
 # Save the plots
 figsavecairo(obj = agesex_plot,
-             data = agesex_agg_long,
+             data = agesex_to_plot,
              name = "f5_3_agesex")
 
 # Clean up (remove any objects with their name beginning with 'agesex')
