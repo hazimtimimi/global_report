@@ -556,11 +556,9 @@ kids_data$c_agesex_tot <- kids_data %>%
 kids_data$kids_pct <- ifelse(is.na(kids_data$c_new_014) | NZ(kids_data$c_agesex_tot) == 0, NA,
                              kids_data$c_new_014 * 100 / kids_data$c_agesex_tot)
 
-
-
 kids_data$cat <- cut(kids_data$kids_pct,
-                     c(0, 2.0, 5.0, 10.0, Inf),
-                     c('0-1.9', '2-4.9', '5-9.9', '\u226510'),
+                     c(0, 5.0, 10.0, 15.0, Inf),
+                     c('0-4.9', '5-9.9', '10-14.9', '\u226515'),
                      right=FALSE)
 
 # Find the countries with empty data for latest year and see if there are data for the previous year
@@ -1105,10 +1103,9 @@ hivstatus_data <- TBHIV_for_aggregates %>%
                   mutate(hivstatus_pct = ifelse(is.na(hivtest_pct_numerator) | NZ(hivtest_pct_denominator) == 0, NA,
                                                 hivtest_pct_numerator * 100 / hivtest_pct_denominator))
 
-
 hivstatus_data$cat <- cut(hivstatus_data$hivstatus_pct,
-                          c(0, 25, 50, 75, Inf),
-                          c('0-24', '25-49', '50-74', "\u226575"),
+                          c(0, 50, 76, 90, Inf),
+                          c('0-49', '50-75', '76-89', "\u226590"),
                           right=FALSE)
 
 
