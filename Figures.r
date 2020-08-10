@@ -3913,6 +3913,505 @@ rm(list=ls(pattern = "^adsm"))
 
 
 
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Figure Box 5.2.1 ------
+# Notifications of TB in children and adolescents globally, 2000 - report_year - 1
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# Get data
+child_data <- notification %>%
+  filter(year >= 2000) %>%
+  select(iso2,
+         year,
+         c_new_014,
+         new_sp_f04,
+         new_sp_f514,
+         new_sp_m04,
+         new_sp_m514,
+
+         new_sn_f04,
+         new_sn_f514,
+         new_sn_m04,
+         new_sn_m514,
+
+         new_ep_f04,
+         new_ep_f514,
+         new_ep_m04,
+         new_ep_m514,
+
+         newrel_f04,
+         newrel_f514,
+         newrel_f59,
+         newrel_f1014,
+         newrel_f1519,
+         newrel_m04,
+         newrel_m514,
+         newrel_m59,
+         newrel_m1014,
+         newrel_m1519) %>%
+
+  # Calculate global sums
+  group_by(year) %>%
+  summarise_at(vars(c_new_014:newrel_m1519),
+             sum,
+             na.rm = TRUE) %>%
+  ungroup() %>%
+
+  # Reduce to the variables we want (0-4, 5-14 and 0-14 with no sex disagg)
+  # Break into two time series from before and after the change in variables as
+  # Babis wants to show the difference
+  mutate(c_new_04_b4 = new_sp_f04 + new_sp_m04 +
+                        new_sn_f04 + new_sn_m04 +
+                        new_ep_f04 + new_ep_m04,
+         c_new_04_aft = newrel_f04 + newrel_m04,
+
+         c_new_514_b4 = new_sp_f514 + new_sp_m514 +
+                        new_sn_f514 + new_sn_m514 +
+                        new_ep_f514 + new_ep_m514,
+         c_new_514_aft = newrel_f514 + newrel_m514,
+
+         c_new_014_b4 = ifelse(year < 2013, c_new_014, NA),
+         c_new_014_aft = ifelse(year >= 2013, c_new_014, NA),
+
+         c_new_59 = newrel_f59 + newrel_m59,
+         c_new_1019 = newrel_f1014 + newrel_m1014 +
+                      newrel_f1519 + newrel_m1519) %>%
+
+      select(year,
+         c_new_04_b4,
+         c_new_04_aft,
+         c_new_514_b4,
+         c_new_514_aft,
+         c_new_014_b4,
+         c_new_014_aft,
+         c_new_59,
+         c_new_1019) %>%
+
+  # Turn zeros into NAs to keep the timeseries separate when plotted
+  mutate_all(function(i){ifelse(i==0, NA, i)})
+
+
+# Plot as lines
+child_plot <- child_data %>%
+
+  ggplot() +
+
+  geom_line(aes(x=year, y=c_new_014_b4),
+            size=1,
+            linetype="solid",
+            colour = "green") +
+
+  geom_line(aes(x=year, y=c_new_014_aft),
+            size=1,
+            linetype="solid",
+            colour = "green") +
+
+  annotate("text", x=2018, y=550e3, label="Ages 0-14", size=4, colour = "green") +
+
+  geom_line(aes(x=year, y=c_new_04_b4),
+            size=1,
+            linetype="dashed",
+            colour="blue") +
+
+  geom_line(aes(x=year, y=c_new_04_aft),
+            size=1,
+            linetype="solid",
+            colour="blue") +
+
+  annotate("text", x=2018, y=230e3, label="Ages 0-4", size=4, colour = "blue") +
+
+  geom_line(aes(x=year, y=c_new_514_b4),
+            size=1,
+            linetype="dashed",
+            colour="red") +
+
+  geom_line(aes(x=year, y=c_new_514_aft),
+            size=1,
+            linetype="solid",
+            colour="red") +
+
+  annotate("text", x=2018, y=350e3, label="Ages 5-14", size=4, colour = "red") +
+
+  geom_point(aes(x=year, y=c_new_59),
+             size=2,
+             colour="purple") +
+
+  annotate("text", x=2018, y=100e3, label="Ages 5-9", size=4, colour = "purple") +
+
+  geom_point(aes(x=year, y=c_new_1019),
+             size=2,
+             colour="orange") +
+
+  annotate("text", x=2018, y=425e3, label="Ages 10-19", size=4, colour = "orange") +
+
+  scale_x_continuous(name = "Year",
+                     breaks = c(2000, 2005, 2010, 2015, report_year-1)) +
+
+  scale_y_continuous(name = "Number of cases (thousands)",
+                     labels = function(i){round(i/1e3)}) +
+
+  ggtitle(paste0("FIG.B5.2.1\nNotifications of TB in children and adolescents globally, 2000-",
+               report_year-1)) +
+
+  theme_glb.rpt() +
+  theme(legend.position="top",
+        legend.title=element_blank())
+
+
+# Save the plot
+figsavecairo(obj = child_plot,
+             data = child_data,
+             name = "fB5_2_1_childhood_notifications",
+             width = 11,
+             height = 7)
+
+# Clean up (remove any objects with their name beginning with 'child_')
+rm(list=ls(pattern = "^child_"))
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Figure Box 5.2.2 ------
+# Proportion of cases notified with age and sex disaggregations globally, 2000 - report_year - 1
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# Get data
+disagg_data <- notification %>%
+  filter(year >= 2000) %>%
+  select(year,
+         c_newinc,
+         newrel_f014,
+         newrel_f15plus,
+         newrel_m014,
+         newrel_m15plus,
+
+         # and pre-2013 data
+         new_sp,
+         starts_with("new_sp_f"),
+         starts_with("new_sp_m"),
+
+         new_sn,
+         new_sn_f014,
+         new_sn_f15plus,
+         new_sn_m014,
+         new_sn_m15plus,
+
+         new_ep,
+         new_ep_f014,
+         new_ep_f15plus,
+         new_ep_m014,
+         new_ep_m15plus,
+) %>%
+
+  # Calculate global sums
+  group_by(year) %>%
+  summarise_at(vars(c_newinc:new_ep_m15plus),
+             sum,
+             na.rm = TRUE) %>%
+  ungroup()
+
+# Calculate totals of each type that were reported by age and sex
+disagg_data$newrel_agesex_tot <- disagg_data %>%
+  select(starts_with("newrel_")) %>%
+  sum_of_row()
+
+disagg_data$new_sp_agesex_tot <- disagg_data %>%
+  select(starts_with("new_sp_")) %>%
+  # remove 04 and 514 to avoid double-counting
+  select(-new_sp_f04, -new_sp_f514, -new_sp_m04, -new_sp_m514) %>%
+  sum_of_row()
+
+disagg_data$new_sn_agesex_tot <- disagg_data %>%
+  select(starts_with("new_sn_")) %>%
+  sum_of_row()
+
+disagg_data$new_ep_agesex_tot <- disagg_data %>%
+  select(starts_with("new_ep_")) %>%
+  sum_of_row()
+
+# Calculate proportions of each type that were reported by age and sex
+# The changeover year was 2013
+disagg_data <- disagg_data %>%
+  mutate(newrel_agesex_pct = ifelse(year >= 2013, newrel_agesex_tot * 100 / c_newinc, NA),
+         new_sp_agesex_pct = ifelse(year < 2013, new_sp_agesex_tot * 100 / new_sp, NA),
+         new_sn_agesex_pct = ifelse(year < 2013, new_sn_agesex_tot * 100 / new_sn, NA),
+         new_ep_agesex_pct = ifelse(year < 2013, new_ep_agesex_tot * 100 / new_ep, NA)
+         ) %>%
+
+  # filter out unwanted columns
+  select(year, ends_with("_pct"))
+
+
+# Plot as lines
+disagg_plot <-disagg_data %>%
+
+  ggplot() +
+
+  geom_line(aes(x=year, y=newrel_agesex_pct),
+            size=1,
+            linetype="solid",
+            colour = "blue") +
+
+  annotate("text", x=2017, y=90, label="New and replase", size=4, colour = "blue") +
+
+  geom_line(aes(x=year, y=new_sp_agesex_pct),
+            size=1,
+            linetype="solid",
+            colour="green") +
+
+  annotate("text", x=2005, y=90, label="New smear positive", size=4, colour = "green") +
+
+  geom_line(aes(x=year, y=new_sn_agesex_pct),
+            size=1,
+            linetype="dashed",
+            colour="red") +
+
+  annotate("text", x=2012, y=55, label="New smear negative", size=4, colour = "red") +
+
+  geom_line(aes(x=year, y=new_ep_agesex_pct),
+            size=1,
+            linetype="dashed",
+            colour="grey") +
+
+  annotate("text", x=2012, y=30, label="New extrapulmonary", size=4, colour = "grey") +
+
+  scale_x_continuous(name = "Year",
+                     breaks = c(2000, 2005, 2010, 2015, report_year-1)) +
+
+  scale_y_continuous(name = "Proportion (%)",
+                     labels = function(i){paste0(i, "%")}) +
+
+  ggtitle(paste0("FIG.B5.2.2\nProportion of cases notified with age and sex disaggregations globally, 2000-",
+               report_year-1)) +
+
+  theme_glb.rpt() +
+  theme(legend.position="top",
+        legend.title=element_blank())
+
+
+# Save the plot
+figsavecairo(obj = disagg_plot,
+             data = disagg_data,
+             name = "fB5_2_2_disagg_availability",
+             width = 11,
+             height = 7)
+
+# Clean up (remove any objects with their name beginning with 'disagg_')
+rm(list=ls(pattern = "^disagg_"))
+
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Figure Box 5.2.3a ------
+# New and relapse TB case notifications by age and sex for children and
+# adolescents in xx countries, report_year-1,
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# Get age/sex disaggregated data for countries able to report on
+# adolescent age groups
+ado_data <- notification %>%
+  filter(year == report_year - 1 & agegroup_option == 220) %>%
+  select(year,
+         newrel_f04,
+         newrel_f59,
+         newrel_f1014,
+         newrel_f1519,
+         newrel_m04,
+         newrel_m59,
+         newrel_m1014,
+         newrel_m1519,
+         c_newinc)
+
+ado_count <- nrow(ado_data)
+
+ado_data <- ado_data %>%
+  group_by(year) %>%
+  summarise_at(vars(newrel_f04:c_newinc),
+             sum,
+             na.rm = TRUE) %>%
+  ungroup() %>%
+
+  # calculate % of all notifications that were adolescents aged 10-19
+  # and % that were children aged 0-14
+  mutate(ado_pct = (newrel_f1014 + newrel_f1519 + newrel_m1014 + newrel_m1519) * 100/ c_newinc,
+         child_pct = (newrel_f04 + newrel_f59 + newrel_f1014 +
+                      newrel_m04 + newrel_m59 + newrel_m1014) * 100 / c_newinc)
+
+
+# create long format table to plot
+ado_data_to_plot <- ado_data %>%
+  #  dro unwanted columns
+  select(starts_with("newrel_")) %>%
+
+  pivot_longer(cols = 1:8,
+               names_to = c("sex", "age_group"),
+               names_pattern = "newrel_(.)(.*)",
+               values_to = "notified")
+
+
+ado_data_to_plot$age_group <- factor(ado_data_to_plot$age_group,
+                                   levels=c("04", "59", "1014", "1519"),
+                                   labels=c("0-4", "5-9", "10-14", "15-19"))
+
+ado_data_to_plot$sex <- factor(ado_data_to_plot$sex,
+                             levels = c("f", "m"),
+                             labels=c("Female", "Male"))
+
+
+# Create age/sex pyramid chart
+ado_plot <- ado_data_to_plot %>%
+
+  # Multiply all the female rates by -1
+  mutate(notified = ifelse(sex == "Female", notified * -1, notified )) %>%
+
+  ggplot() +
+
+  geom_bar(aes(x=age_group, y=notified, fill=sex),
+           stat="identity",
+           size=.3,
+           position="identity") +
+
+  scale_fill_manual(values=palette_agesex()) +
+
+  scale_y_continuous(name = "Number of cases notified",
+                     labels = function(i){rounder(abs(i))}) +
+
+  scale_x_discrete(name = "Age group (years)") +
+
+  coord_flip() +
+
+  ggtitle(paste0("FIG.B5.2.3a\nNew and relapse TB case notifications by age and sex for children and adolescents\n",
+                 "in ",
+                 ado_count,
+                 " countries\u1d43, ",
+                 report_year-1)) +
+
+  theme_glb.rpt() +
+  theme(legend.position="right",
+        legend.title=element_blank())
+
+# Add footnote
+ado_foot <- paste0("\u1d43 In these countries, children aged 0-14 accounted for ",
+                   round(ado_data$child_pct),
+                   "% of reported cases and adolescents aged 10-19 accounted for ",
+                      round(ado_data$ado_pct),
+                      "% of reported cases")
+
+ado_plot <- arrangeGrob(ado_plot, bottom = textGrob(ado_foot, x = 0, hjust = -0.1, vjust=0.1, gp = gpar(fontsize = 10)))
+
+# Save the plots
+figsavecairo(obj = ado_plot,
+             data = ado_data,
+             name = "fB5_2_3a_ado_pyramid")
+
+# Clean up (remove any objects with their name beginning with 'ado_')
+rm(list=ls(pattern = "^ado_"))
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Figure Box 5.2.3b ------
+# New and relapse TB case notification rates by age and sex for children and
+# adolescents in xx high TB burden countries, report_year-1,
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# Get age/sex disaggregated data for countries able to report on
+# adolescent age groups
+ado_data <- notification %>%
+  filter(year == report_year - 1 & agegroup_option == 220) %>%
+  select(iso2,
+         newrel_f04,
+         newrel_f59,
+         newrel_f1014,
+         newrel_f1519,
+         newrel_m04,
+         newrel_m59,
+         newrel_m1014,
+         newrel_m1519)
+
+# get list of high TB burden countries
+ado_30hbc <- country_group_membership %>%
+  filter(group_type == "g_hb_tb" & group_name == 1) %>%
+  select(iso2)
+
+# restrict ado_data to the HBCs
+ado_data <- ado_data %>%
+  inner_join(ado_30hbc, by = "iso2")
+
+# bodge this next bit to get 5-year population estimates from the database
+# This is not part of the usual datasets
+ado_sql <- paste("SELECT * FROM view_TME_estimates_population_5yr WHERE year =",
+                 report_year - 1)
+
+library(RODBC)
+ch <- odbcDriverConnect(connection_string)
+ado_pop <- sqlQuery(ch, ado_sql, stringsAsFactors = FALSE)
+close(ch)
+
+# Calculate notification rates for each age group
+ado_rate <- ado_data %>%
+  inner_join(ado_pop, by = "iso2") %>%
+  mutate(rate_04 = ifelse(e_pop_f04 + e_pop_m04 > 0,
+                          (newrel_f04 + newrel_m04) * 1e5 / (e_pop_f04 + e_pop_m04),
+                          NA),
+         rate_59 = ifelse(e_pop_f59 + e_pop_m59 > 0,
+                          (newrel_f59 + newrel_m59) * 1e5 / (e_pop_f59 + e_pop_m59),
+                          NA),
+         rate_1014 = ifelse(e_pop_f1014 + e_pop_m1014 > 0,
+                          (newrel_f1014 + newrel_m1014) * 1e5 / (e_pop_f1014 + e_pop_m1014),
+                          NA),
+         rate_1519 = ifelse(e_pop_f1519 + e_pop_m1519 > 0,
+                          (newrel_f1519 + newrel_m1519) * 1e5 / (e_pop_f1519 + e_pop_m1519),
+                          NA)) %>%
+
+  select(country, starts_with("rate_")) %>%
+
+  pivot_longer(cols = 2:5,
+               names_to = "age_group",
+               names_pattern = "rate_(.*)",
+               values_to = "rate")
+
+ado_rate$age_group <- factor(ado_rate$age_group,
+                             levels=c("04", "59", "1014", "1519"),
+                             labels=c("0-4", "5-9", "10-14", "15-19"))
+
+
+# use ggrepel to avoid overlapping text annotations
+library(ggrepel)
+
+# Plot as line chart spaghetti
+ado_plot <- ado_rate %>%
+
+  ggplot(aes(x=age_group, y=rate, group=country)) +
+
+  geom_line() +
+
+  # Add country name to end of each line
+  geom_text_repel(data = filter(ado_rate, age_group == "15-19"),
+                  aes(label = country),
+                  nudge_x = 0.2,
+                  colour = "green",
+                  hjust = "left") +
+
+  scale_y_continuous(name = "Cases per 100 000 population") +
+
+  ggtitle(paste0("FIG.B5.2.3b\nNew and relapse TB case notification rates by age and sex for children and adolescents in ",
+                 nrow(ado_data),
+                 " high TB burden countries, ",
+                 report_year-1)) +
+
+            theme_glb.rpt() +
+            theme(legend.position="top",
+                  legend.title=element_blank())
+
+
+# Save the plot
+figsavecairo(obj = ado_plot,
+             data = ado_data,
+             name = "fB5_2_3b_ado_rates")
+
+# Clean up (remove any objects with their name beginning with 'ado_')
+rm(list=ls(pattern = "^ado_"))
+
+
+
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Figure Box 5.3.1 ------
