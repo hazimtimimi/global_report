@@ -4340,10 +4340,8 @@ ado_data <- ado_data %>%
 ado_sql <- paste("SELECT * FROM view_TME_estimates_population_5yr WHERE year =",
                  report_year - 1)
 
-library(RODBC)
-ch <- odbcDriverConnect(connection_string)
-ado_pop <- sqlQuery(ch, ado_sql, stringsAsFactors = FALSE)
-close(ch)
+ado_pop <- estimates_population_5yr %>%
+  filter(year == report_year - 1)
 
 # Calculate notification rates for each age group
 ado_rate <- ado_data %>%

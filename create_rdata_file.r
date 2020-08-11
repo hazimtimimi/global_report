@@ -56,6 +56,7 @@ save (aggregated_estimates_agesex,
       estimates_drtb_rawvalues,
       estimates_ltbi,
       estimates_population,
+      estimates_population_5yr,
 
       finance,
       finance_cleaned,

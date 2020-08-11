@@ -76,6 +76,7 @@ estimates_drtb             <- .fixnamibia(sqlFetch(ch, "view_TME_estimates_drtb"
 estimates_drtb_rawvalues   <- .fixnamibia(sqlFetch(ch, "view_TME_estimates_drtb_rawvalues"))
 estimates_ltbi             <- .fixnamibia(sqlFetch(ch, "view_TME_estimates_ltbi"))
 estimates_population       <- .fixnamibia(sqlFetch(ch, "view_TME_estimates_population"))
+estimates_population_5yr   <- .fixnamibia(sqlFetch(ch, "view_TME_estimates_population_5yr"))
 
 finance                    <- .fixnamibia(sqlFetch(ch, "view_TME_master_finance"))
 finance_cleaned            <- .fixnamibia(sqlFetch(ch, "view_TME_master_finance_cleaned"))
