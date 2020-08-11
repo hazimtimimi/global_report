@@ -556,7 +556,7 @@ plot_tpt <- prevtx_cf_global %>%
 
   # display y-axis scale im millions
   scale_y_continuous(name = "Millions", labels = function(i){round(i/1e6)},
-                     limits = c(0,3e6)) +
+                     limits = c(0,4.5e6)) +
 
   #ggtitle(label = "Provision of TB Preventive Treatment") +
 
