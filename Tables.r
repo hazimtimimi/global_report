@@ -419,7 +419,7 @@ print(rdxpolicy_table_html,
                                   <td>Percentage of notified rifampicin-resistant TB cases with DST results for fluoroquinolones</td>
                                   <td>National policy and algorithm indicate the use of lateral flow urine lipoarabinomannan assay (LF-LAM) to assist in the detection of TB in people living with HIV</td>
                               </tr>",
-                              "<tr><td colspan='10'>Blank cells indicate data not reported. - Indicates value that cannot be calculated. WRD, WHO-recommended rapid diagnostic. DST, drug susceptibility testing.<br /><sup>a</sup>The 48 countries shown in the table are the countries that are in one or more of the three lists of high TB, TB/HIV and MDR-TB burden countries (see also Chapter 2, Figure 2.5 and Table 2.4).<br /><sup>b</sup>Testing in cases with unknown previous treatment history is not included. The percentage may exceed 100% for several reasons, e.g. samples rather than cases are counted in the numerator; laboratory specimen results are not linked to the denominator data source when enumerated; or there is incomplete reporting of bacteriologically confirmed cases in the denominator. Bacteriologically confirmed extrapulmonary cases are not included in the denominator because they cannot be differentiated from clinically diagnosed ones in the way data are reported to WHO.</td>
+                              "<tr><td colspan='10'>Blank cells indicate data not reported. - Indicates value that cannot be calculated. WRD, WHO-recommended rapid diagnostic. DST, drug susceptibility testing.<br /><sup>a</sup>The 48 countries shown in the table are the countries that are in one or more of the three lists of high TB, TB/HIV and MDR-TB burden countries (see Annex 2).<br /><sup>b</sup>Testing in cases with unknown previous treatment history is not included. The percentage may exceed 100% for several reasons, e.g. samples rather than cases are counted in the numerator; laboratory specimen results are not linked to the denominator data source when enumerated; or there is incomplete reporting of bacteriologically confirmed cases in the denominator. Bacteriologically confirmed extrapulmonary cases are not included in the denominator because they cannot be differentiated from clinically diagnosed ones in the way data are reported to WHO.</td>
                               </tr>")
                       )
       )
@@ -427,7 +427,7 @@ print(rdxpolicy_table_html,
 
 # Export the aggregate stats for Wayne to use
 write.csv(rdxpolicy_aggs,
-          file=paste0(figures_folder, "/Tables/t4_3_lab_policy_aggregates_", Sys.Date(), ".csv"),
+          file=paste0(figures_folder, "/Tables/t5_3_lab_policy_aggregates_", Sys.Date(), ".csv"),
           row.names=FALSE,
           na="")
 
@@ -532,10 +532,10 @@ print(labquality_table_html,
                                   <td>Phenotypic DST for first-line drugs only</td>
                                   <td>Phenotypic DST for first-line and second-line drugs</td>
                                   <td>LPA for rifampicin and isoniazid only</td>
-                                  <td>LPA for rifampicin, isoniazid, fluroguinolones and second-line injectables</td>
+                                  <td>LPA for rifampicin, isoniazid, fluroquinolones and second-line injectables</td>
                               </tr>",
                               "<tr><td colspan='8'>Blank cells indicate data not reported. - Indicates value that cannot be calculated. DST, drug susceptibility testing. EQA, external quality assurance. LPA, line probe assay.<br />
-                              <sup>a</sup>The 48 countries shown in the table are the countries that are in one or more of the three lists of high TB, TB/HIV and MDR-TB burden countries (see also Chapter 2, Figure 2.5 and Table 2.4).</td>
+                              <sup>a</sup>The 48 countries shown in the table are the countries that are in one or more of the three lists of high TB, TB/HIV and MDR-TB burden countries (see Annex 2).</td>
                               </tr>")
                       )
       )
