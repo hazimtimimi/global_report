@@ -650,18 +650,19 @@ prev_tx_table_data <- prev_tx_hb_data %>%
                                                     e_prevtx_kids_pct_lo,
                                                     e_prevtx_kids_pct_hi)) %>%
 
-  # format and round numbers,add call out for Russian footnote and for data comes from survey(CAR in 2018)
+  # format and round numbers,add call out for Russian footnote
   mutate(hiv_ipt = rounder(hiv_ipt),
          hiv_reg_new = rounder(hiv_reg_new),
          hiv_ipt_reg_all = rounder(hiv_ipt_reg_all),
          newinc_con04_tpt = rounder(newinc_con04_tpt),
-         newinc_con04_tpt = ifelse(!is.na(ptsurvey_newinc_con04_prevtx),
-                                   paste0(ptsurvey_newinc_con04_prevtx, " d"),
-                                   newinc_con04_tpt),
          e_prevtx_eligible = display_num(e_prevtx_eligible),
          e_prevtx_kids_pct = display_num(e_prevtx_kids_pct),
-         entity = recode(entity, "Russian Federation"= "Russian Federation d")) %>%
+         entity = recode(entity, "Russian Federation"= "Russian Federation c")) %>%
 
+  # Add call out for data that come from a review of records
+  mutate(newinc_con04_tpt = ifelse(!is.na(ptsurvey_newinc_con04_prevtx),
+                                   paste0(rounder(ptsurvey_newinc_con04_prevtx), " d"),
+                                   newinc_con04_tpt)) %>%
 
   # drop the separate *_lo and *_hi variables
   select(entity,
@@ -676,12 +677,16 @@ prev_tx_table_data <- prev_tx_hb_data %>%
          e_prevtx_kids_pct_lohi)
 
 
+# Calculate the number of countries with data from a review of records that shoul have
+# footnote
 
+prev_tx_review <- prev_tx_table_data$newinc_con04_tpt %>%
+  str_subset(pattern = "d$", negate = FALSE) %>% nrow()
 
 
 # Remove the coverage calculations for the excluded countries
 prev_tx_table_data <- prev_tx_table_data %>%
-  mutate(#For contries got a coverage greater than 100%, show it as >100 and delete the interval
+  mutate(#For contries with coverage greater than 100%, show it as >100 and delete the interval
          e_prevtx_kids_pct_lohi=replace(e_prevtx_kids_pct_lohi,(e_prevtx_kids_pct == 100),NA),
          e_prevtx_kids_pct=replace(e_prevtx_kids_pct,(e_prevtx_kids_pct == 100),">100"))
 #Zimbabwe only reported half year's data for 2017, remove the whole row of it after discussed with Annabel;should add back since 2018
@@ -728,9 +733,12 @@ print(prev_tx_table_html,
                                 <td>Best estimate</td>
                                 <td>Uncertainty interval</td>
                                 </tr>",
-                                paste("<tr><td colspan='10'>Blank cells indicate data not reported.<br />","<sup>a</sup> Estimates are shown to three significant figures.<br />","<sup>b</sup> Reasons for a higher than expected coverage might be that the numerator reported did not fully meet WHO's definition, e.g. it included non-household contacts, household contacts of clinically diagnosed TB cases or children five years or older.<br />",
-                                      "<sup>c</sup> Data reported are from a survey of random sample of medical records or treatment cards of TB patients.<br />",
-                                      "<sup>d</sup> For the Russian Federation, data reported for the numerator and the denominator for the indicator &quot;people living with HIV newly enrolled in care started on TB preventive treatment&quot; are based on subnational data.<br />",
+                                paste("<tr><td colspan='10'>Blank cells indicate data not reported.<br />","<sup>a</sup> Estimates are shown to three significant figures.<br />",
+                                      "<sup>b</sup> Reasons for a higher than expected coverage might be that the numerator reported did not fully meet WHO's definition, e.g. it included non-household contacts, household contacts of clinically diagnosed TB cases or children five years or older.<br />",
+                                      "<sup>c</sup> For the Russian Federation, data reported for the numerator and the denominator for the indicator &quot;people living with HIV newly enrolled in care started on TB preventive treatment&quot; are based on subnational data.<br />",
+                                      ifelse(!is.null(prev_tx_review) & prev_tx_review > 0,
+                                             "<sup>d</sup> Data reported are from a review of a random sample of medical records or treatment cards of TB patients.<br />",
+                                             ""),
                                       "</td>
                                       </tr>"))
                                 )
