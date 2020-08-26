@@ -4070,7 +4070,8 @@ rm(list=ls(pattern = "^child_"))
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Figure Box 5.3.2 ------
-# Proportion of cases notified with age and sex disaggregations globally, 2000 - report_year - 1
+# Availability of national TB notification data disaggregated by age group,
+# including the category 0-14 years, 2000 - report_year - 1
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # Get data
@@ -4150,7 +4151,7 @@ disagg_plot <-disagg_data %>%
             linetype="solid",
             colour = "blue") +
 
-  annotate("text", x=2017, y=90, label="New and replase", size=4, colour = "blue") +
+  annotate("text", x=2017, y=90, label="New and relapse", size=4, colour = "blue") +
 
   geom_line(aes(x=year, y=new_sp_agesex_pct),
             size=1,
@@ -4176,10 +4177,10 @@ disagg_plot <-disagg_data %>%
   scale_x_continuous(name = "Year",
                      breaks = c(2000, 2005, 2010, 2015, report_year-1)) +
 
-  scale_y_continuous(name = "Proportion (%)",
+  scale_y_continuous(name = "Percentage of global notifications reported to WHO",
                      labels = function(i){paste0(i, "%")}) +
 
-  ggtitle(paste0("FIG.B5.3.2\nProportion of cases notified with age and sex disaggregations globally, 2000-",
+  ggtitle(paste0("FIG.B5.3.2\nAvailability of national TB notification data disaggregated by age group, including the category 0-14 years, 2000-",
                report_year-1)) +
 
   theme_glb.rpt() +
