@@ -4671,8 +4671,8 @@ rm(list=ls(pattern = "^commureport"))
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 6.1a ---------
-# Provision of TB preventive treatment to people enrolled in HIV care, 2005–report_year-1
+# Figure 6.3a ---------
+# Provision of TB preventive treatment to people enrolled on HIV treatment, 2005–report_year-1
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 ipt_data <- notification %>%
@@ -4741,7 +4741,7 @@ ipt_plot <- ipt_data %>%
 
     facet_wrap( ~ entity, ncol = 4) +
 
-    ggtitle(paste0("FIG.6.1a\nProvision of TB preventive treatment to people enrolled in HIV care\u1d43 , 2005\u2013",
+    ggtitle(paste0("FIG.6.3a\nProvision of TB preventive treatment to people enrolled on HIV treatment\u1d43 ,\n 2005\u2013",
                   report_year-1))+
 
     theme_glb.rpt() +
@@ -4749,8 +4749,8 @@ ipt_plot <- ipt_data %>%
           legend.title=element_blank())
 
 # Add footnote about including for all PLHIV on treatment;
-ipt_foot <- paste("\u1d43 Prior to 2017, data were collected for PLHIV newly enrolled in HIV care (dotted lines).\n",
-                  " Since 2017, data were also collected for PLHIV currently enrolled in HIV care (solid lines).")
+ipt_foot <- paste("\u1d43 Prior to 2017, data were collected for people newly enrolled on HIV treatment (dotted lines).\n",
+                  " Since 2017, data were also collected for people currently enrolled on HIV treatment (solid lines).")
 
 ipt_plot <- arrangeGrob(ipt_plot,
                         bottom = textGrob(ipt_foot,
@@ -4762,7 +4762,7 @@ ipt_plot <- arrangeGrob(ipt_plot,
 # Save the plot
 figsavecairo(obj = ipt_plot,
              data = ipt_data,
-             name = "f6_1a_tpt_plhiv_aggregates",
+             name = "f6_3a_tpt_plhiv_aggregates",
              width = 7,
              height = 5)
 
@@ -4771,8 +4771,8 @@ rm(list=ls(pattern = "^ipt"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 6.1b ---------
-# The top 5 countries providing TB preventive treatment to people enrolled in HIV care, report_year-1
+# Figure 6.3b ---------
+# The top 5 countries providing TB preventive treatment to people enrolled on HIV treatment, report_year-1
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 tpthiv_data <- notification %>%
@@ -4822,13 +4822,13 @@ tpthiv_chart <- tpthiv_data %>%
   geom_bar(stat = "identity", fill = "blue") +
 
   # display y-axis scale im thousands
-  scale_y_continuous(name = "Number of PLHIV provided with TPT (% of global total)",
+  scale_y_continuous(name = "Number provided with TB preventive treatment (% of global total)",
                      labels = function(x) {paste0(rounder(x), "%")}) +
 
   coord_flip() +
 
-  ggtitle(paste0("FIG.6.1b\n",
-                       "The top 5 countries providing TB preventive treatment to people enrolled in HIV care, ",
+  ggtitle(paste0("FIG.6.3b\n",
+                       "The top 5 countries providing TB preventive treatment to people enrolled on HIV treatment, ",
                        report_year - 1)) +
 
   theme_glb.rpt()
@@ -4837,7 +4837,7 @@ figsavecairo(obj = tpthiv_chart,
              data = select(tpthiv_data,
                     entity,
                     proportion),
-             name = "f6_1b_top5_tpt_plhiv")
+             name = "f6_3b_top5_tpt_plhiv")
 
 # Clean up (remove any objects with their name starting 'tpthiv')
 rm(list=ls(pattern = "^tpthiv"))
@@ -4845,9 +4845,9 @@ rm(list=ls(pattern = "^tpthiv"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 6.2   ------
+# Figure 6.4   ------
 # Gaps in TB prevention and TB detection for people
-# who were newly enrolled in HIV care in report_year-1, selected countries
+# who were newly enrolled on HIV treatment in report_year-1, selected high TB or TB/HIV burden countries
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
@@ -4926,12 +4926,16 @@ ipt_gap_plot <- ipt_gap_long %>%
         plot.margin = margin(2, 10, 80, 10),
         panel.grid=element_blank()) +
 
-  ggtitle(paste0("FIG.6.2\nGaps in TB prevention and TB detection for people who were newly enrolled in HIV care in ",
+  ggtitle(paste0("FIG.6.4\nGaps in TB prevention and TB detection for people who were newly enrolled on HIV treatment in ",
                  report_year - 1,
-                 ",selected countries\u1d43 "))
+                 ",\nselected high TB or TB/HIV burden countries\u1d43 "))
 
 # Add explanatory footnotes
-ipt_gap_footnote <- "\u1d43 The selected countries are high TB or TB/HIV burden countries that reported on all three of the following: the number of people newly enrolled on HIV care; the number of \n      TB cases detected among people newly enrolled on HIV care; and the number of people newly enrolled on HIV care who were started on TB preventive treatment. In high \n      TB burden countries, testing for LTBI is not a requirement for initiation of TB preventive treatment, such that all those without active TB disease are eligible for TB preventive \n                              treatment.\n     \u1d47  The gap represents people living with HIV who should have undergone complete evaluation for TB disease or TB preventive treatment."
+ipt_gap_footnote <- paste0("\u1d43 The selected countries are high TB or TB/HIV burden countries that reported on all three of the following: the number of people newly enrolled on HIV treatment; the number of",
+                          "\n TB cases detected among people newly enrolled on HIV treatment; and the number of people newly enrolled on HIV treatment who were started on TB preventive treatment. In high",
+                          "\n TB burden countries, testing for TB infection is not a requirement for initiation of TB preventive treatment, such that all those without active TB disease are eligible for",
+                          "\n     TB preventive treatment.",
+                          "\n \u1d47  The gap represents people living with HIV who should have undergone complete evaluation for TB disease or TB preventive treatment.")
 ipt_gap_plot <- arrangeGrob(ipt_gap_plot,
                             bottom = textGrob(ipt_gap_footnote,
                                               x = 0,
@@ -4941,7 +4945,7 @@ ipt_gap_plot <- arrangeGrob(ipt_gap_plot,
 
 figsavecairo(obj = ipt_gap_plot,
              data = ipt_gap_country,
-             name = "f6_2_gaps_for_ipt_in_new_hiv_patients",
+             name = "f6_4_gaps_for_ipt_in_new_hiv_patients",
              width = 11,
              height = 7) # Designer needs wide data; output portrait mode
 
@@ -4950,8 +4954,8 @@ rm(list=ls(pattern = "^ipt_gap"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 6.3 (Map) -------
-# Coverage of TB preventive treatment among people newly enrolled in HIV care, report_year-1
+# Figure 6.5 (Map) -------
+# Coverage of TB preventive treatment among people newly enrolled on HIV treatment, report_year-1
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 tpthiv_data <- notification %>%
@@ -4974,7 +4978,7 @@ tpthiv_data$cat <- cut(tpthiv_data$coverage,
 
 # produce the map
 tpthiv_map <- WHOmap.print(tpthiv_data,
-                            paste("FIG.6.3\nCoverage of TB preventive treatment among people newly enrolled in HIV care, ",
+                            paste("FIG.6.5\nCoverage of TB preventive treatment among people newly enrolled on HIV treatment, ",
                                   report_year-1),
                             legend.title = "Coverage (%)",
                             copyright=FALSE,
@@ -4989,7 +4993,7 @@ figsavecairo(obj = tpthiv_map,
                     country,
                     coverage,
                     cat),
-             name = "f6_3_tpt_plhiv_coverage_map")
+             name = "f6_5_tpt_plhiv_coverage_map")
 
 
 # Clean up (remove any objects with their name beginning with 'tpthiv')
@@ -4998,7 +5002,7 @@ rm(list=ls(pattern = "^tpthiv"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 6.4 (Map) -------
+# Figure 6.6 (Map) -------
 # Coverage of TB preventive treatment among eligible children aged under 5 years, report_year-1
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -5019,7 +5023,7 @@ prevtx_kids_data$cat <- cut(prevtx_kids_data$e_prevtx_kids_pct,
 
 # produce the map
 prevtx_kids_map <- WHOmap.print(prevtx_kids_data,
-                                paste("FIG.6.4\nCoverage of TB preventive treatment among eligible children aged under 5 years\u1d43,",
+                                paste("FIG.6.6\nCoverage of TB preventive treatment among eligible children aged under 5 years\u1d43,",
                                       report_year-1),
                                 legend.title = "Coverage (%)",
                                 copyright=FALSE,
@@ -5039,16 +5043,16 @@ prevtx_kids_map <- arrangeGrob(prevtx_kids_map, bottom = textGrob(prevtx_kids_fo
 
 figsavecairo(obj = prevtx_kids_map,
              data = prevtx_kids_data,
-             name = "f6_4_prevtx_kids_map")
+             name = "f6_6_prevtx_kids_map")
 
 # Clean up (remove any objects with their name beginning with 'prevtx_kids')
 rm(list=ls(pattern = "^prevtx_kids"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 6.6 (Map) ---------
+# Figure 6.8 (Map) ---------
 # Percentage of household contacts of bacteriologically-confirmed pulmonary new and relapse TB cases
-# evaluated for active TB and latent TB, report_year - 1
+# evaluated for active TB and TB infection, report_year - 1
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 housecon_data <- strategy %>%
@@ -5080,8 +5084,8 @@ housecon_data$cat <- cut(housecon_data$screened_pct,
 
 # produce the map
 screened_map <- WHOmap.print(housecon_data,
-                                paste("FIG.6.6\nPercentage of household contacts of bacteriologically-confirmed pulmonary new and relapse TB cases",
-                                      "\nevaluated for active TB and latent TB,",
+                                paste("FIG.6.8\nPercentage of household contacts of bacteriologically-confirmed pulmonary new and relapse TB cases",
+                                      "\nevaluated for active TB and TB infection,",
                                       report_year-1),
                                 legend.title = "Percentage (%)",
                                 copyright=FALSE,
@@ -5092,14 +5096,14 @@ screened_map <- WHOmap.print(housecon_data,
 
 figsavecairo(obj = screened_map,
              data = housecon_data,
-             name = "f6_6_contact_screening")
+             name = "f6_8_contact_screening")
 
 # Clean up (remove any objects with their name beginning with 'housecon')
 rm(list=ls(pattern = "^housecon"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 6.7 (Map) ---------
+# Figure 6.9 (Map) ---------
 # Notification rate ratio of TB among healthcare workers compared with the adult population, report_year-1
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -5164,7 +5168,7 @@ hcw_data$cat <- cut(hcw_data$nrr,
 
 # produce the map
 hcw_map <- WHOmap.print(hcw_data,
-                        paste("FIG.6.7\nNotification rate ratio of TB among healthcare workers compared with the adult population,", report_year-1,"\u1d43"),
+                        paste("FIG.6.9\nNotification rate ratio of TB among healthcare workers compared with the adult population,", report_year-1,"\u1d43"),
                         "Notification\nrate ratio",
                         copyright=FALSE,
                         colors=brewer.pal(4, "Reds"),
@@ -5182,14 +5186,14 @@ hcw_map <- arrangeGrob(hcw_map, bottom = textGrob(hcw_foot, x = 0, hjust = -0.1,
 
 figsavecairo(obj = hcw_map,
              data = hcw_data,
-             name = "f6_7_hcw_notf_rate_ratio")
+             name = "f6_9_hcw_notf_rate_ratio")
 
 # Clean up (remove any objects with their name beginning with 'hcw')
 rm(list=ls(pattern = "^hcw"))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Figure 6.8 (Map) ---------
+# Figure 6.10 (Map) ---------
 # BCG vaccination practices by country
 # Get data from BCG Atlas people
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -5208,7 +5212,7 @@ bcg_policy_data$cat <- factor(bcg_policy_data$var,
                                            "BCG for special groups"))
 
 bcg_policy_map <- WHOmap.print(bcg_policy_data,
-                               "FIG.6.8\nBCG vaccination practices by country",
+                               "FIG.6.10\nBCG vaccination practices by country",
                                "Practices",
                                copyright=FALSE,
                                colors=c("darkgreen", "lightgreen"),
@@ -5227,7 +5231,7 @@ bcg_policy_map <- arrangeGrob(bcg_policy_map,
 figsavecairo(bcg_policy_map,
         bcg_policy_data,
         bcg_policy_foot,
-        "f6_8_BCG_policy_map")
+        "f6_10_BCG_policy_map")
 
 # Clean up (remove any objects with their name beginning with 'bcg_policy')
 rm(list=ls(pattern = "^bcg_policy"))
