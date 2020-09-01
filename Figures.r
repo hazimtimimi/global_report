@@ -2026,12 +2026,8 @@ inc_plot <- inc_data %>%
                   legend.title=element_blank(),
                   strip.text.x = element_text(size=8))  #reduce font size of labels above each panel
 
-# Add India and other countries footnotes
-
-pending_incidence_footnote<- "Estimates of TB incidence for Lesotho, Mozambique and South Africa will be reviewed after final results from their \nrespective national TB prevalence surveys are available in 2020."
-
-inc_foot <- paste("\u1d43 ",
-                  india_incidence_footnote,"\n\u1d47 ",pending_incidence_footnote)
+# Add footnotes
+inc_foot <- paste("\u1d43 ", india_incidence_footnote)
 
 inc_plot <- arrangeGrob(inc_plot,
                         bottom = textGrob(inc_foot,
@@ -2082,10 +2078,7 @@ coverage_inc_country <- coverage_inc_country %>%
 
 if (nrow(coverage_inc_country) > 0) {
 coverage_inc_country <- coverage_inc_country %>%
-   mutate(entity = recode(entity, "India"="India\u1d47 ",
-                         "Mozambique"="Mozambique\u1d43 ",
-                         "South Africa"="South Africa\u1d43 ",
-                         "Lesotho"="Lesotho\u1d43 "))
+   mutate(entity = recode(entity, "India"="India\u1d43 "))
 }
 
 coverage_country <- notification %>%
@@ -2163,11 +2156,7 @@ coverage_plot <- coverage_data %>%
   coord_flip()
 
 # Add footnotes
-coverage_pending_incidence_footnote <- "Estimates of TB incidence for Lesotho, Mozambique and South Africa will be reviewed after final \nresults from their respective national TB prevalence surveys are available in 2020."
-
-
-coverage_footnote <- paste("\u1d43 ",
-                           coverage_pending_incidence_footnote,"\n\u1d47 ",india_incidence_footnote)
+coverage_footnote <- paste("\u1d43 ", india_incidence_footnote)
 # If there are countries with no data then mention it in the footnotes
 if (coverage_nodata_count > 0)
 {
@@ -2241,10 +2230,9 @@ gap_ten_countries_name_by_rank <- gap_data  %>%
   arrange(desc(bubble_size))   %>%
   select(country)
 
-gap_India_SF_foot <- "Estimates of TB incidence for India are interim, pending results from the national TB prevalence survey planned for 2019/2020. Estimate of \nTB incidence for South Africa will be reviewed after final resultS from its national TB prevalence survey is available in 2020."
 
 gap_foot <- paste0("\u1d43 The ten countries ranked in order of the size of the gap between notified cases and the best estimates of TB incidence in ",report_year-1," are \n",
-                   sapply(gap_ten_countries_name_by_rank,paste, collapse=", "),".","\n",gap_India_SF_foot)
+                   sapply(gap_ten_countries_name_by_rank,paste, collapse=", "),".","\n", india_incidence_footnote)
 
 gap_map <- arrangeGrob(gap_map,
                        bottom = textGrob(gap_foot,
@@ -2319,11 +2307,7 @@ inctbhiv_data <- estimates_epi_rawvalues %>%
                   # change to shortened country names
                   get_names_for_tables()%>%
                   #add markers for India and other countries with pending survey resluts footnote
-                  mutate(country = recode(country, "Eswatini"="Eswatini\u1d47 ",
-                                                   "South Africa"="South Africa\u1d47 ",
-                                                   "Lesotho"="Lesotho\u1d47 ",
-                                                   "Mozambique"="Mozambique\u1d47 ",
-                                                   "India"="India\u1d9c "))
+                  mutate(country = recode(country, "India"="India\u1d47 "))
 
 # Plot as lines
 inctbhiv_plot <- inctbhiv_data %>%
@@ -2358,13 +2342,9 @@ inctbhiv_plot <- inctbhiv_data %>%
 
 # Add footnote
 inctbhiv_foot <- "\u1d43 The calculation is for all cases in years prior to 2015."
-pending_incidence_footnote <- " Estimates of TB incidence for Eswatini, Lesotho, Mozambique and South Africa will be reviewed after final \nresults from their respective national TB prevalence surveys are available in 2020."
-india_incidence_footnote <- " Estimates of TB incidence for India are interim, pending results from the national TB prevalence survey planned for 2019/2020."
 
 inctbhiv_foot <- paste(inctbhiv_foot,
                        "\n\u1d47",
-                       pending_incidence_footnote,
-                       "\n\u1d9c",
                        india_incidence_footnote)
 
 inctbhiv_plot <- arrangeGrob(inctbhiv_plot, bottom = textGrob(inctbhiv_foot,

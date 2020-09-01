@@ -102,10 +102,8 @@ who_region_names <- get_region_names()
 
 
 # Repeated footnotes -----
-india_incidence_footnote <- "Estimates of TB incidence for India are interim, pending results from the national TB prevalence survey planned for 2019/2020."
-india_mortality_footnote <- "Estimates of TB mortality for India are interim, pending results from the national TB prevalence survey planned for 2019/2020."
-pending_incidence_footnote <- "Estimates of TB incidence for Eswatini, Lesotho, Mozambique, Nepal, and South Africa will be reviewed after final \nresults from their respective national TB prevalence surveys are available in 2020."
-pending_mortality_footnote <- "Estimates of TB mortality for Eswatini, Lesotho, Mozambique, Nepal, and South Africa will be reviewed after final \nresults from their respective national TB prevalence surveys are available in 2020."
+india_incidence_footnote <- "Estimates of TB incidence for India are interim, pending results from the national TB prevalence survey (2020/2021)."
+india_mortality_footnote <- "Estimates of TB mortality for India are interim, pending results from the national TB prevalence survey (2020/2021)."
 
 # Create a folder structure for output files ----
 # (only if they don't exist yet)
