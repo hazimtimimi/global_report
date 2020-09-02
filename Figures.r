@@ -4289,7 +4289,7 @@ rm(list=ls(pattern = "^ado_"))
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Figure Box 5.3.3b ------
-# New and relapse TB case notification rates by age and sex for children and
+# New and relapse TB case notification rates by age group for children and
 # adolescents in xx high TB burden countries, report_year-1,
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -4371,7 +4371,7 @@ ado_plot <- ado_rate %>%
 
   scale_y_continuous(name = "Cases per 100 000 population") +
 
-  ggtitle(paste0("FIG.B5.3.3b\nNew and relapse TB case notification rates by age and sex for children and adolescents in ",
+  ggtitle(paste0("FIG.B5.3.3b\nNew and relapse TB case notification rates by age group for children and adolescents in ",
                  nrow(ado_data),
                  " high TB burden countries, ",
                  report_year-1)) +
@@ -4383,7 +4383,7 @@ ado_plot <- ado_rate %>%
 
 # Save the plot
 figsavecairo(obj = ado_plot,
-             data = ado_data,
+             data = ado_rate,
              name = "f5_box_5_3_3b_ado_rates")
 
 # Clean up (remove any objects with their name beginning with 'ado_')
