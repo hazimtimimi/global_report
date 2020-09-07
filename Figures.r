@@ -2220,9 +2220,9 @@ gap_map <- who_bubble_map(gap_data,
                                  report_year - 1,"\u1d43 "),
                           bubble_colour = "purple",
                           background = "white",
-                          scale_breaks = c(70000,500000,1000000),
-                          scale_limits = c(70000,1100000),
-                          scale_labels = c("70 000","500 000","1 000 000"),
+                          scale_breaks = c(6e4,5e5,1e6),
+                          scale_limits = c(6e4,1e6),
+                          scale_labels = c("60 000","500 000","1 000 000"),
                           bubble_label_show_number = 10)
 
 # Generate names for footnote
