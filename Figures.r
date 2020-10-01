@@ -4497,6 +4497,80 @@ figsavecairo(obj = ppm_plot,
 rm(list=ls(pattern = "^ppm_"))
 
 
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Figure Box 5.2.1 (experimental) ------
+# Contribution of public–private and public-public mix to TB case notifications
+# in seven PPM priority countries, 2012–report-year-1
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+
+# Get PPM data
+ppm_data <- strategy %>%
+            select(iso2, year, country, pub_new_dx, priv_new_dx) %>%
+            filter(year >= 2012 & iso2 %in%
+                     c('BD', 'IN', 'ID', 'MM', 'NG', 'PK', 'PH'))
+
+# Merge with notifications
+ppm_data <- notification %>%
+            select(iso2, year, c_notified) %>%
+            inner_join(ppm_data)
+
+# Calculate percent contributions
+ppm_data <- ppm_data %>%
+            mutate(public_pcnt = ifelse(!is.na(pub_new_dx) & c_notified > 0,
+                                        pub_new_dx * 100 / c_notified,
+                                        NA),
+                   private_pcnt = ifelse(!is.na(priv_new_dx) & c_notified > 0,
+                                        priv_new_dx * 100 / c_notified,
+                                        NA))
+
+# Plot as lines
+ppm_plot <- ppm_data %>%
+
+  ggplot() +
+
+  geom_line(aes(x=year, y=public_pcnt),
+            size=1,
+            linetype="solid",
+            colour = "green") +
+
+  geom_line(aes(x=year, y=private_pcnt),
+            size=1,
+            linetype="solid",
+            colour = "blue") +
+
+  facet_wrap(~ country, ncol = 4, scales = "free_y") +
+
+  scale_x_continuous(name="Year",
+                     breaks = seq(2012, report_year, by = 2 )) +
+
+  scale_y_continuous(name = "Contribution to total notifications (%)") +
+
+  ggtitle(paste0("FIG.B5.2.1\nContribution of public–private (blue) and public-public (green) mix to TB case notifications\nin seven PPM priority countries, 2012-",
+                 report_year-1)) +
+
+  theme_glb.rpt() +
+  theme(legend.position="top",
+        legend.title=element_blank(),
+        axis.text.x = element_text(size=5))
+
+# Save the plot
+figsavecairo(obj = ppm_plot,
+             data = select(ppm_data,
+                           country,
+                           year,
+                           private_pcnt,
+                           public_pcnt),
+             name = "f5_box_5_2_1_ppm_experimental")
+
+# Clean up (remove any objects with their name beginning 'ppm_')
+rm(list=ls(pattern = "^ppm_"))
+
+
+
+
+
+
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Figure Box 5.5.1  (Map) ------
