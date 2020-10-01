@@ -22,7 +22,7 @@ rm(list=ls())
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # Establish the report year
-report_year <- 2019
+report_year <- 2020
 
 # The following are convenience variables since notification and most other data sets will run up to the
 # year before the reporting year and outcomes will run up to two years before the reporting year
@@ -779,21 +779,31 @@ outcome_country <-  outcomes %>%
                            rel_with_new_flg,
                            newrel_coh, newrel_succ,
                            ret_nrel_coh, ret_nrel_succ,
+                           newrel_014_coh, newrel_014_succ,
                            tbhiv_coh, tbhiv_succ)
 
 
-# B. Combine with MDR and XDR cohorts one year older than standard
+# B. Combine with MDR cohorts one year older than standard
 outcome_dr_country <-  outcomes %>%
                       filter(year == (outcome_maxyear - 1)) %>%
                       select(country,
-                             mdr_coh, mdr_succ,
-                             xdr_coh, xdr_succ)
+                             mdr_coh, mdr_succ)
 
 outcome_country <-  outcome_dr_country %>%
                     inner_join(outcome_country, by = "country") %>%
                     rename(entity = country ) %>%
                     arrange(entity)
 
+# Late tweak for 2020 report -- create a version of the old annex 4
+# table but just for the 48 countries in one of the high burden country lists
+
+outcome_hbc <-  country_group_membership %>%
+                        filter(  (group_type %in% c("g_hb_tb", "g_hb_tbhiv","g_hb_mdr")) &
+                               group_name == 1) %>%
+                        select(country) %>%
+                        unique()
+
+outcome_country <- inner_join(outcome_country, outcome_hbc, by = c("entity" = "country"))
 
 # Calculate regional aggregates
 outcome_region <- outcome_country %>%
@@ -842,21 +852,21 @@ outcome_table <- within(outcome_table, {
   # Retreatment or retreatment excluding relapse
   c_ret_tsr <- ifelse( is.na(ret_nrel_coh), NA, rounder( ret_nrel_succ * 100 / ret_nrel_coh ))
 
+  # children
+  c_014_tsr <- ifelse( is.na(newrel_014_coh), NA, rounder( newrel_014_succ * 100 / newrel_014_coh ))
+
   # HIV-positive, all cases
   c_tbhiv_tsr <- ifelse( is.na(tbhiv_coh), NA, rounder( tbhiv_succ * 100 / tbhiv_coh ))
 
   # MDR
   c_mdr_tsr <- ifelse( is.na(mdr_coh), NA, rounder( mdr_succ * 100 / mdr_coh))
 
-  # XDR
-  c_xdr_tsr <- ifelse( is.na(xdr_coh), NA, rounder( xdr_succ * 100 / xdr_coh))
-
   # Format the cohort sizes
   newrel_coh <- rounder(newrel_coh)
   ret_nrel_coh <- rounder(ret_nrel_coh)
+  newrel_014_coh <- rounder(newrel_014_coh)
   tbhiv_coh <- rounder(tbhiv_coh)
   mdr_coh <- rounder(mdr_coh)
-  xdr_coh <- rounder(xdr_coh)
 
   # Flag country name if relapses were not included with new cases
   entity <- ifelse(!is.na(rel_with_new_flg) & rel_with_new_flg==0, paste0(entity,"*"),entity)
@@ -873,9 +883,9 @@ subset(outcome_table,
        select = c("entity",
                   "newrel_coh", "blank", "c_newrel_tsr", "blank",
                   "ret_nrel_coh", "blank", "c_ret_tsr", "blank",
+                  "newrel_014_coh", "blank", "c_014_tsr", "blank",
                   "tbhiv_coh", "blank", "c_tbhiv_tsr", "blank",
-                  "mdr_coh", "blank", "c_mdr_tsr", "blank",
-                  "xdr_coh", "blank", "c_xdr_tsr"))  %>%
+                  "mdr_coh", "blank", "c_mdr_tsr"))  %>%
   write.csv(file="outcome_table.csv", row.names=FALSE, na="")
 
 # Don't leave any mess behind!
