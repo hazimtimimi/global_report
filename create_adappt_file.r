@@ -6,15 +6,11 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
-# Clear the decks ----
-rm(list=ls())
-
-
 # A: SET A FEW FLAGS AND CONSTANTS ----
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # Establish the report year
-report_year <- 2019
+report_year <- 2020
 
 # The following are convenience variables since notification and most other data sets will run up to the
 # year before the reporting year and outcomes will run up to two years before the reporting year
@@ -284,38 +280,110 @@ rm(adappt_temp)
 adappt_sdg <-
   # Here are the indicators for which we only want the latest available year
   # % below poverty line
-        get_external_indicators(external_indicator_data, indicator_filter = "SI_POV_DAY1", round_sig_fig=2) %>%
+        get_external_indicators(external_indicator_data,
+                                indicator_filter = "SI_POV_DAY1",
+                                round_sig_fig=2) %>%
   # social protection
-  rbind(get_external_indicators(external_indicator_data, indicator_filter = "per_allsp.cov_pop_tot", round_sig_fig=2)) %>%
+  rbind(get_external_indicators(external_indicator_data,
+                                indicator_filter = "per_allsp.cov_pop_tot",
+                                round_sig_fig=2)) %>%
   # HIV prevalence
-  rbind(get_external_indicators(external_indicator_data, indicator_filter = "SH.DYN.AIDS.ZS", round_sig_fig=2)) %>%
+  rbind(get_external_indicators(external_indicator_data,
+                                indicator_filter = "MDG_0000000029",
+                                # keep the ID used in 2019 so adappt doesnt need to change their code
+                                output_var_name = "SH.DYN.AIDS.ZS",
+                                round_sig_fig=2)) %>%
   # UHC index
-  rbind(get_external_indicators(external_indicator_data, indicator_filter = "UHC_INDEX_REPORTED")) %>%
+  rbind(get_external_indicators(external_indicator_data,
+                                indicator_filter = "UHC_INDEX_REPORTED")) %>%
   # access to clean fuel
-  rbind(get_external_indicators(external_indicator_data, indicator_filter = "EG.CFT.ACCS.ZS", round_sig_fig=2)) %>%
+  rbind(get_external_indicators(external_indicator_data,
+                                indicator_filter = "EG.CFT.ACCS.ZS",
+                                round_sig_fig=2)) %>%
   # GINI index
-  rbind(get_external_indicators(external_indicator_data, indicator_filter = "SI.POV.GINI", round_sig_fig=2)) %>%
+  rbind(get_external_indicators(external_indicator_data,
+                                indicator_filter = "SI.POV.GINI",
+                                round_sig_fig=2)) %>%
   # urban population in slums
-  rbind(get_external_indicators(external_indicator_data, indicator_filter = "EN.POP.SLUM.UR.ZS", round_sig_fig=2)) %>%
+  rbind(get_external_indicators(external_indicator_data,
+                                indicator_filter = "EN_LND_SLUM",
+                                # keep the ID used in 2019 so adappt doesnt need to change their code
+                                output_var_name ="EN.POP.SLUM.UR.ZS",
+                                round_sig_fig=2)) %>%
 
   # And here are the indicators for which we only want all years
   # undernourishment
-  rbind(get_external_indicators(external_indicator_data, indicator_filter = "SN.ITK.DEFC.ZS", flg_latest_year = FALSE, round_sig_fig=2)) %>%
+  rbind(get_external_indicators(external_indicator_data,
+                                indicator_filter = "SN.ITK.DEFC.ZS",
+                                flg_latest_year = FALSE,
+                                round_sig_fig=2)) %>%
+
   # diabetes, female and male separately
-  rbind(get_external_indicators(external_indicator_data, indicator_filter = "NCD_GLUC_04FMLE", flg_latest_year = FALSE, round_sig_fig=2)) %>%
-  rbind(get_external_indicators(external_indicator_data, indicator_filter = "NCD_GLUC_04MLE", flg_latest_year = FALSE, round_sig_fig=2)) %>%
+  rbind(get_external_indicators(external_indicator_data,
+                                indicator_filter = "NCD_GLUC_04",
+                                sex_filter = "f",
+                                # keep the ID used in 2019 so adappt doesnt need to change their code
+                                output_var_name = "NCD_GLUC_04FMLE",
+                                flg_latest_year = FALSE,
+                                round_sig_fig=2)) %>%
+  rbind(get_external_indicators(external_indicator_data,
+                                indicator_filter = "NCD_GLUC_04",
+                                sex_filter = "m",
+                                # keep the ID used in 2019 so adappt doesnt need to change their code
+                                output_var_name = "NCD_GLUC_04MLE",
+                                flg_latest_year = FALSE,
+                                round_sig_fig=2)) %>%
+
   # alcohol, female and male separately
-  rbind(get_external_indicators(external_indicator_data, indicator_filter = "SA_0000001462FMLE", flg_latest_year = FALSE, round_sig_fig=2)) %>%
-  rbind(get_external_indicators(external_indicator_data, indicator_filter = "SA_0000001462MLE", flg_latest_year = FALSE, round_sig_fig=2)) %>%
+  rbind(get_external_indicators(external_indicator_data,
+                                indicator_filter = "SA_0000001462",
+                                sex_filter = "f",
+                                # keep the ID used in 2019 so adappt doesnt need to change their code
+                                output_var_name = "SA_0000001462FMLE",
+                                flg_latest_year = FALSE,
+                                round_sig_fig=2)) %>%
+  rbind(get_external_indicators(external_indicator_data,
+                                indicator_filter = "SA_0000001462",
+                                sex_filter = "m",
+                                # keep the ID used in 2019 so adappt doesnt need to change their code
+                                output_var_name = "SA_0000001462MLE",
+                                flg_latest_year = FALSE,
+                                round_sig_fig=2)) %>%
+
   # smoking, female and male separately
-  rbind(get_external_indicators(external_indicator_data, indicator_filter = "SH.PRV.SMOK.FE", flg_latest_year = FALSE, round_sig_fig=2)) %>%
-  rbind(get_external_indicators(external_indicator_data, indicator_filter = "SH.PRV.SMOK.MA", flg_latest_year = FALSE, round_sig_fig=2)) %>%
+  rbind(get_external_indicators(external_indicator_data,
+                                indicator_filter = "M_Est_smk_curr_std",
+                                sex_filter = "f",
+                                # keep the ID used in 2019 so adappt doesnt need to change their code
+                                output_var_name = "SH.PRV.SMOK.FE",
+                                flg_latest_year = FALSE,
+                                round_sig_fig=2)) %>%
+  rbind(get_external_indicators(external_indicator_data,
+                                indicator_filter = "M_Est_smk_curr_std",
+                                sex_filter = "m",
+                                # keep the ID used in 2019 so adappt doesnt need to change their code
+                                output_var_name = "SH.PRV.SMOK.MA",
+                                flg_latest_year = FALSE,
+                                round_sig_fig=2)) %>%
+
   # health expenditure per capita
-  rbind(get_external_indicators(external_indicator_data, indicator_filter = "SH.XPD.CHEX.PP.CD", flg_latest_year = FALSE, round_whole_digit=TRUE)) %>%
+  rbind(get_external_indicators(external_indicator_data,
+                                indicator_filter = "GHED_CHE_pc_PPP_SHA2011",
+                                # keep the ID used in 2019 so adappt doesnt need to change their code
+                                output_var_name = "SH.XPD.CHEX.PP.CD",
+                                flg_latest_year = FALSE,
+                                round_whole_digit=TRUE)) %>%
+
   # > 10% total expenditure on health
-  rbind(get_external_indicators(external_indicator_data, indicator_filter = "FINPROTECTION_CATA_TOT_10_POP", flg_latest_year = FALSE, round_sig_fig=2)) %>%
+  rbind(get_external_indicators(external_indicator_data,
+                                indicator_filter = "FINPROTECTION_CATA_TOT_10_POP",
+                                flg_latest_year = FALSE,
+                                round_sig_fig=2)) %>%
   # GDP per capita
-  rbind(get_external_indicators(external_indicator_data, indicator_filter = "NY.GDP.PCAP.PP.KD", flg_latest_year = FALSE, round_whole_digit=TRUE))
+  rbind(get_external_indicators(external_indicator_data,
+                                indicator_filter = "NY.GDP.PCAP.PP.KD",
+                                flg_latest_year = FALSE,
+                                round_whole_digit=TRUE))
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -329,10 +397,21 @@ estimates_population$e_pop_num <- as.numeric(estimates_population$e_pop_num)
 
 
 adappt_data <-
-        get_vars_and_aggregates(notification, c("c_newinc", "c_notified")) %>%
+
+  # In 2020 we dropped rr_sldst from the notification view and replaced it with indicator rr_dst_rlt_fq from the dr_surveillance view
+  # However, to avoid adappt having to recode the app, we decided to provide the new variable using the old
+  # variable name.
+
+  get_vars_and_aggregates(dr_surveillance, "rr_dst_rlt_fq", starting_year = notification_maxyear) %>%
+
+  # I don't really need to use str_replace since no other indicators yet in the script,
+  # but using this just in case I move things around later so code doesn't break.
+
+  mutate(indicator_code = str_replace(indicator_code, "rr_dst_rlt_fq","rr_sldst")) %>%
+
+  rbind(get_vars_and_aggregates(notification, c("c_newinc", "c_notified"))) %>%
   rbind(get_vars_and_aggregates(notification, c("newrel_hivpos",
                                                 "newrel_art",
-                                                "rr_sldst",
                                                 "conf_rrmdr",
                                                 "all_conf_xdr",
                                                 "conf_xdr_tx"), starting_year = notification_maxyear )) %>%
@@ -416,7 +495,7 @@ adappt_calc <-
                 starting_year = notification_maxyear,
                 output_var_name = "c_art_pct")) %>%
 
-  # preventive therapy
+  # preventive treatment
   rbind(get_pct(TBHIV_for_aggregates,
                 numerator_vars = "hiv_ipt_pct_numerator",
                 denominator_vars = "hiv_ipt_pct_denominator",
@@ -603,7 +682,7 @@ adappt_output <-
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
-# restrict data to the 216 countries and areas from whom we collected data
+# restrict data to the 215 countries and areas from whom we collected data
 # in 2019 (this deals with Serbia & Montenegro, Netherlands Antilles etc)
 
 adappt_location_list <-
@@ -617,7 +696,7 @@ group_codes <- read.table(textConnection("
 location_code,g_whoregion,location_name, location_name_FR, location_name_ES, location_name_RU, show_flag
 global,,Global, Global, Mundial, Глобальный,
 AFR,,Africa, Afrique, África, Африка,
-AMR,,Americas, Amériques, Las Américas, Америка,
+AMR,,Americas, Amériques, Las Américas, Северные и Южная Америка,
 EMR,,Eastern Mediterranean, Méditerranée orientale, Mediterráneo oriental, Восточное Средиземноморье,
 EUR,,Europe, Europe, Europa, Европа,
 SEA,,South-East Asia, Asie du Sud-Est, Asia Sudoriental, Юго-Восточная Азия,
@@ -652,40 +731,9 @@ write.csv(x = adappt_output,
 #   Produce and save location codes -----
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+print("Create the locations file using script ~/OneOffQueries/adappt_locations.sql  because Widnows has problems with UTF-8 characters!")
 
-
-# Produce a list of location names
-
-# Combine with official country names
-adappt_locations <-
-  report_country %>%
-  mutate(show_flag = ifelse(g_whostatus == "M", TRUE, NA)) %>%
-  select(location_code = iso3,
-         g_whoregion,
-         location_name = country,
-         location_name_FR = country_FR,
-         location_name_ES = country_ES,
-         location_name_RU = country_RU,
-         show_flag) %>%
-  # restrict to countries reporting during the latest data collection round
-  filter(location_code %in% adappt_location_list$location_code) %>%
-  rbind(group_codes)
-
-
-
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#   Save location list and names to CSV -----
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-write.csv(x = adappt_locations,
-          file = paste(adappt_folder, "adappt_location_",Sys.Date(),".csv",sep="") ,
-          quote = 3,
-          row.names = FALSE,
-          na = "",
-          fileEncoding = "UTF-8")
-
-# And, of course, this doesn't workproperly for the Russian text when run on Windows, grrrr....
-# So instead I created the CSV directly using SQL-Server Management Studio. and script at
+# So I created the CSV directly using SQL-Server Management Studio. and script at
 # ~/OneOffQueries/adappt_locations.sql
 
 

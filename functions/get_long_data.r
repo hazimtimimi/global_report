@@ -105,22 +105,20 @@ get_catatrophic_costs <- function(df,
 
 get_external_indicators <- function(df,
                                     indicator_filter = "all",
+                                    sex_filter = "a",
                                     flg_latest_year = TRUE,
                                     output_var_name = NA,
                                     round_sig_fig = NA,
                                     round_whole_digit = FALSE) {
 
 # Get external (SDG) data, by default only for the latest year available
-# treat differently again.
-# First add a new variable which shows the latest year for each country, just in case in future we start to
-# get repeat surveys
 
   # Adandon function if the dataframe doesn't have the indicator_id field
   if (!("indicator_id" %in% names(df) )) return(NULL)
 
   output <-
     df %>%
-    filter(indicator_id == indicator_filter) %>%
+    filter(indicator_id == indicator_filter & sex == sex_filter) %>%
     mutate(# rename variables if requested
            indicator_code = ifelse(is.na(output_var_name),
                                    indicator_filter,
