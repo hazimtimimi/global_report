@@ -649,8 +649,8 @@ adappt_fin_agg <-
          c_f_international_pct = display_cap_pct(international_funding, budget_total),
          c_f_unfunded_pct = display_cap_pct(unfunded_gap, budget_total)) %>%
 
-  # Convert aggregate budget total to millions
-  mutate(budget_total = ifelse(budget_total > 1e6,
+  # Convert aggregate budget total to millions and change name to budget_tot
+  mutate(budget_tot = ifelse(budget_total > 1e6,
                                round(budget_total / 1e6, 0),
                                round(budget_total / 1e6, 1))) %>%
 
@@ -659,7 +659,7 @@ adappt_fin_agg <-
          c_f_domestic_pct,
          c_f_international_pct,
          c_f_unfunded_pct,
-         budget_total) %>%
+         budget_tot) %>%
 
   # melt into long format
   gather(key="indicator_code",
