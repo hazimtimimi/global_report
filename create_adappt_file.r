@@ -18,6 +18,9 @@ notification_maxyear <- (report_year - 1)
 outcome_maxyear      <- (report_year - 2)
 
 
+# Establish starting year for historical data that will not go all the way back to 2000
+hist_start_year <- 2015
+
 # This is needed to avoid scientific notation output. No idea what it actally means -- it must get the prize for the most confusing documentation. Ever.
 
 options("scipen"=20)
@@ -175,7 +178,7 @@ adappt_est <-
   rbind(get_catatrophic_costs(catastrophic_costs_survey, output_var_name = "catast_pct")) %>%
 
   # add the TPT covereage for children < 5 for countries only
-  rbind(get_estimates(estimates_ltbi,"e_prevtx_kids_pct", starting_year = notification_maxyear))
+  rbind(get_estimates(estimates_ltbi,"e_prevtx_kids_pct", starting_year = hist_start_year))
 
 # remove uncertainty intervals from e_prevtx_kids_pct if value, lo and hi are all 100
 adappt_est <-
@@ -217,7 +220,7 @@ adappt_temp <-
   estimates_ltbi %>%
   select(iso3, year, e_prevtx_eligible, e_prevtx_eligible_lo, e_prevtx_eligible_hi, newinc_con04_prevtx) %>%
   inner_join(select(report_country, iso3, g_whoregion)) %>%
-  filter(year == notification_maxyear)
+  filter(year >= hist_start_year)
 
 adappt_temp_r <-
   adappt_temp %>%
@@ -273,42 +276,50 @@ rm(adappt_temp)
 #   SDG indicators -----
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-# THe following is a bt clunky considering the source table is already in long format, but wanted the
+# The following is a bit clunky considering the source table is already in long format, but wanted the
 # flexibility here to be able to chop and change as needed, including if we needed to change the output
 # variable name
 
 adappt_sdg <-
-  # Here are the indicators for which we only want the latest available year
+  # Here are the indicators for which previously we only wanted the latest available year
+  # But by end of 2020 version of the app we changed to all years
   # % below poverty line
         get_external_indicators(external_indicator_data,
                                 indicator_filter = "SI_POV_DAY1",
+                                flg_latest_year = FALSE,
                                 round_sig_fig=2) %>%
   # social protection
   rbind(get_external_indicators(external_indicator_data,
                                 indicator_filter = "per_allsp.cov_pop_tot",
+                                flg_latest_year = FALSE,
                                 round_sig_fig=2)) %>%
   # HIV prevalence
   rbind(get_external_indicators(external_indicator_data,
                                 indicator_filter = "MDG_0000000029",
                                 # keep the ID used in 2019 so adappt doesnt need to change their code
                                 output_var_name = "SH.DYN.AIDS.ZS",
+                                flg_latest_year = FALSE,
                                 round_sig_fig=2)) %>%
   # UHC index
   rbind(get_external_indicators(external_indicator_data,
-                                indicator_filter = "UHC_INDEX_REPORTED")) %>%
+                                indicator_filter = "UHC_INDEX_REPORTED"),
+                                flg_latest_year = FALSE) %>%
   # access to clean fuel
   rbind(get_external_indicators(external_indicator_data,
                                 indicator_filter = "EG.CFT.ACCS.ZS",
+                                flg_latest_year = FALSE,
                                 round_sig_fig=2)) %>%
   # GINI index
   rbind(get_external_indicators(external_indicator_data,
                                 indicator_filter = "SI.POV.GINI",
+                                flg_latest_year = FALSE,
                                 round_sig_fig=2)) %>%
   # urban population in slums
   rbind(get_external_indicators(external_indicator_data,
                                 indicator_filter = "EN_LND_SLUM",
                                 # keep the ID used in 2019 so adappt doesnt need to change their code
                                 output_var_name ="EN.POP.SLUM.UR.ZS",
+                                flg_latest_year = FALSE,
                                 round_sig_fig=2)) %>%
 
   # And here are the indicators for which we only want all years
@@ -402,10 +413,8 @@ adappt_data <-
   # However, to avoid adappt having to recode the app, we decided to provide the new variable using the old
   # variable name.
 
-  get_vars_and_aggregates(dr_surveillance, "rr_dst_rlt_fq", starting_year = notification_maxyear) %>%
-
-  # I don't really need to use str_replace since no other indicators yet in the script,
-  # but using this just in case I move things around later so code doesn't break.
+  get_vars_and_aggregates(notification, "rr_sldst", starting_year = hist_start_year, ending_year = 2018) %>%
+  rbind(get_vars_and_aggregates(dr_surveillance, "rr_dst_rlt_fq", starting_year = 2019)) %>%
 
   mutate(indicator_code = str_replace(indicator_code, "rr_dst_rlt_fq","rr_sldst")) %>%
 
@@ -414,10 +423,9 @@ adappt_data <-
                                                 "newrel_art",
                                                 "conf_rrmdr",
                                                 "all_conf_xdr",
-                                                "conf_xdr_tx"), starting_year = notification_maxyear )) %>%
-  rbind(get_vars_and_aggregates(budget_expenditure, "budget_tot" , starting_year = report_year )) %>%
+                                                "conf_xdr_tx"), starting_year = hist_start_year )) %>%
+  rbind(get_vars_and_aggregates(budget_expenditure, "budget_tot" , starting_year = hist_start_year )) %>%
   rbind(get_vars_and_aggregates(estimates_population, "e_pop_num" , ending_year = notification_maxyear ))
-
 
 
 # Convert budget total to millions; show numbers < 1 million to one decimal place
@@ -435,15 +443,16 @@ adappt_data <-
 adappt_temp <-
   notification %>%
   select(iso3, year, g_whoregion, unconf_rrmdr_tx, conf_rrmdr_tx) %>%
-  filter(year == notification_maxyear)
+  filter(year >= hist_start_year)
 
 adappt_temp$mdr_tx <- sum_of_row(adappt_temp[c("unconf_rrmdr_tx", "conf_rrmdr_tx")])
 
 adappt_data <-
   adappt_data %>%
-  rbind(get_vars_and_aggregates(adappt_temp, "mdr_tx", starting_year = notification_maxyear))
+  rbind(get_vars_and_aggregates(adappt_temp, "mdr_tx", starting_year = hist_start_year))
 
 rm(adappt_temp)
+
 
 
 # Calculate percentages
@@ -452,68 +461,72 @@ adappt_calc <-
         get_pct(notification,
                 numerator_vars = "newinc_rdx",
                 denominator_vars = "c_newinc",
-                starting_year = notification_maxyear,
+                starting_year = hist_start_year,
                 output_var_name = "c_rdx_pct") %>%
   # for HIV testing use TBHIV_for_aggregates dataset
   rbind(get_pct(TBHIV_for_aggregates,
                 numerator_vars = "hivtest_pct_numerator",
                 denominator_vars = "hivtest_pct_denominator",
-                starting_year = notification_maxyear,
+                starting_year = hist_start_year,
                 output_var_name = "c_hivtest_pct")) %>%
   rbind(get_pct(notification,
                 numerator_vars = c("new_labconf", "new_clindx", "ret_rel_labconf", "ret_rel_clindx"),
                 denominator_vars = "c_newinc",
-                starting_year = notification_maxyear,
+                starting_year = hist_start_year,
                 output_var_name = "c_pulm_pct")) %>%
   rbind(get_pct(notification,
                 numerator_vars = c("new_labconf", "ret_rel_labconf"),
                 denominator_vars = c("new_labconf", "new_clindx", "ret_rel_labconf", "ret_rel_clindx"),
-                starting_year = notification_maxyear,
+                starting_year = hist_start_year,
                 output_var_name = "c_pulm_labconf_pct")) %>%
 
   rbind(get_pct(notification,
                 numerator_vars = c("newrel_f15plus", "newrel_fu"),
                 denominator_vars = c("c_new_014", "newrel_f15plus", "newrel_fu", "newrel_m15plus", "newrel_mu"),
-                starting_year = notification_maxyear,
+                starting_year = hist_start_year,
                 output_var_name = "c_women_pct")) %>%
   rbind(get_pct(notification,
                 numerator_vars = c("newrel_m15plus", "newrel_mu"),
                 denominator_vars = c("c_new_014", "newrel_f15plus", "newrel_fu", "newrel_m15plus", "newrel_mu"),
-                starting_year = notification_maxyear,
+                starting_year = hist_start_year,
                 output_var_name = "c_men_pct")) %>%
 
   # TB.HIV
-  #
   rbind(get_pct(TBHIV_for_aggregates,
                 numerator_vars = "hivtest_pos_pct_numerator",
                 denominator_vars = "hivtest_pos_pct_denominator",
-                starting_year = notification_maxyear,
+                starting_year = hist_start_year,
                 output_var_name = "c_hivpos_pct")) %>%
   rbind(get_pct(TBHIV_for_aggregates,
                 numerator_vars = "hiv_art_pct_numerator",
                 denominator_vars = "hiv_art_pct_denominator",
-                starting_year = notification_maxyear,
+                starting_year = hist_start_year,
                 output_var_name = "c_art_pct")) %>%
 
   # preventive treatment
   rbind(get_pct(TBHIV_for_aggregates,
                 numerator_vars = "hiv_ipt_pct_numerator",
                 denominator_vars = "hiv_ipt_pct_denominator",
-                starting_year = notification_maxyear,
+                starting_year = hist_start_year,
                 output_var_name = "c_prevtx_hiv_pct")) %>%
 
 
   # DST
+  # Variables for numerator and denominator changed over the years
+  # Safest to go back to 2017 only from dr_surveillance since before that
+  # there was a mix of variables that may only give a proxy of the indicator
+
   rbind(get_pct(dr_surveillance,
                 numerator_vars = "r_rlt_new",
                 denominator_vars = "pulm_labconf_new",
-                starting_year = notification_maxyear,
+                starting_year = 2017,
                 output_var_name = "c_rdst_new_pct")) %>%
   rbind(get_pct(dr_surveillance,
                 numerator_vars = "r_rlt_ret",
                 denominator_vars = "pulm_labconf_ret",
-                starting_year = notification_maxyear,
+                starting_year = 2017,
                 output_var_name = "c_rdst_ret_pct")) %>%
+
 
   # treatment outcomes -- recalculate them so as to get the aggregates too
   # For new/relapse cases start the time series at 2000; the old and new variables
@@ -522,40 +535,46 @@ adappt_calc <-
                 numerator_vars = c("new_sp_cur", "new_sp_cmplt", "new_snep_cmplt", "newrel_succ"),
                 denominator_vars = c("new_sp_coh", "new_snep_coh", "newrel_coh"),
                 starting_year = 2000,
+                ending_year = outcome_maxyear,
                 output_var_name = "c_new_tsr")) %>%
   rbind(get_pct(outcomes,
                 numerator_vars = "ret_nrel_succ",
                 denominator_vars = "ret_nrel_coh",
-                starting_year = outcome_maxyear,
+                starting_year = hist_start_year,
+                ending_year = outcome_maxyear,
                 output_var_name = "c_ret_tsr")) %>%
   rbind(get_pct(outcomes,
                 numerator_vars = "tbhiv_succ",
                 denominator_vars = "tbhiv_coh",
-                starting_year = outcome_maxyear,
+                starting_year = hist_start_year,
+                ending_year = outcome_maxyear,
                 output_var_name = "c_tbhiv_tsr")) %>%
-  # MDR and XDR outcomes are one year earlier -- need to filter out the final year, bit clunky
+  # MDR and XDR outcomes are one year earlier -- need to filter out the final year
   rbind(get_pct(outcomes,
                 numerator_vars = "mdr_succ",
                 denominator_vars = "mdr_coh",
-                starting_year = (outcome_maxyear - 1),
-                output_var_name = "c_mdr_tsr") %>%  filter(year == (outcome_maxyear - 1) )) %>%
+                starting_year = hist_start_year,
+                ending_year = outcome_maxyear - 1,
+                output_var_name = "c_mdr_tsr")) %>%
+
 
   # Finance
   rbind(get_pct(budget_expenditure,
                 numerator_vars = "cf_tot_domestic",
                 denominator_vars = "budget_tot",
-                starting_year = report_year,
+                starting_year = hist_start_year,
                 output_var_name = "c_f_domestic_pct")) %>%
   rbind(get_pct(budget_expenditure,
                 numerator_vars = c("cf_tot_gf", "cf_tot_usaid", "cf_tot_grnt"),
                 denominator_vars = "budget_tot",
-                starting_year = report_year,
+                starting_year = hist_start_year,
                 output_var_name = "c_f_international_pct")) %>%
   rbind(get_pct(budget_expenditure,
                 numerator_vars = "gap_tot",
                 denominator_vars = "budget_tot",
-                starting_year = report_year,
+                starting_year = hist_start_year,
                 output_var_name = "c_f_unfunded_pct"))
+
 
 
 # To avoid accumulation of rounding errors and questions about why rounded
@@ -573,7 +592,7 @@ adappt_temp_men <-
 
 adappt_temp_kids <-
   adappt_temp_women %>%
-  inner_join(adappt_temp_men) %>%
+  inner_join(adappt_temp_men, by = c("location_code", "year")) %>%
   mutate(c_014_pct = ifelse(c_women_pct != "" & c_men_pct != "",
                            100 - as.numeric(c_women_pct) - as.numeric(c_men_pct),
                            NA))
@@ -581,14 +600,14 @@ adappt_temp_kids <-
 # this next bit is necessary to avoid a false 0%
 adappt_temp_kids_num <-
   notification %>%
-  filter(year == notification_maxyear) %>%
+  filter(year >= hist_start_year) %>%
   select(location_code = iso3,
          year,
          c_new_014)
 
 adappt_temp_kids <-
   adappt_temp_kids %>%
-  left_join(adappt_temp_kids_num) %>%
+  left_join(adappt_temp_kids_num, by = c("location_code", "year")) %>%
   mutate(value = ifelse(c_014_pct == 0 & c_new_014 > 0,
                            "<1",
                            c_014_pct),
@@ -603,7 +622,6 @@ adappt_calc <-
   rbind(adappt_temp_kids)
 
 rm(list=ls(pattern = "^adappt_temp"))
-
 
 
 # Calculate case notification rate
@@ -622,7 +640,6 @@ adappt_calc <-
   rbind(get_rate(adappt_temp, numerator_var = "c_newinc", population_var = "e_pop_num", output_var_name = "c_newinc_100k"))
 
 rm(adappt_temp)
-
 
 
 # Need to replace aggregate budgets and percentages with cleaned version in dataset aggregated_finance_estimates
@@ -644,7 +661,7 @@ adappt_calc <-
 
 adappt_fin_agg <-
   aggregated_finance_estimates %>%
-  filter(year == report_year) %>%
+  filter(year >= hist_start_year) %>%
   mutate(c_f_domestic_pct = display_cap_pct(domestic_funding, budget_total),
          c_f_international_pct = display_cap_pct(international_funding, budget_total),
          c_f_unfunded_pct = display_cap_pct(unfunded_gap, budget_total)) %>%
@@ -675,15 +692,13 @@ adappt_output <-
          hi = NA) %>%
   rbind(adappt_est)
 
-
-
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 #   Exclude disbanded entities -----
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
-# restrict data to the 215 countries and areas from whom we collected data
-# in 2019 (this deals with Serbia & Montenegro, Netherlands Antilles etc)
+# restrict data to the 215 countries and areas from which we collected data
+# in the reporting year (this deals with Serbia & Montenegro, Netherlands Antilles etc)
 
 adappt_location_list <-
   data_collection %>%

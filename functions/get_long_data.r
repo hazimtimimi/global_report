@@ -245,6 +245,7 @@ get_pct <- function(df,
                     numerator_vars,
                     denominator_vars,
                     starting_year = 2000,
+                    ending_year = NA,
                     output_var_name = NA) {
 
 # calculate numerators (as sum of numerator_vars) and denominators (as sum of denominator_vars)
@@ -265,6 +266,13 @@ get_pct <- function(df,
            one_of(numerator_vars, denominator_vars)) %>%
     filter(year >= starting_year)
 
+
+  if (!is.na(ending_year)) {
+    # add an end year filter
+    output_country <-
+      output_country %>%
+      filter(year <= ending_year)
+  }
   # calculate numerators and denominators
 
   output_country$numerator <- sum_of_row(output_country[numerator_vars])
