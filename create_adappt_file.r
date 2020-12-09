@@ -140,7 +140,7 @@ adappt_est <-
   rbind(get_estimates(aggregated_estimates_epi,"e_inc_tbhiv_num")) %>%
   rbind(get_estimates(aggregated_estimates_epi,"e_inc_tbhiv_100k")) %>%
   rbind(get_estimates(aggregated_estimates_epi,"c_cfr_pct", starting_year = notification_maxyear)) %>%
-  rbind(get_estimates(aggregated_estimates_epi,"c_cdr", starting_year = notification_maxyear)) %>%
+  rbind(get_estimates(aggregated_estimates_epi,"c_cdr", starting_year = hist_start_year)) %>%
   rbind(get_estimates(aggregated_estimates_drtb,"e_inc_rr_num", starting_year = notification_maxyear)) %>%
   rbind(get_estimates(aggregated_estimates_drtb,"e_inc_rr_100k", starting_year = notification_maxyear)) %>%
   rbind(get_estimates(aggregated_estimates_drtb,"e_rr_pct_new", starting_year = notification_maxyear)) %>%
@@ -268,6 +268,51 @@ adappt_temp <-
 adappt_est <- rbind(adappt_est, adappt_temp)
 
 rm(adappt_temp)
+
+# Add % change indicators (done December 2020) related to the End TB Strategy milestones
+
+# Need to calculate total deaths, which is not in the aggregated estimates dataframe (it is in the country one)
+addapt_temp_agg <- aggregated_estimates_epi_rawvalues %>%
+  mutate(e_mort_num = e_mort_exc_tbhiv_num + e_mort_tbhiv_num) %>%
+  # Restrict to global and regional groups
+  filter(group_type %in% c("global", "g_whoregion")) %>%
+  select(group_name, year, e_inc_100k, e_mort_num)
+
+adappt_temp <-  get_var_pct_change(addapt_temp_agg,
+                                   var_name = "e_inc_100k",
+                                   start_year = hist_start_year,
+                                   end_year = notification_maxyear,
+                                   output_var_name = "e_inc_100k_ch_pct") %>%
+
+  rbind(get_var_pct_change(addapt_temp_agg,
+                           var_name = "e_mort_num",
+                           start_year = hist_start_year,
+                           end_year = notification_maxyear,
+                           output_var_name = "e_mort_num_ch_pct")) %>%
+
+  rbind(get_var_pct_change(estimates_epi_rawvalues,
+                           var_name = "e_inc_100k",
+                           start_year = hist_start_year,
+                           end_year = notification_maxyear,
+                           output_var_name = "e_inc_100k_ch_pct")) %>%
+
+  rbind(get_var_pct_change(estimates_epi_rawvalues,
+                           var_name = "e_mort_num",
+                           start_year = hist_start_year,
+                           end_year = notification_maxyear,
+                           output_var_name = "e_mort_num_ch_pct")) %>%
+
+  # Add dummy lo and hi variables
+  mutate(lo = NA,
+         hi = NA)
+
+# Add the result to the estimates file
+
+adappt_est <- rbind(adappt_est, adappt_temp)
+
+rm(addapt_temp_agg, adappt_temp)
+
+
 
 # And that, folks, concludes the estimates section.
 

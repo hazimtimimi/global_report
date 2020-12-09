@@ -31,6 +31,48 @@ get_estimates <- function(df, var_name, starting_year = 2000, output_var_name = 
 
 }
 
+get_var_pct_change <- function(df, var_name, start_year = 2015, end_year = 2019, output_var_name = NA) {
+
+  # Calculate % change in a variable between the start year and the end year
+
+  # Determine if the dataframe is for aggregates or countries
+  location_var <- ifelse("iso3" %in% names(df),
+                         "iso3",
+                         "group_name")
+
+  start_values <-
+    df %>%
+      filter(year == start_year) %>%
+      select(location_code = !!sym(location_var),
+             start = !!sym(var_name))
+
+  end_values <-
+    df %>%
+      filter(year == end_year) %>%
+      select(location_code = !!sym(location_var),
+             year,
+             end = !!sym(var_name))
+
+  #join the two data sets
+  output <-
+    inner_join(start_values, end_values, by = "location_code") %>%
+
+      mutate(indicator_code = ifelse(is.na(output_var_name),
+                                     var_name,
+                                     output_var_name),
+
+             # Calculate the percent change
+             value = display_change_cap_pct(start, end )) %>%
+
+      select(indicator_code,
+             location_code,
+             year,
+             value)
+
+  return(output)
+
+}
+
 
 get_estimates_agesex <- function(df,
                                  starting_year = notification_maxyear,
