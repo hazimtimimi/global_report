@@ -99,12 +99,27 @@ display_cap_pct <- function(numerator, denominator) {
   return(pct)
 }
 
+# Calculate % using numerator and denominator, and cap at 100%
+# without using > and < symbols (<0.1% reduced to 0)
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+cap_pct <- function(numerator, denominator) {
 
-# Calculate % change using start and end values, format the output and cap between 0.1% and 100%
-# without using > and < symbols and allowing for negative numbers
+  pct <- ifelse(is.na(numerator) | is.na(denominator) | denominator == 0, NA,
+                signif(numerator * 100 / denominator, 2))
+
+   pct <- ifelse(is.na(pct), "",
+          ifelse(pct > 100, 100,
+          ifelse(pct < 0.1, 0, pct)))
+
+  return(pct)
+}
+
+
+# Calculate % change using start and end values, format the output and cap at +/- 100%
+# without using > and < symbols (<0.1% reduced to 0) and allowing for negative numbers
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-display_change_cap_pct <- function(start_value, end_value) {
+change_cap_pct <- function(start_value, end_value) {
 
   pct <- ifelse(is.na(end_value) | is.na(start_value) | start_value == 0, NA,
                 signif((end_value - start_value) * 100 / start_value, 2))

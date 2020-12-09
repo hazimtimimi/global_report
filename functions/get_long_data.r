@@ -61,8 +61,8 @@ get_var_pct_change <- function(df, var_name, start_year = 2015, end_year = 2019,
                                      var_name,
                                      output_var_name),
 
-             # Calculate the percent change
-             value = display_change_cap_pct(start, end )) %>%
+             # Calculate the percent change, capped at +/- 100%
+             value = change_cap_pct(start, end )) %>%
 
       select(indicator_code,
              location_code,
@@ -367,7 +367,7 @@ get_pct <- function(df,
   output <-
     output %>%
     mutate(indicator_code = output_var_name) %>%
-    mutate(value = display_cap_pct(numerator, denominator)) %>%
+    mutate(value = cap_pct(numerator, denominator)) %>%
     select(indicator_code,
            location_code,
            year,

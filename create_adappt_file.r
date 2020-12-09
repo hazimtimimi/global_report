@@ -251,9 +251,9 @@ rm(adappt_temp_r, adappt_temp_g)
 # Calculate the percent coverage
 adappt_temp <-
   adappt_temp %>%
-  mutate(value = display_cap_pct(kids, eligible_best),
-         lo = display_cap_pct(kids, eligible_hi),
-         hi = display_cap_pct(kids, eligible_lo),
+  mutate(value = cap_pct(kids, eligible_best),
+         lo = cap_pct(kids, eligible_hi),
+         hi = cap_pct(kids, eligible_lo),
          indicator_code = "e_prevtx_kids_pct") %>%
   # remove any "> 100" values
   mutate(value = ifelse(value==">100", 100, value),
@@ -707,9 +707,9 @@ adappt_calc <-
 adappt_fin_agg <-
   aggregated_finance_estimates %>%
   filter(year >= hist_start_year) %>%
-  mutate(c_f_domestic_pct = display_cap_pct(domestic_funding, budget_total),
-         c_f_international_pct = display_cap_pct(international_funding, budget_total),
-         c_f_unfunded_pct = display_cap_pct(unfunded_gap, budget_total)) %>%
+  mutate(c_f_domestic_pct = cap_pct(domestic_funding, budget_total),
+         c_f_international_pct = cap_pct(international_funding, budget_total),
+         c_f_unfunded_pct = cap_pct(unfunded_gap, budget_total)) %>%
 
   # Convert aggregate budget total to millions and change name to budget_tot
   mutate(budget_tot = ifelse(budget_total > 1e6,
