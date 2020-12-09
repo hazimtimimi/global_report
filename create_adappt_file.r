@@ -123,7 +123,7 @@ adappt_est <-
   rbind(get_estimates(estimates_epi,"e_inc_tbhiv_num")) %>%
   rbind(get_estimates(estimates_epi,"e_inc_tbhiv_100k")) %>%
   rbind(get_estimates(estimates_epi,"c_cfr_pct", starting_year = notification_maxyear)) %>%
-  rbind(get_estimates(estimates_epi,"c_cdr", starting_year = notification_maxyear)) %>%
+  rbind(get_estimates(estimates_epi,"c_cdr", starting_year = hist_start_year)) %>%
   rbind(get_estimates(estimates_drtb,"e_inc_rr_num", starting_year = notification_maxyear)) %>%
   rbind(get_estimates(estimates_drtb,"e_inc_rr_100k", starting_year = notification_maxyear)) %>%
   rbind(get_estimates(estimates_drtb,"e_rr_pct_new", starting_year = notification_maxyear)) %>%
