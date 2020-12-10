@@ -224,7 +224,7 @@ get_vars_and_aggregates <- function(df, vars, starting_year = 2000, ending_year 
     select(location_code = iso3,
            g_whoregion,
            year,
-           one_of(vars)) %>%
+           all_of(vars)) %>%
     filter(year >= starting_year)
 
 if (!is.na(ending_year)) {
@@ -239,7 +239,7 @@ if (!is.na(ending_year)) {
   output_agg_r <-
     output_country %>%
     group_by(g_whoregion, year) %>%
-    summarise_at(vars(one_of(vars)),
+    summarise_at(vars(all_of(vars)),
                  sum,
                  na.rm = TRUE) %>%
     ungroup() %>%
@@ -249,7 +249,7 @@ if (!is.na(ending_year)) {
   output_agg_g <-
     output_country %>%
     group_by(year) %>%
-    summarise_at(vars(one_of(vars)),
+    summarise_at(vars(all_of(vars)),
                  sum,
                  na.rm = TRUE) %>%
     ungroup() %>%
@@ -305,7 +305,7 @@ get_pct <- function(df,
     select(location_code = iso3,
            g_whoregion,
            year,
-           one_of(numerator_vars, denominator_vars)) %>%
+           all_of(c(numerator_vars, denominator_vars))) %>%
     filter(year >= starting_year)
 
 
@@ -397,14 +397,14 @@ get_rate <- function(df,
     select(location_code = iso3,
            g_whoregion,
            year,
-           one_of(numerator_var, population_var))
+           all_of(c(numerator_var, population_var)))
 
   # Calculate aggregates
   # 1. WHO regions
   output_agg_r <-
     output_country %>%
     group_by(g_whoregion, year) %>%
-    summarise_at(vars(numerator_var:population_var),
+    summarise_at(vars(all_of(c(numerator_var, population_var))),
                  sum,
                  na.rm = TRUE) %>%
     ungroup() %>%
@@ -414,7 +414,7 @@ get_rate <- function(df,
   output_agg_g <-
     output_country %>%
     group_by(year) %>%
-    summarise_at(vars(numerator_var:population_var),
+    summarise_at(vars(all_of(c(numerator_var, population_var))),
                  sum,
                  na.rm = TRUE) %>%
     ungroup() %>%
