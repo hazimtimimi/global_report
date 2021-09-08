@@ -10,7 +10,7 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # Establish the report year
-report_year <- 2020
+report_year <- 2021
 
 # The following are convenience variables since notification and most other data sets will run up to the
 # year before the reporting year and outcomes will run up to two years before the reporting year
@@ -177,7 +177,7 @@ adappt_est <-
 
   rbind(get_catatrophic_costs(catastrophic_costs_survey, output_var_name = "catast_pct")) %>%
 
-  # add the TPT covereage for children < 5 for countries only
+  # add the TPT coverage for children < 5 for countries only
   rbind(get_estimates(estimates_ltbi,"e_prevtx_kids_pct", starting_year = hist_start_year))
 
 # remove uncertainty intervals from e_prevtx_kids_pct if value, lo and hi are all 100
@@ -465,10 +465,7 @@ adappt_data <-
 
   rbind(get_vars_and_aggregates(notification, c("c_newinc", "c_notified"))) %>%
   rbind(get_vars_and_aggregates(notification, c("newrel_hivpos",
-                                                "newrel_art",
-                                                "conf_rrmdr",
-                                                "all_conf_xdr",
-                                                "conf_xdr_tx"), starting_year = hist_start_year )) %>%
+                                                "newrel_art"), starting_year = hist_start_year )) %>%
   rbind(get_vars_and_aggregates(budget_expenditure, "budget_tot" , starting_year = hist_start_year )) %>%
   rbind(get_vars_and_aggregates(estimates_population, "e_pop_num" , ending_year = notification_maxyear ))
 
@@ -482,21 +479,57 @@ adappt_data <-
                                round(value / 1e6, 1)),
                         value))
 
+# In 2021 data collection yearwe changed the RR, MDR and XDR detection and treatment variable names.
+# However, to avoid adappt having to recode the app, we decided to provide the new variable using the old
+# variable name.
+# Note: the old and new variables are mutually exclusive so can be added
 
 
-# Calculate sum for MDR cases put on treatment
+# Calculate sum for DR cases detected and MDR cases put on treatment
 adappt_temp <-
   notification %>%
-  select(iso3, year, g_whoregion, unconf_rrmdr_tx, conf_rrmdr_tx) %>%
+  select(iso3, year, g_whoregion,
+         # pre-2021 dcyear detection variables
+         conf_rrmdr,
+         all_conf_xdr,
+         # 2021 dcyear detection variables
+         conf_rr_nfqr,
+         conf_rr_fqr,
+         # pre-2021 dcyear enrolment variables
+         unconf_rrmdr_tx,
+         conf_rrmdr_tx,
+         conf_xdr_tx,
+         # 2021 dcyear enrolment variables
+         unconf_rr_nfqr_tx,
+         conf_rr_nfqr_tx,
+         conf_rr_fqr_tx) %>%
   filter(year >= hist_start_year)
 
-adappt_temp$mdr_tx <- sum_of_row(adappt_temp[c("unconf_rrmdr_tx", "conf_rrmdr_tx")])
+adappt_temp$conf_rrmdr <- sum_of_row(adappt_temp[c("conf_rrmdr", "conf_rr_nfqr", "conf_rr_fqr")])
+adappt_temp$all_conf_xdr <- sum_of_row(adappt_temp[c("all_conf_xdr", "conf_rr_fqr")])
+
+adappt_temp$mdr_tx <- sum_of_row(adappt_temp[c("unconf_rrmdr_tx", "conf_rrmdr_tx", "unconf_rr_nfqr_tx", "conf_rr_nfqr_tx", "conf_rr_fqr_tx")])
+adappt_temp$conf_xdr_tx <- sum_of_row(adappt_temp[c("conf_xdr_tx", "conf_rr_fqr_tx")])
 
 adappt_data <-
   adappt_data %>%
-  rbind(get_vars_and_aggregates(adappt_temp, "mdr_tx", starting_year = hist_start_year))
+  rbind(get_vars_and_aggregates(adappt_temp, c("conf_rrmdr", "all_conf_xdr", "mdr_tx", "conf_xdr_tx"), starting_year = hist_start_year))
 
 rm(adappt_temp)
+
+
+# Create a temporary dataframe for 2020 TPT among PLHIV because new variables introduced in 2021 data collection year
+# but these are not in TBHIV_for_aggregates yet
+
+adappt_temp <- filter(notification, year==2020) %>%
+  select(iso3, year, g_whoregion,
+         # These two alternatives sets introduced 2021 dcyear for TPT among PLHIV newly enrolled on ART
+         hiv_new_tpt, hiv_new,
+         hiv_elig_new_tpt, hiv_elig_new) %>%
+
+  # Decide which set to use
+  mutate(hiv_tpt_numerator = coalesce(hiv_new_tpt, hiv_elig_new_tpt),
+         hiv_tpt_denominator = coalesce(hiv_new, hiv_elig_new))
 
 
 
@@ -549,12 +582,21 @@ adappt_calc <-
                 output_var_name = "c_art_pct")) %>%
 
   # preventive treatment
+  # TEMPORARY TWEAK BECAUSE OF CHANGED VARIABLES IN 2021 DATA COLLECTION YEAR
+  # Use adappt_temp for 2020 data
   rbind(get_pct(TBHIV_for_aggregates,
                 numerator_vars = "hiv_ipt_pct_numerator",
                 denominator_vars = "hiv_ipt_pct_denominator",
                 starting_year = hist_start_year,
+                ending_year = 2019,
                 output_var_name = "c_prevtx_hiv_pct")) %>%
 
+  rbind(get_pct(adappt_temp,
+                numerator_vars = "hiv_tpt_numerator",
+                denominator_vars = "hiv_tpt_denominator",
+                starting_year = 2019,
+                ending_year = 2020,
+                output_var_name = "c_prevtx_hiv_pct")) %>%
 
   # DST
   # Variables for numerator and denominator changed over the years
@@ -620,7 +662,8 @@ adappt_calc <-
                 starting_year = hist_start_year,
                 output_var_name = "c_f_unfunded_pct"))
 
-
+# Get rid of temp dataframe used for 2020 TPT/HIV
+rm(adappt_temp)
 
 # To avoid accumulation of rounding errors and questions about why rounded
 # percentages don't add up to 100, calculate % children as 100 - %men - %women. Yeah, bit of a bodge, but easier
