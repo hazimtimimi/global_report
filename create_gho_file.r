@@ -8,16 +8,11 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
-# Clear the decks ----
-rm(list=ls())
-
-
-
 # A: SET A FEW FLAGS AND CONSTANTS ----
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # Establish the report year
-report_year <- 2020
+report_year <- 2021
 
 # The following are convenience variables since notification and most other data sets will run up to the
 # year before the reporting year and outcomes will run up to two years before the reporting year
@@ -123,7 +118,7 @@ source(paste0(scripts_folder, "/functions/handle_NAs.r"))
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 #   g_income -----
 #   Recreate the old g_income variable which used to exist prior to 2017 data collection year
-#   Note that in 2017, Cook Islands and Niue did not have a g_income assignation, therefor must
+#   Note that in 2017, Cook Islands and Niue did not have a g_income assignation, therefore must
 #   do a left join when combining this table with notifications, outcomes etc.
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -666,9 +661,13 @@ dst_rrmdr_country <- notification %>%
                     inner_join(dr_derived_variables, by = c("iso3", "year")) %>%
                     select(iso3, year, g_whoregion, g_income,
                            c_rrmdr,
+                           # new variables to use from 2020 onwards
+                           conf_rr_nfqr, conf_rr_fqr,
                            rdst_new, new_labconf, new_sp, new_bc, c_newunk,
                            rdst_ret, c_ret,
-                           conf_mdr_tx, unconf_mdr_tx, conf_rrmdr_tx, unconf_rrmdr_tx) %>%
+                           conf_mdr_tx, unconf_mdr_tx, conf_rrmdr_tx, unconf_rrmdr_tx,
+                           # new variables to use from 2020 onwards
+                           unconf_rr_nfqr_tx, conf_rr_nfqr_tx, conf_rr_fqr_tx) %>%
                     filter( year >= 2005)
 
 # B. Combine with routine surveillance
@@ -758,10 +757,16 @@ dst_rrmdr_country <- within(dst_rrmdr_country, {
                     r_rlt_ret,
                     dst_ret)
 
+  # Calculate the number detected with RR/MDR-TB -- adjustment needed for 2020 onwards
+  c_rrmdr <- ifelse(year >= 2020,
+                    sum_of_row(dst_rrmdr_country[c("conf_rr_nfqr", "conf_rr_fqr")]),
+                    c_rrmdr)
 
   # Number started on treatment (confirmed or unconfirmed) -- note that variables changed in 2015 data collection year
   # but old ones dropped so they are mutually exclusive and can add them all up
-  c_rrmdr_tx <- sum_of_row(dst_rrmdr_country[c("conf_mdr_tx", "unconf_mdr_tx", "conf_rrmdr_tx","unconf_rrmdr_tx")])
+  # and the same for the variables introduced in 2020
+  c_rrmdr_tx <- sum_of_row(dst_rrmdr_country[c("conf_mdr_tx", "unconf_mdr_tx", "conf_rrmdr_tx","unconf_rrmdr_tx",
+                                               "unconf_rr_nfqr_tx", "conf_rr_nfqr_tx", "conf_rr_fqr_tx")])
 })
 
 
