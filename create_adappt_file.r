@@ -10,7 +10,7 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # Establish the report year
-report_year <- 2021
+report_year <- 2022
 
 # The following are convenience variables since notification and most other data sets will run up to the
 # year before the reporting year and outcomes will run up to two years before the reporting year
@@ -21,7 +21,7 @@ outcome_maxyear      <- (report_year - 2)
 # Establish starting year for historical data that will not go all the way back to 2000
 hist_start_year <- 2015
 
-# This is needed to avoid scientific notation output. No idea what it actally means -- it must get the prize for the most confusing documentation. Ever.
+# This is needed to avoid scientific notation output. No idea what it actually means -- it must get the prize for the most confusing documentation. Ever.
 
 options("scipen"=20)
 
@@ -124,10 +124,10 @@ adappt_est <-
   rbind(get_estimates(estimates_epi,"e_inc_tbhiv_100k")) %>%
   rbind(get_estimates(estimates_epi,"c_cfr_pct", starting_year = notification_maxyear)) %>%
   rbind(get_estimates(estimates_epi,"c_cdr", starting_year = hist_start_year)) %>%
-  rbind(get_estimates(estimates_drtb,"e_inc_rr_num", starting_year = notification_maxyear)) %>%
-  rbind(get_estimates(estimates_drtb,"e_inc_rr_100k", starting_year = notification_maxyear)) %>%
-  rbind(get_estimates(estimates_drtb,"e_rr_pct_new", starting_year = notification_maxyear)) %>%
-  rbind(get_estimates(estimates_drtb,"e_rr_pct_ret", starting_year = notification_maxyear)) %>%
+  rbind(get_estimates(estimates_drtb,"e_inc_rr_num", starting_year = hist_start_year)) %>%
+  rbind(get_estimates(estimates_drtb,"e_inc_rr_100k", starting_year = hist_start_year)) %>%
+  rbind(get_estimates(estimates_drtb,"e_rr_pct_new", starting_year = hist_start_year)) %>%
+  rbind(get_estimates(estimates_drtb,"e_rr_pct_ret", starting_year = hist_start_year)) %>%
 
   # and now add the same indicators for aggregates
 
@@ -518,12 +518,13 @@ adappt_data <-
 rm(adappt_temp)
 
 
-# Create a temporary dataframe for 2020 TPT among PLHIV because new variables introduced in 2021 data collection year
+# Create a temporary dataframe for 2020 TPT among PLHIV onwards because new variables introduced in 2021 data collection year
 # but these are not in TBHIV_for_aggregates yet
 
-adappt_temp <- filter(notification, year==2020) %>%
+adappt_temp <- filter(notification, year >= 2020) %>%
   select(iso3, year, g_whoregion,
          # These two alternatives sets introduced 2021 dcyear for TPT among PLHIV newly enrolled on ART
+         # (In 2022 dcyear got rid of the *_elig_* set of variables, but the code below should still work)
          hiv_new_tpt, hiv_new,
          hiv_elig_new_tpt, hiv_elig_new) %>%
 
@@ -583,7 +584,7 @@ adappt_calc <-
 
   # preventive treatment
   # TEMPORARY TWEAK BECAUSE OF CHANGED VARIABLES IN 2021 DATA COLLECTION YEAR
-  # Use adappt_temp for 2020 data
+  # Use adappt_temp for post-2019 data
   rbind(get_pct(TBHIV_for_aggregates,
                 numerator_vars = "hiv_ipt_pct_numerator",
                 denominator_vars = "hiv_ipt_pct_denominator",
@@ -594,8 +595,8 @@ adappt_calc <-
   rbind(get_pct(adappt_temp,
                 numerator_vars = "hiv_tpt_numerator",
                 denominator_vars = "hiv_tpt_denominator",
-                starting_year = 2019,
-                ending_year = 2020,
+                starting_year = 2020,
+                ending_year = notification_maxyear,
                 output_var_name = "c_prevtx_hiv_pct")) %>%
 
   # DST
@@ -834,7 +835,7 @@ write.csv(x = adappt_output,
 #   Produce and save location codes -----
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-print("Create the locations file using script ~/OneOffQueries/adappt_locations.sql  because Widnows has problems with UTF-8 characters!")
+print("Create the locations file using script ~/OneOffQueries/adappt_locations.sql  because Windows has problems with UTF-8 characters!")
 
 # So I created the CSV directly using SQL-Server Management Studio. and script at
 # ~/OneOffQueries/adappt_locations.sql
