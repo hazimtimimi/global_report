@@ -446,9 +446,9 @@ adappt_sdg <-
 #   Country-reported data -----
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-# make sure budget and population are treated as numeric, otherwise global estimates will be too big to hold ..
+# make sure expenditure (proxy is received funding) and population are treated as numeric, otherwise global estimates will be too big to hold ..
 
-budget_expenditure$budget_tot <- as.numeric(budget_expenditure$budget_tot)
+budget_expenditure$rcvd_tot <- as.numeric(budget_expenditure$rcvd_tot)
 estimates_population$e_pop_num <- as.numeric(estimates_population$e_pop_num)
 
 
@@ -458,28 +458,35 @@ adappt_data <-
   # However, to avoid adappt having to recode the app, we decided to provide the new variable using the old
   # variable name.
 
-  get_vars_and_aggregates(notification, "rr_sldst", starting_year = hist_start_year, ending_year = 2018) %>%
-  rbind(get_vars_and_aggregates(dr_surveillance, "rr_dst_rlt_fq", starting_year = 2019)) %>%
+  get_vars_and_aggregates(notification, "rr_sldst",
+                          starting_year = hist_start_year,
+                          ending_year = 2018) %>%
+  rbind(get_vars_and_aggregates(dr_surveillance, "rr_dst_rlt_fq",
+                                starting_year = 2019)) %>%
 
   mutate(indicator_code = str_replace(indicator_code, "rr_dst_rlt_fq","rr_sldst")) %>%
 
   rbind(get_vars_and_aggregates(notification, c("c_newinc", "c_notified"))) %>%
   rbind(get_vars_and_aggregates(notification, c("newrel_hivpos",
-                                                "newrel_art"), starting_year = hist_start_year )) %>%
-  rbind(get_vars_and_aggregates(budget_expenditure, "budget_tot" , starting_year = hist_start_year )) %>%
-  rbind(get_vars_and_aggregates(estimates_population, "e_pop_num" , ending_year = notification_maxyear ))
+                                                "newrel_art"),
+                                starting_year = hist_start_year )) %>%
+  rbind(get_vars_and_aggregates(budget_expenditure, "rcvd_tot" ,
+                                starting_year = hist_start_year,
+                                ending_year = notification_maxyear )) %>%
+  rbind(get_vars_and_aggregates(estimates_population, "e_pop_num" ,
+                                ending_year = notification_maxyear ))
 
 
-# Convert budget total to millions; show numbers < 1 million to one decimal place
+# Convert received funding to millions; show numbers < 1 million to one decimal place
 adappt_data <-
   adappt_data %>%
-  mutate(value = ifelse(indicator_code %in% c("budget_tot"),
+  mutate(value = ifelse(indicator_code %in% c("rcvd_tot"),
                         ifelse(value > 1e6,
                                round(value / 1e6, 0),
                                round(value / 1e6, 1)),
                         value))
 
-# In 2021 data collection yearwe changed the RR, MDR and XDR detection and treatment variable names.
+# In 2021 data collection year we changed the RR, MDR and XDR detection and treatment variable names.
 # However, to avoid adappt having to recode the app, we decided to provide the new variable using the old
 # variable name.
 # Note: the old and new variables are mutually exclusive so can be added
@@ -647,21 +654,20 @@ adappt_calc <-
 
 
   # Finance
+  # Changed in dcyear 2022 to previous year's expenditure (proxy is received funding)
   rbind(get_pct(budget_expenditure,
-                numerator_vars = "cf_tot_domestic",
-                denominator_vars = "budget_tot",
+                numerator_vars = "rcvd_tot_domestic",
+                denominator_vars = "rcvd_tot",
                 starting_year = hist_start_year,
-                output_var_name = "c_f_domestic_pct")) %>%
+                ending_year = notification_maxyear,
+                output_var_name = "c_rcvd_domestic_pct")) %>%
   rbind(get_pct(budget_expenditure,
-                numerator_vars = c("cf_tot_gf", "cf_tot_usaid", "cf_tot_grnt"),
-                denominator_vars = "budget_tot",
+                numerator_vars = c("rcvd_tot_gf", "rcvd_tot_usaid", "rcvd_tot_grnt"),
+                denominator_vars = "rcvd_tot",
                 starting_year = hist_start_year,
-                output_var_name = "c_f_international_pct")) %>%
-  rbind(get_pct(budget_expenditure,
-                numerator_vars = "gap_tot",
-                denominator_vars = "budget_tot",
-                starting_year = hist_start_year,
-                output_var_name = "c_f_unfunded_pct"))
+                ending_year = notification_maxyear,
+                output_var_name = "c_rcvd_international_pct"))
+
 
 # Get rid of temp dataframe used for 2020 TPT/HIV
 rm(adappt_temp)
@@ -731,18 +737,20 @@ adappt_calc <-
 rm(adappt_temp)
 
 
-# Need to replace aggregate budgets and percentages with cleaned version in dataset aggregated_finance_estimates
+# Need to replace aggregate expenditure and percentages with cleaned version which also
+# includes estimated inpatient and outpatient costs (GHS = general health service costs)
+# These are in the aggregate finance dataset
 
 
 # First, remove the aggregate finance from the earlier datasets
 adappt_data <-
   adappt_data %>%
-  filter( !(indicator_code %in% c("budget_tot", "c_f_domestic_pct", "c_f_international_pct", "c_f_unfunded_pct") &
+  filter( !(indicator_code %in% c("rcvd_tot", "c_rcvd_domestic_pct", "c_rcvd_international_pct") &
            location_code %in% c("AFR", "AMR", "EMR", "EUR", "SEA", "WPR", "global")))
 
 adappt_calc <-
   adappt_calc %>%
-  filter( !(indicator_code %in% c("budget_tot", "c_f_domestic_pct", "c_f_international_pct", "c_f_unfunded_pct") &
+  filter( !(indicator_code %in% c("rcvd_tot", "c_rcvd_domestic_pct", "c_rcvd_international_pct") &
            location_code %in% c("AFR", "AMR", "EMR", "EUR", "SEA", "WPR", "global")))
 
 
@@ -751,21 +759,23 @@ adappt_calc <-
 adappt_fin_agg <-
   aggregated_finance_estimates %>%
   filter(year >= hist_start_year) %>%
-  mutate(c_f_domestic_pct = cap_pct(domestic_funding, budget_total),
-         c_f_international_pct = cap_pct(international_funding, budget_total),
-         c_f_unfunded_pct = cap_pct(unfunded_gap, budget_total)) %>%
 
-  # Convert aggregate budget total to millions and change name to budget_tot
-  mutate(budget_tot = ifelse(budget_total > 1e6,
-                               round(budget_total / 1e6, 0),
-                               round(budget_total / 1e6, 1))) %>%
+  # Total funding includes general health service (inpatient+outpatient) costs c_ghs
+  # This will be the denominator to calculate percentages
+  mutate(rcvd_tot_ghs = rcvd_tot + c_ghs) %>%
+  mutate(c_rcvd_domestic_pct = cap_pct( (rcvd_int + c_ghs), rcvd_tot_ghs ),
+         c_rcvd_international_pct = cap_pct( (rcvd_ext_gf + rcvd_ext_ngf), rcvd_tot_ghs )) %>%
+
+  # Convert total funding to millions and rename back to rcvd_tot
+  mutate(rcvd_tot = ifelse(rcvd_tot_ghs > 1e6,
+                          round(rcvd_tot_ghs / 1e6, 0),
+                          round(rcvd_tot_ghs / 1e6, 1))) %>%
 
   select(location_code = group_name,
          year,
-         c_f_domestic_pct,
-         c_f_international_pct,
-         c_f_unfunded_pct,
-         budget_tot) %>%
+         c_rcvd_domestic_pct,
+         c_rcvd_international_pct,
+         rcvd_tot) %>%
 
   # melt into long format
   gather(key="indicator_code",
@@ -877,7 +887,7 @@ adappt_agesex_inc <- rbind(adappt_agesex_country, adappt_agesex_agg)
 
 rm(adappt_agesex_agg, adappt_agesex_country)
 
-# Get the notifications
+# Get the notifications    !!!!! ADD THE CODE FOR WHAT GROUPING WAS USED TO REPORT DATA -- SIMPLIFY!
 
 agesex_vars <- c("newrel_m04", "newrel_m514", "newrel_m014",
                  "newrel_m1524", "newrel_m2534", "newrel_m3544",
