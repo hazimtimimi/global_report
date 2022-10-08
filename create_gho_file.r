@@ -12,7 +12,7 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # Establish the report year
-report_year <- 2021
+report_year <- 2022
 
 # The following are convenience variables since notification and most other data sets will run up to the
 # year before the reporting year and outcomes will run up to two years before the reporting year
@@ -182,13 +182,11 @@ rm(est_country, est_agg)
 # are identical
 
 est_rr_country <- estimates_drtb %>%
-                  filter(year == notification_maxyear) %>%
                     select(iso3, year,
                            e_inc_rr_num, e_inc_rr_num_lo, e_inc_rr_num_hi) %>%
                     rename(location_code = iso3)
 
 est_rr_agg <-  aggregated_estimates_drtb %>%
-                filter(year == notification_maxyear) %>%
                 select(group_name, year,
                        e_inc_rr_num, e_inc_rr_num_lo, e_inc_rr_num_hi) %>%
                 # convert to GHO group codes

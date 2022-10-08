@@ -944,6 +944,12 @@ adappt_agesex_notifs <-
                               FALSE
                                 ))
 
+# For info, see which countries have either of these flags set to TRUE
+adappt_agesex_notifs %>% filter(flg_15plus_only==TRUE) %>% select(location_code)
+
+adappt_agesex_notifs %>% filter(flg_014_only==TRUE) %>% select(location_code)
+
+
 # Flip to long format. Need to vary the operation based on whether we have disaggregated adults and children
 # notifications or not
 
@@ -967,7 +973,7 @@ addapt_agesex_notifs_disag <-
              values_to = "notifs")
 
 # 2. CHildren disaggregated, adults aggregated
-#  (For 2019 report these were Gambia, Mozambique, Niue and Senegal)
+#  (For 2022 report this was Mozambique only)
 
 addapt_agesex_notifs_adultsagg <-
   adappt_agesex_notifs %>%
