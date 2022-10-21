@@ -8,6 +8,15 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
+stop("
+
+     >>>>>>>>>>
+     Make sure you have run script ~/OneOffQueries/calculate_cache_aggregated_estimates.sql in
+     the database first so that it contains cached estimates by World Bank income group!
+     <<<<<<<<<<<<")
+
+
+
 # A: SET A FEW FLAGS AND CONSTANTS ----
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
