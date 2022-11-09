@@ -167,11 +167,12 @@ adappt_est <-
   rbind(get_estimates_agesex(aggregated_estimates_agesex, sex_filter = "m", output_var_name = "e_inc_num_m")) %>%
   rbind(get_estimates_agesex(aggregated_estimates_agesex, age_group_filter = "0-14", output_var_name = "e_inc_num_014")) %>%
   rbind(get_estimates_agesex(aggregated_estimates_agesex, age_group_filter = "15plus", output_var_name = "e_inc_num_15plus")) %>%
-  rbind(get_estimates_agesex(aggregated_estimates_agesex, age_group_filter = "15plus", risk_factor_filter = "alc", output_var_name = "e_inc_num_alc")) %>%
-  rbind(get_estimates_agesex(aggregated_estimates_agesex, age_group_filter = "18plus", risk_factor_filter = "dia", output_var_name = "e_inc_num_dia")) %>%
-  rbind(get_estimates_agesex(aggregated_estimates_agesex, risk_factor_filter = "hiv", output_var_name = "e_inc_num_hiv")) %>%
-  rbind(get_estimates_agesex(aggregated_estimates_agesex, age_group_filter = "15plus", risk_factor_filter = "smk", output_var_name = "e_inc_num_smk")) %>%
-  rbind(get_estimates_agesex(aggregated_estimates_agesex, risk_factor_filter = "und", output_var_name = "e_inc_num_und")) %>%
+  # Changed to using un-rounded estimates for the risk factors in late change post publication of 2022 report
+  rbind(get_estimates_agesex(aggregated_estimates_agesex_rawvalues, age_group_filter = "15plus", risk_factor_filter = "alc", output_var_name = "e_inc_num_alc")) %>%
+  rbind(get_estimates_agesex(aggregated_estimates_agesex_rawvalues, age_group_filter = "18plus", risk_factor_filter = "dia", output_var_name = "e_inc_num_dia")) %>%
+  rbind(get_estimates_agesex(aggregated_estimates_agesex_rawvalues, risk_factor_filter = "hiv", output_var_name = "e_inc_num_hiv")) %>%
+  rbind(get_estimates_agesex(aggregated_estimates_agesex_rawvalues, age_group_filter = "15plus", risk_factor_filter = "smk", output_var_name = "e_inc_num_smk")) %>%
+  rbind(get_estimates_agesex(aggregated_estimates_agesex_rawvalues, risk_factor_filter = "und", output_var_name = "e_inc_num_und")) %>%
 
   # and now add catastrophic cost survey results for countries that have them
 
