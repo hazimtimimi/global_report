@@ -87,6 +87,22 @@ rounder <- function(x) {
 }
 
 
+# Rounding function to remain compatible with adappt's app rounding rules:
+# The adappt interface automatically displays large numbers using K for thousands, M for millions and B for billions.
+# We need to make sure the appropriate precision is used in each case. Please use the following rules:
+# - Numbers < 10: display using two digits, for example 2.1K
+# - Numbers ≥ 10: display as a whole number using two or three digits as appropriate, for example 15M or 789K
+
+round_adappt <- function(x) {
+
+  ifelse(
+    # numbers 100-999,  100k-999k,  100M-999M,  100B-999B
+    floor(log10(x)) %in% c(2, 5, 8, 11), signif(x, 3),
+    # numbers 1-99, 1k-99k, 1M-99M, 1B-99B or any other number
+    signif(x, 2))
+
+}
+
 
 # Calculate % using numerator and denominator, format the output and cap at 100%
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

@@ -81,7 +81,8 @@ get_estimates_agesex <- function(df,
                                  age_group_filter = "all",
                                  sex_filter = "a",
                                  risk_factor_filter = "all",
-                                 output_var_name) {
+                                 output_var_name,
+                                 round_4_adappt = FALSE) {
 
   # Records from the age/sex/risk factor tables which are already in long format and need to be
   # queried in a slightly different way
@@ -108,6 +109,16 @@ get_estimates_agesex <- function(df,
              value = best,
              lo,
              hi)
+
+  if (round_4_adappt == TRUE) {
+
+    # Do additional rounding of raw figures to match adappt's method of rounding
+
+    output <- output %>%
+      mutate(value = round_adappt(value),
+             lo = round_adappt(lo),
+             hi = round_adappt(hi))
+  }
 
   return(output)
 
