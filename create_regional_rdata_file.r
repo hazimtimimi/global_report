@@ -7,7 +7,7 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # Get DB connection string and path where to save the data (variable rdata_folder in set_environment.r)
-source("set_environment.r")
+source(here::here("set_environment.r"))
 
 # Set the region code to use ----
 g_whoregion <- "WPR"
@@ -54,12 +54,15 @@ aggregated_estimates_drtb_rawvalues   <- sqlQuery(ch, sql_group("view_TME_aggreg
 aggregated_finance_estimates          <- sqlQuery(ch, sql_group("reports.view_TME_aggregated_finance_estimates", g_whoregion))
 
 budget_expenditure                 <- sqlQuery(ch, sql_region("view_TME_master_budget_expenditure", g_whoregion))
+contacts_tpt                       <- sqlQuery(ch, sql_region("view_TME_master_contacts_tpt", g_whoregion))
 covid_unhlm                        <- sqlQuery(ch, sql_region("view_TME_master_covid_unhlm", g_whoregion))
 data_collection                    <- sqlQuery(ch, sql_region("view_TME_master_data_collection", g_whoregion))
 dr_surveillance                    <- sqlQuery(ch, sql_region("view_TME_master_dr_surveillance", g_whoregion))
 drs                                <- sqlQuery(ch, sql_region("view_TME_master_drs", g_whoregion))
 drs_for_estimation_new             <- sqlQuery(ch, sql_region("view_DRS_for_estimation_new", g_whoregion))
+drs_for_estimation_new_INH         <- sqlQuery(ch, sql_region("view_DRS_for_estimation_new_INH", g_whoregion))
 drs_for_estimation_ret             <- sqlQuery(ch, sql_region("view_DRS_for_estimation_ret", g_whoregion))
+drs_for_estimation_ret_INH             <- sqlQuery(ch, sql_region("view_DRS_for_estimation_ret_INH", g_whoregion))
 drs_for_estimation_sldst           <- sqlQuery(ch, sql_region("view_DRS_for_estimation_sldst", g_whoregion))
 drs_most_recent_for_estimation     <- sqlQuery(ch, sql_region("view_DRS_most_recent_for_estimation", g_whoregion))
 drs_most_recent_for_estimation_inh <- sqlQuery(ch, sql_region("view_DRS_most_recent_for_estimation_INH", g_whoregion))
@@ -133,12 +136,15 @@ save (
    aggregated_finance_estimates,
 
    budget_expenditure,
+   contacts_tpt,
    covid_unhlm,
    data_collection,
    dr_surveillance,
    drs,
    drs_for_estimation_new,
+   drs_for_estimation_new_INH,
    drs_for_estimation_ret,
+   drs_for_estimation_ret_INH,
    drs_for_estimation_sldst,
    drs_most_recent_for_estimation,
    drs_most_recent_for_estimation_inh,
