@@ -1,6 +1,33 @@
 # Functions to get data in long format, eg for sending to adappt or the GHO ----
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+get_var <- function(df, var_name, starting_year = 2000, output_var_name = NA) {
+
+  # Pass a string to identify the variable name and use !!sym() to identify and
+  # (see https://stackoverflow.com/questions/48219732/pass-a-string-as-variable-name-in-dplyrfilter)
+
+  # Determine if the dataframe is for aggregates or countries
+  location_var <- ifelse("iso3" %in% names(df),
+                         "iso3",
+                         "group_name")
+
+  output <-
+    df %>%
+    filter(year >= starting_year) %>%
+    mutate( # rename variables if requested
+      indicator_code = ifelse(is.na(output_var_name),
+                              var_name,
+                              output_var_name)) %>%
+    select(indicator_code,
+           location_code = !!sym(location_var),
+           year,
+           value = !!sym(var_name) )
+
+  return(output)
+
+}
+
+
 
 get_estimates <- function(df, var_name, starting_year = 2000, output_var_name = NA) {
 
