@@ -7,9 +7,6 @@
 # Hazim Timimi, based on a original from Tom
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-# Clear the decks ----
-rm(list=ls())
-
 # Get DB connection string and path where to save the data (variable rdata_folder in set_environment.r)
 source("set_environment.r")
 
@@ -71,6 +68,7 @@ save (aggregated_estimates_agesex,
 
       report_country,
       strategy,
+      tpt,
       TBHIV_for_aggregates,
 
       external_indicator_data,
@@ -81,5 +79,4 @@ save (aggregated_estimates_agesex,
       data.date,
       file=paste0(rdata_folder, "data_",Sys.Date(),".Rdata"))
 
-# Clear the decks ----
-rm(list=ls())
+

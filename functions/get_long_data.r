@@ -1,7 +1,7 @@
 # Functions to get data in long format, eg for sending to adappt or the GHO ----
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-get_var <- function(df, var_name, starting_year = 2000, output_var_name = NA) {
+get_var <- function(df, var_name, starting_year = 2010, output_var_name = NA) {
 
   # Pass a string to identify the variable name and use !!sym() to identify and
   # (see https://stackoverflow.com/questions/48219732/pass-a-string-as-variable-name-in-dplyrfilter)
@@ -12,12 +12,12 @@ get_var <- function(df, var_name, starting_year = 2000, output_var_name = NA) {
                          "group_name")
 
   output <-
-    df %>%
-    filter(year >= starting_year) %>%
+    df |>
+    filter(year >= starting_year) |>
     mutate( # rename variables if requested
       indicator_code = ifelse(is.na(output_var_name),
                               var_name,
-                              output_var_name)) %>%
+                              output_var_name)) |>
     select(indicator_code,
            location_code = !!sym(location_var),
            year,
@@ -29,7 +29,7 @@ get_var <- function(df, var_name, starting_year = 2000, output_var_name = NA) {
 
 
 
-get_estimates <- function(df, var_name, starting_year = 2000, output_var_name = NA) {
+get_estimates <- function(df, var_name, starting_year = 2010, output_var_name = NA) {
 
   # Pass a string to identify the variable name and use !!sym() to identify and
   # rename the variables to best, lo, hi
@@ -41,12 +41,12 @@ get_estimates <- function(df, var_name, starting_year = 2000, output_var_name = 
                          "group_name")
 
   output <-
-    df %>%
-      filter(year >= starting_year) %>%
+    df |>
+      filter(year >= starting_year) |>
       mutate( # rename variables if requested
              indicator_code = ifelse(is.na(output_var_name),
                                      var_name,
-                                     output_var_name)) %>%
+                                     output_var_name)) |>
       select(indicator_code,
              location_code = !!sym(location_var),
              year,
@@ -68,28 +68,28 @@ get_var_pct_change <- function(df, var_name, start_year = 2015, end_year = 2019,
                          "group_name")
 
   start_values <-
-    df %>%
-      filter(year == start_year) %>%
+    df |>
+      filter(year == start_year) |>
       select(location_code = !!sym(location_var),
              start = !!sym(var_name))
 
   end_values <-
-    df %>%
-      filter(year == end_year) %>%
+    df |>
+      filter(year == end_year) |>
       select(location_code = !!sym(location_var),
              year,
              end = !!sym(var_name))
 
   #join the two data sets
   output <-
-    inner_join(start_values, end_values, by = "location_code") %>%
+    inner_join(start_values, end_values, by = "location_code") |>
 
       mutate(indicator_code = ifelse(is.na(output_var_name),
                                      var_name,
                                      output_var_name),
 
              # Calculate the percent change, capped at +/- 100%
-             value = change_cap_pct(start, end )) %>%
+             value = change_cap_pct(start, end )) |>
 
       select(indicator_code,
              location_code,
@@ -122,14 +122,14 @@ get_estimates_agesex <- function(df,
                          "group_name")
 
   output <-
-    df %>%
+    df |>
       filter(year == starting_year &
                measure == measure_filter &
                unit == unit_filter &
                age_group == age_group_filter &
                sex == sex_filter &
-               risk_factor == risk_factor_filter) %>%
-      mutate(indicator_code = output_var_name) %>%
+               risk_factor == risk_factor_filter) |>
+      mutate(indicator_code = output_var_name) |>
       select(indicator_code,
              location_code = !!sym(location_var),
              year,
@@ -141,7 +141,7 @@ get_estimates_agesex <- function(df,
 
     # Do additional rounding of raw figures to match adappt's method of rounding
 
-    output <- output %>%
+    output <- output |>
       mutate(value = round_adappt(value),
              lo = round_adappt(lo),
              hi = round_adappt(hi))
@@ -162,16 +162,16 @@ get_catatrophic_costs <- function(df,
 # get repeat surveys
 
   output <-
-    df %>%
-    group_by(iso3) %>%
+    df |>
+    group_by(iso3) |>
     mutate(ref_year = last(year),
-           indicator_code = output_var_name) %>%
-    ungroup() %>%
+           indicator_code = output_var_name) |>
+    ungroup() |>
 
     # select the latest year for all patient groups and all area types
     filter(year == ref_year &
              patient_group == patient_group_filter &
-             area_type == area_type_filter) %>%
+             area_type == area_type_filter) |>
     select(indicator_code,
            location_code = iso3,
            year,
@@ -184,6 +184,7 @@ get_catatrophic_costs <- function(df,
 }
 
 get_external_indicators <- function(df,
+                                    starting_year = 2010,
                                     indicator_filter = "all",
                                     sex_filter = "a",
                                     flg_latest_year = TRUE,
@@ -197,12 +198,12 @@ get_external_indicators <- function(df,
   if (!("indicator_id" %in% names(df) )) return(NULL)
 
   output <-
-    df %>%
-    filter(indicator_id == indicator_filter & sex == sex_filter) %>%
+    df |>
+    filter(indicator_id == indicator_filter & sex == sex_filter & year >= starting_year) |>
     mutate(# rename variables if requested
            indicator_code = ifelse(is.na(output_var_name),
                                    indicator_filter,
-                                   output_var_name)) %>%
+                                   output_var_name)) |>
     select(indicator_code,
            location_code = iso3,
            year,
@@ -212,13 +213,13 @@ get_external_indicators <- function(df,
   if (flg_latest_year == TRUE){
 
     output <-
-      output %>%
-      group_by(location_code) %>%
-      mutate(ref_year = last(year)) %>%
-      ungroup() %>%
+      output |>
+      group_by(location_code) |>
+      mutate(ref_year = last(year)) |>
+      ungroup() |>
 
       # select the latest year for all patient groups and all area types
-      filter(year == ref_year) %>%
+      filter(year == ref_year) |>
       # remove the ref_year variable from the output
       select(-ref_year)
   }
@@ -227,7 +228,7 @@ get_external_indicators <- function(df,
   if (!is.na(round_sig_fig)){
 
     output <-
-      output %>%
+      output |>
       mutate(value = signif(value, round_sig_fig))
   }
 
@@ -235,7 +236,7 @@ get_external_indicators <- function(df,
   if (round_whole_digit == TRUE){
 
     output <-
-      output %>%
+      output |>
       mutate(value = round(value, digits=0))
   }
 
@@ -249,7 +250,7 @@ get_external_indicators <- function(df,
 
 
 
-get_vars_and_aggregates <- function(df, vars, starting_year = 2000, ending_year = NA, flg_long = TRUE) {
+get_vars_and_aggregates <- function(df, vars, starting_year = 2010, ending_year = NA, flg_long = TRUE) {
 
 # Get the variables listed in vars and calculate simple sum by WHO region and globally
 # Will only work if df contains iso3 and g_whoregion variables
@@ -258,39 +259,39 @@ get_vars_and_aggregates <- function(df, vars, starting_year = 2000, ending_year 
   if (!("iso3" %in% names(df) & "g_whoregion" %in% names(df))) return(NULL)
 
   output_country <-
-    df %>%
+    df |>
     select(location_code = iso3,
            g_whoregion,
            year,
-           all_of(vars)) %>%
+           all_of(vars)) |>
     filter(year >= starting_year)
 
 if (!is.na(ending_year)) {
   # add an end year filter
   output_country <-
-    output_country %>%
+    output_country |>
     filter(year <= ending_year)
 }
 
   # Calculate aggregates
   # 1. WHO regions
   output_agg_r <-
-    output_country %>%
-    group_by(g_whoregion, year) %>%
+    output_country |>
+    group_by(g_whoregion, year) |>
     summarise_at(vars(all_of(vars)),
                  sum,
-                 na.rm = TRUE) %>%
-    ungroup() %>%
+                 na.rm = TRUE) |>
+    ungroup() |>
     rename(location_code = g_whoregion )
 
   # 2. Global aggregates
   output_agg_g <-
-    output_country %>%
-    group_by(year) %>%
+    output_country |>
+    group_by(year) |>
     summarise_at(vars(all_of(vars)),
                  sum,
-                 na.rm = TRUE) %>%
-    ungroup() %>%
+                 na.rm = TRUE) |>
+    ungroup() |>
     mutate(location_code = "global" )
 
 
@@ -299,7 +300,7 @@ if (!is.na(ending_year)) {
 
   # get rid of g_whoregion from output_country
   output_country <-
-    output_country %>%
+    output_country |>
         select(-g_whoregion)
 
   # combine country and aggregates
@@ -309,7 +310,7 @@ if (!is.na(ending_year)) {
 
     # melt into long format
     output <-
-      output %>%
+      output |>
       gather(key="indicator_code",
              value="value",
              -location_code,
@@ -324,7 +325,7 @@ if (!is.na(ending_year)) {
 get_pct <- function(df,
                     numerator_vars,
                     denominator_vars,
-                    starting_year = 2000,
+                    starting_year = 2010,
                     ending_year = NA,
                     output_var_name = NA) {
 
@@ -339,18 +340,18 @@ get_pct <- function(df,
   if (is.na(output_var_name)) return(NULL)
 
   output_country <-
-    df %>%
+    df |>
     select(location_code = iso3,
            g_whoregion,
            year,
-           all_of(c(numerator_vars, denominator_vars))) %>%
+           all_of(c(numerator_vars, denominator_vars))) |>
     filter(year >= starting_year)
 
 
   if (!is.na(ending_year)) {
     # add an end year filter
     output_country <-
-      output_country %>%
+      output_country |>
       filter(year <= ending_year)
   }
   # calculate numerators and denominators
@@ -359,7 +360,7 @@ get_pct <- function(df,
   output_country$denominator <- sum_of_row(output_country[denominator_vars])
 
   output_country <-
-    output_country %>%
+    output_country |>
     select(location_code,
            g_whoregion,
            year,
@@ -369,22 +370,22 @@ get_pct <- function(df,
   # Calculate aggregates
   # 1. WHO regions
   output_agg_r <-
-    output_country %>%
-    group_by(g_whoregion, year) %>%
+    output_country |>
+    group_by(g_whoregion, year) |>
     summarise_at(vars(numerator:denominator),
                  sum,
-                 na.rm = TRUE) %>%
-    ungroup() %>%
+                 na.rm = TRUE) |>
+    ungroup() |>
     rename(location_code = g_whoregion )
 
   # 2. Global aggregates
   output_agg_g <-
-    output_country %>%
-    group_by(year) %>%
+    output_country |>
+    group_by(year) |>
     summarise_at(vars(numerator:denominator),
                  sum,
-                 na.rm = TRUE) %>%
-    ungroup() %>%
+                 na.rm = TRUE) |>
+    ungroup() |>
     mutate(location_code = "global" )
 
 
@@ -393,7 +394,7 @@ get_pct <- function(df,
 
   # get rid of g_whoregion from output_country
   output_country <-
-    output_country %>%
+    output_country |>
         select(-g_whoregion)
 
   # combine country and aggregates
@@ -403,9 +404,9 @@ get_pct <- function(df,
   # Calculate the percentage
 
   output <-
-    output %>%
-    mutate(indicator_code = output_var_name) %>%
-    mutate(value = cap_pct(numerator, denominator)) %>%
+    output |>
+    mutate(indicator_code = output_var_name) |>
+    mutate(value = cap_pct(numerator, denominator)) |>
     select(indicator_code,
            location_code,
            year,
@@ -431,7 +432,7 @@ get_rate <- function(df,
   if (is.na(output_var_name)) return(NULL)
 
   output_country <-
-    df %>%
+    df |>
     select(location_code = iso3,
            g_whoregion,
            year,
@@ -440,22 +441,22 @@ get_rate <- function(df,
   # Calculate aggregates
   # 1. WHO regions
   output_agg_r <-
-    output_country %>%
-    group_by(g_whoregion, year) %>%
+    output_country |>
+    group_by(g_whoregion, year) |>
     summarise_at(vars(all_of(c(numerator_var, population_var))),
                  sum,
-                 na.rm = TRUE) %>%
-    ungroup() %>%
+                 na.rm = TRUE) |>
+    ungroup() |>
     rename(location_code = g_whoregion )
 
   # 2. Global aggregates
   output_agg_g <-
-    output_country %>%
-    group_by(year) %>%
+    output_country |>
+    group_by(year) |>
     summarise_at(vars(all_of(c(numerator_var, population_var))),
                  sum,
-                 na.rm = TRUE) %>%
-    ungroup() %>%
+                 na.rm = TRUE) |>
+    ungroup() |>
     mutate(location_code = "global" )
 
 
@@ -464,7 +465,7 @@ get_rate <- function(df,
 
   # get rid of g_whoregion from output_country
   output_country <-
-    output_country %>%
+    output_country |>
         select(-g_whoregion)
 
   # combine country and aggregates
@@ -476,9 +477,9 @@ get_rate <- function(df,
   # (see https://stackoverflow.com/questions/48219732/pass-a-string-as-variable-name-in-dplyrfilter)
 
   output <-
-    output %>%
-    mutate(indicator_code = output_var_name) %>%
-    mutate(value = display_num(!!sym(numerator_var) * 1e5 / !!sym(population_var))) %>%
+    output |>
+    mutate(indicator_code = output_var_name) |>
+    mutate(value = display_num(!!sym(numerator_var) * 1e5 / !!sym(population_var))) |>
     select(indicator_code,
            location_code,
            year,

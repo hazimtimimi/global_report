@@ -17,13 +17,6 @@
 # Kill any attempt at using factors, unless we explicitly want them!
 options(stringsAsFactors=FALSE)
 
-.fixnamibia <- function(df){
-  # make sure Namibia's iso2 code is not interpreted as R's NA (null)
-  df$iso2 <- ifelse(df$country=="Namibia", "NA", as.character(df$iso2))
-  return(df)
-}
-
-
 # Get ODBC connection string from the environment file (if not already loaded)
 if (exists("connection_string")==FALSE) {
   source("set_environment.r")
@@ -34,72 +27,73 @@ library(RODBC)
 ch <- odbcDriverConnect(connection_string)
 
 # load views into dataframes
-aggregated_estimates_agesex <- sqlFetch(ch, "estimates.view_aggregated_estimates")
-aggregated_estimates_agesex_rawvalues <-  sqlFetch(ch, "estimates.view_aggregated_estimates_rawvalues")
-aggregated_estimates_epi   <- sqlFetch(ch, "view_TME_aggregated_estimates_epi")
-aggregated_estimates_epi_rawvalues   <- sqlFetch(ch, "view_TME_aggregated_estimates_epi_rawvalues")
-aggregated_estimates_drtb  <- sqlFetch(ch, "view_TME_aggregated_estimates_drtb")
-aggregated_estimates_drtb_rawvalues <- sqlFetch(ch, "view_TME_aggregated_estimates_drtb_rawvalues")
+aggregated_estimates_agesex <- sqlFetch(ch, "estimates.view_aggregated_estimates", na.strings = "")
+aggregated_estimates_agesex_rawvalues <-  sqlFetch(ch, "estimates.view_aggregated_estimates_rawvalues", na.strings = "")
+aggregated_estimates_epi   <- sqlFetch(ch, "view_TME_aggregated_estimates_epi", na.strings = "")
+aggregated_estimates_epi_rawvalues   <- sqlFetch(ch, "view_TME_aggregated_estimates_epi_rawvalues", na.strings = "")
+aggregated_estimates_drtb  <- sqlFetch(ch, "view_TME_aggregated_estimates_drtb", na.strings = "")
+aggregated_estimates_drtb_rawvalues <- sqlFetch(ch, "view_TME_aggregated_estimates_drtb_rawvalues", na.strings = "")
 
-aggregated_finance_estimates <- sqlFetch(ch, "reports.view_TME_aggregated_finance_estimates")
+aggregated_finance_estimates <- sqlFetch(ch, "reports.view_TME_aggregated_finance_estimates", na.strings = "")
 
-budget_expenditure         <- .fixnamibia(sqlFetch(ch, "view_TME_master_budget_expenditure"))
+budget_expenditure         <- sqlFetch(ch, "view_TME_master_budget_expenditure", na.strings = "")
 
-catastrophic_costs_survey  <- .fixnamibia(sqlFetch(ch, "survey.view_catastrophic_costs_survey"))
+catastrophic_costs_survey  <- sqlFetch(ch, "survey.view_catastrophic_costs_survey", na.strings = "")
 
-country_group_membership   <- .fixnamibia(sqlFetch(ch, "view_country_group_membership"))
-country_group_types        <- sqlFetch(ch, "view_country_group_types")
-country_groups             <- sqlFetch(ch, "view_country_groups")
+country_group_membership   <- sqlFetch(ch, "view_country_group_membership", na.strings = "")
+country_group_types        <- sqlFetch(ch, "view_country_group_types", na.strings = "")
+country_groups             <- sqlFetch(ch, "view_country_groups", na.strings = "")
 
-data_codes                 <- sqlFetch(ch, "view_TME_data_codes")
-data_collection            <- .fixnamibia(sqlFetch(ch, "view_TME_master_data_collection"))
-data_dictionary            <- sqlFetch(ch, "view_TME_data_dictionary")
+data_codes                 <- sqlFetch(ch, "view_TME_data_codes", na.strings = "")
+data_collection            <- sqlFetch(ch, "view_TME_master_data_collection", na.strings = "")
+data_dictionary            <- sqlFetch(ch, "view_TME_data_dictionary", na.strings = "")
 
-dr_derived_variables       <- .fixnamibia(sqlFetch(ch, "view_dr_derived_variables"))
-dr_surveillance            <- .fixnamibia(sqlFetch(ch, "view_TME_master_dr_surveillance"))
-drs                        <- .fixnamibia(sqlFetch(ch, "view_TME_master_drs"))
+dr_derived_variables       <- sqlFetch(ch, "view_dr_derived_variables", na.strings = "")
+dr_surveillance            <- sqlFetch(ch, "view_TME_master_dr_surveillance", na.strings = "")
+drs                        <- sqlFetch(ch, "view_TME_master_drs", na.strings = "")
 
-drs_for_estimation_new     <- .fixnamibia(sqlFetch(ch, "view_DRS_for_estimation_new"))
-drs_for_estimation_ret     <- .fixnamibia(sqlFetch(ch, "view_DRS_for_estimation_ret"))
-drs_for_estimation_sldst   <- .fixnamibia(sqlFetch(ch, "view_DRS_for_estimation_sldst"))
+drs_for_estimation_new     <- sqlFetch(ch, "view_DRS_for_estimation_new", na.strings = "")
+drs_for_estimation_ret     <- sqlFetch(ch, "view_DRS_for_estimation_ret", na.strings = "")
+drs_for_estimation_sldst   <- sqlFetch(ch, "view_DRS_for_estimation_sldst", na.strings = "")
 
-drs_most_recent_for_estimation <- .fixnamibia(sqlFetch(ch, "view_DRS_most_recent_for_estimation"))
-drs_most_recent_for_estimation_inh  <- .fixnamibia(sqlFetch(ch, "dbo.view_DRS_most_recent_for_estimation_INH"))
+drs_most_recent_for_estimation <- sqlFetch(ch, "view_DRS_most_recent_for_estimation", na.strings = "")
+drs_most_recent_for_estimation_inh  <- sqlFetch(ch, "view_DRS_most_recent_for_estimation_INH", na.strings = "")
 
 
 
-estimates_agesex           <- .fixnamibia(sqlFetch(ch, "estimates.view_estimates"))
-estimates_agesex_rawvalues <- .fixnamibia(sqlFetch(ch, "estimates.view_estimates_rawvalues"))
-estimates_epi              <- .fixnamibia(sqlFetch(ch, "view_TME_estimates_epi"))
-estimates_epi_rawvalues    <- .fixnamibia(sqlFetch(ch, "view_TME_estimates_epi_rawvalues"))
-estimates_drtb             <- .fixnamibia(sqlFetch(ch, "view_TME_estimates_drtb"))
-estimates_drtb_rawvalues   <- .fixnamibia(sqlFetch(ch, "view_TME_estimates_drtb_rawvalues"))
-estimates_ltbi             <- .fixnamibia(sqlFetch(ch, "view_TME_estimates_ltbi"))
-estimates_population       <- .fixnamibia(sqlFetch(ch, "view_TME_estimates_population"))
-estimates_population_5yr   <- .fixnamibia(sqlFetch(ch, "view_TME_estimates_population_5yr"))
+estimates_agesex           <- sqlFetch(ch, "estimates.view_estimates", na.strings = "")
+estimates_agesex_rawvalues <- sqlFetch(ch, "estimates.view_estimates_rawvalues", na.strings = "")
+estimates_epi              <- sqlFetch(ch, "view_TME_estimates_epi", na.strings = "")
+estimates_epi_rawvalues    <- sqlFetch(ch, "view_TME_estimates_epi_rawvalues", na.strings = "")
+estimates_drtb             <- sqlFetch(ch, "view_TME_estimates_drtb", na.strings = "")
+estimates_drtb_rawvalues   <- sqlFetch(ch, "view_TME_estimates_drtb_rawvalues", na.strings = "")
+estimates_ltbi             <- sqlFetch(ch, "view_TME_estimates_ltbi", na.strings = "")
+estimates_population       <- sqlFetch(ch, "view_TME_estimates_population", na.strings = "")
+estimates_population_5yr   <- sqlFetch(ch, "view_TME_estimates_population_5yr", na.strings = "")
 
-finance                    <- .fixnamibia(sqlFetch(ch, "view_TME_master_finance"))
-finance_cleaned            <- .fixnamibia(sqlFetch(ch, "view_TME_master_finance_cleaned"))
+finance                    <- sqlFetch(ch, "view_TME_master_finance", na.strings = "")
+finance_cleaned            <- sqlFetch(ch, "view_TME_master_finance_cleaned", na.strings = "")
 
-notification               <- .fixnamibia(sqlFetch(ch, "view_TME_master_notification"))
-notification_exceptions    <- sqlFetch(ch, "view_TME_master_notification_exceptions")
-outcomes                   <- .fixnamibia(sqlFetch(ch, "view_TME_master_outcomes"))
+notification               <- sqlFetch(ch, "view_TME_master_notification", na.strings = "")
+notification_exceptions    <- sqlFetch(ch, "view_TME_master_notification_exceptions", na.strings = "")
+outcomes                   <- sqlFetch(ch, "view_TME_master_outcomes", na.strings = "")
 
-prevalence_survey          <- .fixnamibia(sqlFetch(ch, "survey.view_prevalence_survey"))
-prevalence_survey_cases    <- .fixnamibia(sqlFetch(ch, "survey.view_prevalence_survey_cases"))
-prevalence_survey_estimates<- .fixnamibia(sqlFetch(ch, "survey.view_prevalence_survey_estimates"))
+prevalence_survey          <- sqlFetch(ch, "survey.view_prevalence_survey", na.strings = "")
+prevalence_survey_cases    <- sqlFetch(ch, "survey.view_prevalence_survey_cases", na.strings = "")
+prevalence_survey_estimates<- sqlFetch(ch, "survey.view_prevalence_survey_estimates", na.strings = "")
 
-report_country             <- .fixnamibia(sqlFetch(ch, "view_TME_master_report_country"))
-strategy                   <- .fixnamibia(sqlFetch(ch, "view_TME_master_strategy"))
-TBHIV_for_aggregates       <- .fixnamibia(sqlFetch(ch, "view_TME_master_TBHIV_for_aggregates"))
+report_country             <- sqlFetch(ch, "view_TME_master_report_country", na.strings = "")
+strategy                   <- sqlFetch(ch, "view_TME_master_strategy", na.strings = "")
+tpt                        <- sqlFetch(ch, "view_TME_master_contacts_tpt", na.strings = "")
+TBHIV_for_aggregates       <- sqlFetch(ch, "view_TME_master_TBHIV_for_aggregates", na.strings = "")
 
 # external data views
-external_indicator_data    <- .fixnamibia(sqlFetch(ch, "external_indicators.view_indicator_data"))
-external_indicator_defs    <- sqlFetch(ch, "external_indicators.view_indicator_definition")
+external_indicator_data    <- sqlFetch(ch, "external_indicators.view_indicator_data", na.strings = "")
+external_indicator_defs    <- sqlFetch(ch, "external_indicators.view_indicator_definition", na.strings = "")
 
 # One-off view for 2020 data collection on impact of COVID-19 on TB services and on
 # country reponses to targets set by the 2018 UN High-Level Meeting on TB
-covid_unhlm                <- .fixnamibia(sqlFetch(ch, "view_TME_master_covid_unhlm"))
+covid_unhlm                <- sqlFetch(ch, "view_TME_master_covid_unhlm", na.strings = "")
 
 close(ch)
 
