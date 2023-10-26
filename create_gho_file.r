@@ -21,7 +21,7 @@ stop("
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # Establish the report year
-report_year <- 2022
+report_year <- 2023
 
 # The following are convenience variables since notification and most other data sets will run up to the
 # year before the reporting year and outcomes will run up to two years before the reporting year
@@ -1020,6 +1020,8 @@ rm(outcome)
 
 entities_to_exclude <- report_country %>%
                        filter(g_whostatus != "M" | is.na(g_whostatus)) %>%
+                       # In 2023 GHO started accepting data from Hong Kong, Macao, Puerto Rico and Palestine
+                       filter(!(iso3 %in% c('HKG', 'MAC', 'PRI', 'PSE'))) %>%
                        select(location_code = iso3) %>%
                        mutate(exclude = 1)
 
