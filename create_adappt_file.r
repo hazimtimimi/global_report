@@ -672,7 +672,7 @@ adappt_calc <-
 
   # Finance
   # Changed in dcyear 2022 to previous year's expenditure (proxy is received funding)
-  # And in dcyear 2023 resurrected budgets, but just for the latest year, as well as received funding
+  # And in dcyear 2023 resurrected budgets, but just for the latest year and at country-level only, as well as received funding
 
   rbind(get_pct(budget_expenditure,
                 numerator_vars = "cf_tot_domestic",
@@ -799,27 +799,18 @@ adappt_fin_agg <-
 
   # Total funding includes general health service (inpatient+outpatient) costs c_ghs
   # This will be the denominator to calculate percentages
+  # Note that aggregates will not include budget indicators
   mutate(rcvd_tot_ghs = rcvd_tot + c_ghs) |>
-  mutate(c_f_domestic_pct = cap_pct(domestic_funding, budget_total),
-         c_f_international_pct = cap_pct(international_funding, budget_total),
-         c_f_unfunded_pct = cap_pct(unfunded_gap, budget_total),
-         c_rcvd_domestic_pct = cap_pct( (rcvd_int + c_ghs), rcvd_tot_ghs ),
+  mutate(c_rcvd_domestic_pct = cap_pct( (rcvd_int + c_ghs), rcvd_tot_ghs ),
          c_rcvd_international_pct = cap_pct( (rcvd_ext_gf + rcvd_ext_ngf), rcvd_tot_ghs )) |>
 
-  # Convert total budgets and total funding to millions and rename back to budget_tot and rcvd_tot
-  mutate(budget_tot = ifelse(budget_total > 1e6,
-                             round(budget_total / 1e6, 0),
-                             round(budget_total / 1e6, 1)),
-         rcvd_tot = ifelse(rcvd_tot_ghs > 1e6,
+  # Convert total funding to millions and rename back to rcvd_tot
+  mutate(rcvd_tot = ifelse(rcvd_tot_ghs > 1e6,
                           round(rcvd_tot_ghs / 1e6, 0),
                           round(rcvd_tot_ghs / 1e6, 1))) |>
 
   select(location_code = group_name,
          year,
-         c_f_domestic_pct,
-         c_f_international_pct,
-         c_f_unfunded_pct,
-         budget_tot,
          c_rcvd_domestic_pct,
          c_rcvd_international_pct,
          rcvd_tot) |>
