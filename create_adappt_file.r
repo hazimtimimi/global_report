@@ -286,20 +286,13 @@ rm(adappt_temp)
 
 # Add % change indicators related to the End TB Strategy milestones
 
-# Need to calculate total deaths, which is not in the aggregated estimates dataframe (it is in the country one)
-addapt_temp_agg <- aggregated_estimates_epi_rawvalues |>
-  mutate(e_mort_num = e_mort_exc_tbhiv_num + e_mort_tbhiv_num) |>
-  # Restrict to global and regional groups
-  filter(group_type %in% c("global", "g_whoregion")) |>
-  select(group_name, year, e_inc_100k, e_mort_num)
-
-adappt_temp <-  get_var_pct_change(addapt_temp_agg,
+adappt_temp <-  get_var_pct_change(aggregated_estimates_epi_rawvalues,
                                    var_name = "e_inc_100k",
                                    start_year = hist_start_year,
                                    end_year = notification_maxyear,
                                    output_var_name = "e_inc_100k_ch_pct") |>
 
-  rbind(get_var_pct_change(addapt_temp_agg,
+  rbind(get_var_pct_change(aggregated_estimates_epi_rawvalues,
                            var_name = "e_mort_num",
                            start_year = hist_start_year,
                            end_year = notification_maxyear,
@@ -325,7 +318,7 @@ adappt_temp <-  get_var_pct_change(addapt_temp_agg,
 
 adappt_est <- rbind(adappt_est, adappt_temp)
 
-rm(addapt_temp_agg, adappt_temp)
+rm(adappt_temp)
 
 
 
@@ -563,7 +556,7 @@ adappt_temp <- filter(notification, year >= 2020) |>
 
 adappt_calc <-
         get_pct(notification,
-                numerator_vars = "newinc_rdx",
+                numerator_vars = c("newinc_rdx", "newinc_pulm_labconf_rdx", "newinc_pulm_clindx_rdx", "newinc_ep_rdx"),
                 denominator_vars = "c_newinc",
                 starting_year = hist_start_year,
                 output_var_name = "c_rdx_pct") |>
