@@ -5,7 +5,7 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # Establish the report year
-report_year <- 2022
+report_year <- 2023
 
 
 # Kill any attempt at using factors, unless we explicitly want them!
@@ -47,7 +47,7 @@ library("dplyr")
 # Create incidence and mortality estimates file ----
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-estimates_epi_rawvalues %>%
+estimates_epi_rawvalues |>
   select(country, year, iso2, iso3,
          e_inc_num,
          e_inc_num_lo,
@@ -63,7 +63,7 @@ estimates_epi_rawvalues %>%
          e_mort_tbhiv_num_hi,
          e_mort_num,
          e_mort_num_lo,
-         e_mort_num_hi) %>%
+         e_mort_num_hi) |>
 
   write.csv(file=paste0(gf_folder, "GF_TB_incidence_mortality_",Sys.Date(),".csv"),
             row.names=FALSE,
@@ -73,11 +73,20 @@ estimates_epi_rawvalues %>%
 # Create RR-TB incidence estimates file ----
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-estimates_drtb_rawvalues %>%
+estimates_drtb_rawvalues |>
   select(country, year, iso2, iso3,
+         e_rr_prop_new,
+         e_rr_prop_new_lo,
+         e_rr_prop_new_hi,
+         e_rr_prop_ret,
+         e_rr_prop_ret_lo,
+         e_rr_prop_ret_hi,
          e_inc_rr_num,
          e_inc_rr_num_lo,
-         e_inc_rr_num_hi) %>%
+         e_inc_rr_num_hi,
+         e_rr_in_notified_labconf_pulm,
+         e_rr_in_notified_labconf_pulm_lo,
+         e_rr_in_notified_labconf_pulm_hi) |>
 
   write.csv(file=paste0(gf_folder, "GF_RR-TB_incidence_",Sys.Date(),".csv"),
             row.names=FALSE,
@@ -87,8 +96,8 @@ estimates_drtb_rawvalues %>%
 # Create disaggregated incidence estimates file ----
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-estimates_agesex_rawvalues %>%
-  select(-se) %>%
+estimates_agesex_rawvalues |>
+  select(-se) |>
   write.csv(file=paste0(gf_folder, "GF_TB_incidence_agesex_riskfactors_",Sys.Date(),".csv"),
             row.names=FALSE,
             na="")
@@ -96,12 +105,21 @@ estimates_agesex_rawvalues %>%
 # Create LTBI estimates file ----
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-estimates_ltbi %>%
+estimates_ltbi |>
   select(country, year, iso2, iso3,
+         e_hh_contacts,
+         e_hh_contacts_lo,
+         e_hh_contacts_hi,
+         e_prevtx_hh_contacts_pct,
+         e_prevtx_hh_contacts_pct_lo,
+         e_prevtx_hh_contacts_pct_hi,
          e_prevtx_eligible,
          e_prevtx_eligible_lo,
-         e_prevtx_eligible_hi) %>%
-  filter(year==report_year-1) %>%
+         e_prevtx_eligible_hi,
+         e_prevtx_kids_pct,
+         e_prevtx_kids_pct_lo,
+         e_prevtx_kids_pct_hi) |>
+  filter(year==report_year-1) |>
   write.csv(file=paste0(gf_folder, "GF_LTBI_estimates_",Sys.Date(),".csv"),
             row.names=FALSE,
             na="")
