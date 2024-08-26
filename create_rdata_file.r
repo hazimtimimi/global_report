@@ -25,6 +25,7 @@ save (aggregated_estimates_agesex,
       budget_expenditure,
 
       catastrophic_costs_survey,
+      catastrophic_costs_model,
 
       country_group_membership,
       country_group_types,

@@ -39,6 +39,7 @@ aggregated_finance_estimates <- sqlFetch(ch, "reports.view_TME_aggregated_financ
 budget_expenditure         <- sqlFetch(ch, "view_TME_master_budget_expenditure", na.strings = "")
 
 catastrophic_costs_survey  <- sqlFetch(ch, "survey.view_catastrophic_costs_survey", na.strings = "")
+catastrophic_costs_model   <- sqlFetch(ch, "view_TME_estimates_catast_costs", na.strings = "")
 
 country_group_membership   <- sqlFetch(ch, "view_country_group_membership", na.strings = "")
 country_group_types        <- sqlFetch(ch, "view_country_group_types", na.strings = "")
