@@ -152,17 +152,18 @@ get_estimates_agesex <- function(df,
 }
 
 
-get_catatrophic_costs <- function(df,
-                                  patient_group_filter = "all",
-                                  area_type_filter = "a",
-                                  output_var_name) {
-# Get latest catastrophic costs
-# treat differently again.
-# First add a new variable which shows the latest year for each country, just in case in future we start to
-# get repeat surveys
+get_catastrophic_costs_survey <- function(df_survey,
+                                          patient_group_filter = "all",
+                                          area_type_filter = "a",
+                                          output_var_name) {
 
+  # Get latest catastrophic costs survey results
+  # In dcyear 2024 included modelled estimates for low- and middle-income countries that haven't conducted
+  # a survey
+
+   # Get the latest survey results first
   output <-
-    df |>
+    df_survey |>
     group_by(iso3) |>
     mutate(ref_year = last(year),
            indicator_code = output_var_name) |>
@@ -172,6 +173,35 @@ get_catatrophic_costs <- function(df,
     filter(year == ref_year &
              patient_group == patient_group_filter &
              area_type == area_type_filter) |>
+    select(indicator_code,
+           location_code = iso3,
+           year,
+           value = catast_pct,
+           lo = catast_pct_lo,
+           hi = catast_pct_hi)
+
+  return(output)
+
+}
+
+get_catastrophic_costs_model <- function(df_model,
+                                          patient_group_filter = "all",
+                                          output_var_name) {
+
+  # In dcyear 2024 included modelled estimates for low- and middle-income countries that haven't conducted
+  # a survey
+
+  # Get the latest survey results first
+  output <-
+    df_model |>
+    group_by(iso3) |>
+    mutate(ref_year = last(year),
+           indicator_code = output_var_name) |>
+    ungroup() |>
+
+    # select the latest year for all patient groups
+    filter(year == ref_year &
+             patient_group == patient_group_filter) |>
     select(indicator_code,
            location_code = iso3,
            year,

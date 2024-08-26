@@ -10,7 +10,7 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # Establish the report year
-report_year <- 2023
+report_year <- 2024
 
 # The following are convenience variables since notification and most other data sets will run up to the
 # year before the reporting year and outcomes will run up to two years before the reporting year
@@ -191,9 +191,14 @@ adappt_est <-
                              output_var_name = "e_inc_num_und",
                              round_4_adappt = TRUE)) |>
 
-  # and now add catastrophic cost survey results for countries that have them
+  # and now add catastrophic cost survey and modelling results for countries that have them
 
-  rbind(get_catatrophic_costs(catastrophic_costs_survey, output_var_name = "catast_pct")) |>
+  rbind(get_catastrophic_costs_survey(catastrophic_costs_survey,
+                              output_var_name = "catast_survey_pct")) |>
+
+  # Modelled catastrophic costs for low- and middle-income countries added dcyear 2024
+  rbind(get_catastrophic_costs_model(catastrophic_costs_model,
+        output_var_name = "catast_model_pct")) |>
 
   # add the TPT coverage for household contacts for countries only
   # Started collecting this in 2019 dcyear, so 2018 is the earliest yearwith data
@@ -355,8 +360,9 @@ adappt_sdg <-
                                 round_sig_fig=2)) |>
   # UHC index
   rbind(get_external_indicators(external_indicator_data,
-                                indicator_filter = "UHC_INDEX_REPORTED"),
-                                flg_latest_year = FALSE) |>
+                                indicator_filter = "UHC_INDEX_REPORTED",
+                                flg_latest_year = FALSE,
+                                round_sig_fig=2)) |>
   # access to clean fuel
   rbind(get_external_indicators(external_indicator_data,
                                 indicator_filter = "EG.CFT.ACCS.ZS",
@@ -375,10 +381,9 @@ adappt_sdg <-
                                 flg_latest_year = FALSE,
                                 round_sig_fig=2)) |>
 
-  # And here are the indicators for which we only want all years
-  # undernourishment
+  # undernutrition (changed in dcyear 2024, previously had undernourishment)
   rbind(get_external_indicators(external_indicator_data,
-                                indicator_filter = "SN.ITK.DEFC.ZS",
+                                indicator_filter = "NCD_BMI_18C",
                                 flg_latest_year = FALSE,
                                 round_sig_fig=2)) |>
 
