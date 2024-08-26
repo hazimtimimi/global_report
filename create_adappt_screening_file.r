@@ -10,8 +10,8 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # Establish the report year and limiting date for the incidence estimates
-report_year <- 2022
-limiting_date <- '2022-12-31'
+report_year <- 2023
+limiting_date <- '2023-12-31'
 
 # The following are convenience variables since notification and most other data sets will run up to the
 # year before the reporting year
