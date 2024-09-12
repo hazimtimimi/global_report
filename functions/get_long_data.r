@@ -186,7 +186,8 @@ get_catastrophic_costs_survey <- function(df_survey,
 
 get_catastrophic_costs_model <- function(df_model,
                                           patient_group_filter = "all",
-                                          output_var_name) {
+                                          output_var_name,
+                                         round_4_adappt = FALSE) {
 
   # In dcyear 2024 included modelled estimates for low- and middle-income countries that haven't conducted
   # a survey
@@ -208,6 +209,16 @@ get_catastrophic_costs_model <- function(df_model,
            value = catast_pct,
            lo = catast_pct_lo,
            hi = catast_pct_hi)
+
+  if (round_4_adappt == TRUE) {
+
+    # Do additional rounding of raw figures to match adappt's method of rounding
+
+    output <- output |>
+      mutate(value = round_adappt(value),
+             lo = round_adappt(lo),
+             hi = round_adappt(hi))
+  }
 
   return(output)
 
