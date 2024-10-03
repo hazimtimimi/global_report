@@ -8,20 +8,11 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
-stop("
-
-     >>>>>>>>>>
-     Make sure you have run script ~/OneOffQueries/calculate_cache_aggregated_estimates.sql in
-     the database first so that it contains cached estimates by World Bank income group!
-     <<<<<<<<<<<<")
-
-
-
 # A: SET A FEW FLAGS AND CONSTANTS ----
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # Establish the report year
-report_year <- 2023
+report_year <- 2024
 
 # The following are convenience variables since notification and most other data sets will run up to the
 # year before the reporting year and outcomes will run up to two years before the reporting year
