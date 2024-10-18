@@ -201,6 +201,11 @@ adappt_est <-
         output_var_name = "catast_model_pct",
         round_4_adappt = TRUE)) |>
 
+  # Modelled catastrophic costs for WHO regions (low- and middle-income countries only) added dcyear 2024
+  rbind(get_catastrophic_costs_model(aggregated_catastrophic_costs_model,
+                                     output_var_name = "catast_model_pct",
+                                     round_4_adappt = TRUE)) |>
+
   # add the TPT coverage for household contacts for countries only
   # Started collecting this in 2019 dcyear, so 2018 is the earliest yearwith data
   rbind(get_estimates(estimates_ltbi,"e_prevtx_hh_contacts_pct", starting_year = 2018))
