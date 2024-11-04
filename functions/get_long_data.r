@@ -192,20 +192,18 @@ get_catastrophic_costs_model <- function(df_model,
   # In dcyear 2024 included modelled estimates for low- and middle-income countries that haven't conducted
   # a survey
 
-  # Determine if the dataframe is for aggregates or countries
-  location_var <- ifelse("iso3" %in% names(df),
-                         "iso3",
-                         "group_name")
-
   output <-
     df_model |>
-    mutate(indicator_code = output_var_name) |>
+    group_by(iso3) |>
+    mutate(ref_year = last(year),
+           indicator_code = output_var_name) |>
+    ungroup() |>
 
-    # select all patient groups
-    filter(patient_group == patient_group_filter) |>
-
+    # select the latest year for all patient groups
+    filter(year == ref_year &
+             patient_group == patient_group_filter) |>
     select(indicator_code,
-           location_code = !!sym(location_var),
+           location_code = iso3,
            year,
            value = catast_pct,
            lo = catast_pct_lo,

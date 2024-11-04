@@ -201,10 +201,17 @@ adappt_est <-
         output_var_name = "catast_model_pct",
         round_4_adappt = TRUE)) |>
 
-  # Modelled catastrophic costs for WHO regions (low- and middle-income countries only) added dcyear 2024
-  rbind(get_catastrophic_costs_model(aggregated_catastrophic_costs_model,
-                                     output_var_name = "catast_model_pct",
-                                     round_4_adappt = TRUE)) |>
+  # Pooled catastrophic costs estimate globally taken from all country surveys since 2015
+  rbind(pooled_catastrophic_costs |>
+          filter(patient_group == "all") |>
+          mutate(indicator_code = "catast_pct") |>
+          select(indicator_code,
+                 location_code = group_name,
+               year = year_range,
+               value = catast_pct,
+               lo = catast_pct_lo,
+               hi = catast_pct_hi
+               ))  |>
 
   # add the TPT coverage for household contacts for countries only
   # Started collecting this in 2019 dcyear, so 2018 is the earliest yearwith data

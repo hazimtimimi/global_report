@@ -63,6 +63,8 @@ save (aggregated_estimates_agesex,
       notification_exceptions,
       outcomes,
 
+      pooled_catastrophic_costs,
+
       prevalence_survey,
       prevalence_survey_cases,
       prevalence_survey_estimates,

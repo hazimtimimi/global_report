@@ -27,7 +27,6 @@ library(RODBC)
 ch <- odbcDriverConnect(connection_string)
 
 # load views into dataframes
-aggregated_catastrophic_costs_model   <- sqlFetch(ch, "view_TME_aggregated_estimates_catast_costs", na.strings = "")
 aggregated_estimates_agesex <- sqlFetch(ch, "estimates.view_aggregated_estimates", na.strings = "")
 aggregated_estimates_agesex_rawvalues <-  sqlFetch(ch, "estimates.view_aggregated_estimates_rawvalues", na.strings = "")
 aggregated_estimates_epi   <- sqlFetch(ch, "view_TME_aggregated_estimates_epi", na.strings = "")
@@ -80,6 +79,8 @@ finance_cleaned            <- sqlFetch(ch, "view_TME_master_finance_cleaned", na
 notification               <- sqlFetch(ch, "view_TME_master_notification", na.strings = "")
 notification_exceptions    <- sqlFetch(ch, "view_TME_master_notification_exceptions", na.strings = "")
 outcomes                   <- sqlFetch(ch, "view_TME_master_outcomes", na.strings = "")
+
+pooled_catastrophic_costs  <- sqlFetch(ch, "survey.view_pooled_catastrophic_costs", na.strings = "")
 
 prevalence_survey          <- sqlFetch(ch, "survey.view_prevalence_survey", na.strings = "")
 prevalence_survey_cases    <- sqlFetch(ch, "survey.view_prevalence_survey_cases", na.strings = "")
