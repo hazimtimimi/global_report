@@ -5,6 +5,7 @@
 global_report.Rproj
 # ignore the configuration file to set user's local environment
 set_environment.r
+set_environment_UNSDG.r
 # ignore all html files
 *.html
 packrat/lib*/
