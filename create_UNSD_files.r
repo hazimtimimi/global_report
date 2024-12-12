@@ -15,7 +15,7 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # Establish the report year
-report_year <- 2023
+report_year <- 2024
 
 # Descriptions UN Statistics Division asks to be included in the file sent to them
 
@@ -57,11 +57,11 @@ git_repo_cty_path <- paste0(report_git_repo, "data/gtb/other/cty.rda")
 
 # Define filenames for group configurations sent by UNSD
 # 1. SDG groups
-unsd_groups_file <- "2. Regional Groupings and Compositions-2024Reporting_20231221.xlsx"
+unsd_groups_file <- "2. Regional Groupings and Compositions-2025Reporting_20241202.xlsx"
 unsd_groups_file_sheet <- "Group Composition (List View)"
 
 # 2. Regional Economic Commissions groups
-unsd_rc_groups_file <- "9. CompositionOfRegions_RCs_20231221.xlsx"
+unsd_rc_groups_file <- "9. CompositionOfRegions_RCs_20241202.xlsx"
 unsd_rc_groups_file_sheet = "Ref_Area_Long"
 
 # Define base name to use for output files
