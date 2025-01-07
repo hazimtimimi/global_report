@@ -57,15 +57,15 @@ git_repo_cty_path <- paste0(report_git_repo, "data/gtb/other/cty.rda")
 
 # Define filenames for group configurations sent by UNSD
 # 1. SDG groups
-unsd_groups_file <- "2. Regional Groupings and Compositions-2025Reporting_20241202.xlsx"
+unsd_groups_file <- "2. Regional Groupings and Compositions-2025Reporting_20241219.xlsx"
 unsd_groups_file_sheet <- "Group Composition (List View)"
 
 # 2. Regional Economic Commissions groups
-unsd_rc_groups_file <- "9. CompositionOfRegions_RCs_20241202.xlsx"
+unsd_rc_groups_file <- "9. CompositionOfRegions_RCs_20241219.xlsx"
 unsd_rc_groups_file_sheet = "Ref_Area_Long"
 
 # Define base name to use for output files
-output_file_base_name <- paste0("138-3.3.2-2875-SH_TBS_INCD-5164_",
+output_file_base_name <- paste0("138-3.3.2-2875-SH_TBS_INCD-5400_",
                                 format(Sys.Date(), "%Y-%m-%d"),
                                 ".xlsx")
 
@@ -346,13 +346,6 @@ writexl::write_xlsx(list(Data = inc),
 # Load RC groupings from file sent by the UN Statistics Division
 rc_groups_detailed <- read_xlsx(path = paste0(unsd_rc_folder, unsd_rc_groups_file),
                                  sheet = unsd_rc_groups_file_sheet)
-
-
-# Data bug fix in 2023 file: Some groups had RC_Name of "ECSCWA" instead of "ESCWA"
-rc_groups_detailed <- rc_groups_detailed |>
-  mutate(RC_Name = ifelse(RC_Name == "ECSCWA",
-                          "ESCWA",
-                          RC_Name))
 
 
 rc_groups <- rc_groups_detailed |>
