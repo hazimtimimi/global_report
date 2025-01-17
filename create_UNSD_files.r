@@ -30,7 +30,10 @@ unsd_FootNote <- paste("Data extracted as of",
                        "based on data originally compiled for the",
                        report_year,
                        "WHO Global TB Report")
-unsd_Nature <- "N"
+
+unsd_Nature_region <- "N"
+unsd_Nature_country <- "G"
+
 unsd_Units <- "PER_100000_POP"
 unsd_Reporting_Type <- "G"
 unsd_SeriesCode <- "SH_TBS_INCD"
@@ -252,7 +255,7 @@ inc_sdg <- inc_sdg |>
          SeriesDescription = unsd_SeriesDescription,
          Source = unsd_Source,
          FootNote = unsd_FootNote,
-         Nature = unsd_Nature,
+         Nature = unsd_Nature_region,
          Units = unsd_Units,
          `Reporting Type` = unsd_Reporting_Type,
          SeriesCode = unsd_SeriesCode,
@@ -295,7 +298,7 @@ inc_cty <- est |>
          SeriesDescription = unsd_SeriesDescription,
          Source = unsd_Source,
          FootNote = unsd_FootNote,
-         Nature = unsd_Nature,
+         Nature = unsd_Nature_country,
          Units = unsd_Units,
          `Reporting Type` = unsd_Reporting_Type,
          SeriesCode = unsd_SeriesCode,
@@ -413,7 +416,7 @@ inc_rc <- inc_rc |>
          SeriesDescription = unsd_SeriesDescription,
          Source = unsd_Source,
          FootNote = unsd_FootNote,
-         Nature = unsd_Nature,
+         Nature = unsd_Nature_region,
          Units = unsd_Units,
          `Reporting Type` = unsd_Reporting_Type,
          SeriesCode = unsd_SeriesCode,
