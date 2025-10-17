@@ -12,7 +12,7 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # Establish the report year
-report_year <- 2024
+report_year <- 2025
 
 # The following are convenience variables since notification and most other data sets will run up to the
 # year before the reporting year and outcomes will run up to two years before the reporting year
@@ -127,16 +127,6 @@ wb_g_income <-  country_group_membership %>%
   select(iso2, group_type, group_name) %>%
   spread(key = group_type, value = group_name, fill = 0)
 
-
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# stop("OK, see what we have!")
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-stop("
-
-     >>>>>>>>>>
-     Stopping here so can do the rest manually!
-     <<<<<<<<<<<<")
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 #   Estimates (country-level and aggregates) -----
@@ -370,46 +360,14 @@ notif <-  notification %>%
           filter(year >= 2000) %>%
           left_join(wb_g_income, by = "iso2") %>%
           select(iso3, year, g_whoregion, g_income,
-                 c_newinc,
-                 new_labconf, new_sp, new_clindx, new_sn, new_su, new_ep, new_oth,
-                 ret_rel_labconf, ret_rel_clindx, ret_rel_ep, ret_rel,
-                 ret_nrel, ret_taf, ret_tad, ret_oth, newret_oth)
-
-
-
-
-# Calculate stuff
-notif <- within(notif, {
-
-  # Calculate total new smear-neg, smear unknown, others for years prior to 2013
-  new_snsuoth <- ifelse(year < 2013, sum_of_row(notif[c("new_sn", "new_su","new_oth")]) , NA )
-
-  # Calculate total retreatment cases excluding relapses for years prior to 2013
-  ret_nrel <- ifelse(year < 2013, sum_of_row(notif[c("ret_taf", "ret_tad", "ret_oth")]) , ret_nrel )
-
-  # For years before 2013, only show new_labconf for EUR countries (others weren't reporting consistently)
-  new_labconf <- ifelse(year < 2013 & g_whoregion != "EUR", NA, new_labconf)
-
-  # For EUR, only show new_labconf if >= new_sp ! (wasn't true in early years collection)
-  new_labconf <- ifelse(year < 2013 & new_labconf < new_sp, NA, new_labconf)
-
-  # Clean up rows where sum_of_row has returned NaN
-  new_snsuoth <- ifelse(is.na(new_snsuoth),NA,new_snsuoth)
-  ret_nrel <- ifelse(is.na(ret_nrel),NA,ret_nrel)
-
-})
-
-# Drop the uneeded variables
-notif <- notif %>%
-        select(-new_sn, -new_su, -new_oth,
-               -ret_taf, -ret_tad, -ret_oth)
+                 c_newinc)
 
 
 # Calculate aggregates
 # 1. WHO regions
 notif_agg_r <- notif %>%
                 group_by(g_whoregion, year) %>%
-                summarise_at(vars(c_newinc:new_snsuoth),
+                summarise_at(vars(c_newinc),
                              sum,
                              na.rm = TRUE) %>%
                 ungroup() %>%
@@ -418,7 +376,7 @@ notif_agg_r <- notif %>%
 # 2. WB Income groups
 notif_agg_i <- notif %>%
                 group_by(g_income, year) %>%
-                summarise_at(vars(c_newinc:new_snsuoth),
+                summarise_at(vars(c_newinc),
                              sum,
                              na.rm = TRUE) %>%
                 ungroup() %>%
@@ -427,7 +385,7 @@ notif_agg_i <- notif %>%
 # 3. Global aggregates
 notif_agg_g <- notif %>%
               group_by(year) %>%
-              summarise_at(vars(c_newinc:new_snsuoth),
+              summarise_at(vars(c_newinc),
                            sum,
                            na.rm = TRUE) %>%
               ungroup() %>%
@@ -442,7 +400,7 @@ rm(list=c("notif_agg_r",  "notif_agg_i", "notif_agg_g"))
 # because with na.rm=TRUE I get a 0 for the sum. However I think all aggregates should be > 0 therefore easiest
 # thing to do is to assume all zeros in the resulting aggregates should be NA
 
-notif_agg[3:14] <- sapply(notif_agg[3:14], function(x){ ifelse(x==0,NA,x)})
+notif_agg[3] <- sapply(notif_agg[3], function(x){ ifelse(x==0,NA,x)})
 
 # convert to GHO group codes
 notif_agg <-  notif_agg %>%
@@ -1027,6 +985,9 @@ gho %>%
   write.csv(file=paste("GHO_TB_update_",Sys.Date(),".csv",sep="") , row.names=FALSE, na="")
 
 
+
+if (report_year == 2020) {
+
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 #   Sex-disaggregated incidence estimates -----
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1201,4 +1162,6 @@ write.csv(x = rr_tx_coverage,
           file=paste("RR-TB_treatment_coverage_",Sys.Date(),".csv",sep="") ,
           row.names=FALSE,
           na="")
+
+}
 
